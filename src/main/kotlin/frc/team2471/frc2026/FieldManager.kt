@@ -7,6 +7,7 @@ import edu.wpi.first.math.geometry.Pose2d
 import edu.wpi.first.math.geometry.Translation2d
 import edu.wpi.first.wpilibj.DriverStation
 import edu.wpi.first.wpilibj.Filesystem
+import frc.team2471.frc2026.Robot.isAutonomous
 import org.littletonrobotics.junction.AutoLog
 import org.littletonrobotics.junction.AutoLogOutput
 import org.littletonrobotics.junction.Logger
@@ -72,36 +73,39 @@ object FieldManager {
     val inScoringZone: Boolean
         get () = (fieldCenter.x - Drive.pose.translation.x.feet).absoluteValue() > distanceFromMiddleToScore
 
+    @get:AutoLogOutput(key = "FieldManager/gameData")
+    val gameData: String
+        get() = DriverStation.getGameSpecificMessage()
+
     @get:AutoLogOutput(key = "FieldManager/redWonAuto")
-    val redWonAuto: Boolean?
-        get () = when (DriverStation.getGameSpecificMessage()) {
+    val redWonAuto: Boolean
+        get () = when (gameData) {
             "R" -> true
             "B" -> false
-            else -> null
-        }
+            else -> prevRedWonAuto
+        }.also { prevRedWonAuto = it }
+    private var prevRedWonAuto: Boolean = true
 
-    val blueWonAuto: Boolean?
-        get () = redWonAuto?.not()
+    val blueWonAuto: Boolean
+        get () = !redWonAuto
 
-    val weWonAuto: Boolean?
-        get () = redWonAuto?.equals(isRedAlliance)
+    val weWonAuto: Boolean
+        get () = redWonAuto == isRedAlliance
 
-    val hubIsActive: Boolean?
+    @get:AutoLogOutput(key = "FieldManager/matchTime")
+    val matchTime: Double
+        get() = DriverStation.getMatchTime()
+
+    @get:AutoLogOutput(key = "FieldManager/hubIsActive")
+    val hubIsActive: Boolean
         get () {
-            if (weWonAuto == null) {
-                return null
-            }
-
-            if (DriverStation.getMatchTime() > 130.0) {
+            if (matchTime > 130.0 || matchTime < 30.0 || isAutonomous) {
                 return true
             }
-            if (DriverStation.getMatchTime() < 30.0) {
-                return true
-            }
-            if ((floor((DriverStation.getMatchTime() - 30.0)/25.0)) % 2 == 0.0) {
-                return weWonAuto!!
+            if ((floor((matchTime - 30.0)/25.0)) % 2 == 0.0) {
+                return weWonAuto
             } else {
-                return !weWonAuto!!
+                return !weWonAuto
             }
         }
 
