@@ -71,6 +71,7 @@ object Robot : LoggedRobot() {
     val oi = OI
     val shooter = Shooter
     val intake = Intake
+    val fieldManager = FieldManager
 
     var allSubsystems = arrayOf(drive, intake, shooter, oi)
 
