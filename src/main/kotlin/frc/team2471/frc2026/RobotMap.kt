@@ -31,6 +31,8 @@ object Falcons {
     const val INTAKE_DEPLOY = 99
     const val INTAKE_ROLLER = 98
 
+    const val SHOOTER_0 = 97
+    const val SHOOTER_1 = 96
 }
 
 object Talons {

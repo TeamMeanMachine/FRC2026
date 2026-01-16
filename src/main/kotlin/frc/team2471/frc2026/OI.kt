@@ -4,12 +4,9 @@ import edu.wpi.first.math.filter.Debouncer
 import edu.wpi.first.math.geometry.Pose2d
 import edu.wpi.first.math.geometry.Translation2d
 import edu.wpi.first.wpilibj.Alert
-import edu.wpi.first.wpilibj.GenericHID
 import edu.wpi.first.wpilibj2.command.SubsystemBase
 import org.team2471.frc.lib.control.LoopLogger
 import org.team2471.frc.lib.control.MeanCommandXboxController
-import org.team2471.frc.lib.control.commands.finallyRun
-import org.team2471.frc.lib.control.commands.parallelCommand
 import org.team2471.frc.lib.control.commands.toCommand
 import org.team2471.frc.lib.math.deadband
 import org.team2471.frc.lib.math.normalize
@@ -95,12 +92,12 @@ object OI: SubsystemBase("OI") {
             Drive.pose = Pose2d(Translation2d(3.0, 3.0), Drive.heading)
         }.toCommand(Drive).ignoringDisable(true))
 
-        driverController.a().onTrue({ Shooter.shoot(5.7, 79.95.degrees)}.toCommand())
-        driverController.b().onTrue({ Shooter.shoot(7.9, 53.75.degrees)}.toCommand())
-        driverController.y().onTrue({ Shooter.shoot(11.25, 37.75.degrees)}.toCommand())
-        driverController.x().onTrue({ Shooter.shoot(6.6, 64.75.degrees)}.toCommand())
-        driverController.leftBumper().onTrue({ Shooter.shoot(12.25, 20.0.degrees)}.toCommand())
-        driverController.rightBumper().onTrue({ Shooter.shoot(15.96, 208.8.degrees)}.toCommand())
+        driverController.a().onTrue({ Shooter.shootSimulatedFuel(5.7, 79.95.degrees)}.toCommand())
+        driverController.b().onTrue({ Shooter.shootSimulatedFuel(7.9, 53.75.degrees)}.toCommand())
+        driverController.y().onTrue({ Shooter.shootSimulatedFuel(11.25, 37.75.degrees)}.toCommand())
+        driverController.x().onTrue({ Shooter.shootSimulatedFuel(6.6, 64.75.degrees)}.toCommand())
+        driverController.leftBumper().onTrue({ Shooter.shootSimulatedFuel(12.25, 20.0.degrees)}.toCommand())
+        driverController.rightBumper().onTrue({ Shooter.shootSimulatedFuel(15.96, 208.8.degrees)}.toCommand())
 
     }
 
