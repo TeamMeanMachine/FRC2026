@@ -26,6 +26,13 @@ object Falcons {
     val BACK_LEFT_DRIVE = if (isSim) 41 else 18
     const val BACK_LEFT_STEER = 11
 
+
+
+    const val INTAKE_DEPLOY = 99
+    const val INTAKE_ROLLER = 98
+
+    const val SHOOTER_0 = 97
+    const val SHOOTER_1 = 96
 }
 
 object Talons {

@@ -49,6 +49,7 @@ object FieldManager {
 
     val trenchPositions: Array<Translation2d> = arrayOf(lowerBlueTrenchPosition, lowerRedTrenchPosition, upperRedTrenchPosition, upperBlueTrenchPosition)
 
+    @get:AutoLogOutput(key = "FieldManager/Trench Data")
     val inTrenchArea: Boolean
         get () {
             for (pose in trenchPositions) {
@@ -65,11 +66,13 @@ object FieldManager {
 
     val redGoalPose = (allAprilTags[3].pose.toPose2d().translation + allAprilTags[9].pose.toPose2d().translation)/2.0
     val blueGoalPose = (allAprilTags[19].pose.toPose2d().translation + allAprilTags[25].pose.toPose2d().translation)/2.0
+    @get:AutoLogOutput(key = "FieldManager/ Goal Pose")
     val goalPose: Translation2d
         get () = if (isRedAlliance) redGoalPose else blueGoalPose
 
     val distanceFromMiddleToScore = fieldCenter.x - lowerBlueTrenchPosition.x.feet
 
+    @get:AutoLogOutput(key = "FieldManager/In Scoring Zone")
     val inScoringZone: Boolean
         get () = (fieldCenter.x - Drive.pose.translation.x.feet).absoluteValue() > distanceFromMiddleToScore
 
@@ -89,6 +92,7 @@ object FieldManager {
     val blueWonAuto: Boolean
         get () = !redWonAuto
 
+    @get:AutoLogOutput(key = "FieldManager/weWonAuto")
     val weWonAuto: Boolean
         get () = redWonAuto == isRedAlliance
 
