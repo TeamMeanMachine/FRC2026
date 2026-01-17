@@ -171,7 +171,7 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
             } else {
                 // Simulate quest data
                 addVisionMeasurement(pose, stateTimestamp, QUEST_STD_DEVS)
-                questPose = pose
+                questPose = pose.transformBy(robotToQuestTransformMeters.inverse())
             }
         }
 
@@ -206,7 +206,7 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
         LoopLogger.record("Recorded HeadingHistory")
 
         // Log all the poses for debugging
-        Logger.recordOutput("Swerve/Quest", questPose)
+        Logger.recordOutput("Drive/Quest/questPose", questPose)
         Logger.recordOutput("Swerve/Odometry", localizer.odometryPose)
         Logger.recordOutput("Swerve/InterpolatedOdometry", localizer.interpolatedOdometryPose)
         Logger.recordOutput("Swerve/InterpolatedPose", localizer.interpolatedPose)
