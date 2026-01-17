@@ -1,12 +1,13 @@
 package frc.team2471.frc2026
 
+import edu.wpi.first.math.geometry.Translation2d
 import edu.wpi.first.math.geometry.Translation3d
 import edu.wpi.first.wpilibj.Timer
 import org.littletonrobotics.junction.Logger
 import kotlin.math.pow
 
 const val g = 9.80665
-class FlyingFuel(val x0: Translation3d, val v0: Translation3d) {
+class FlyingFuel(val x0: Translation3d, val v0: Translation3d, val doDrag: Boolean = true) {
     var pos = x0
     var velocity = v0
     var prevVelocity = v0
@@ -16,11 +17,17 @@ class FlyingFuel(val x0: Translation3d, val v0: Translation3d) {
     fun update(numSteps: Int = 1) {
         // Time from last update
         val deltaT = Timer.getFPGATimestamp() - prevT
+
+
+        update(deltaT, numSteps)
+    }
+
+    fun update(deltaT: Double, numSteps: Int) {
         // time between each step
         val dt = deltaT / numSteps
 
         for (i in 0..<numSteps) {
-            val acceleration = Translation3d(0.0, 0.0, -g) + calcDragAccel(prevVelocity)
+            val acceleration = Translation3d(0.0, 0.0, -g) + if (doDrag) calcDragAccel(prevVelocity) else Translation3d()
 
             velocity += ((prevAcceleration + acceleration) / 2.0).times(dt)
 
@@ -53,4 +60,19 @@ private fun calcDragAccel(v: Translation3d): Translation3d {
 private fun calcDragAccel(s: Double): Double {
     //            rho         v^2        Cd       Frontal Area               mass
     return (0.5 * 1.2 * s.pow(2) * 0.47 * 0.075.pow(2) * Math.PI) / 0.2172
+}
+
+/**
+ * @return A pair of doubles, the first is the horizontal error from the target when the ball reaches a specific height, the second is the time error it took the ball to get there.
+ */
+fun calcFuelError(vx: Double, vy: Double, goalPos: Translation2d, goalTime: Double): Pair<Double, Double> {
+    val fuel = FlyingFuel(Translation3d(), Translation3d(vx, 0.0, vy))
+    var time = 0.0
+
+    while (fuel.pos.z > goalPos.y || fuel.velocity.z >= 0.0) {
+        fuel.update(0.02, 1)
+        time += 0.02
+    }
+
+    return Pair(fuel.pos.x - goalPos.x, time - goalTime)
 }
