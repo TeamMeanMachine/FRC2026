@@ -23,10 +23,10 @@ object OI: SubsystemBase("OI") {
     val deadbandOperator = 0.1
 
     val driveTranslationX: Double
-        get() = driverController.leftY.deadband(deadbandDriver)
+        get() = driverController.leftY.deadband(deadbandDriver) * if (driverController.b().asBoolean) 0.5 else 1.0
 
     val driveTranslationY: Double
-        get() = driverController.leftX.deadband(deadbandDriver)
+        get() = driverController.leftX.deadband(deadbandDriver) * if (driverController.b().asBoolean) 0.5 else 1.0
 
     val rawDriveTranslation: Translation2d
         get() {
@@ -95,12 +95,7 @@ object OI: SubsystemBase("OI") {
             Drive.pose = Pose2d(Translation2d(3.0, 3.0), Drive.heading)
         }.toCommand(Drive).ignoringDisable(true))
 
-        driverController.a().onTrue({ Shooter.shoot(5.7, 79.95.degrees)}.toCommand())
-        driverController.b().onTrue({ Shooter.shoot(7.9, 53.75.degrees)}.toCommand())
-        driverController.y().onTrue({ Shooter.shoot(11.25, 37.75.degrees)}.toCommand())
-        driverController.x().onTrue({ Shooter.shoot(6.6, 64.75.degrees)}.toCommand())
-        driverController.leftBumper().onTrue({ Shooter.shoot(12.25, 20.0.degrees)}.toCommand())
-        driverController.rightBumper().onTrue({ Shooter.shoot(15.96, 208.8.degrees)}.toCommand())
+        driverController.a().onTrue({ Shooter.isShooting = !Shooter.isShooting }.toCommand())
 
     }
 
