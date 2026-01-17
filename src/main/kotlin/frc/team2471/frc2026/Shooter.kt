@@ -5,6 +5,8 @@ import com.ctre.phoenix6.controls.VelocityVoltage
 import com.ctre.phoenix6.controls.VoltageOut
 import com.ctre.phoenix6.hardware.TalonFX
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue
+import edu.wpi.first.math.geometry.Pose2d
+import edu.wpi.first.math.geometry.Pose3d
 import edu.wpi.first.math.geometry.Translation2d
 import edu.wpi.first.math.geometry.Translation3d
 import edu.wpi.first.math.interpolation.InterpolatingTreeMap
@@ -34,6 +36,7 @@ import org.team2471.frc.lib.units.absoluteValue
 import org.team2471.frc.lib.units.asInches
 import org.team2471.frc.lib.units.asInchesPerSecond
 import org.team2471.frc.lib.units.asMetersPerSecond
+import org.team2471.frc.lib.units.asMetersPerSecondPerSecond
 import org.team2471.frc.lib.units.asRotation2d
 import org.team2471.frc.lib.units.asVolts
 import org.team2471.frc.lib.units.cos
@@ -116,16 +119,16 @@ object Shooter: SubsystemBase("Shooter") {
 
     fun shootSimulatedFuel() {
         val robotVelocity = Drive.velocity
-        val newPos = Drive.pose.translation + Drive.velocity
+        val newPos = Drive.pose.translation + robotVelocity * 0.85 /*+ Drive.acceleration.asMetersPerSecondPerSecond * 0.5 * 0.85.pow(2)*/
+        Logger.recordOutput("lookahead pose", Pose2d(newPos, Drive.heading))
         val dist = newPos.getDistance(FieldManager.redGoalPose).absoluteValue
         val exitVelocity = speedCurve.get(dist)
         val exitAngle = angleCurve.get(dist).degrees
-        println("Hi ${exitVelocity}, ${exitAngle}")
         val angleToTarget = FieldManager.redGoalPose.angleTo(newPos)
         val velocity2d = Translation2d(-exitVelocity * exitAngle.cos(), 0.0).rotateBy(angleToTarget.asRotation2d)
         fuel.add(FlyingFuel(
             Translation3d(Drive.pose.translation.x, Drive.pose.translation.y, 0.4),
-            Translation3d(velocity2d.x + Drive.velocity.x.asMetersPerSecond, velocity2d.y + Drive.velocity.y.asMetersPerSecond, exitVelocity * exitAngle.sin())
+            Translation3d(velocity2d.x + robotVelocity.x.asMetersPerSecond, velocity2d.y + robotVelocity.y.asMetersPerSecond, exitVelocity * exitAngle.sin())
         ))
     }
 
@@ -165,7 +168,7 @@ object Shooter: SubsystemBase("Shooter") {
     // Performs newtons method in 2 dimensions to estimate
     fun getAngleAndSpeed(distFromGoalM: Double): Pair<Double, Double> {
 
-        val goalTime = 1.0
+        val goalTime = 0.85
 
         val maxTError = 0.1
         val maxDError = 0.1
