@@ -247,7 +247,7 @@ object TunerConstants {
     ) {
         fun createModuleConstants(): SwerveModuleConstants<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration> {
 
-            val canCoder = CANcoder(canCoderID, driveCANBus.name)
+            val canCoder = CANcoder(canCoderID, driveCANBus)
             var magnetSensorOffset = canCoder.getMagnetSensorOffset()
 
             //Use NT preferences as a backup to check if the encoder offset is valid

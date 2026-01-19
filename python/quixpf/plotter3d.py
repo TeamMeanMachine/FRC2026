@@ -23,7 +23,7 @@ from particle_filter import (
     FOV_VERT,
 )
 
-FIELD_IMAGE = os.path.join(os.path.dirname(__file__), "./field.png")
+FIELD_IMAGE = os.path.join(os.path.dirname(__file__), "./2026-field.png")
 
 # FIELD_MESH = mesh.Mesh.from_file(os.path.join(os.path.dirname(__file__), "../../field.stl"))
 # ROBOT_MESH = mesh.Mesh.from_file(os.path.join(os.path.dirname(__file__), "../../robot.stl"))

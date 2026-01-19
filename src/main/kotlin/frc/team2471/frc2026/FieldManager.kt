@@ -8,7 +8,6 @@ import edu.wpi.first.math.geometry.Translation2d
 import edu.wpi.first.wpilibj.DriverStation
 import edu.wpi.first.wpilibj.Filesystem
 import frc.team2471.frc2026.Robot.isAutonomous
-import org.littletonrobotics.junction.AutoLog
 import org.littletonrobotics.junction.AutoLogOutput
 import org.littletonrobotics.junction.Logger
 import org.team2471.frc.lib.units.asMeters
@@ -26,7 +25,7 @@ import kotlin.math.absoluteValue
 import kotlin.math.floor
 
 object FieldManager {
-    val aprilTagFieldLayout: AprilTagFieldLayout = AprilTagFieldLayout(Filesystem.getDeployDirectory().path + "/2026Field.json")
+    val aprilTagFieldLayout: AprilTagFieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded) //AprilTagFieldLayout(Filesystem.getDeployDirectory().path + "/2026Field.json")
     val allAprilTags = aprilTagFieldLayout.tags
 
     val fieldWidth = aprilTagFieldLayout.fieldWidth.meters
@@ -39,6 +38,11 @@ object FieldManager {
 
     val fieldCenter = fieldDimensions / 2.0
 
+    val redHubTags = allAprilTags.filter { it.ID in 2..5 || it.ID in 8..11 }
+    val blueHubTags = allAprilTags.filter { it.ID in 18..21 || it.ID in 24..27 }
+    val hubTags = redHubTags + blueHubTags
+
+
     val trenchAreaWidth = 75.0.inches
     val trenchAreaLength = 50.0.inches
 
@@ -49,7 +53,7 @@ object FieldManager {
 
     val trenchPositions: Array<Translation2d> = arrayOf(lowerBlueTrenchPosition, lowerRedTrenchPosition, upperRedTrenchPosition, upperBlueTrenchPosition)
 
-    @get:AutoLogOutput(key = "FieldManager/Trench Data")
+    @get:AutoLogOutput(key = "FieldManager/In Trench Area")
     val inTrenchArea: Boolean
         get () {
             for (pose in trenchPositions) {
@@ -66,7 +70,8 @@ object FieldManager {
 
     val redGoalPose = (allAprilTags[3].pose.toPose2d().translation + allAprilTags[9].pose.toPose2d().translation)/2.0
     val blueGoalPose = (allAprilTags[19].pose.toPose2d().translation + allAprilTags[25].pose.toPose2d().translation)/2.0
-    @get:AutoLogOutput(key = "FieldManager/ Goal Pose")
+
+    @get:AutoLogOutput(key = "FieldManager/Goal Pose")
     val goalPose: Translation2d
         get () = if (isRedAlliance) redGoalPose else blueGoalPose
 

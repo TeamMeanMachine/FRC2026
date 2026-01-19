@@ -51,9 +51,9 @@ def set_yaw(M, theta):
 
 
 def plot_field(ax):
-    LENGTH = 15.98  # m
-    WIDTH = 8.21  # m
-    img = mpimg.imread("field.png")
+    LENGTH = 16.54 #-2026  (15.98 -2025)  # meters
+    WIDTH = 8.069 #-2026 (8.21 -2025)  # meters
+    img = mpimg.imread("2026-field.png")
     ax.imshow(img, extent=[-LENGTH * 0.5, LENGTH * 0.5, -WIDTH * 0.5, WIDTH * 0.5])
 
 

@@ -61,20 +61,20 @@ class Quixsam:
                     logging.info("First odometry received!")
                     start_time = time.perf_counter()
 
-                    # Start new logger every time we connect.
-                    if self.save_logs:
-                        try:
-                            now_str = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-                            logger = Logger(f"quixsamlog_{now_str}")
-                            logger.init(
-                                NUM_PARTICLES,
-                                odometry,
-                                retroreflective_targets,
-                                apriltag_targets,
-                            )
-                        except Exception as e:
-                            print("Logger failed to start")
-                            print(e)
+                    # Start new logger every time we connect. uncomment out if needed. + uncomment out logger code below
+                    # if self.save_logs:
+                    #     try:
+                    #         now_str = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+                    #         logger = Logger(f"quixsamlog_{now_str}")
+                    #         logger.init(
+                    #             NUM_PARTICLES,
+                    #             odometry,
+                    #             retroreflective_targets,
+                    #             apriltag_targets,
+                    #         )
+                    #     except Exception as e:
+                    #         print("Logger failed to start")
+                    #         print(e)
 
             while nt_manager.is_connected():
                 plotter_cameras_queue.put(nt_manager.get_camera_infos())
@@ -89,18 +89,18 @@ class Quixsam:
                     x, y, theta = best_estimate
                     nt_manager.publish_estimate(measurement_id, x, y, theta, has_vision)
 
-                    # Log for resimulation
-                    if logger is not None:
-                        try:
-                            logger.log(
-                                s - start_time,
-                                odometry,
-                                vision,
-                                best_estimate,
-                                has_vision,
-                            )
-                        except Exception as e:
-                            print("Log failed.")
+                    # Log for resimulation uncomment out for logging
+                    # if logger is not None:
+                    #     try:
+                    #         logger.log(
+                    #             s - start_time,
+                    #             odometry,
+                    #             vision,
+                    #             best_estimate,
+                    #             has_vision,
+                    #         )
+                    #     except Exception as e:
+                    #         print("Log failed.")
 
                     # Handle plotting
                     plotter_queue.put((vision, pf.particles, best_estimate, has_vision))
@@ -119,6 +119,6 @@ if __name__ == "__main__":
     parser.add_argument("--local", action="store_true")
     args = parser.parse_args()
     Quixsam(
-        "10.24.71.2",
+        "localhost",
         save_logs=not args.local,
     ).run()

@@ -22,14 +22,14 @@ from data_utils import Odometry, Vision, CameraInfo
 
 # SIR Particle Filter
 
-ROBOT_HALF_LENGTH = 0.5 * in2m(36.0)  # m
-ROBOT_HALF_WIDTH = 0.5 * in2m(36.0)  # m
+ROBOT_HALF_LENGTH = 0.5 * in2m(27.0)  # m
+ROBOT_HALF_WIDTH = 0.5 * in2m(27.0)  # m
 MIN_ROBOT_DIMENSION = min(ROBOT_HALF_LENGTH, ROBOT_HALF_WIDTH) # Used for handling field boundaries
 FOV_HORIZ = np.deg2rad(70)
-FOV_VERT = np.deg2rad(47.5)
+FOV_VERT = np.deg2rad(55)
 
-FIELD_LENGTH = in2m(12 * 57 + 6.875)  # m
-FIELD_WIDTH = in2m(12 * 26 + 5)  # m
+FIELD_LENGTH = 16.60#16.24  # m
+FIELD_WIDTH = 8.069  # m
 
 TARGET_CENTER_X = 0.0  # m
 TARGET_CENTER_Y = 0.0  # m

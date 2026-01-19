@@ -33,8 +33,8 @@ def mock_robot():
     TARGET_Z = 0.0  # m
     targets_pub.set([-1, TARGET_X, TARGET_Y, TARGET_Z, 0, 0, 0, 0])
 
-    HALF_FIELD_X = in2m(12 * 54 + 3.25) * 0.5  # m
-    HALF_FIELD_Y = in2m(12 * 26 + 3.5) * 0.5  # m
+    HALF_FIELD_X = 16.54 * 0.5  # m
+    HALF_FIELD_Y = 8.069 * 0.5  # m
 
     # Store estimates
     xs = []
