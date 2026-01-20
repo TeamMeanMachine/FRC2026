@@ -80,6 +80,8 @@ object OI: SubsystemBase("OI") {
         // Default command, normal field-relative drive
         Drive.defaultCommand = Drive.joystickDrive()
 
+        Turret.defaultCommand = Turret.aimAtTarget()
+
 
         // Zero Gyro
         driverController.back().onTrue({

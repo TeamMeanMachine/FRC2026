@@ -5,6 +5,7 @@ import edu.wpi.first.apriltag.AprilTagFieldLayout
 import edu.wpi.first.apriltag.AprilTagFields
 import edu.wpi.first.math.geometry.Pose2d
 import edu.wpi.first.math.geometry.Translation2d
+import edu.wpi.first.units.measure.Distance
 import edu.wpi.first.wpilibj.DriverStation
 import edu.wpi.first.wpilibj.Filesystem
 import frc.team2471.frc2026.Robot.isAutonomous
@@ -23,6 +24,7 @@ import org.team2471.frc.lib.units.wrap
 import org.team2471.frc.lib.util.isRedAlliance
 import kotlin.math.absoluteValue
 import kotlin.math.floor
+import kotlin.math.sign
 
 object FieldManager {
     val aprilTagFieldLayout: AprilTagFieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded) //AprilTagFieldLayout(Filesystem.getDeployDirectory().path + "/2026Field.json")
@@ -58,10 +60,7 @@ object FieldManager {
         get () {
             for (pose in trenchPositions) {
                 val relativePose = pose - Drive.pose.translation
-                if (relativePose.x.absoluteValue.meters < (trenchAreaWidth/2.0)) {
-                    return true
-                }
-                if (relativePose.y.absoluteValue.meters < (trenchAreaLength/2.0)) {
+                if (relativePose.y.absoluteValue.meters < (trenchAreaLength/2.0) && relativePose.x.absoluteValue.meters < (trenchAreaWidth/2.0)) {
                     return true
                 }
             }
@@ -75,11 +74,17 @@ object FieldManager {
     val goalPose: Translation2d
         get () = if (isRedAlliance) redGoalPose else blueGoalPose
 
-    val distanceFromMiddleToScore = fieldCenter.x - lowerBlueTrenchPosition.x.feet
+    @get:AutoLogOutput(key = "FieldManager/Distance From Middle to Score")
+    val distanceFromMiddleToScore = fieldCenter.x.asFeet.feet - lowerRedTrenchPosition.x.feet
+
+    @get:AutoLogOutput(key = "FieldManager/Distance From Center")
+    val xRelativeToCenter: Distance
+        get () = (Drive.pose.x.meters - fieldCenter.x.asMeters.meters)
 
     @get:AutoLogOutput(key = "FieldManager/In Scoring Zone")
     val inScoringZone: Boolean
-        get () = (fieldCenter.x - Drive.pose.translation.x.feet).absoluteValue() > distanceFromMiddleToScore
+        get () = xRelativeToCenter.absoluteValue() > distanceFromMiddleToScore
+                && if (isRedAlliance) xRelativeToCenter > 0.0.meters else xRelativeToCenter < 0.0.meters
 
     @get:AutoLogOutput(key = "FieldManager/gameData")
     val gameData: String
