@@ -1,13 +1,7 @@
 package frc.team2471.frc2026
 
 import com.ctre.phoenix6.Utils
-import com.ctre.phoenix6.swerve.SwerveRequest
 import com.ctre.phoenix6.swerve.utility.PhoenixPIDController
-import com.pathplanner.lib.auto.AutoBuilder
-import com.pathplanner.lib.config.PIDConstants
-import com.pathplanner.lib.config.RobotConfig
-import com.pathplanner.lib.controllers.PPHolonomicDriveController
-import com.pathplanner.lib.util.DriveFeedforwards
 import edu.wpi.first.math.Matrix
 import edu.wpi.first.math.VecBuilder
 import edu.wpi.first.math.controller.PIDController
@@ -46,7 +40,6 @@ import org.team2471.frc.lib.units.perSecond
 import org.team2471.frc.lib.util.demoSpeed
 import org.team2471.frc.lib.util.isBlueAlliance
 import org.team2471.frc.lib.util.isReal
-import org.team2471.frc.lib.util.isRedAlliance
 import org.team2471.frc.lib.vision.Fiducial
 import org.team2471.frc.lib.vision.PipelineConfig
 import org.team2471.frc.lib.vision.QuixVisionCamera
@@ -80,16 +73,16 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
         }
 
     val cameras: List<QuixVisionCamera> = listOf(
-//        LimelightCamera(
-//            "limelight-test",
-//            Constants.limelightPose,
-//            Optional.of(Matrix(N3(), N3(), doubleArrayOf(737.3071162812872,0.0,658.6108346810324,0.0,738.2142014335819,411.36513253891655,0.0,0.0,1.0))),
-//            Optional.of(Matrix(N8(), N1(), doubleArrayOf(0.11977275268536702,-0.13935436337469195,-0.000907565402687582,0.0005097193890789445,-0.052047409417428844,0.0,0.0,0.0)))
-//            ),
-        PhotonVisionCamera("FrontLeft", Transform3d(Translation3d(10.5.inches.asMeters, 10.5.inches.asMeters, 8.0.inches.asMeters), Rotation3d(0.0, -45.0.degrees.asRadians, 45.0.degrees.asRadians)), arrayOf(PipelineConfig())),
-//        PhotonVisionCamera("FrontRight", Constants.frontRightCamPose, arrayOf(PipelineConfig())),
-//        PhotonVisionCamera("BackLeft", Constants.backLeftCamPose, arrayOf(PipelineConfig())),
-//        PhotonVisionCamera("BackRight", Constants.backRightCamPose, arrayOf(PipelineConfig())),
+        //Camera on each swerve
+//        PhotonVisionCamera("FrontLeft", Transform3d(Translation3d(12.125.inches.asMeters, 12.125.inches.asMeters, 8.0.inches.asMeters), Rotation3d(0.0, -33.0.degrees.asRadians, 45.0.degrees.asRadians)), arrayOf(PipelineConfig())),
+//        PhotonVisionCamera("FrontRight", Transform3d(Translation3d(-12.125.inches.asMeters, 12.125.inches.asMeters, 8.0.inches.asMeters), Rotation3d(0.0, -33.0.degrees.asRadians, 135.0.degrees.asRadians)), arrayOf(PipelineConfig())),
+//        PhotonVisionCamera("BackLeft", Transform3d(Translation3d(12.125.inches.asMeters, -12.125.inches.asMeters, 8.0.inches.asMeters), Rotation3d(0.0, -33.0.degrees.asRadians, -45.0.degrees.asRadians)), arrayOf(PipelineConfig())),
+//        PhotonVisionCamera("BackRight", Transform3d(Translation3d(-12.125.inches.asMeters, -12.125.inches.asMeters, 8.0.inches.asMeters), Rotation3d(0.0, -33.0.degrees.asRadians, -135.0.degrees.asRadians)), arrayOf(PipelineConfig())),
+        //Camera on turret structure
+        PhotonVisionCamera("FrontLeft", Transform3d(Translation3d(10.0.inches.asMeters, 2.0.inches.asMeters, 22.0.inches.asMeters), Rotation3d(0.0, -25.0.degrees.asRadians, 45.0.degrees.asRadians)), arrayOf(PipelineConfig())),
+        PhotonVisionCamera("BackLight", Transform3d(Translation3d(-10.0.inches.asMeters, 2.0.inches.asMeters, 22.0.inches.asMeters), Rotation3d(0.0, -25.0.degrees.asRadians, 135.0.degrees.asRadians)), arrayOf(PipelineConfig())),
+        PhotonVisionCamera("BackLeft", Transform3d(Translation3d(10.0.inches.asMeters, -2.0.inches.asMeters, 22.0.inches.asMeters), Rotation3d(0.0, -25.0.degrees.asRadians, -45.0.degrees.asRadians)), arrayOf(PipelineConfig())),
+        PhotonVisionCamera("BackRight", Transform3d(Translation3d(-10.0.inches.asMeters, -2.0.inches.asMeters, 22.0.inches.asMeters), Rotation3d(0.0, -25.0.degrees.asRadians, -135.0.degrees.asRadians)), arrayOf(PipelineConfig())),
     )
 
     val headingHistory: DynamicInterpolatingTreeMap<Double, Double> = DynamicInterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble(), 75)
@@ -138,7 +131,7 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
     init {
         println("inside Drive init")
 
-        // MUST start inside the field on bootup for accurate heading measurements due to a vision localizer bug.
+        // MUST start inside the field on bootup for accurate heading measurements due to a PoseLocalizer bug.
         pose = Pose2d(3.0, 3.0, heading)
 
         setStateStdDevs(DRIVE_STD_DEVS)
@@ -164,7 +157,6 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
 
                     Logger.recordOutput("Drive/Quest/DataTimestamp", it.dataTimestamp)
                     Logger.recordOutput("Drive/Quest/CtreTimestamp", ctreTimestamp)
-                    println("ADDED QUEST MEASUREMENTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT")
                     addVisionMeasurement(pose, ctreTimestamp, QUEST_STD_DEVS)
                     questPose = pose
                 }
@@ -174,8 +166,6 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
                 questPose = pose.transformBy(robotToQuestTransformMeters.inverse())
             }
         }
-
-
 
         LoopLogger.record("b4 Drive piodc")
         super.periodic() // Must call this
