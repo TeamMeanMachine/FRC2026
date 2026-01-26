@@ -96,6 +96,8 @@ object OI: SubsystemBase("OI") {
 
         driverController.a().onTrue({ Shooter.isShooting = !Shooter.isShooting }.toCommand())
 
+        driverController.b().toggleOnTrue(Drive.snakeMode())
+
     }
 
     override fun periodic() {

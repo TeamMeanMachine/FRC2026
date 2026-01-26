@@ -1,17 +1,20 @@
 package frc.team2471.frc2026
 
-import edu.wpi.first.math.geometry.Translation2d
 import edu.wpi.first.math.geometry.Translation3d
 import edu.wpi.first.wpilibj.Timer
+import frc.team2471.frc2026.AimUtils.AIR_DENSITY
+import frc.team2471.frc2026.AimUtils.FUEL_DRAG_COEFFICIENT
+import frc.team2471.frc2026.AimUtils.FUEL_FRONTAL_AREA
+import frc.team2471.frc2026.AimUtils.FUEL_MASS
+import frc.team2471.frc2026.AimUtils.G
 import org.littletonrobotics.junction.Logger
 import kotlin.math.pow
 
-const val g = 9.80665
-class FlyingFuel(val x0: Translation3d, val v0: Translation3d, val doDrag: Boolean = true) {
+class FuelSim(val x0: Translation3d, val v0: Translation3d) {
     var pos = x0
     var velocity = v0
     var prevVelocity = v0
-    var prevAcceleration = Translation3d(0.0, 0.0, -g)
+    var prevAcceleration = Translation3d(0.0, 0.0, -G)
     var prevT = Timer.getFPGATimestamp()
 
     fun update(numSteps: Int = 1) {
@@ -27,7 +30,7 @@ class FlyingFuel(val x0: Translation3d, val v0: Translation3d, val doDrag: Boole
         val dt = deltaT / numSteps
 
         for (i in 0..<numSteps) {
-            val acceleration = Translation3d(0.0, 0.0, -g) + if (doDrag) calcDragAccel(prevVelocity) else Translation3d()
+            val acceleration = Translation3d(0.0, 0.0, -G) + calcDragAccel(prevVelocity)
 
             velocity += ((prevAcceleration + acceleration) / 2.0).times(dt)
 
@@ -41,12 +44,12 @@ class FlyingFuel(val x0: Translation3d, val v0: Translation3d, val doDrag: Boole
     }
 }
 
-fun logFuel(name: String, vararg fuel: FlyingFuel) {
+fun logFuel(name: String, vararg fuel: FuelSim) {
     val thing = fuel.map { it.pos }.toTypedArray()
     Logger.recordOutput(name, *thing)
 }
 
-fun MutableList<FlyingFuel>.removeFuel() {
+fun MutableList<FuelSim>.removeFuel() {
     this.removeIf { it.pos.z < 0.0 }
 }
 private fun calcDragAccel(v: Translation3d): Translation3d {
@@ -58,21 +61,6 @@ private fun calcDragAccel(v: Translation3d): Translation3d {
 
 }
 private fun calcDragAccel(s: Double): Double {
-    //            rho         v^2        Cd       Frontal Area               mass
-    return (0.5 * 1.2 * s.pow(2) * 0.47 * 0.075.pow(2) * Math.PI) / 0.2172
-}
-
-/**
- * @return A pair of doubles, the first is the horizontal error from the target when the ball reaches a specific height, the second is the time error it took the ball to get there.
- */
-fun calcFuelError(vx: Double, vy: Double, goalPos: Translation2d, goalTime: Double): Pair<Double, Double> {
-    val fuel = FlyingFuel(Translation3d(), Translation3d(vx, 0.0, vy))
-    var time = 0.0
-
-    while (fuel.pos.z > goalPos.y || fuel.velocity.z >= 0.0) {
-        fuel.update(0.02, 1)
-        time += 0.02
-    }
-
-    return Pair(fuel.pos.x - goalPos.x, time - goalTime)
+    //               rho           v^2                          Cd       Frontal Area          mass
+    return (0.5 * AIR_DENSITY * s.pow(2) * FUEL_DRAG_COEFFICIENT * FUEL_FRONTAL_AREA) / FUEL_MASS
 }
