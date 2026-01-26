@@ -92,8 +92,6 @@ object Intake: SubsystemBase("Intake") {
 
 
         this.defaultCommand = default()
-
-
     }
 
     fun deploy() {
@@ -125,6 +123,5 @@ object Intake: SubsystemBase("Intake") {
         INTAKING,
         OFF,
         SPITTING,
-
     }
 }

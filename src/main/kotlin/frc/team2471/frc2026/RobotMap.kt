@@ -34,7 +34,7 @@ object Falcons {
     const val SHOOTER_0 = 57
     const val SHOOTER_1 = 56
 
-    const val TURRET = 99
+    const val TURRET = 55
 }
 
 object Talons {
