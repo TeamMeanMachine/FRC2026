@@ -28,6 +28,7 @@ import frc.team2471.frc2026.OI.driverController
 import gg.questnav.questnav.QuestNav
 import org.littletonrobotics.junction.Logger
 import org.team2471.frc.lib.control.LoopLogger
+import org.team2471.frc.lib.control.commands.finallyRun
 import org.team2471.frc.lib.control.commands.runCommand
 import org.team2471.frc.lib.ctre.PhoenixUtil
 import org.team2471.frc.lib.localization.PoseLocalizer
@@ -224,7 +225,7 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
     override fun getJoystickPercentageSpeeds(): ChassisSpeeds {
         val rawJoystick = OI.rawDriveTranslation
         // Square drive input and apply demoSpeed
-        val power = rawJoystick.norm.square() * demoSpeed
+        val power = rawJoystick.norm.square() * demoSpeed * if (inSnakeMode) 0.9 else 1.0
         // Apply modified power to joystick vector and flip depending on alliance
         val joystickTranslation = rawJoystick * power * if (isBlueAlliance) -1.0 else 1.0
 
@@ -235,7 +236,9 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
         return ChassisSpeeds(joystickTranslation.x, joystickTranslation.y, omega)
     }
 
+    var inSnakeMode = false
     fun snakeMode(): Command = runCommand(Drive) {
+        inSnakeMode = true
         if (OI.rawDriveTranslation.norm > 0.1) {
             driveAtAngle(
                 atan2(
@@ -246,6 +249,8 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
         } else {
             driveVelocity(getChassisSpeedsFromJoystick().apply { omegaRadiansPerSecond = 0.0 })
         }
+    }.finallyRun {
+        inSnakeMode = false
     }
 
     fun resetOdometryToAbsolute() {

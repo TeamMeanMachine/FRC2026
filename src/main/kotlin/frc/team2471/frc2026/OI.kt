@@ -7,6 +7,7 @@ import edu.wpi.first.wpilibj.Alert
 import edu.wpi.first.wpilibj2.command.SubsystemBase
 import org.team2471.frc.lib.control.LoopLogger
 import org.team2471.frc.lib.control.MeanCommandXboxController
+import org.team2471.frc.lib.control.commands.parallelCommand
 import org.team2471.frc.lib.control.commands.toCommand
 import org.team2471.frc.lib.math.deadband
 import org.team2471.frc.lib.math.normalize
@@ -96,7 +97,7 @@ object OI: SubsystemBase("OI") {
 
         driverController.a().onTrue({ Shooter.isShooting = !Shooter.isShooting }.toCommand())
 
-        driverController.b().toggleOnTrue(Drive.snakeMode())
+        driverController.rightBumper().whileTrue(Drive.snakeMode())
 
     }
 
