@@ -42,8 +42,8 @@ object Turret: SubsystemBase("Turret") {
         }
 
 
-    val turretOffsetFromCenter = Translation2d(0.0.inches, 0.0.inches)
-
+    val turretOffsetFromCenter = Translation2d(0.0.inches, 0.725.inches)
+    var turretHeight = 0.4.meters
 
     val turretPose: Translation2d
         get() = Drive.pose.translation + turretOffsetFromCenter.rotateBy(Drive.heading)
@@ -72,6 +72,6 @@ object Turret: SubsystemBase("Turret") {
 
     fun aimAtTarget(): Command = run {
         fieldCentricSetpoint =
-            AimUtils.turretLookAheadPoint.angleTo(aimTarget)
+            Drive.pose.translation.angleTo(aimTarget)
     }
 }

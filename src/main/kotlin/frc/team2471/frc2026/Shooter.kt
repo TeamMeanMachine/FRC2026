@@ -8,16 +8,12 @@ import com.ctre.phoenix6.signals.StaticFeedforwardSignValue
 import edu.wpi.first.math.geometry.Pose2d
 import edu.wpi.first.math.geometry.Translation2d
 import edu.wpi.first.math.geometry.Translation3d
-import edu.wpi.first.math.interpolation.InterpolatingTreeMap
-import edu.wpi.first.math.interpolation.Interpolator
-import edu.wpi.first.math.interpolation.InverseInterpolator
 import edu.wpi.first.networktables.NetworkTableInstance
 import edu.wpi.first.units.measure.LinearVelocity
 import edu.wpi.first.units.measure.Voltage
 import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog
 import edu.wpi.first.wpilibj2.command.SubsystemBase
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine
-import frc.team2471.frc2026.AimUtils.calcFuelError
 import frc.team2471.frc2026.AimUtils.generateShooterCurve
 import org.littletonrobotics.junction.AutoLogOutput
 import org.littletonrobotics.junction.Logger
@@ -26,18 +22,16 @@ import org.team2471.frc.lib.ctre.coastMode
 import org.team2471.frc.lib.ctre.currentLimits
 import org.team2471.frc.lib.ctre.p
 import org.team2471.frc.lib.ctre.s
-import org.team2471.frc.lib.units.asDegrees
-import org.team2471.frc.lib.units.asMeters
 import org.team2471.frc.lib.units.asInches
 import org.team2471.frc.lib.units.asInchesPerSecond
+import org.team2471.frc.lib.units.asMeters
 import org.team2471.frc.lib.units.asMetersPerSecond
+import org.team2471.frc.lib.units.asRadiansPerSecond
 import org.team2471.frc.lib.units.asRotation2d
 import org.team2471.frc.lib.units.asVolts
 import org.team2471.frc.lib.units.cos
 import org.team2471.frc.lib.units.degrees
-import org.team2471.frc.lib.units.feet
 import org.team2471.frc.lib.units.inches
-import org.team2471.frc.lib.units.radians
 import org.team2471.frc.lib.units.inchesPerSecond
 import org.team2471.frc.lib.units.seconds
 import org.team2471.frc.lib.units.sin
@@ -45,9 +39,6 @@ import org.team2471.frc.lib.units.volts
 import org.team2471.frc.lib.units.voltsPerSecond
 import org.team2471.frc.lib.util.angleTo
 import kotlin.math.absoluteValue
-import kotlin.math.atan2
-import kotlin.math.pow
-import kotlin.math.sqrt
 
 // Unless otherwise specified every double here is in meters
 object Shooter: SubsystemBase("Shooter") {
@@ -73,9 +64,13 @@ object Shooter: SubsystemBase("Shooter") {
 
     var fuel: MutableList<FuelSim> = mutableListOf()
 
-    val shooterCurves = generateShooterCurve()
-    val speedCurve = shooterCurves.second
-    val angleCurve = shooterCurves.first
+    val hubShooterCurves = generateShooterCurve(AimUtils.HUB_HEIGHT - Turret.turretHeight, AimUtils.SHOT_AIRTIME)
+    val hubSpeedCurve = hubShooterCurves.second
+    val hubAngleCurve = hubShooterCurves.first
+
+    val floorShooterCurves = generateShooterCurve(-Turret.turretHeight, AimUtils.PASS_AIRTIME)
+    val floorSpeedCurve = floorShooterCurves.second
+    val floorAngleCurve = floorShooterCurves.first
 
     var isShooting = false
     var i = 0
@@ -108,16 +103,18 @@ object Shooter: SubsystemBase("Shooter") {
 
     fun shootSimulatedFuel() {
         val robotVelocity = Drive.velocity
-        val newPos = Drive.pose.translation + robotVelocity * 0.85 /*+ Drive.acceleration.asMetersPerSecondPerSecond * 0.5 * 0.85.pow(2)*/
-        Logger.recordOutput("lookahead pose", Pose2d(newPos, Drive.heading))
-        val dist = newPos.getDistance(FieldManager.redGoalPose).absoluteValue
-        val exitVelocity = speedCurve.get(dist)
-        val exitAngle = angleCurve.get(dist).degrees
-        val angleToTarget = FieldManager.redGoalPose.angleTo(newPos)
+
+        val dist = Drive.pose.translation.getDistance(AimUtils.aimTarget).absoluteValue
+
+        val exitVelocity = hubSpeedCurve.get(dist)
+        val exitAngle = hubAngleCurve.get(dist).degrees
+        val angleToTarget = AimUtils.aimTarget.angleTo(Drive.pose.translation)
         val velocity2d = Translation2d(-exitVelocity * exitAngle.cos(), 0.0).rotateBy(angleToTarget.asRotation2d)
+        val turretVelocity = Translation2d(Turret.turretOffsetFromCenter.x, Turret.turretOffsetFromCenter.y * Drive.gyroYawRate.asRadiansPerSecond).rotateBy(Drive.heading) + Drive.velocity
+        val turretPos = Translation2d(0.0, 0.725.inches.asMeters).rotateBy(Drive.heading)
         fuel.add(FuelSim(
-            Translation3d(Drive.pose.translation.x, Drive.pose.translation.y, 0.4),
-            Translation3d(velocity2d.x + robotVelocity.x.asMetersPerSecond, velocity2d.y + robotVelocity.y.asMetersPerSecond, exitVelocity * exitAngle.sin())
+            Translation3d(Drive.pose.translation.x + turretPos.x, Drive.pose.translation.y + turretPos.y, 0.4),
+            Translation3d(velocity2d.x + turretVelocity.x, velocity2d.y + turretVelocity.y, exitVelocity * exitAngle.sin())
         ))
     }
 
