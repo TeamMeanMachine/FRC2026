@@ -7,7 +7,9 @@ import edu.wpi.first.math.interpolation.Interpolator
 import edu.wpi.first.math.interpolation.InverseInterpolator
 import edu.wpi.first.units.measure.Distance
 import org.littletonrobotics.junction.AutoLogOutput
+import org.team2471.frc.lib.math.round
 import org.team2471.frc.lib.units.asDegrees
+import org.team2471.frc.lib.units.asFeet
 import org.team2471.frc.lib.units.asMeters
 import org.team2471.frc.lib.units.asRadiansPerSecond
 import org.team2471.frc.lib.units.feet
@@ -57,8 +59,6 @@ object AimUtils {
         }
 
 
-
-
     /**
      * @return A pair of doubles, the first is the horizontal error from the target when the ball reaches a specific height, the second is the time error it took the ball to get there.
      */
@@ -85,6 +85,7 @@ object AimUtils {
             val angleAndSpeed = getAngleAndSpeed(dist, goalHeight, airTime)
             angleCurve.put(dist.asMeters, angleAndSpeed.first)
             speedCurve.put(dist.asMeters, angleAndSpeed.second)
+            println("Dist: ${dist.asFeet.round(3)} angle: ${angleAndSpeed.first.round(3)} Speed: ${angleAndSpeed.second.round(3)}")
         }
 
         return Pair(angleCurve, speedCurve)
@@ -129,8 +130,8 @@ object AimUtils {
             val x2 = guessIncremented.first
             val y2 = guessIncremented.second
 
-            println("($x1,$y1,$errorSum)")
-            println("($x2,$y2,$errorSumIncremented)")
+//            println("($x1,$y1,$errorSum)")
+//            println("($x2,$y2,$errorSumIncremented)")
 
             // Then find the t value for which z is 0
             //  t = -z1       / (           z2       -  z1      )
@@ -148,7 +149,7 @@ object AimUtils {
 
             num++
         }
-        println("Dist: ${distFromGoal.asMeters}, ErrorSum: ${errorSum}, iterations: ${num}")
+//        println("Dist: ${distFromGoal.asMeters}, ErrorSum: ${errorSum}, iterations: ${num}")
 
         return Pair(atan2(guess.second, guess.first).radians.asDegrees, sqrt(guess.first.pow(2) + guess.second.pow(2)))
     }

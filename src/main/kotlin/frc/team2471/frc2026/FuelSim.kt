@@ -54,9 +54,9 @@ fun MutableList<FuelSim>.removeFuel() {
 }
 private fun calcDragAccel(v: Translation3d): Translation3d {
     val length = v.norm
-    Logger.recordOutput("VMag", length)
+//    Logger.recordOutput("VMag", length)
     val newMagnitude = calcDragAccel(length)
-    Logger.recordOutput("DMag", newMagnitude)
+//    Logger.recordOutput("DMag", newMagnitude)
     return v.times(-newMagnitude / length)
 
 }
