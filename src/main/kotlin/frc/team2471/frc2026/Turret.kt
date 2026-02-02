@@ -72,6 +72,6 @@ object Turret: SubsystemBase("Turret") {
 
     fun aimAtTarget(): Command = run {
         fieldCentricSetpoint =
-            Drive.pose.translation.angleTo(aimTarget)
+            turretPose.angleTo(aimTarget)
     }
 }

@@ -104,16 +104,15 @@ object Shooter: SubsystemBase("Shooter") {
     fun shootSimulatedFuel() {
         val robotVelocity = Drive.velocity
 
-        val dist = Drive.pose.translation.getDistance(AimUtils.aimTarget).absoluteValue
+        val dist = Turret.turretPose.getDistance(AimUtils.aimTarget).absoluteValue
 
         val exitVelocity = hubSpeedCurve.get(dist)
         val exitAngle = hubAngleCurve.get(dist).degrees
-        val angleToTarget = AimUtils.aimTarget.angleTo(Drive.pose.translation)
+        val angleToTarget = AimUtils.aimTarget.angleTo(Turret.turretPose)
         val velocity2d = Translation2d(-exitVelocity * exitAngle.cos(), 0.0).rotateBy(angleToTarget.asRotation2d)
-        val turretVelocity = Translation2d(Turret.turretOffsetFromCenter.x, Turret.turretOffsetFromCenter.y * Drive.gyroYawRate.asRadiansPerSecond).rotateBy(Drive.heading) + Drive.velocity
-        val turretPos = Translation2d(0.0, 0.725.inches.asMeters).rotateBy(Drive.heading)
+        val turretVelocity = Translation2d(Turret.turretOffsetFromCenter.x * Drive.gyroYawRate.asRadiansPerSecond, Turret.turretOffsetFromCenter.y * Drive.gyroYawRate.asRadiansPerSecond).rotateBy(Drive.heading) + Drive.velocity
         fuel.add(FuelSim(
-            Translation3d(Drive.pose.translation.x + turretPos.x, Drive.pose.translation.y + turretPos.y, 0.4),
+            Translation3d(Turret.turretPose.x, Turret.turretPose.y, 0.4),
             Translation3d(velocity2d.x + turretVelocity.x, velocity2d.y + turretVelocity.y, exitVelocity * exitAngle.sin())
         ))
     }

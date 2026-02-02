@@ -75,7 +75,7 @@ object FieldManager {
         get () = if (isRedAlliance) redGoalPose else blueGoalPose
 
     @get:AutoLogOutput(key = "FieldManager/Distance From Middle to Score")
-    val distanceFromMiddleToScore = fieldCenter.x.asFeet.feet - lowerRedTrenchPosition.x.feet
+    val distanceFromMiddleToScore = fieldCenter.x.asFeet.feet - lowerRedTrenchPosition.x.feet - 2.0.feet
 
     @get:AutoLogOutput(key = "FieldManager/Distance From Center")
     val xRelativeToCenter: Distance

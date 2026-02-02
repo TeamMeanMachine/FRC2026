@@ -43,7 +43,7 @@ object AimUtils {
     @get:AutoLogOutput(key = "aim target")
     val aimTarget: Translation2d
         get() {
-            val turretVelocity = Translation2d(Turret.turretOffsetFromCenter.x, Turret.turretOffsetFromCenter.y * Drive.gyroYawRate.asRadiansPerSecond).rotateBy(Drive.heading) + Drive.velocity
+            val turretVelocity = Translation2d(Turret.turretOffsetFromCenter.x * Drive.gyroYawRate.asRadiansPerSecond, Turret.turretOffsetFromCenter.y * Drive.gyroYawRate.asRadiansPerSecond).rotateBy(Drive.heading) + Drive.velocity
 
             return if (FieldManager.inScoringZone) {
                 FieldManager.goalPose - turretVelocity * SHOT_AIRTIME
@@ -54,7 +54,7 @@ object AimUtils {
                     FieldManager.goalPose + Translation2d(0.0.inches, 70.0.inches)
                 } else {
                     FieldManager.goalPose + Translation2d(-0.0.inches, -70.0.inches)
-                }-turretVelocity * PASS_AIRTIME
+                } - turretVelocity * PASS_AIRTIME
             }
         }
 
