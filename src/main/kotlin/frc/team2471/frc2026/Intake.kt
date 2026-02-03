@@ -9,6 +9,7 @@ import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.SubsystemBase
 import org.littletonrobotics.junction.AutoLogOutput
 import org.team2471.frc.lib.control.commands.runCommand
+import org.team2471.frc.lib.ctre.addFollower
 import org.team2471.frc.lib.ctre.applyConfiguration
 import org.team2471.frc.lib.ctre.coastMode
 import org.team2471.frc.lib.ctre.currentLimits
@@ -24,14 +25,14 @@ object Intake: SubsystemBase("Intake") {
 
 
 
-    val rollerMotor = TalonFX(Falcons.INTAKE_ROLLER)
+    val rollerMotor = TalonFX(Falcons.INTAKE_ROLLER_0)
     val deployMotor = TalonFX(Falcons.INTAKE_DEPLOY)
 
 
-    val DEPLOY_POSE get() = deployPoseEntry.getDouble(1.0)
-    val STOW_POSE get() = stowPoseEntry.getDouble(0.0)
+    val deployPose get() = deployPoseEntry.getDouble(1.0)
+    val stowPose get() = stowPoseEntry.getDouble(0.0)
 
-    val INTAKE_POWER get() = intakePowerEntry.getDouble(0.5)
+    val intakePower get() = intakePowerEntry.getDouble(0.5)
 
     @get:AutoLogOutput(key = "Intake/Intake state")
     var intakeState: IntakeState = IntakeState.OFF
@@ -67,14 +68,13 @@ object Intake: SubsystemBase("Intake") {
         get() = deployMotor.supplyCurrent.valueAsDouble
 
     init {
-        deployPoseEntry.setDouble(DEPLOY_POSE)
-        stowPoseEntry.setDouble(STOW_POSE)
-        intakePowerEntry.setDouble(INTAKE_POWER)
+        if (!deployPoseEntry.exists()) deployPoseEntry.setDouble(deployPose)
+        if (!stowPoseEntry.exists()) stowPoseEntry.setDouble(stowPose)
+        if (!intakePowerEntry.exists()) intakePowerEntry.setDouble(intakePower)
 
         deployPoseEntry.setPersistent()
         stowPoseEntry.setPersistent()
         intakePowerEntry.setPersistent()
-
 
 
 
@@ -89,17 +89,17 @@ object Intake: SubsystemBase("Intake") {
             currentLimits(20.0, 30.0, 1.0)
             coastMode()
         }
-
+        rollerMotor.addFollower(Falcons.INTAKE_ROLLER_1)
 
         this.defaultCommand = default()
     }
 
     fun deploy() {
-        deploySetpoint = DEPLOY_POSE
+        deploySetpoint = deployPose
     }
 
     fun stow() {
-        deploySetpoint = STOW_POSE
+        deploySetpoint = stowPose
     }
 
 
@@ -110,11 +110,11 @@ object Intake: SubsystemBase("Intake") {
             }
 
             IntakeState.INTAKING -> {
-                rollerSetpoint = INTAKE_POWER
+                rollerSetpoint = intakePower
             }
 
             IntakeState.SPITTING -> {
-                rollerSetpoint = -INTAKE_POWER
+                rollerSetpoint = -intakePower
             }
         }
     }

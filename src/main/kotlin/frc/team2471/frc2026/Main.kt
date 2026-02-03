@@ -72,9 +72,10 @@ object Robot : LoggedRobot() {
     val shooter = Shooter
     val intake = Intake
     val turret = Turret
+    val spindexer = Spindexer
     val fieldManager = FieldManager
 
-    var allSubsystems = arrayOf(drive, intake, shooter, turret, oi)
+    var allSubsystems = arrayOf(drive, intake, shooter, turret, spindexer, oi)
 
     init {
         // Tells FRC we use Kotlin

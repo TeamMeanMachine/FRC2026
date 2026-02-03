@@ -45,10 +45,9 @@ object AimUtils {
         get() {
             val turretVelocity = Translation2d(Turret.turretOffsetFromCenter.x * Drive.gyroYawRate.asRadiansPerSecond, Turret.turretOffsetFromCenter.y * Drive.gyroYawRate.asRadiansPerSecond).rotateBy(Drive.heading) + Drive.velocity
 
-            return if (FieldManager.inScoringZone) {
+            return if (aimingAtGoal) {
                 FieldManager.goalPose - turretVelocity * SHOT_AIRTIME
             } else {
-                // TODO: Use actual values for dumping positions
                 if (Drive.pose.y.meters > FieldManager.fieldHalfWidth) {
                     // This is the stuff making the robot aim in the middle of the hump. Keeping it until we are sure it doesn't work.
                     FieldManager.goalPose + Translation2d(0.0.inches, 70.0.inches)
@@ -57,6 +56,11 @@ object AimUtils {
                 } - turretVelocity * PASS_AIRTIME
             }
         }
+
+
+    val aimingAtGoal get() = FieldManager.inScoringZone
+
+    val distanceToGoal get() = Turret.turretPose.getDistance(aimTarget).absoluteValue
 
 
     /**
@@ -91,6 +95,7 @@ object AimUtils {
         return Pair(angleCurve, speedCurve)
     }
 
+    // angle in degrees, speed in m/s
     // Performs newtons method in 2 dimensions to estimate
     fun getAngleAndSpeed(distFromGoal: Distance, goalHeight: Distance, airTime: Double): Pair<Double, Double> {
         val maxTError = 0.1

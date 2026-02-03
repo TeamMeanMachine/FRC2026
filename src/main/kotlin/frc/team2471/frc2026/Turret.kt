@@ -10,6 +10,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase
 import frc.team2471.frc2026.AimUtils.aimTarget
 import org.littletonrobotics.junction.AutoLogOutput
 import org.littletonrobotics.junction.Logger
+import org.team2471.frc.lib.ctre.addFollower
 import org.team2471.frc.lib.ctre.applyConfiguration
 import org.team2471.frc.lib.ctre.coastMode
 import org.team2471.frc.lib.ctre.currentLimits
@@ -26,8 +27,7 @@ import org.team2471.frc.lib.units.unWrap
 import org.team2471.frc.lib.util.angleTo
 
 object Turret: SubsystemBase("Turret") {
-    // TODO: Add followers
-    val turretMotor = TalonFX(Falcons.TURRET)
+    val turretMotor = TalonFX(Falcons.TURRET_0)
 
     @get:AutoLogOutput(key = "Turret/fieldCentricAngle")
     val fieldCentricAngle: Angle
@@ -55,14 +55,14 @@ object Turret: SubsystemBase("Turret") {
             inverted(true)
             coastMode()
             s(0.13, StaticFeedforwardSignValue.UseClosedLoopSign)
-            p(50.0)
+            p(0.0)
 
-            // TODO: Gear ratio
 //            Feedback.SensorToMechanismRatio = 1.0 / (10.0 / 233.0)
 //            motionMagic(2.1, 12.2)
 
             ClosedLoopGeneral.ContinuousWrap = true
         }
+        turretMotor.addFollower(Falcons.TURRET_1)
     }
 
     override fun periodic() {
