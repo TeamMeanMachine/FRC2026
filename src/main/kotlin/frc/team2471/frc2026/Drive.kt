@@ -110,6 +110,7 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
     // Trust down to 2 cm in XY and 2 degrees in rotational. Units in meters and radians.
     val QUEST_STD_DEVS: Matrix<N3?, N1?> = VecBuilder.fill(0.025, 0.025, 0.052)
 
+    // TODO: Check heading accuracy
     val localizer = PoseLocalizer(Fiducial.constructFiducialList(FieldManager.allAprilTags), cameras)
 
     private val translationRateTimer = Timer()

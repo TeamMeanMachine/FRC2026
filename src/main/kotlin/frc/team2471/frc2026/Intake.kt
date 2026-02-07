@@ -4,11 +4,17 @@ import com.ctre.phoenix6.controls.DutyCycleOut
 import com.ctre.phoenix6.controls.MotionMagicVoltage
 import com.ctre.phoenix6.hardware.TalonFX
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue
+import edu.wpi.first.math.filter.Debouncer
 import edu.wpi.first.networktables.NetworkTableInstance
+import edu.wpi.first.wpilibj.DigitalInput
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.SubsystemBase
 import org.littletonrobotics.junction.AutoLogOutput
+import org.team2471.frc.lib.control.commands.finallyRun
+import org.team2471.frc.lib.control.commands.onlyRunWhileFalse
+import org.team2471.frc.lib.control.commands.onlyRunWhileTrue
 import org.team2471.frc.lib.control.commands.runCommand
+import org.team2471.frc.lib.control.commands.sequenceCommand
 import org.team2471.frc.lib.ctre.addFollower
 import org.team2471.frc.lib.ctre.applyConfiguration
 import org.team2471.frc.lib.ctre.coastMode
@@ -24,6 +30,10 @@ object Intake: SubsystemBase("Intake") {
     val intakePowerEntry = table.getEntry("intakePower")
 
 
+    val stopSensor = DigitalInput(DigitalSensors.INTAKE_STOP_SENSOR)
+
+    @get:AutoLogOutput(key = "Intake/Hit Hard Stop")
+    val hitHardStop get() = !stopSensor.get()
 
     val rollerMotor = TalonFX(Falcons.INTAKE_ROLLER_0)
     val deployMotor = TalonFX(Falcons.INTAKE_DEPLOY)
@@ -67,6 +77,10 @@ object Intake: SubsystemBase("Intake") {
     val deployCurrent: Double
         get() = deployMotor.supplyCurrent.valueAsDouble
 
+
+    const val HOMING_POWER = 0.1
+
+
     init {
         if (!deployPoseEntry.exists()) deployPoseEntry.setDouble(deployPose)
         if (!stowPoseEntry.exists()) stowPoseEntry.setDouble(stowPose)
@@ -101,6 +115,19 @@ object Intake: SubsystemBase("Intake") {
     fun stow() {
         deploySetpoint = stowPose
     }
+
+    fun home(): Command = sequenceCommand(
+        runCommand(this) {
+            deployMotor.setControl(DutyCycleOut(HOMING_POWER))
+        }.onlyRunWhileTrue { hitHardStop },
+        runCommand(this) {
+            deployMotor.setControl(DutyCycleOut(-HOMING_POWER))
+        }.onlyRunWhileFalse { hitHardStop }.finallyRun {
+            deployMotor.setControl(DutyCycleOut(0.0))
+            deployMotor.setPosition(0.0)
+            stow()
+        }
+    )
 
 
     private fun default(): Command = runCommand(this) {
