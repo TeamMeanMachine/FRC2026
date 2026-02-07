@@ -1,6 +1,7 @@
 package frc.team2471.frc2026
 
 import com.ctre.phoenix6.controls.PositionVoltage
+import com.ctre.phoenix6.hardware.CANcoder
 import com.ctre.phoenix6.hardware.TalonFX
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue
 import edu.wpi.first.math.geometry.Translation2d
@@ -25,9 +26,61 @@ import org.team2471.frc.lib.units.meters
 import org.team2471.frc.lib.units.rotations
 import org.team2471.frc.lib.units.unWrap
 import org.team2471.frc.lib.util.angleTo
+import kotlin.math.absoluteValue
 
 object Turret: SubsystemBase("Turret") {
+
+    const val turretRange = 600.0
+
     val turretMotor = TalonFX(Falcons.TURRET_0)
+
+    val turretEncoder1 = CANcoder(CANCoders.TURRET_1)
+    val turretEncoder2 = CANcoder(CANCoders.TURRET_2)
+
+    const val encoder1GearRatio = 30.0/225.0
+    const val encoder2GearRatio = encoder1GearRatio * 11.0/46.0
+
+    @get:AutoLogOutput(key = "Turret/encoder1Angle")
+    private val encoder1Angle = turretEncoder1.absolutePosition.valueAsDouble
+
+    @get:AutoLogOutput(key = "Turret/encoder2Angle")
+    private val encoder2Angle = turretEncoder2.absolutePosition.valueAsDouble
+
+    // unwraps encoder 1 angle using encoder 2 angle
+    @get:AutoLogOutput(key = "Turret/fusedEncoderAngle")
+    val fusedEncoderAngle: Angle
+        get() {
+            // generate a list od all possible angles based off of encoder 1
+            val validAngles: ArrayList<Double> = arrayListOf()
+            var angle = encoder1Angle * encoder1GearRatio
+            while (angle <= turretRange/2.0){
+                println(angle)
+                validAngles.add(angle)
+                angle += 360.0 * encoder1GearRatio
+            }
+            angle = encoder1Angle * encoder1GearRatio - 360.0 * encoder1GearRatio
+            while (angle >= -turretRange/2.0){
+                println(angle)
+                validAngles.add(angle)
+                angle -= 360.0 * encoder1GearRatio
+            }
+
+//            println(validAngles)
+
+            // using encoder 2 calculate errors of each valid angle
+            var minError = Double.MAX_VALUE
+            var bestAngle = 0.0
+            for (angle in validAngles) {
+                val estEncoder2Angle = (angle/encoder2GearRatio) % 360.0
+                val error = kotlin.math.abs(encoder2Angle - estEncoder2Angle) % 360.0
+//                println("angle: ${angle}, estAngle: ${estEncoder2Angle}, error: ${error}")
+                if (error < minError){
+                    minError = error
+                    bestAngle = angle
+                }
+            }
+            return bestAngle.degrees
+        }
 
     @get:AutoLogOutput(key = "Turret/fieldCentricAngle")
     val fieldCentricAngle: Angle
@@ -66,12 +119,12 @@ object Turret: SubsystemBase("Turret") {
     }
 
     override fun periodic() {
-        Logger.recordOutput("aim target", aimTarget.toPose2d())
+        Logger.recordOutput("aim target", AimUtils.aimTarget.toPose2d())
         Logger.recordOutput("turret setpoint pose", turretPose.toPose2d(fieldCentricSetpoint.asRotation2d))
     }
 
     fun aimAtTarget(): Command = run {
         fieldCentricSetpoint =
-            turretPose.angleTo(aimTarget)
+            turretPose.angleTo(AimUtils.aimTarget)
     }
 }

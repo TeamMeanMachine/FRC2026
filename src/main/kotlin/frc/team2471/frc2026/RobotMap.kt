@@ -53,6 +53,9 @@ object CANCoders {
     const val FRONT_LEFT = 27
     const val BACK_RIGHT = 26
     const val BACK_LEFT = 28
+
+    const val TURRET_1 = 99
+    const val TURRET_2 = 99
 }
 
 object PWMPort {
