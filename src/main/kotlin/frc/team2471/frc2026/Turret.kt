@@ -54,13 +54,11 @@ object Turret: SubsystemBase("Turret") {
             val validAngles: ArrayList<Double> = arrayListOf()
             var angle = encoder1Angle * encoder1GearRatio
             while (angle <= turretRange/2.0){
-                println(angle)
                 validAngles.add(angle)
                 angle += 360.0 * encoder1GearRatio
             }
             angle = encoder1Angle * encoder1GearRatio - 360.0 * encoder1GearRatio
             while (angle >= -turretRange/2.0){
-                println(angle)
                 validAngles.add(angle)
                 angle -= 360.0 * encoder1GearRatio
             }

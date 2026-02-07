@@ -89,10 +89,29 @@ object AimUtils {
             val angleAndSpeed = getAngleAndSpeed(dist, goalHeight, airTime)
             angleCurve.put(dist.asMeters, angleAndSpeed.first)
             speedCurve.put(dist.asMeters, angleAndSpeed.second)
-            println("Dist: ${dist.asFeet.round(3)} angle: ${angleAndSpeed.first.round(3)} Speed: ${angleAndSpeed.second.round(3)}")
+//            println("Dist: ${dist.asFeet.round(3)} angle: ${angleAndSpeed.first.round(3)} Speed: ${angleAndSpeed.second.round(3)}")
         }
 
         return Pair(angleCurve, speedCurve)
+    }
+
+    fun printShooterCurves(goalHeight: Distance, airTime: Double) {
+        val angles = mutableMapOf<Double, Double>()
+        val speeds = mutableMapOf<Double, Double>()
+        for (i in 0..40) {
+            val dist = i.toDouble().feet
+            val angleAndSpeed = getAngleAndSpeed(dist, goalHeight, airTime)
+            angles.put(dist.asMeters, angleAndSpeed.first)
+            speeds.put(dist.asMeters, angleAndSpeed.second)
+        }
+        println("Angle Curve:")
+        angles.forEach { dist, angle ->
+            println("put($dist, $angle)")
+        }
+        println("Speed Curve:")
+        speeds.forEach { dist, speed ->
+            println("put($dist, $speed)")
+        }
     }
 
     // angle in degrees, speed in m/s

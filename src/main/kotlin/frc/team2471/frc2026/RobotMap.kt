@@ -11,7 +11,7 @@ object AnalogSensors {
 }
 
 object DigitalSensors {
-    const val INTAKE_STOP_SENSOR = 99
+    const val INTAKE_STOP_SENSOR = 0
 }
 
 object Falcons {
@@ -56,7 +56,7 @@ object CANCoders {
     const val BACK_LEFT = 28
 
     const val TURRET_1 = 99
-    const val TURRET_2 = 99
+    const val TURRET_2 = 98
 }
 
 object PWMPort {

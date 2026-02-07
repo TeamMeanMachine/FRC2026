@@ -4,6 +4,8 @@ import edu.wpi.first.math.geometry.Pose2d
 import edu.wpi.first.wpilibj2.command.Command
 import frc.team2471.frc2026.tests.joystickTest
 import frc.team2471.frc2026.tests.leftRightStaticFFTest
+import frc.team2471.frc2026.tests.printHubCurves
+import frc.team2471.frc2026.tests.printPassCurves
 import frc.team2471.frc2026.tests.questOffsetTest
 import frc.team2471.frc2026.tests.slipCurrentTest
 import frc.team2471.frc2026.tests.velocityVoltTest
@@ -38,6 +40,8 @@ object Autonomous: Autonomi() {
             addOption("Drive L/R Static FF Test", Drive.leftRightStaticFFTest())
             addOption("Drive Velocity Volt Test", Drive.velocityVoltTest())
             addOption("Quest offset Test", Drive.questOffsetTest())
+            addOption("Print Hub Curves", printHubCurves())
+            addOption("Print Pass Curves", printPassCurves())
         }
 
     /** Autonomous commands */
