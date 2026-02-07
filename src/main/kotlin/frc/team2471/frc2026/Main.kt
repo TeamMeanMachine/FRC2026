@@ -154,6 +154,9 @@ object Robot : LoggedRobot() {
 //        enabledTimer.restart()
         println("Enabled init $timeSinceEnabled")
         Drive.brakeMode()
+
+        // TODO: Uncomment when we are sure it won't explode
+//        Intake.home()
     }
 
     /** This function is called once when the robot is disabled.  */
