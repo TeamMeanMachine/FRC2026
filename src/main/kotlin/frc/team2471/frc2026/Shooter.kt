@@ -4,14 +4,13 @@ import com.ctre.phoenix6.SignalLogger
 import com.ctre.phoenix6.controls.PositionVoltage
 import com.ctre.phoenix6.controls.VelocityVoltage
 import com.ctre.phoenix6.controls.VoltageOut
-import com.ctre.phoenix6.hardware.TalonFX
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue
 import edu.wpi.first.math.geometry.Translation2d
 import edu.wpi.first.math.geometry.Translation3d
 import edu.wpi.first.math.interpolation.InterpolatingTreeMap
 import edu.wpi.first.math.interpolation.Interpolator
 import edu.wpi.first.math.interpolation.InverseInterpolator
-import edu.wpi.first.networktables.NetworkTableInstance
+import edu.wpi.first.math.system.plant.DCMotor
 import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.units.measure.LinearVelocity
 import edu.wpi.first.units.measure.Voltage
@@ -19,8 +18,6 @@ import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.SubsystemBase
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine
-import frc.team2471.frc2026.AimUtils.generateShooterCurve
-import frc.team2471.frc2026.Turret.turretMotor
 import org.littletonrobotics.junction.AutoLogOutput
 import org.littletonrobotics.junction.Logger
 import org.team2471.frc.lib.control.commands.finallyRun
@@ -32,6 +29,7 @@ import org.team2471.frc.lib.ctre.brakeMode
 import org.team2471.frc.lib.ctre.coastMode
 import org.team2471.frc.lib.ctre.currentLimits
 import org.team2471.frc.lib.ctre.inverted
+import org.team2471.frc.lib.ctre.loggedTalonFX.LoggedTalonFX
 import org.team2471.frc.lib.ctre.p
 import org.team2471.frc.lib.ctre.s
 import org.team2471.frc.lib.units.absoluteValue
@@ -42,17 +40,17 @@ import org.team2471.frc.lib.units.asRotation2d
 import org.team2471.frc.lib.units.asVolts
 import org.team2471.frc.lib.units.cos
 import org.team2471.frc.lib.units.degrees
-import org.team2471.frc.lib.units.degreesPerSecond
 import org.team2471.frc.lib.units.inches
 import org.team2471.frc.lib.units.inchesPerSecond
 import org.team2471.frc.lib.units.metersPerSecond
+import org.team2471.frc.lib.units.rotations
 import org.team2471.frc.lib.units.seconds
 import org.team2471.frc.lib.units.sin
 import org.team2471.frc.lib.units.volts
 import org.team2471.frc.lib.units.voltsPerSecond
 import org.team2471.frc.lib.util.angleTo
+import org.team2471.frc.lib.util.isReal
 import org.team2471.frc.lib.util.isSim
-import kotlin.math.absoluteValue
 
 // Unless otherwise specified every double here is in meters
 object Shooter: SubsystemBase("Shooter") {
@@ -232,8 +230,8 @@ object Shooter: SubsystemBase("Shooter") {
     }
 
 
-    val shooterMotor = TalonFX(Falcons.SHOOTER_0)
-    val hoodMotor = TalonFX(Falcons.SHOOTER_HOOD)
+    val shooterMotor = LoggedTalonFX(Falcons.SHOOTER_0)
+    val hoodMotor = LoggedTalonFX(Falcons.SHOOTER_HOOD)
 
     val WHEEL_DIAMETER = 4.0.inches
 
@@ -251,6 +249,9 @@ object Shooter: SubsystemBase("Shooter") {
             hoodMotor.setControl(PositionVoltage(field))
         }
 
+    @get:AutoLogOutput(key = "Shooter/Hood Position")
+    val hoodMotorPosition: Angle get() = hoodMotor.position.valueAsDouble.rotations
+
     // degrees
     const val HOOD_STOW_SETPOINT = 90.0
 
@@ -265,17 +266,20 @@ object Shooter: SubsystemBase("Shooter") {
 
     var fuel: MutableList<FuelSim> = mutableListOf()
 
-    val rampedUp: Boolean get() = (shooterVelocity - shooterVelocitySetpoint).absoluteValue() < 0.1.metersPerSecond
+    val rampedUp: Boolean get() = (shooterVelocity - shooterVelocitySetpoint).absoluteValue() < 0.5.metersPerSecond
 
     var isShooting = false
     var i = 0
 
     init {
+        shooterMotor.configSim(DCMotor.getKrakenX60(2), 0.1)
+        hoodMotor.configSim(DCMotor.getKrakenX60(1), 0.01)
+
         shooterMotor.applyConfiguration {
             currentLimits(25.0, 30.0, 1.0)
             coastMode()
 
-            p(0.0)
+            p(if (isReal) 0.0 else 10.0)
             s(0.0, StaticFeedforwardSignValue.UseVelocitySign)
         }
         shooterMotor.addFollower(Falcons.SHOOTER_1)
@@ -285,7 +289,7 @@ object Shooter: SubsystemBase("Shooter") {
             inverted(true)
             brakeMode()
             s(0.13, StaticFeedforwardSignValue.UseClosedLoopSign)
-            p(0.0)
+            p(if (isReal) 0.0 else 1.0)
 
 //            Feedback.SensorToMechanismRatio = 1.0 / (10.0 / 233.0)
 //            motionMagic(2.1, 12.2)

@@ -5,6 +5,7 @@ import com.ctre.phoenix6.hardware.CANcoder
 import com.ctre.phoenix6.hardware.TalonFX
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue
 import edu.wpi.first.math.geometry.Translation2d
+import edu.wpi.first.math.system.plant.DCMotor
 import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.SubsystemBase
@@ -15,6 +16,7 @@ import org.team2471.frc.lib.ctre.applyConfiguration
 import org.team2471.frc.lib.ctre.brakeMode
 import org.team2471.frc.lib.ctre.currentLimits
 import org.team2471.frc.lib.ctre.inverted
+import org.team2471.frc.lib.ctre.loggedTalonFX.LoggedTalonFX
 import org.team2471.frc.lib.ctre.p
 import org.team2471.frc.lib.ctre.s
 import org.team2471.frc.lib.math.toPose2d
@@ -25,12 +27,13 @@ import org.team2471.frc.lib.units.meters
 import org.team2471.frc.lib.units.rotations
 import org.team2471.frc.lib.units.unWrap
 import org.team2471.frc.lib.util.angleTo
+import org.team2471.frc.lib.util.isReal
 
 object Turret: SubsystemBase("Turret") {
 
     const val turretRange = 600.0
 
-    val turretMotor = TalonFX(Falcons.TURRET_0)
+    val turretMotor = LoggedTalonFX(Falcons.TURRET_0)
 
     val turretEncoder1 = CANcoder(CANCoders.TURRET_1)
     val turretEncoder2 = CANcoder(CANCoders.TURRET_2)
@@ -99,12 +102,14 @@ object Turret: SubsystemBase("Turret") {
 
 
     init {
+        turretMotor.configSim(DCMotor.getKrakenX60(1), 0.01)
+
         turretMotor.applyConfiguration {
             currentLimits(30.0, 40.0, 1.0)
             inverted(true)
             brakeMode()
             s(0.13, StaticFeedforwardSignValue.UseClosedLoopSign)
-            p(0.0)
+            p(if (isReal) 0.0 else 0.5)
 
 //            Feedback.SensorToMechanismRatio = 1.0 / (10.0 / 233.0)
 //            motionMagic(2.1, 12.2)
