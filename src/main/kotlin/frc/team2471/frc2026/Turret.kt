@@ -8,12 +8,11 @@ import edu.wpi.first.math.geometry.Translation2d
 import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.SubsystemBase
-import frc.team2471.frc2026.AimUtils.aimTarget
 import org.littletonrobotics.junction.AutoLogOutput
 import org.littletonrobotics.junction.Logger
 import org.team2471.frc.lib.ctre.addFollower
 import org.team2471.frc.lib.ctre.applyConfiguration
-import org.team2471.frc.lib.ctre.coastMode
+import org.team2471.frc.lib.ctre.brakeMode
 import org.team2471.frc.lib.ctre.currentLimits
 import org.team2471.frc.lib.ctre.inverted
 import org.team2471.frc.lib.ctre.p
@@ -26,7 +25,6 @@ import org.team2471.frc.lib.units.meters
 import org.team2471.frc.lib.units.rotations
 import org.team2471.frc.lib.units.unWrap
 import org.team2471.frc.lib.util.angleTo
-import kotlin.math.absoluteValue
 
 object Turret: SubsystemBase("Turret") {
 
@@ -104,7 +102,7 @@ object Turret: SubsystemBase("Turret") {
         turretMotor.applyConfiguration {
             currentLimits(30.0, 40.0, 1.0)
             inverted(true)
-            coastMode()
+            brakeMode()
             s(0.13, StaticFeedforwardSignValue.UseClosedLoopSign)
             p(0.0)
 

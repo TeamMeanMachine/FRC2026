@@ -7,6 +7,7 @@ import com.ctre.phoenix6.hardware.TalonFX
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue
 import edu.wpi.first.networktables.NetworkTableInstance
 import edu.wpi.first.wpilibj2.command.SubsystemBase
+import org.littletonrobotics.junction.AutoLogOutput
 import org.team2471.frc.lib.ctre.addFollower
 import org.team2471.frc.lib.ctre.applyConfiguration
 import org.team2471.frc.lib.ctre.coastMode
@@ -22,6 +23,7 @@ object Spindexer: SubsystemBase("Spindexer") {
     val sidetakeMotor = TalonFX(Falcons.SIDETAKE)
     val uptakeMotor = TalonFX(Falcons.UPTAKE)
 
+    @get:AutoLogOutput(key = "Spindexer/Current State")
     var currentState = State.OFF
 
     val spinVelocityEntry = table.getEntry("Spin Velocity")

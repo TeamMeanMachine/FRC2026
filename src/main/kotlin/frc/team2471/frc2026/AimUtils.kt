@@ -52,7 +52,7 @@ object AimUtils {
                     // This is the stuff making the robot aim in the middle of the hump. Keeping it until we are sure it doesn't work.
                     FieldManager.goalPose + Translation2d(0.0.inches, 70.0.inches)
                 } else {
-                    FieldManager.goalPose + Translation2d(-0.0.inches, -70.0.inches)
+                    FieldManager.goalPose + Translation2d(0.0.inches, -70.0.inches)
                 } - turretVelocity * PASS_AIRTIME
             }
         }

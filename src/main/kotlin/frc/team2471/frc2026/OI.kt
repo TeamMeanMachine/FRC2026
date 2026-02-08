@@ -83,6 +83,7 @@ object OI: SubsystemBase("OI") {
 
         Turret.defaultCommand = Turret.aimAtTarget()
 
+        Shooter.defaultCommand = Shooter.rampUp()
 
         // Zero Gyro
         driverController.back().onTrue({
@@ -95,7 +96,7 @@ object OI: SubsystemBase("OI") {
             Drive.pose = Pose2d(Translation2d(3.0, 3.0), Drive.heading)
         }.toCommand(Drive).ignoringDisable(true))
 
-        driverController.a().onTrue({ Shooter.isShooting = !Shooter.isShooting }.toCommand())
+        driverController.a().whileTrue(Shooter.shoot())
 
         driverController.rightBumper().whileTrue(Drive.snakeMode())
 
