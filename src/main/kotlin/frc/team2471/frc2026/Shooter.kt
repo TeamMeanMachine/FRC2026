@@ -59,9 +59,9 @@ import org.team2471.frc.lib.util.isSim
 import kotlin.math.abs
 import kotlin.math.cos
 
-// Unless otherwise specified every double here is in meters
 object Shooter: SubsystemBase("Shooter") {
 
+    // feet, m/s
     val hubSpeedCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
         put(3.0, 6.052)
         put(4.0, 6.111)
@@ -82,6 +82,7 @@ object Shooter: SubsystemBase("Shooter") {
         put(19.0, 9.028)
         put(20.0, 9.282)
     }
+    // feet, degrees
     val hubAngleCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
         put(3.0, 80.849)
         put(4.0, 77.878)
@@ -103,7 +104,7 @@ object Shooter: SubsystemBase("Shooter") {
         put(20.0, 43.071)
 
     }
-
+    // feet, m/s
     val floorSpeedCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
         put(5.0, 4.754)
         put(6.0, 4.86)
@@ -142,6 +143,7 @@ object Shooter: SubsystemBase("Shooter") {
         put(39.0, 13.42)
         put(40.0, 13.862)
     }
+    // feet, degrees
     val floorAngleCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
         put(5.0, 71.303)
         put(6.0, 67.898)
