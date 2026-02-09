@@ -6,10 +6,18 @@ import frc.team2471.frc2026.AimUtils.printShooterCurves
 import frc.team2471.frc2026.Turret
 import org.team2471.frc.lib.control.commands.runOnce
 
-fun printHubCurves(): Command = runOnce{
-    printShooterCurves(AimUtils.HUB_HEIGHT - Turret.turretHeight, AimUtils.SHOT_AIRTIME)
-
+// Prints the hub curves using a gradle task. Needs a main function in a class so I put it here.
+object PrintHubCurves {
+    @JvmStatic
+    fun main(args: Array<String>) {
+        printShooterCurves(AimUtils.HUB_HEIGHT - Turret.turretHeight, AimUtils.SHOT_AIRTIME, 3..20)
+    }
 }
-fun printPassCurves(): Command = runOnce{
-    printShooterCurves( -Turret.turretHeight, AimUtils.PASS_AIRTIME)
+
+// Prints the pass curves using a gradle task. Needs a main function in a class so I put it here.
+object PrintPassCurves {
+    @JvmStatic
+    fun main(args: Array<String>) {
+        printShooterCurves( -Turret.turretHeight, AimUtils.PASS_AIRTIME, 5..40)
+    }
 }
