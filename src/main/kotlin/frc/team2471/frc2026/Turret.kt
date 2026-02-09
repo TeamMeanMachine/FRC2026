@@ -20,6 +20,8 @@ import org.team2471.frc.lib.ctre.loggedTalonFX.LoggedTalonFX
 import org.team2471.frc.lib.ctre.p
 import org.team2471.frc.lib.ctre.s
 import org.team2471.frc.lib.math.toPose2d
+import org.team2471.frc.lib.units.asInches
+import org.team2471.frc.lib.units.asMeters
 import org.team2471.frc.lib.units.asRotation2d
 import org.team2471.frc.lib.units.degrees
 import org.team2471.frc.lib.units.inches
@@ -106,7 +108,7 @@ object Turret: SubsystemBase("Turret") {
 
 
     @get:AutoLogOutput(key = "Turret/Turret error distance")
-    val turretErrorDistance get() = abs(sin(turretMotor.closedLoopError.valueAsDouble.rotations) * AimUtils.distanceToGoal)
+    val turretErrorDistance get() = abs(sin(turretMotor.closedLoopError.valueAsDouble.rotations) * AimUtils.distanceToGoal.asInches).inches
 
 
     init {

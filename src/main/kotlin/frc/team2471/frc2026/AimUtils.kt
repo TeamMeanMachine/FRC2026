@@ -7,7 +7,9 @@ import edu.wpi.first.math.interpolation.Interpolator
 import edu.wpi.first.math.interpolation.InverseInterpolator
 import edu.wpi.first.units.measure.Distance
 import org.littletonrobotics.junction.AutoLogOutput
+import org.team2471.frc.lib.math.round
 import org.team2471.frc.lib.units.asDegrees
+import org.team2471.frc.lib.units.asFeet
 import org.team2471.frc.lib.units.asMeters
 import org.team2471.frc.lib.units.asRadiansPerSecond
 import org.team2471.frc.lib.units.feet
@@ -58,7 +60,7 @@ object AimUtils {
 
     val aimingAtGoal get() = FieldManager.inScoringZone
 
-    val distanceToGoal get() = Turret.turretTranslation.getDistance(aimTarget).absoluteValue
+    val distanceToGoal get() = Turret.turretTranslation.getDistance(aimTarget).absoluteValue.meters
 
 
     /**
@@ -97,18 +99,18 @@ object AimUtils {
         val angles = mutableMapOf<Double, Double>()
         val speeds = mutableMapOf<Double, Double>()
         for (i in distRange) {
-            val dist = i.toDouble().feet
-            val angleAndSpeed = getAngleAndSpeed(dist, goalHeight, airTime)
-            angles.put(dist.asMeters, angleAndSpeed.first)
-            speeds.put(dist.asMeters, angleAndSpeed.second)
+            val dist = i.toDouble()
+            val angleAndSpeed = getAngleAndSpeed(dist.feet, goalHeight, airTime)
+            angles[dist] = angleAndSpeed.first
+            speeds[dist] = angleAndSpeed.second
         }
         println("Angle Curve:")
-        angles.forEach { dist, angle ->
-            println("put($dist, $angle)")
+        angles.forEach { (dist, angle) ->
+            println("put(${dist.round(3)}, ${angle.round(3)})")
         }
         println("Speed Curve:")
-        speeds.forEach { dist, speed ->
-            println("put($dist, $speed)")
+        speeds.forEach { (dist, speed) ->
+            println("put(${dist.round(3)}, ${speed.round(3)})")
         }
     }
 
