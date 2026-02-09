@@ -2,7 +2,6 @@ package frc.team2471.frc2026
 
 import com.ctre.phoenix6.controls.PositionVoltage
 import com.ctre.phoenix6.hardware.CANcoder
-import com.ctre.phoenix6.hardware.TalonFX
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue
 import edu.wpi.first.math.geometry.Translation2d
 import edu.wpi.first.math.system.plant.DCMotor
@@ -15,6 +14,7 @@ import org.team2471.frc.lib.ctre.addFollower
 import org.team2471.frc.lib.ctre.applyConfiguration
 import org.team2471.frc.lib.ctre.brakeMode
 import org.team2471.frc.lib.ctre.currentLimits
+import org.team2471.frc.lib.ctre.d
 import org.team2471.frc.lib.ctre.inverted
 import org.team2471.frc.lib.ctre.loggedTalonFX.LoggedTalonFX
 import org.team2471.frc.lib.ctre.p
@@ -25,15 +25,19 @@ import org.team2471.frc.lib.units.degrees
 import org.team2471.frc.lib.units.inches
 import org.team2471.frc.lib.units.meters
 import org.team2471.frc.lib.units.rotations
+import org.team2471.frc.lib.units.sin
 import org.team2471.frc.lib.units.unWrap
 import org.team2471.frc.lib.util.angleTo
 import org.team2471.frc.lib.util.isReal
+import kotlin.math.abs
 
 object Turret: SubsystemBase("Turret") {
 
     const val turretRange = 600.0
 
     val turretMotor = LoggedTalonFX(Falcons.TURRET_0)
+
+    val turretMotorRotorAngle: Angle get() = turretMotor.rotorPosition.valueAsDouble.rotations / 27.88
 
     val turretEncoder1 = CANcoder(CANCoders.TURRET_1)
     val turretEncoder2 = CANcoder(CANCoders.TURRET_2)
@@ -90,15 +94,19 @@ object Turret: SubsystemBase("Turret") {
         set(value) {
             field = value.unWrap(fieldCentricAngle)
 
-            turretMotor.setControl(PositionVoltage(field))
+            turretMotor.setControl(PositionVoltage(field - Drive.heading.measure))
         }
 
 
     val turretOffsetFromCenter = Translation2d(0.0.inches, 0.725.inches)
     var turretHeight = 0.4.meters
 
-    val turretPose: Translation2d
+    val turretTranslation: Translation2d
         get() = Drive.pose.translation + turretOffsetFromCenter.rotateBy(Drive.heading)
+
+
+    @get:AutoLogOutput(key = "Turret/Turret error distance")
+    val turretErrorDistance get() = abs(sin(turretMotor.closedLoopError.valueAsDouble.rotations) * AimUtils.distanceToGoal)
 
 
     init {
@@ -109,7 +117,8 @@ object Turret: SubsystemBase("Turret") {
             inverted(true)
             brakeMode()
             s(0.13, StaticFeedforwardSignValue.UseClosedLoopSign)
-            p(if (isReal) 0.0 else 0.5)
+            p(if (isReal) 0.0 else 150.0)
+            d(15.0)
 
 //            Feedback.SensorToMechanismRatio = 1.0 / (10.0 / 233.0)
 //            motionMagic(2.1, 12.2)
@@ -121,11 +130,12 @@ object Turret: SubsystemBase("Turret") {
 
     override fun periodic() {
         Logger.recordOutput("aim target", AimUtils.aimTarget.toPose2d())
-        Logger.recordOutput("turret setpoint pose", turretPose.toPose2d(fieldCentricSetpoint.asRotation2d))
+        Logger.recordOutput("turret setpoint pose", turretTranslation.toPose2d(fieldCentricSetpoint.asRotation2d))
+        Logger.recordOutput("turret pose", turretTranslation.toPose2d(fieldCentricAngle.asRotation2d))
     }
 
     fun aimAtTarget(): Command = run {
         fieldCentricSetpoint =
-            turretPose.angleTo(AimUtils.aimTarget)
+            turretTranslation.angleTo(AimUtils.aimTarget)
     }
 }

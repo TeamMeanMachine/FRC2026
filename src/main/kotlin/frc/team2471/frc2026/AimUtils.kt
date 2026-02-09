@@ -7,9 +7,7 @@ import edu.wpi.first.math.interpolation.Interpolator
 import edu.wpi.first.math.interpolation.InverseInterpolator
 import edu.wpi.first.units.measure.Distance
 import org.littletonrobotics.junction.AutoLogOutput
-import org.team2471.frc.lib.math.round
 import org.team2471.frc.lib.units.asDegrees
-import org.team2471.frc.lib.units.asFeet
 import org.team2471.frc.lib.units.asMeters
 import org.team2471.frc.lib.units.asRadiansPerSecond
 import org.team2471.frc.lib.units.feet
@@ -23,7 +21,7 @@ import kotlin.math.sqrt
 
 object AimUtils {
     // seconds
-    const val SHOT_AIRTIME = 0.85
+    const val SHOT_AIRTIME = 0.95
     const val PASS_AIRTIME = 1.0
     // m/s^2
     const val G = 9.80665
@@ -60,7 +58,7 @@ object AimUtils {
 
     val aimingAtGoal get() = FieldManager.inScoringZone
 
-    val distanceToGoal get() = Turret.turretPose.getDistance(aimTarget).absoluteValue
+    val distanceToGoal get() = Turret.turretTranslation.getDistance(aimTarget).absoluteValue
 
 
     /**

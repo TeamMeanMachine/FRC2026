@@ -28,13 +28,17 @@ import org.team2471.frc.lib.ctre.applyConfiguration
 import org.team2471.frc.lib.ctre.brakeMode
 import org.team2471.frc.lib.ctre.coastMode
 import org.team2471.frc.lib.ctre.currentLimits
+import org.team2471.frc.lib.ctre.d
 import org.team2471.frc.lib.ctre.inverted
 import org.team2471.frc.lib.ctre.loggedTalonFX.LoggedTalonFX
 import org.team2471.frc.lib.ctre.p
 import org.team2471.frc.lib.ctre.s
+import org.team2471.frc.lib.ctre.v
 import org.team2471.frc.lib.units.absoluteValue
 import org.team2471.frc.lib.units.asInches
 import org.team2471.frc.lib.units.asInchesPerSecond
+import org.team2471.frc.lib.units.asMeters
+import org.team2471.frc.lib.units.asMetersPerSecond
 import org.team2471.frc.lib.units.asRadiansPerSecond
 import org.team2471.frc.lib.units.asRotation2d
 import org.team2471.frc.lib.units.asVolts
@@ -43,103 +47,105 @@ import org.team2471.frc.lib.units.degrees
 import org.team2471.frc.lib.units.inches
 import org.team2471.frc.lib.units.inchesPerSecond
 import org.team2471.frc.lib.units.metersPerSecond
+import org.team2471.frc.lib.units.radians
 import org.team2471.frc.lib.units.rotations
 import org.team2471.frc.lib.units.seconds
 import org.team2471.frc.lib.units.sin
 import org.team2471.frc.lib.units.volts
 import org.team2471.frc.lib.units.voltsPerSecond
-import org.team2471.frc.lib.util.angleTo
 import org.team2471.frc.lib.util.isReal
 import org.team2471.frc.lib.util.isSim
+import kotlin.math.abs
+import kotlin.math.cos
 
 // Unless otherwise specified every double here is in meters
 object Shooter: SubsystemBase("Shooter") {
 
     val hubSpeedCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
-        put(0.0, 5.639590955882352)
-        put(0.30479999999999996, 5.650979709055888)
-        put(0.6095999999999999, 5.685009079995864)
-        put(0.9144, 5.741276500229907)
-        put(1.2191999999999998, 5.819136921359697)
-        put(1.524, 6.066392463116945)
-        put(1.8288, 6.181519310750068)
-        put(2.1336, 6.338269232046272)
-        put(2.4383999999999997, 6.512421952188193)
-        put(2.7432, 6.702687682604051)
-        put(3.048, 6.907788978272454)
-        put(3.3528, 7.089296123514534)
-        put(3.6576, 7.31292483897281)
-        put(3.9623999999999997, 7.54765278062865)
-        put(4.2672, 7.792495041829245)
-        put(4.572, 8.046543067831271)
-        put(4.876799999999999, 8.476694499121312)
-        put(5.1815999999999995, 8.75664077650401)
-        put(5.4864, 9.043411750611908)
-        put(5.7912, 8.952452495096281)
-        put(6.096, 8.93445084533094)
-        put(6.400799999999999, 9.899771725705317)
-        put(6.7056, 10.145023838731676)
-        put(7.0104, 10.477618443506287)
-        put(7.3152, 10.881901567444025)
-        put(7.62, 11.237952381734907)
-        put(7.924799999999999, 11.466093689584005)
-        put(8.2296, 11.875444490686492)
-        put(8.5344, 12.190364171380546)
-        put(8.839199999999998, 12.532097625267989)
-        put(9.144, 12.774213842028066)
-        put(9.448799999999999, 13.222989421986771)
-        put(9.753599999999999, 13.475338604833617)
-        put(10.058399999999999, 13.955125017762596)
-        put(10.363199999999999, 14.209593673270334)
-        put(10.668, 14.911570096432257)
-        put(10.9728, 14.893900445371388)
-        put(11.277599999999998, 15.265533542689216)
-        put(11.5824, 15.558429401370308)
-        put(11.887199999999998, 15.917418790321467)
-        put(12.192, 16.343740018770976)
+        put(0.0, 5.975000855263158)
+        put(0.30479999999999996, 5.98360885059386)
+        put(0.6095999999999999, 6.0093588548558365)
+        put(0.9144, 6.052032066090093)
+        put(1.2191999999999998, 6.111273985393765)
+        put(1.524, 6.338511713101029)
+        put(1.8288, 6.41490842337587)
+        put(2.1336, 6.540247994276543)
+        put(2.4383999999999997, 6.679989104421275)
+        put(2.7432, 6.833315345221642)
+        put(3.048, 6.999389952263551)
+        put(3.3528, 7.143837998151528)
+        put(3.6576, 7.325573227991944)
+        put(3.9623999999999997, 7.52369774940966)
+        put(4.2672, 7.718260854329522)
+        put(4.572, 7.979458036071344)
+        put(4.876799999999999, 8.30227769050815)
+        put(5.1815999999999995, 8.537510273784207)
+        put(5.4864, 8.779471666768007)
+        put(5.7912, 9.027635189380714)
+        put(6.096, 9.281516216960513)
+        put(6.400799999999999, 9.557221618512205)
+        put(6.7056, 9.713394426870112)
+        put(7.0104, 10.00147356268994)
+        put(7.3152, 10.376595582896961)
+        put(7.62, 10.512635229548158)
+        put(7.924799999999999, 10.82920364199341)
+        put(8.2296, 11.22326600546104)
+        put(8.5344, 11.428149642589604)
+        put(8.839199999999998, 11.733139324457994)
+        put(9.144, 12.063781651692123)
+        put(9.448799999999999, 11.791116974441833)
+        put(9.753599999999999, 12.686110712469285)
+        put(10.058399999999999, 13.029460090061214)
+        put(10.363199999999999, 13.274947451484703)
+        put(10.668, 13.595112910955907)
+        put(10.9728, 13.917233756545247)
+        put(11.277599999999998, 14.241188867795625)
+        put(11.5824, 14.533723468537932)
+        put(11.887199999999998, 14.960445780410867)
+        put(12.192, 15.165509640676033)
     }
     val hubAngleCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
         put(0.0, 90.0)
-        put(0.30479999999999996, 86.36179796977044)
-        put(0.6095999999999999, 82.7527005706532)
-        put(0.9144, 79.20043921987744)
-        put(1.2191999999999998, 75.7301569570825)
-        put(1.524, 71.63919252263383)
-        put(1.8288, 68.51573680801226)
-        put(2.1336, 65.43403275355804)
-        put(2.4383999999999997, 62.50911971695068)
-        put(2.7432, 59.74323004172886)
-        put(3.048, 57.135549524610795)
-        put(3.3528, 54.7341105592441)
-        put(3.6576, 52.42527035456388)
-        put(3.9623999999999997, 50.2567718238655)
-        put(4.2672, 48.221811338798496)
-        put(4.572, 46.31307536090758)
-        put(4.876799999999999, 44.53246172268135)
-        put(5.1815999999999995, 42.887859957661114)
-        put(5.4864, 41.34635908574173)
-        put(5.7912, 39.68131513766788)
-        put(6.096, 38.03505131362643)
-        put(6.400799999999999, 37.23845117054059)
-        put(6.7056, 35.97998952594711)
-        put(7.0104, 34.86297550175815)
-        put(7.3152, 33.88580197315637)
-        put(7.62, 32.92331776583621)
-        put(7.924799999999999, 31.86938774288247)
-        put(8.2296, 31.07257799386358)
-        put(8.5344, 30.210135645082943)
-        put(8.839199999999998, 29.422201592597148)
-        put(9.144, 28.542379859138137)
-        put(9.448799999999999, 27.9703448394974)
-        put(9.753599999999999, 27.16969882117106)
-        put(10.058399999999999, 26.70912983401122)
-        put(10.363199999999999, 25.969882543552025)
-        put(10.668, 25.86958023156304)
-        put(10.9728, 24.810098852722597)
-        put(11.277599999999998, 24.308219755648352)
-        put(11.5824, 23.716303902060595)
-        put(11.887199999999998, 23.239397070794915)
-        put(12.192, 22.87842254755574)
+        put(0.30479999999999996, 86.92631666870594)
+        put(0.6095999999999999, 83.87022359406497)
+        put(0.9144, 80.84871442203033)
+        put(1.2191999999999998, 77.8776392771635)
+        put(1.524, 74.18251478502259)
+        put(1.8288, 71.51425009768978)
+        put(2.1336, 68.77692608199607)
+        put(2.4383999999999997, 66.14810738162157)
+        put(2.7432, 63.631740389005046)
+        put(3.048, 61.229835534132484)
+        put(3.3528, 59.0094801241263)
+        put(3.6576, 56.835776657078426)
+        put(3.9623999999999997, 54.76177592309224)
+        put(4.2672, 52.809745425653105)
+        put(4.572, 50.91220299827429)
+        put(4.876799999999999, 49.11008737866478)
+        put(5.1815999999999995, 47.47164573549949)
+        put(5.4864, 45.922246172345474)
+        put(5.7912, 44.45697173409083)
+        put(6.096, 43.07097873347284)
+        put(6.400799999999999, 41.765173492867845)
+        put(6.7056, 40.47595307797732)
+        put(7.0104, 39.30176182864191)
+        put(7.3152, 38.24850198566654)
+        put(7.62, 37.08969547192753)
+        put(7.924799999999999, 36.10933725783022)
+        put(8.2296, 35.25071579649663)
+        put(8.5344, 34.2716294512995)
+        put(8.839199999999998, 33.42502222210868)
+        put(9.144, 32.645681796886535)
+        put(9.448799999999999, 31.222920898267517)
+        put(9.753599999999999, 31.159058328298464)
+        put(10.058399999999999, 30.5026441910638)
+        put(10.363199999999999, 29.763965297691684)
+        put(10.668, 29.13958017377846)
+        put(10.9728, 28.544498959702718)
+        put(11.277599999999998, 27.97689350127402)
+        put(11.5824, 27.393705620324376)
+        put(11.887199999999998, 27.00032258478542)
+        put(12.192, 26.349602358918297)
     }
 
     val floorSpeedCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
@@ -239,47 +245,62 @@ object Shooter: SubsystemBase("Shooter") {
     var shooterVelocitySetpoint: LinearVelocity = 0.0.inchesPerSecond
         set(value) {
             field = value
-            shooterMotor.setControl(VelocityVoltage(field.asInchesPerSecond/(WHEEL_DIAMETER.asInches * Math.PI)))
+            shooterMotor.setControl(VelocityVoltage(2.0 * field.asInchesPerSecond/(WHEEL_DIAMETER.asInches * Math.PI)))
         }
-
-    // ball trajectory angle
-    var hoodAngleSetpoint: Angle = 0.0.degrees
-        set(value) {
-            field = value.coerceIn(0.0.degrees, 45.0.degrees)
-            hoodMotor.setControl(PositionVoltage(field))
-        }
-
-    @get:AutoLogOutput(key = "Shooter/Hood Position")
-    val hoodMotorPosition: Angle get() = hoodMotor.position.valueAsDouble.rotations
-
-    // degrees
-    const val HOOD_STOW_SETPOINT = 90.0
 
 
     @get:AutoLogOutput(key = "Shooter/Shooter Velocity")
     val shooterVelocity: LinearVelocity
-        get() = (shooterMotor.velocity.valueAsDouble * WHEEL_DIAMETER.asInches * Math.PI).inchesPerSecond
+        get() = (shooterMotor.velocity.valueAsDouble * WHEEL_DIAMETER.asInches * Math.PI).inchesPerSecond / 2.0
 
     @get:AutoLogOutput(key = "Shooter/Shooter Current")
     val shooterCurrent: Double
         get() = shooterMotor.supplyCurrent.valueAsDouble
 
+
+    // ball trajectory angle
+    @get:AutoLogOutput(key = "Shooter/Hood Angle Setpoint")
+    var hoodAngleSetpoint: Angle = HOOD_STOW_SETPOINT.degrees
+        set(value) {
+            field = value.coerceIn(0.0.degrees, 90.0.degrees)
+            hoodMotor.setControl(PositionVoltage(field))
+        }
+
+    @get:AutoLogOutput(key = "Shooter/Hood Angle")
+    val hoodAngle: Angle get() = hoodMotor.position.valueAsDouble.rotations
+
+    // degrees
+    const val HOOD_STOW_SETPOINT = 90.0
+
+
+    @get:AutoLogOutput(key = "Shooter/Hood error distance")
+    val hoodErrorDistance get() = abs(AimUtils.distanceToGoal * sin(hoodMotor.closedLoopError.valueAsDouble.radians))
+
+    @get:AutoLogOutput(key = "Shooter/Velocity error distance")
+    val velocityErrorDistance get() = abs((if (AimUtils.aimingAtGoal) AimUtils.SHOT_AIRTIME * cos(hubAngleCurve.get(AimUtils.distanceToGoal)) else AimUtils.PASS_AIRTIME * cos(floorAngleCurve.get(AimUtils.distanceToGoal))) * shooterMotor.closedLoopError.valueAsDouble * WHEEL_DIAMETER.asMeters * Math.PI * 0.5)
+
+
     var fuel: MutableList<FuelSim> = mutableListOf()
 
-    val rampedUp: Boolean get() = (shooterVelocity - shooterVelocitySetpoint).absoluteValue() < 0.5.metersPerSecond
+    @get:AutoLogOutput(key = "Shooter/Ramped up")
+    val rampedUp: Boolean get() = (shooterVelocity - shooterVelocitySetpoint).absoluteValue() < 1.0.metersPerSecond
 
     var isShooting = false
     var i = 0
 
     init {
         shooterMotor.configSim(DCMotor.getKrakenX60(2), 0.1)
-        hoodMotor.configSim(DCMotor.getKrakenX60(1), 0.01)
+        hoodMotor.configSim(DCMotor.getKrakenX60(1), 0.005)
 
         shooterMotor.applyConfiguration {
             currentLimits(25.0, 30.0, 1.0)
             coastMode()
 
-            p(if (isReal) 0.0 else 10.0)
+            Feedback.withSensorToMechanismRatio(1.0/1.5)
+
+            v(0.08)
+            p(if (isReal) 0.0 else 2000.0)
+            d(0.0)
             s(0.0, StaticFeedforwardSignValue.UseVelocitySign)
         }
         shooterMotor.addFollower(Falcons.SHOOTER_1)
@@ -289,7 +310,8 @@ object Shooter: SubsystemBase("Shooter") {
             inverted(true)
             brakeMode()
             s(0.13, StaticFeedforwardSignValue.UseClosedLoopSign)
-            p(if (isReal) 0.0 else 1.0)
+            p(if (isReal) 0.0 else 60.0)
+            d(4.0)
 
 //            Feedback.SensorToMechanismRatio = 1.0 / (10.0 / 233.0)
 //            motionMagic(2.1, 12.2)
@@ -318,9 +340,14 @@ object Shooter: SubsystemBase("Shooter") {
 
 
     fun shoot(): Command = runCommand {
-        if (rampedUp && !FieldManager.inTrenchArea) {
-            isShooting = true
-            Spindexer.currentState = Spindexer.State.ON
+        if (!FieldManager.inTrenchArea) {
+            if (rampedUp) {
+                isShooting = true
+                Spindexer.currentState = Spindexer.State.ON
+            } else {
+                isShooting = false
+                Spindexer.currentState = Spindexer.State.OFF
+            }
 
             hoodAngleSetpoint = (
                 if (AimUtils.aimingAtGoal)
@@ -350,13 +377,13 @@ object Shooter: SubsystemBase("Shooter") {
 
 
     fun shootSimulatedFuel() {
-        val exitVelocity = hubSpeedCurve.get(AimUtils.distanceToGoal)
-        val exitAngle = hubAngleCurve.get(AimUtils.distanceToGoal).degrees
-        val angleToTarget = AimUtils.aimTarget.angleTo(Turret.turretPose)
-        val velocity2d = Translation2d(-exitVelocity * exitAngle.cos(), 0.0).rotateBy(angleToTarget.asRotation2d)
+        val exitVelocity = shooterVelocity.asMetersPerSecond//hubSpeedCurve.get(AimUtils.distanceToGoal)
+        val exitAngle = hoodAngle//hubAngleCurve.get(AimUtils.distanceToGoal).degrees
+//        val angleToTarget = AimUtils.aimTarget.angleTo(Turret.turretPose)
+        val velocity2d = Translation2d(exitVelocity * exitAngle.cos(), 0.0).rotateBy(Turret.fieldCentricAngle.asRotation2d)
         val turretVelocity = Translation2d(Turret.turretOffsetFromCenter.x * Drive.gyroYawRate.asRadiansPerSecond, Turret.turretOffsetFromCenter.y * Drive.gyroYawRate.asRadiansPerSecond).rotateBy(Drive.heading) + Drive.velocity
         fuel.add(FuelSim(
-            Translation3d(Turret.turretPose.x, Turret.turretPose.y, 0.4),
+            Translation3d(Turret.turretTranslation.x, Turret.turretTranslation.y, 0.4),
             Translation3d(velocity2d.x + turretVelocity.x, velocity2d.y + turretVelocity.y, exitVelocity * exitAngle.sin())
         ))
     }
