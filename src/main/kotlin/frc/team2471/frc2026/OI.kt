@@ -7,6 +7,7 @@ import edu.wpi.first.wpilibj.Alert
 import edu.wpi.first.wpilibj2.command.SubsystemBase
 import org.team2471.frc.lib.control.LoopLogger
 import org.team2471.frc.lib.control.MeanCommandXboxController
+import org.team2471.frc.lib.control.b
 import org.team2471.frc.lib.control.commands.parallelCommand
 import org.team2471.frc.lib.control.commands.toCommand
 import org.team2471.frc.lib.math.deadband
@@ -21,10 +22,10 @@ object OI: SubsystemBase("OI") {
     val deadbandOperator = 0.1
 
     val driveTranslationX: Double
-        get() = driverController.leftY.deadband(deadbandDriver) * if (driverController.b().asBoolean) 0.5 else 1.0
+        get() = driverController.leftY.deadband(deadbandDriver)
 
     val driveTranslationY: Double
-        get() = driverController.leftX.deadband(deadbandDriver) * if (driverController.b().asBoolean) 0.5 else 1.0
+        get() = driverController.leftX.deadband(deadbandDriver)
 
     val rawDriveTranslation: Translation2d
         get() {

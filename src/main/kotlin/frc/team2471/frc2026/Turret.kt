@@ -119,8 +119,8 @@ object Turret: SubsystemBase("Turret") {
             inverted(true)
             brakeMode()
             s(0.13, StaticFeedforwardSignValue.UseClosedLoopSign)
-            p(if (isReal) 0.0 else 150.0)
-            d(15.0)
+            p(if (isReal) 0.0 else 500.0)
+            d(25.0)
 
 //            Feedback.SensorToMechanismRatio = 1.0 / (10.0 / 233.0)
 //            motionMagic(2.1, 12.2)

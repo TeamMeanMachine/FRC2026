@@ -247,7 +247,7 @@ object Shooter: SubsystemBase("Shooter") {
             Feedback.withSensorToMechanismRatio(1.0/1.5)
 
             v(0.08)
-            p(if (isReal) 0.0 else 2000.0)
+            p(if (isReal) 0.0 else 4000.0)
             d(0.0)
             s(0.0, StaticFeedforwardSignValue.UseVelocitySign)
         }
