@@ -40,6 +40,7 @@ import org.team2471.frc.lib.units.asInches
 import org.team2471.frc.lib.units.asInchesPerSecond
 import org.team2471.frc.lib.units.asMeters
 import org.team2471.frc.lib.units.asMetersPerSecond
+import org.team2471.frc.lib.units.asRadians
 import org.team2471.frc.lib.units.asRadiansPerSecond
 import org.team2471.frc.lib.units.asRotation2d
 import org.team2471.frc.lib.units.asVolts
@@ -54,6 +55,7 @@ import org.team2471.frc.lib.units.seconds
 import org.team2471.frc.lib.units.sin
 import org.team2471.frc.lib.units.volts
 import org.team2471.frc.lib.units.voltsPerSecond
+import org.team2471.frc.lib.util.angleTo
 import org.team2471.frc.lib.util.isReal
 import org.team2471.frc.lib.util.isSim
 import kotlin.math.abs
@@ -229,6 +231,7 @@ object Shooter: SubsystemBase("Shooter") {
 
 
     var fuel: MutableList<FuelSim> = mutableListOf()
+    var fuel2: MutableList<FuelSim> = mutableListOf()
 
     @get:AutoLogOutput(key = "Shooter/Ramped up")
     val rampedUp: Boolean get() = (shooterVelocity - shooterVelocitySetpoint).absoluteValue() < 1.0.metersPerSecond
@@ -283,6 +286,10 @@ object Shooter: SubsystemBase("Shooter") {
             fuel.forEach { it.update() }
             logFuel("fuel", *fuel.toTypedArray())
             fuel.removeFuel()
+
+            fuel2.forEach { it.update() }
+            logFuel("fuel2", *fuel2.toTypedArray())
+            fuel2.removeFuel()
         }
     }
 
@@ -325,10 +332,10 @@ object Shooter: SubsystemBase("Shooter") {
 
 
     fun shootSimulatedFuel() {
-        val exitVelocity = shooterVelocity.asMetersPerSecond//hubSpeedCurve.get(AimUtils.distanceToGoal)
-        val exitAngle = hoodAngle//hubAngleCurve.get(AimUtils.distanceToGoal).degrees
-//        val angleToTarget = AimUtils.aimTarget.angleTo(Turret.turretPose)
-        val velocity2d = Translation2d(exitVelocity * exitAngle.cos(), 0.0).rotateBy(Turret.fieldCentricAngle.asRotation2d)
+        val exitVelocity = hubSpeedCurve.get(AimUtils.distanceToGoal.asFeet)
+        val exitAngle = hubAngleCurve.get(AimUtils.distanceToGoal.asFeet).degrees
+        val angleToTarget = Turret.turretTranslation.angleTo(AimUtils.aimTarget)
+        val velocity2d = Translation2d(exitVelocity * exitAngle.cos(), 0.0).rotateBy(angleToTarget.asRotation2d)
         val turretVelocity = Translation2d(Turret.turretOffsetFromCenter.x * Drive.gyroYawRate.asRadiansPerSecond, Turret.turretOffsetFromCenter.y * Drive.gyroYawRate.asRadiansPerSecond).rotateBy(Drive.heading) + Drive.velocity
         fuel.add(FuelSim(
             Translation3d(Turret.turretTranslation.x, Turret.turretTranslation.y, 0.4),

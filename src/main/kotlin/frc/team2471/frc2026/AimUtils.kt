@@ -5,6 +5,7 @@ import edu.wpi.first.math.geometry.Translation3d
 import edu.wpi.first.math.interpolation.InterpolatingTreeMap
 import edu.wpi.first.math.interpolation.Interpolator
 import edu.wpi.first.math.interpolation.InverseInterpolator
+import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.units.measure.Distance
 import org.littletonrobotics.junction.AutoLogOutput
 import org.team2471.frc.lib.math.round
@@ -12,10 +13,15 @@ import org.team2471.frc.lib.units.asDegrees
 import org.team2471.frc.lib.units.asFeet
 import org.team2471.frc.lib.units.asMeters
 import org.team2471.frc.lib.units.asRadiansPerSecond
+import org.team2471.frc.lib.units.cos
+import org.team2471.frc.lib.units.degrees
 import org.team2471.frc.lib.units.feet
 import org.team2471.frc.lib.units.inches
 import org.team2471.frc.lib.units.meters
 import org.team2471.frc.lib.units.radians
+import org.team2471.frc.lib.units.sin
+import org.team2471.frc.lib.units.wrap
+import kotlin.math.abs
 import kotlin.math.absoluteValue
 import kotlin.math.atan2
 import kotlin.math.pow
@@ -54,6 +60,20 @@ object AimUtils {
                 } else {
                     FieldManager.goalPose + Translation2d(0.0.inches, -70.0.inches)
                 } - turretVelocity * PASS_AIRTIME
+            }
+        }
+
+    val boringAimTarget: Translation2d
+        get() {
+            return if (aimingAtGoal) {
+                FieldManager.goalPose
+            } else {
+                if (Drive.pose.y.meters > FieldManager.fieldHalfWidth) {
+                    // This is the stuff making the robot aim in the middle of the hump. Keeping it until we are sure it doesn't work.
+                    FieldManager.goalPose + Translation2d(0.0.inches, 70.0.inches)
+                } else {
+                    FieldManager.goalPose + Translation2d(0.0.inches, -70.0.inches)
+                }
             }
         }
 
@@ -97,20 +117,15 @@ object AimUtils {
 
     fun printShooterCurves(goalHeight: Distance, airTime: Double, distRange: IntRange) {
         val angles = mutableMapOf<Double, Double>()
-        val speeds = mutableMapOf<Double, Double>()
+        val speed = 7.5
         for (i in distRange) {
             val dist = i.toDouble()
-            val angleAndSpeed = getAngleAndSpeed(dist.feet, goalHeight, airTime)
-            angles[dist] = angleAndSpeed.first
-            speeds[dist] = angleAndSpeed.second
+            val angle = getAngle(dist.feet, goalHeight, speed)
+            angles[dist] = angle.asDegrees
         }
         println("Angle Curve:")
         angles.forEach { (dist, angle) ->
             println("put(${dist.round(3)}, ${angle.round(3)})")
-        }
-        println("Speed Curve:")
-        speeds.forEach { (dist, speed) ->
-            println("put(${dist.round(3)}, ${speed.round(3)})")
         }
     }
 
@@ -176,5 +191,41 @@ object AimUtils {
 //        println("Dist: ${distFromGoal.asMeters}, ErrorSum: ${errorSum}, iterations: ${num}")
 
         return Pair(atan2(guess.second, guess.first).radians.asDegrees, sqrt(guess.first.pow(2) + guess.second.pow(2)))
+    }
+
+    fun getAngle(distFromGoal: Distance, goalHeight: Distance, speed: Double) : Angle {
+
+        val toTarget: Translation2d = Translation2d(distFromGoal, goalHeight)
+
+        var guess = 75.0
+        var guessIncremented = guess + 0.1
+
+        var error = calcFuelError(speed * guess.degrees.cos(), speed * guess.degrees.sin(), toTarget, AimUtils.SHOT_AIRTIME).first
+        var errorIncremented = calcFuelError(speed * guessIncremented.degrees.cos(), speed * guessIncremented.degrees.sin(), toTarget, AimUtils.SHOT_AIRTIME).first
+
+        var num = 0
+        while (error >= 0.1 || num < 10) {
+            var slope = (errorIncremented - error)/(guessIncremented - guess)
+            println("guess = ${guess} error = ${error} slope = $slope")
+
+
+            while (abs(slope) < 0.0001) { guessIncremented += 0.1
+
+                errorIncremented = calcFuelError(speed * guessIncremented.degrees.cos(), speed * guessIncremented.degrees.sin(), toTarget, AimUtils.SHOT_AIRTIME).first
+                slope = (errorIncremented - error)/(guessIncremented - guess)
+            }
+
+            guess = (-error/slope + guess).coerceIn(0.0, 90.0)
+//            println("error/slope = ${-error/slope}")
+//            println("newguess = ${guess}")
+            guessIncremented = guess + 0.1
+
+            error = calcFuelError(speed * guess.degrees.cos(), speed * guess.degrees.sin(), toTarget, AimUtils.SHOT_AIRTIME).first
+            errorIncremented = calcFuelError(speed * guessIncremented.degrees.cos(), speed * guessIncremented.degrees.sin(), toTarget, AimUtils.SHOT_AIRTIME).first
+
+            num++
+        }
+
+        return guess.degrees
     }
 }
