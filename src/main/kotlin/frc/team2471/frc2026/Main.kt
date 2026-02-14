@@ -2,7 +2,6 @@
 package frc.team2471.frc2026
 
 import com.ctre.phoenix6.SignalLogger
-import com.ctre.phoenix6.controls.MotionMagicDutyCycle
 import edu.wpi.first.hal.FRCNetComm.tInstances
 import edu.wpi.first.hal.FRCNetComm.tResourceType
 import edu.wpi.first.hal.HAL
@@ -92,7 +91,7 @@ object Robot : LoggedRobot() {
                 Logger.addDataReceiver(WPILOGWriter())
             } // Running a physics simulator, log to NT
             RobotMode.REPLAY -> { // Replaying a log, set up replay source
-                setUseTiming(false) // Run as fast as possible
+                setUseTiming(true) // false - simulate as fast as possible, true - simulate in real time (particle filter needs true)
                 val logPath = LogFileUtil.findReplayLog()
                 Logger.setReplaySource(WPILOGReader(logPath))
                 Logger.addDataReceiver(WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim")))
