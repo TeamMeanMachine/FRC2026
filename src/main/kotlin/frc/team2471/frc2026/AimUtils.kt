@@ -86,16 +86,63 @@ object AimUtils {
     /**
      * @return A pair of doubles, the first is the horizontal error from the target when the ball reaches a specific height, the second is the time error it took the ball to get there.
      */
-    fun calcFuelError(vx: Double, vy: Double, goalPos: Translation2d, airTimeTarget: Double): Pair<Double, Double> {
+    fun calcFuelError(vx: Double, vy: Double, goalPos: Translation2d, airTimeTarget: Double, printPoints: Boolean = false): Pair<Double, Double> {
         val fuel = FuelSim(Translation3d(), Translation3d(vx, 0.0, vy))
         var time = 0.0
+
+        val points = mutableMapOf<Double, Double>()
 
         while (fuel.pos.z > goalPos.y || fuel.velocity.z >= 0.0) {
             fuel.update(0.02, 1)
             time += 0.02
+            points[fuel.pos.x] = fuel.pos.z
+        }
+
+        if (printPoints) {
+            points.forEach { (x, y) -> print("($x,$y),") }
+            print("\n")
         }
 
         return Pair(fuel.pos.x - goalPos.x, time - airTimeTarget)
+    }
+
+    fun calcFuelHeightError(vx: Double, vy: Double, goalPos: Translation2d, printPoints: Boolean = false): Double {
+        val fuel = FuelSim(Translation3d(), Translation3d(vx, 0.0, vy))
+        var prevFuelPos = Translation2d()
+
+        val points = mutableMapOf<Double, Double>()
+
+
+
+        while (fuel.pos.x < goalPos.x) {
+//            println("fuel x: ${fuel.pos.x} Goal pos: ${goalPos.x}")
+            prevFuelPos = Translation2d(fuel.pos.x, fuel.pos.z)
+            fuel.update(0.02, 1)
+            points[fuel.pos.x] = fuel.pos.z
+        }
+        if (printPoints) {
+            points.forEach { (x, y) -> print("($x,$y),") }
+            print("\n")
+        }
+
+        // draws a line between final 2 fuel position and calculates where line crosses goalpos
+
+        val slope = (fuel.pos.z - prevFuelPos.y)/(fuel.pos.x - prevFuelPos.x)
+
+        return (slope * (goalPos.x - prevFuelPos.x) + prevFuelPos.y) - goalPos.y
+    }
+
+    fun calcFuelTime(vx: Double, vy: Double, goalPos: Translation2d): Double {
+        val fuel = FuelSim(Translation3d(), Translation3d(vx, 0.0, vy))
+
+        var t = 0.0
+
+        while (fuel.pos.x < goalPos.x) {
+            fuel.update(0.01, 1)
+            t+=0.01
+        }
+
+        return t
     }
 
 
@@ -115,18 +162,55 @@ object AimUtils {
         return Pair(angleCurve, speedCurve)
     }
 
-    fun printShooterCurves(goalHeight: Distance, airTime: Double, distRange: IntRange) {
+    fun printShooterCurves(goalHeight: Distance, distRange: IntRange, airTime: Double) {
         val angles = mutableMapOf<Double, Double>()
-        val speed = 7.5
+        val speeds = mutableMapOf<Double, Double>()
+
         for (i in distRange) {
             val dist = i.toDouble()
-            val angle = getAngle(dist.feet, goalHeight, speed)
-            angles[dist] = angle.asDegrees
+            val angleAndSpeed = getAngleAndSpeed(dist.feet, goalHeight, airTime)
+            angles[dist] = angleAndSpeed.first
+            speeds[dist] = angleAndSpeed.second
+        }
+
+        println("Angle Curve:")
+        angles.forEach { (dist, angle) ->
+            println("put(${dist.round(3)}, ${angle.round(3)})")
+        }
+        println("Speed Curve:")
+        speeds.forEach { (dist, speed) ->
+            println("put(${dist.round(3)}, ${speed.round(3)})")
+        }
+    }
+
+    fun printShooterCurves(goalHeight: Distance, distRange: IntRange, speedRange: Pair<Double, Double>) {
+
+        val angles = mutableMapOf<Double, Double>()
+        val speeds = mutableMapOf<Double, Double>()
+        val times = mutableMapOf<Double, Double>()
+
+        for (i in distRange) {
+            val dist = i.toDouble()
+            val speed = ((speedRange.second - speedRange.first)/(distRange.endInclusive.toDouble() - distRange.start.toDouble()))*(i.toDouble() - distRange.start.toDouble()) + speedRange.first
+            val angleAndTime = getAngleAndTime(dist.feet, goalHeight, speed)
+            angles[dist] = angleAndTime.first.asDegrees
+            speeds[dist] = speed
+            times[dist] = angleAndTime.second
         }
         println("Angle Curve:")
         angles.forEach { (dist, angle) ->
             println("put(${dist.round(3)}, ${angle.round(3)})")
         }
+        println("Speed Curve:")
+        speeds.forEach { (dist, speed) ->
+            println("put(${dist.round(3)}, ${speed.round(3)})")
+        }
+
+        println("Time Curve:")
+        times.forEach { (dist, time) ->
+            println("put(${dist.round(3)}, ${time.round(3)})")
+        }
+
     }
 
     // angle in degrees, speed in m/s
@@ -193,39 +277,50 @@ object AimUtils {
         return Pair(atan2(guess.second, guess.first).radians.asDegrees, sqrt(guess.first.pow(2) + guess.second.pow(2)))
     }
 
-    fun getAngle(distFromGoal: Distance, goalHeight: Distance, speed: Double) : Angle {
+    fun getAngleAndTime(distFromGoal: Distance, goalHeight: Distance, speed: Double): Pair<Angle, Double> {
 
         val toTarget: Translation2d = Translation2d(distFromGoal, goalHeight)
+
+        println("(${toTarget.x},${toTarget.y})")
+        println("Speed: ${speed}")
 
         var guess = 75.0
         var guessIncremented = guess + 0.1
 
-        var error = calcFuelError(speed * guess.degrees.cos(), speed * guess.degrees.sin(), toTarget, AimUtils.SHOT_AIRTIME).first
-        var errorIncremented = calcFuelError(speed * guessIncremented.degrees.cos(), speed * guessIncremented.degrees.sin(), toTarget, AimUtils.SHOT_AIRTIME).first
+        var error = calcFuelHeightError(speed * guess.degrees.cos(), speed * guess.degrees.sin(), toTarget, true)
+        var errorIncremented = calcFuelHeightError(speed * guessIncremented.degrees.cos(), speed * guessIncremented.degrees.sin(), toTarget, true)
 
         var num = 0
-        while (error >= 0.1 || num < 10) {
+        while ((error >= 0.1 || num < 10) && guess != 0.0) {
             var slope = (errorIncremented - error)/(guessIncremented - guess)
+//            println(errorIncremented)
+//            println(error)
             println("guess = ${guess} error = ${error} slope = $slope")
 
 
-            while (abs(slope) < 0.0001) { guessIncremented += 0.1
 
-                errorIncremented = calcFuelError(speed * guessIncremented.degrees.cos(), speed * guessIncremented.degrees.sin(), toTarget, AimUtils.SHOT_AIRTIME).first
-                slope = (errorIncremented - error)/(guessIncremented - guess)
-            }
+//            while (abs(slope) < 0.0001) { guessIncremented += 0.1
+//
+//                errorIncremented = calcFuelHeightError(speed * guessIncremented.degrees.cos(), speed * guessIncremented.degrees.sin(), toTarget, AimUtils.SHOT_AIRTIME)
+//                slope = (errorIncremented - error)/(guessIncremented - guess)
+//            }
 
-            guess = (-error/slope + guess).coerceIn(0.0, 90.0)
+            guess = (-error/slope + guess).coerceIn(0.0, 85.0)
 //            println("error/slope = ${-error/slope}")
 //            println("newguess = ${guess}")
             guessIncremented = guess + 0.1
+//            println("before fuel calc guess = ${guess} guessIncremented = ${guessIncremented}")
 
-            error = calcFuelError(speed * guess.degrees.cos(), speed * guess.degrees.sin(), toTarget, AimUtils.SHOT_AIRTIME).first
-            errorIncremented = calcFuelError(speed * guessIncremented.degrees.cos(), speed * guessIncremented.degrees.sin(), toTarget, AimUtils.SHOT_AIRTIME).first
+            error = calcFuelHeightError(speed * guess.degrees.cos(), speed * guess.degrees.sin(), toTarget, true)
+            errorIncremented = calcFuelHeightError(speed * guessIncremented.degrees.cos(), speed * guessIncremented.degrees.sin(), toTarget, true)
+
+//            println("after fuel calc")
 
             num++
         }
 
-        return guess.degrees
+
+
+        return Pair(guess.degrees, calcFuelTime(speed * guess.degrees.cos(), speed * guess.degrees.sin(), toTarget))
     }
 }
