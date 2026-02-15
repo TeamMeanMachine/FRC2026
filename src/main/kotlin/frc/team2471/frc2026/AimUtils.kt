@@ -49,19 +49,34 @@ object AimUtils {
     @get:AutoLogOutput(key = "aim target")
     val aimTarget: Translation2d
         get() {
-            val turretVelocity = Translation2d(Turret.turretOffsetFromCenter.x * Drive.gyroYawRate.asRadiansPerSecond, Turret.turretOffsetFromCenter.y * Drive.gyroYawRate.asRadiansPerSecond).rotateBy(Drive.heading) + Drive.velocity
-
             return if (aimingAtGoal) {
-                FieldManager.goalPose - turretVelocity * SHOT_AIRTIME
+                FieldManager.goalPose - calculateAimTargetOffset(SHOT_AIRTIME)
             } else {
                 if (Drive.pose.y.meters > FieldManager.fieldHalfWidth) {
                     // This is the stuff making the robot aim in the middle of the hump. Keeping it until we are sure it doesn't work.
                     FieldManager.goalPose + Translation2d(0.0.inches, 70.0.inches)
                 } else {
                     FieldManager.goalPose + Translation2d(0.0.inches, -70.0.inches)
-                } - turretVelocity * PASS_AIRTIME
+                } - calculateAimTargetOffset(PASS_AIRTIME)
             }
         }
+    fun calculateAimTargetOffset(airTime: Double) : Translation2d {
+        val turretVelocity = Translation2d(Turret.turretOffsetFromCenter.x * Drive.gyroYawRate.asRadiansPerSecond, Turret.turretOffsetFromCenter.y * Drive.gyroYawRate.asRadiansPerSecond).rotateBy(Drive.heading) + Drive.velocity
+
+        return turretVelocity * airTime
+    }
+
+//    fun calculateAimTargetOffset() : Translation2d {
+//        val turretVelocity = Translation2d(Turret.turretOffsetFromCenter.x * Drive.gyroYawRate.asRadiansPerSecond, Turret.turretOffsetFromCenter.y * Drive.gyroYawRate.asRadiansPerSecond).rotateBy(Drive.heading) + Drive.velocity
+//        var offset : Translation2d = turretVelocity * Shooter.hubTimeCurve.get(Turret.turretTranslation.getDistance(
+//            FieldManager.goalPose).meters.asFeet)
+//
+//        for (i in 1..4) {
+//            offset = turretVelocity * Shooter.hubTimeCurve.get(Turret.turretTranslation.getDistance(FieldManager.goalPose - offset).meters.asFeet)
+//        }
+//
+//        return offset
+//    }
 
     val boringAimTarget: Translation2d
         get() {
@@ -284,7 +299,7 @@ object AimUtils {
         println("(${toTarget.x},${toTarget.y})")
         println("Speed: ${speed}")
 
-        var guess = 75.0
+        var guess = if (distFromGoal > 7.0.feet) 75.0 else 84.0
         var guessIncremented = guess + 0.1
 
         var error = calcFuelHeightError(speed * guess.degrees.cos(), speed * guess.degrees.sin(), toTarget, true)

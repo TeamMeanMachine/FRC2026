@@ -106,6 +106,27 @@ object Shooter: SubsystemBase("Shooter") {
         put(20.0, 43.071)
 
     }
+
+    //feet, s
+//    val hubTimeCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
+//        put(3.0, 0.27)
+//        put(4.0, 0.3)
+//        put(5.0, 1.2)
+//        put(6.0, 1.22)
+//        put(7.0, 1.24)
+//        put(8.0, 1.25)
+//        put(9.0, 1.26)
+//        put(10.0, 1.28)
+//        put(11.0, 1.29)
+//        put(12.0, 1.3)
+//        put(13.0, 1.31)
+//        put(14.0, 1.31)
+//        put(15.0, 1.32)
+//        put(16.0, 1.32)
+//        put(17.0, 1.32)
+//        put(18.0, 1.32)
+//    }
+
     // feet, m/s
     val floorSpeedCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
         put(5.0, 4.754)

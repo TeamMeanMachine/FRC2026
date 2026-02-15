@@ -10,8 +10,8 @@ import org.team2471.frc.lib.control.commands.runOnce
 object PrintHubCurves {
     @JvmStatic
     fun main(args: Array<String>) {
-        printShooterCurves(AimUtils.HUB_HEIGHT - Turret.turretHeight, 3..18, AimUtils.SHOT_AIRTIME)
-//        printShooterCurves(AimUtils.HUB_HEIGHT - Turret.turretHeight, 3..18, Pair(7.0, 9.0))
+//        printShooterCurves(AimUtils.HUB_HEIGHT - Turret.turretHeight, 3..18, AimUtils.SHOT_AIRTIME)
+        printShooterCurves(AimUtils.HUB_HEIGHT - Turret.turretHeight, 3..18, Pair(7.0, 9.0))
     }
 }
 
