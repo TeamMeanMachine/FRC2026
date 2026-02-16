@@ -299,7 +299,7 @@ object Shooter: SubsystemBase("Shooter") {
             if (isShooting) {
                 if (i > 1) {
                     i = 0
-                    shootSimulatedFuel()
+                    shootSimulatedFuelWithMotors()
                 } else {
                     i++
                 }
@@ -357,6 +357,18 @@ object Shooter: SubsystemBase("Shooter") {
         val exitAngle = hubAngleCurve.get(AimUtils.distanceToGoal.asFeet).degrees
         val angleToTarget = Turret.turretTranslation.angleTo(AimUtils.aimTarget)
         val velocity2d = Translation2d(exitVelocity * exitAngle.cos(), 0.0).rotateBy(angleToTarget.asRotation2d)
+        val turretVelocity = Translation2d(Turret.turretOffsetFromCenter.x * Drive.gyroYawRate.asRadiansPerSecond, Turret.turretOffsetFromCenter.y * Drive.gyroYawRate.asRadiansPerSecond).rotateBy(Drive.heading) + Drive.velocity
+        fuel.add(FuelSim(
+            Translation3d(Turret.turretTranslation.x, Turret.turretTranslation.y, 0.4),
+            Translation3d(velocity2d.x + turretVelocity.x, velocity2d.y + turretVelocity.y, exitVelocity * exitAngle.sin())
+        ))
+    }
+
+    fun shootSimulatedFuelWithMotors() {
+        val exitVelocity = shooterVelocity.asMetersPerSecond
+        val exitAngle = hoodAngle
+//        val angleToTarget = AimUtils.aimTarget.angleTo(Turret.turretPose)
+        val velocity2d = Translation2d(exitVelocity * exitAngle.cos(), 0.0).rotateBy(Turret.fieldCentricAngle.asRotation2d)
         val turretVelocity = Translation2d(Turret.turretOffsetFromCenter.x * Drive.gyroYawRate.asRadiansPerSecond, Turret.turretOffsetFromCenter.y * Drive.gyroYawRate.asRadiansPerSecond).rotateBy(Drive.heading) + Drive.velocity
         fuel.add(FuelSim(
             Translation3d(Turret.turretTranslation.x, Turret.turretTranslation.y, 0.4),

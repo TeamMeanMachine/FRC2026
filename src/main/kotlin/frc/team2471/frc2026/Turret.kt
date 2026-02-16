@@ -19,7 +19,9 @@ import org.team2471.frc.lib.ctre.inverted
 import org.team2471.frc.lib.ctre.loggedTalonFX.LoggedTalonFX
 import org.team2471.frc.lib.ctre.p
 import org.team2471.frc.lib.ctre.s
+import org.team2471.frc.lib.math.round
 import org.team2471.frc.lib.math.toPose2d
+import org.team2471.frc.lib.units.asDegrees
 import org.team2471.frc.lib.units.asInches
 import org.team2471.frc.lib.units.asMeters
 import org.team2471.frc.lib.units.asRotation2d
@@ -29,6 +31,7 @@ import org.team2471.frc.lib.units.meters
 import org.team2471.frc.lib.units.rotations
 import org.team2471.frc.lib.units.sin
 import org.team2471.frc.lib.units.unWrap
+import org.team2471.frc.lib.units.wrap
 import org.team2471.frc.lib.util.angleTo
 import org.team2471.frc.lib.util.isReal
 import kotlin.math.abs
@@ -48,10 +51,10 @@ object Turret: SubsystemBase("Turret") {
     const val encoder2GearRatio = encoder1GearRatio * 11.0/46.0
 
     @get:AutoLogOutput(key = "Turret/encoder1Angle")
-    private val encoder1Angle = turretEncoder1.absolutePosition.valueAsDouble
+    private val encoder1Angle = turretEncoder1.absolutePosition.valueAsDouble.rotations
 
     @get:AutoLogOutput(key = "Turret/encoder2Angle")
-    private val encoder2Angle = turretEncoder2.absolutePosition.valueAsDouble
+    private val encoder2Angle = turretEncoder2.absolutePosition.valueAsDouble.rotations
 
     // unwraps encoder 1 angle using encoder 2 angle
     @get:AutoLogOutput(key = "Turret/fusedEncoderAngle")
@@ -59,25 +62,24 @@ object Turret: SubsystemBase("Turret") {
         get() {
             // generate a list od all possible angles based off of encoder 1
             val validAngles: ArrayList<Double> = arrayListOf()
-            var angle = encoder1Angle * encoder1GearRatio
+            var angle = encoder1Angle.asDegrees * encoder1GearRatio
             while (angle <= turretRange/2.0){
                 validAngles.add(angle)
                 angle += 360.0 * encoder1GearRatio
             }
-            angle = encoder1Angle * encoder1GearRatio - 360.0 * encoder1GearRatio
+            angle = encoder1Angle.asDegrees * encoder1GearRatio - 360.0 * encoder1GearRatio
             while (angle >= -turretRange/2.0){
                 validAngles.add(angle)
                 angle -= 360.0 * encoder1GearRatio
             }
-
-//            println(validAngles)
 
             // using encoder 2 calculate errors of each valid angle
             var minError = Double.MAX_VALUE
             var bestAngle = 0.0
             for (angle in validAngles) {
                 val estEncoder2Angle = (angle/encoder2GearRatio) % 360.0
-                val error = kotlin.math.abs(encoder2Angle - estEncoder2Angle) % 360.0
+                // rounded because of floating point errors
+                val error = kotlin.math.abs(encoder2Angle.asDegrees - estEncoder2Angle).round(3) % 360.0
 //                println("angle: ${angle}, estAngle: ${estEncoder2Angle}, error: ${error}")
                 if (error < minError){
                     minError = error
