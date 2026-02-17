@@ -16,22 +16,22 @@ object DigitalSensors {
 
 object Falcons {
     const val FRONT_RIGHT_DRIVE = 23
-    const val FRONT_RIGHT_STEER = 14
+    const val FRONT_RIGHT_STEER = 12
 
     const val FRONT_LEFT_DRIVE = 16
-    const val FRONT_LEFT_STEER = 10
+    const val FRONT_LEFT_STEER = 15
 
-    const val BACK_RIGHT_DRIVE = 22
-    val BACK_RIGHT_STEER = if (isSim) 40 else 15
+    const val BACK_RIGHT_DRIVE = 1
+    val BACK_RIGHT_STEER = 24
 
-    val BACK_LEFT_DRIVE = if (isSim) 41 else 18
+    const val BACK_LEFT_DRIVE = 10
     const val BACK_LEFT_STEER = 11
 
 
 
-    const val INTAKE_DEPLOY = 59
-    const val INTAKE_ROLLER_0 = 58
-    const val INTAKE_ROLLER_1 = 60
+    const val INTAKE_DEPLOY = 21
+    const val INTAKE_ROLLER_0 = 14
+    const val INTAKE_ROLLER_1 = 13
 
     const val SHOOTER_HOOD = 53
     const val SHOOTER_0 = 57
@@ -40,20 +40,20 @@ object Falcons {
     const val TURRET_0 = 55
     const val TURRET_1 = 54
 
-    const val SPIN_0 = 52
-    const val SPIN_1 = 51
-    const val SIDETAKE = 49
-    const val UPTAKE = 48
+    const val SPIN_0 = 2
+    const val SPIN_1 = 3
+    const val SIDETAKE = 19
+    const val UPTAKE = 18
 }
 
 object Talons {
 }
 
 object CANCoders {
-    const val FRONT_RIGHT = 25
-    const val FRONT_LEFT = 27
-    const val BACK_RIGHT = 26
-    const val BACK_LEFT = 28
+    const val FRONT_RIGHT = 31
+    const val FRONT_LEFT = 30
+    const val BACK_RIGHT = 32
+    const val BACK_LEFT = 33
 
     const val TURRET_1 = 99
     const val TURRET_2 = 98
@@ -69,7 +69,7 @@ object CANivores {
 }
 
 object CANSensors {
-    const val PIGEON = 2
+    const val PIGEON = 34
 }
 
 object I2CPort {
