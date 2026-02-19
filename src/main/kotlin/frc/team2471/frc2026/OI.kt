@@ -97,9 +97,27 @@ object OI: SubsystemBase("OI") {
             Drive.pose = Pose2d(Translation2d(3.0, 3.0), Drive.heading)
         }.toCommand(Drive).ignoringDisable(true))
 
-        driverController.a().whileTrue(Shooter.shoot())
+//        driverController.a().whileTrue(Shooter.shoot())
 
-        driverController.rightBumper().whileTrue(Drive.snakeMode())
+//        driverController.rightBumper().whileTrue(Drive.snakeMode())
+        driverController.x().onTrue(runOnce { Intake.deploy() })
+        driverController.b().onTrue(runOnce { Intake.stow() })
+
+        driverController.leftBumper().onTrue(runOnce {
+            if (Spindexer.currentState != Spindexer.State.ON) {
+                Spindexer.currentState = Spindexer.State.ON
+            } else {
+                Spindexer.currentState = Spindexer.State.OFF
+            }
+        })
+
+        driverController.rightBumper().onTrue(runOnce {
+            if (Intake.intakeState != Intake.IntakeState.INTAKING) {
+                Intake.intakeState = Intake.IntakeState.INTAKING
+            } else {
+                Intake.intakeState = Intake.IntakeState.OFF
+            }
+        })
 
     }
 

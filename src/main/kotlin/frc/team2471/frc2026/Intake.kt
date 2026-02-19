@@ -2,6 +2,7 @@ package frc.team2471.frc2026
 
 import com.ctre.phoenix6.controls.DutyCycleOut
 import com.ctre.phoenix6.controls.MotionMagicVoltage
+import com.ctre.phoenix6.controls.PositionVoltage
 import com.ctre.phoenix6.hardware.TalonFX
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue
 import edu.wpi.first.math.filter.Debouncer
@@ -39,10 +40,10 @@ object Intake: SubsystemBase("Intake") {
     val deployMotor = TalonFX(Falcons.INTAKE_DEPLOY)
 
 
-    val deployPose get() = deployPoseEntry.getDouble(1.0)
+    val deployPose get() = deployPoseEntry.getDouble(25.75)
     val stowPose get() = stowPoseEntry.getDouble(0.0)
 
-    val intakePower get() = intakePowerEntry.getDouble(0.5)
+    val intakePower get() = intakePowerEntry.getDouble(0.84)
 
     @get:AutoLogOutput(key = "Intake/Intake state")
     var intakeState: IntakeState = IntakeState.OFF
@@ -77,6 +78,11 @@ object Intake: SubsystemBase("Intake") {
     val deployCurrent: Double
         get() = deployMotor.supplyCurrent.valueAsDouble
 
+    @get:AutoLogOutput(key = "Intake/Deploy Motor Position")
+    val deployMotorPosition: Double
+        get() = deployMotor.position.valueAsDouble
+
+
 
     const val HOMING_POWER = 0.1
 
@@ -95,15 +101,17 @@ object Intake: SubsystemBase("Intake") {
         deployMotor.applyConfiguration {
             currentLimits(20.0, 30.0, 1.0)
             coastMode()
-            p(0.0)
-            s(0.0, StaticFeedforwardSignValue.UseClosedLoopSign)
-            motionMagic(50.0, 50.0)
+            p(1.5)
+            s(0.25, StaticFeedforwardSignValue.UseClosedLoopSign)
+            motionMagic(750.0, 1500.0)
         }
         rollerMotor.applyConfiguration {
             currentLimits(20.0, 30.0, 1.0)
             coastMode()
         }
         rollerMotor.addFollower(Falcons.INTAKE_ROLLER_1)
+
+        deployMotor.setPosition(0.0)
 
         this.defaultCommand = default()
     }

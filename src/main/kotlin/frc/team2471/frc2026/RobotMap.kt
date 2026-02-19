@@ -16,7 +16,7 @@ object DigitalSensors {
 
 object Falcons {
     const val FRONT_RIGHT_DRIVE = 23
-    const val FRONT_RIGHT_STEER = 12
+    const val FRONT_RIGHT_STEER = 22
 
     const val FRONT_LEFT_DRIVE = 16
     const val FRONT_LEFT_STEER = 15
