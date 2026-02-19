@@ -2,7 +2,7 @@
 
 package frc.team2471.frc2026
 
-import org.team2471.frc.lib.util.isSim
+import com.ctre.phoenix6.CANBus
 
 object Sparks {
 }
@@ -66,10 +66,12 @@ object ServoPort {
 }
 
 object CANivores {
+    val TURRET_CAN = CANBus("kenivore")
 }
 
 object CANSensors {
     const val PIGEON = 34
+    const val TURRET_PIGEON = 35
 }
 
 object I2CPort {
