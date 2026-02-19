@@ -1,16 +1,15 @@
 package frc.team2471.frc2026
 
-import edu.wpi.first.apriltag.AprilTag
 import edu.wpi.first.apriltag.AprilTagFieldLayout
 import edu.wpi.first.apriltag.AprilTagFields
 import edu.wpi.first.math.geometry.Pose2d
 import edu.wpi.first.math.geometry.Translation2d
 import edu.wpi.first.units.measure.Distance
 import edu.wpi.first.wpilibj.DriverStation
-import edu.wpi.first.wpilibj.Filesystem
 import frc.team2471.frc2026.Robot.isAutonomous
 import org.littletonrobotics.junction.AutoLogOutput
 import org.littletonrobotics.junction.Logger
+import org.littletonrobotics.junction.networktables.LoggedDashboardChooser
 import org.team2471.frc.lib.units.asMeters
 import org.team2471.frc.lib.units.asRotation2d
 import org.team2471.frc.lib.units.degrees
@@ -24,7 +23,6 @@ import org.team2471.frc.lib.units.wrap
 import org.team2471.frc.lib.util.isRedAlliance
 import kotlin.math.absoluteValue
 import kotlin.math.floor
-import kotlin.math.sign
 
 object FieldManager {
     val aprilTagFieldLayout: AprilTagFieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded) //AprilTagFieldLayout(Filesystem.getDeployDirectory().path + "/2026Field.json")
@@ -44,6 +42,12 @@ object FieldManager {
     val blueHubTags = allAprilTags.filter { it.ID in 18..21 || it.ID in 24..27 }
     val hubTags = redHubTags + blueHubTags
 
+    val overrideAutoWinner: LoggedDashboardChooser<String> =
+        LoggedDashboardChooser<String>("Override Auto Winner").apply {
+            addOption("None", null)
+            addOption("Red", "R")
+            addOption("Blue", "B")
+        }
 
     val trenchAreaWidth = 75.0.inches
     val trenchAreaLength = 50.0.inches
@@ -88,7 +92,7 @@ object FieldManager {
 
     @get:AutoLogOutput(key = "FieldManager/gameData")
     val gameData: String
-        get() = DriverStation.getGameSpecificMessage()
+        get() = if (overrideAutoWinner.get() == null) DriverStation.getGameSpecificMessage() else overrideAutoWinner.get()
 
     @get:AutoLogOutput(key = "FieldManager/redWonAuto")
     val redWonAuto: Boolean
@@ -97,6 +101,7 @@ object FieldManager {
             "B" -> false
             else -> prevRedWonAuto
         }.also { prevRedWonAuto = it }
+
     private var prevRedWonAuto: Boolean = true
 
     val blueWonAuto: Boolean

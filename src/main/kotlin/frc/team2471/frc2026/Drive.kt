@@ -18,6 +18,7 @@ import edu.wpi.first.math.interpolation.InverseInterpolator
 import edu.wpi.first.math.kinematics.ChassisSpeeds
 import edu.wpi.first.math.numbers.N1
 import edu.wpi.first.math.numbers.N3
+import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.wpilibj.Timer
 import edu.wpi.first.wpilibj2.command.Command
 import frc.team2471.frc2026.OI.driverController
@@ -42,6 +43,7 @@ import org.team2471.frc.lib.units.inchesPerSecond
 import org.team2471.frc.lib.units.metersPerSecondPerSecond
 import org.team2471.frc.lib.units.perSecond
 import org.team2471.frc.lib.units.radians
+import org.team2471.frc.lib.units.unWrap
 import org.team2471.frc.lib.util.demoSpeed
 import org.team2471.frc.lib.util.isBlueAlliance
 import org.team2471.frc.lib.util.isReal
@@ -76,7 +78,11 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
             } else {
                 quest.setPose(Pose3d(Pose2d(questPose.transformBy(robotToQuestTransformMeters).translation, value + robotToQuestTransformMeters.rotation)))
             }
+            Turret.setTurretOffset(value.measure)
         }
+
+    var headingAngleUnwrapped: Angle = heading.measure
+        get() = heading.measure.unWrap(field)
 
     val cameras: List<QuixVisionCamera> = listOf(
         /*  +x
@@ -110,6 +116,7 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
     // Trust down to 2 cm in XY and 2 degrees in rotational. Units in meters and radians.
     val QUEST_STD_DEVS: Matrix<N3?, N1?> = VecBuilder.fill(0.025, 0.025, 0.052)
 
+    // TODO: Check heading accuracy
     val localizer = PoseLocalizer(Fiducial.constructFiducialList(FieldManager.allAprilTags), cameras)
 
     private val translationRateTimer = Timer()
@@ -219,7 +226,7 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
     override fun getJoystickPercentageSpeeds(): ChassisSpeeds {
         val rawJoystick = OI.rawDriveTranslation
         // Square drive input and apply demoSpeed
-        val power = rawJoystick.norm.square() * demoSpeed * if (inSnakeMode) 0.9 else 1.0
+        val power = rawJoystick.norm.square() * demoSpeed * if (Shooter.isShooting) 0.6 else if (inSnakeMode) 0.8 else 1.0
         // Apply modified power to joystick vector and flip depending on alliance
         val joystickTranslation = rawJoystick * power * if (isBlueAlliance) -1.0 else 1.0
 

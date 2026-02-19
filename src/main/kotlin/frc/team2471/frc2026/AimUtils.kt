@@ -5,6 +5,7 @@ import edu.wpi.first.math.geometry.Translation3d
 import edu.wpi.first.math.interpolation.InterpolatingTreeMap
 import edu.wpi.first.math.interpolation.Interpolator
 import edu.wpi.first.math.interpolation.InverseInterpolator
+import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.units.measure.Distance
 import org.littletonrobotics.junction.AutoLogOutput
 import org.team2471.frc.lib.math.round
@@ -12,10 +13,15 @@ import org.team2471.frc.lib.units.asDegrees
 import org.team2471.frc.lib.units.asFeet
 import org.team2471.frc.lib.units.asMeters
 import org.team2471.frc.lib.units.asRadiansPerSecond
+import org.team2471.frc.lib.units.cos
+import org.team2471.frc.lib.units.degrees
 import org.team2471.frc.lib.units.feet
 import org.team2471.frc.lib.units.inches
 import org.team2471.frc.lib.units.meters
 import org.team2471.frc.lib.units.radians
+import org.team2471.frc.lib.units.sin
+import org.team2471.frc.lib.units.wrap
+import kotlin.math.abs
 import kotlin.math.absoluteValue
 import kotlin.math.atan2
 import kotlin.math.pow
@@ -23,7 +29,7 @@ import kotlin.math.sqrt
 
 object AimUtils {
     // seconds
-    const val SHOT_AIRTIME = 0.85
+    const val SHOT_AIRTIME = 0.95
     const val PASS_AIRTIME = 1.0
     // m/s^2
     const val G = 9.80665
@@ -43,39 +49,115 @@ object AimUtils {
     @get:AutoLogOutput(key = "aim target")
     val aimTarget: Translation2d
         get() {
-            val turretVelocity = Translation2d(Turret.turretOffsetFromCenter.x * Drive.gyroYawRate.asRadiansPerSecond, Turret.turretOffsetFromCenter.y * Drive.gyroYawRate.asRadiansPerSecond).rotateBy(Drive.heading) + Drive.velocity
-
             return if (aimingAtGoal) {
-                FieldManager.goalPose - turretVelocity * SHOT_AIRTIME
+                FieldManager.goalPose - calculateAimTargetOffset(SHOT_AIRTIME)
             } else {
                 if (Drive.pose.y.meters > FieldManager.fieldHalfWidth) {
                     // This is the stuff making the robot aim in the middle of the hump. Keeping it until we are sure it doesn't work.
                     FieldManager.goalPose + Translation2d(0.0.inches, 70.0.inches)
                 } else {
-                    FieldManager.goalPose + Translation2d(-0.0.inches, -70.0.inches)
-                } - turretVelocity * PASS_AIRTIME
+                    FieldManager.goalPose + Translation2d(0.0.inches, -70.0.inches)
+                } - calculateAimTargetOffset(PASS_AIRTIME)
+            }
+        }
+    fun calculateAimTargetOffset(airTime: Double) : Translation2d {
+        val turretVelocity = Translation2d(Turret.turretOffsetFromCenter.x * Drive.gyroYawRate.asRadiansPerSecond, Turret.turretOffsetFromCenter.y * Drive.gyroYawRate.asRadiansPerSecond).rotateBy(Drive.heading) + Drive.velocity
+
+        return turretVelocity * airTime
+    }
+
+//    fun calculateAimTargetOffset() : Translation2d {
+//        val turretVelocity = Translation2d(Turret.turretOffsetFromCenter.x * Drive.gyroYawRate.asRadiansPerSecond, Turret.turretOffsetFromCenter.y * Drive.gyroYawRate.asRadiansPerSecond).rotateBy(Drive.heading) + Drive.velocity
+//        var offset : Translation2d = turretVelocity * Shooter.hubTimeCurve.get(Turret.turretTranslation.getDistance(
+//            FieldManager.goalPose).meters.asFeet)
+//
+//        for (i in 1..4) {
+//            offset = turretVelocity * Shooter.hubTimeCurve.get(Turret.turretTranslation.getDistance(FieldManager.goalPose - offset).meters.asFeet)
+//        }
+//
+//        return offset
+//    }
+
+    val boringAimTarget: Translation2d
+        get() {
+            return if (aimingAtGoal) {
+                FieldManager.goalPose
+            } else {
+                if (Drive.pose.y.meters > FieldManager.fieldHalfWidth) {
+                    // This is the stuff making the robot aim in the middle of the hump. Keeping it until we are sure it doesn't work.
+                    FieldManager.goalPose + Translation2d(0.0.inches, 70.0.inches)
+                } else {
+                    FieldManager.goalPose + Translation2d(0.0.inches, -70.0.inches)
+                }
             }
         }
 
 
     val aimingAtGoal get() = FieldManager.inScoringZone
 
-    val distanceToGoal get() = Turret.turretPose.getDistance(aimTarget).absoluteValue
+    val distanceToGoal get() = Turret.turretTranslation.getDistance(aimTarget).absoluteValue.meters
 
 
     /**
      * @return A pair of doubles, the first is the horizontal error from the target when the ball reaches a specific height, the second is the time error it took the ball to get there.
      */
-    fun calcFuelError(vx: Double, vy: Double, goalPos: Translation2d, airTimeTarget: Double): Pair<Double, Double> {
+    fun calcFuelError(vx: Double, vy: Double, goalPos: Translation2d, airTimeTarget: Double, printPoints: Boolean = false): Pair<Double, Double> {
         val fuel = FuelSim(Translation3d(), Translation3d(vx, 0.0, vy))
         var time = 0.0
+
+        val points = mutableMapOf<Double, Double>()
 
         while (fuel.pos.z > goalPos.y || fuel.velocity.z >= 0.0) {
             fuel.update(0.02, 1)
             time += 0.02
+            points[fuel.pos.x] = fuel.pos.z
+        }
+
+        if (printPoints) {
+            points.forEach { (x, y) -> print("($x,$y),") }
+            print("\n")
         }
 
         return Pair(fuel.pos.x - goalPos.x, time - airTimeTarget)
+    }
+
+    fun calcFuelHeightError(vx: Double, vy: Double, goalPos: Translation2d, printPoints: Boolean = false): Double {
+        val fuel = FuelSim(Translation3d(), Translation3d(vx, 0.0, vy))
+        var prevFuelPos = Translation2d()
+
+        val points = mutableMapOf<Double, Double>()
+
+
+
+        while (fuel.pos.x < goalPos.x) {
+//            println("fuel x: ${fuel.pos.x} Goal pos: ${goalPos.x}")
+            prevFuelPos = Translation2d(fuel.pos.x, fuel.pos.z)
+            fuel.update(0.02, 1)
+            points[fuel.pos.x] = fuel.pos.z
+        }
+        if (printPoints) {
+            points.forEach { (x, y) -> print("($x,$y),") }
+            print("\n")
+        }
+
+        // draws a line between final 2 fuel position and calculates where line crosses goalpos
+
+        val slope = (fuel.pos.z - prevFuelPos.y)/(fuel.pos.x - prevFuelPos.x)
+
+        return (slope * (goalPos.x - prevFuelPos.x) + prevFuelPos.y) - goalPos.y
+    }
+
+    fun calcFuelTime(vx: Double, vy: Double, goalPos: Translation2d): Double {
+        val fuel = FuelSim(Translation3d(), Translation3d(vx, 0.0, vy))
+
+        var t = 0.0
+
+        while (fuel.pos.x < goalPos.x) {
+            fuel.update(0.01, 1)
+            t+=0.01
+        }
+
+        return t
     }
 
 
@@ -89,10 +171,61 @@ object AimUtils {
             val angleAndSpeed = getAngleAndSpeed(dist, goalHeight, airTime)
             angleCurve.put(dist.asMeters, angleAndSpeed.first)
             speedCurve.put(dist.asMeters, angleAndSpeed.second)
-            println("Dist: ${dist.asFeet.round(3)} angle: ${angleAndSpeed.first.round(3)} Speed: ${angleAndSpeed.second.round(3)}")
+//            println("Dist: ${dist.asFeet.round(3)} angle: ${angleAndSpeed.first.round(3)} Speed: ${angleAndSpeed.second.round(3)}")
         }
 
         return Pair(angleCurve, speedCurve)
+    }
+
+    fun printShooterCurves(goalHeight: Distance, distRange: IntRange, airTime: Double) {
+        val angles = mutableMapOf<Double, Double>()
+        val speeds = mutableMapOf<Double, Double>()
+
+        for (i in distRange) {
+            val dist = i.toDouble()
+            val angleAndSpeed = getAngleAndSpeed(dist.feet, goalHeight, airTime)
+            angles[dist] = angleAndSpeed.first
+            speeds[dist] = angleAndSpeed.second
+        }
+
+        println("Angle Curve:")
+        angles.forEach { (dist, angle) ->
+            println("put(${dist.round(3)}, ${angle.round(3)})")
+        }
+        println("Speed Curve:")
+        speeds.forEach { (dist, speed) ->
+            println("put(${dist.round(3)}, ${speed.round(3)})")
+        }
+    }
+
+    fun printShooterCurves(goalHeight: Distance, distRange: IntRange, speedRange: Pair<Double, Double>) {
+
+        val angles = mutableMapOf<Double, Double>()
+        val speeds = mutableMapOf<Double, Double>()
+        val times = mutableMapOf<Double, Double>()
+
+        for (i in distRange) {
+            val dist = i.toDouble()
+            val speed = ((speedRange.second - speedRange.first)/(distRange.endInclusive.toDouble() - distRange.start.toDouble()))*(i.toDouble() - distRange.start.toDouble()) + speedRange.first
+            val angleAndTime = getAngleAndTime(dist.feet, goalHeight, speed)
+            angles[dist] = angleAndTime.first.asDegrees
+            speeds[dist] = speed
+            times[dist] = angleAndTime.second
+        }
+        println("Angle Curve:")
+        angles.forEach { (dist, angle) ->
+            println("put(${dist.round(3)}, ${angle.round(3)})")
+        }
+        println("Speed Curve:")
+        speeds.forEach { (dist, speed) ->
+            println("put(${dist.round(3)}, ${speed.round(3)})")
+        }
+
+        println("Time Curve:")
+        times.forEach { (dist, time) ->
+            println("put(${dist.round(3)}, ${time.round(3)})")
+        }
+
     }
 
     // angle in degrees, speed in m/s
@@ -157,5 +290,52 @@ object AimUtils {
 //        println("Dist: ${distFromGoal.asMeters}, ErrorSum: ${errorSum}, iterations: ${num}")
 
         return Pair(atan2(guess.second, guess.first).radians.asDegrees, sqrt(guess.first.pow(2) + guess.second.pow(2)))
+    }
+
+    fun getAngleAndTime(distFromGoal: Distance, goalHeight: Distance, speed: Double): Pair<Angle, Double> {
+
+        val toTarget: Translation2d = Translation2d(distFromGoal, goalHeight)
+
+        println("(${toTarget.x},${toTarget.y})")
+        println("Speed: ${speed}")
+
+        var guess = if (distFromGoal > 7.0.feet) 75.0 else 84.0
+        var guessIncremented = guess + 0.1
+
+        var error = calcFuelHeightError(speed * guess.degrees.cos(), speed * guess.degrees.sin(), toTarget, true)
+        var errorIncremented = calcFuelHeightError(speed * guessIncremented.degrees.cos(), speed * guessIncremented.degrees.sin(), toTarget, true)
+
+        var num = 0
+        while ((error >= 0.1 || num < 10) && guess != 0.0) {
+            var slope = (errorIncremented - error)/(guessIncremented - guess)
+//            println(errorIncremented)
+//            println(error)
+            println("guess = ${guess} error = ${error} slope = $slope")
+
+
+
+//            while (abs(slope) < 0.0001) { guessIncremented += 0.1
+//
+//                errorIncremented = calcFuelHeightError(speed * guessIncremented.degrees.cos(), speed * guessIncremented.degrees.sin(), toTarget, AimUtils.SHOT_AIRTIME)
+//                slope = (errorIncremented - error)/(guessIncremented - guess)
+//            }
+
+            guess = (-error/slope + guess).coerceIn(0.0, 85.0)
+//            println("error/slope = ${-error/slope}")
+//            println("newguess = ${guess}")
+            guessIncremented = guess + 0.1
+//            println("before fuel calc guess = ${guess} guessIncremented = ${guessIncremented}")
+
+            error = calcFuelHeightError(speed * guess.degrees.cos(), speed * guess.degrees.sin(), toTarget, true)
+            errorIncremented = calcFuelHeightError(speed * guessIncremented.degrees.cos(), speed * guessIncremented.degrees.sin(), toTarget, true)
+
+//            println("after fuel calc")
+
+            num++
+        }
+
+
+
+        return Pair(guess.degrees, calcFuelTime(speed * guess.degrees.cos(), speed * guess.degrees.sin(), toTarget))
     }
 }

@@ -183,6 +183,19 @@ tasks.withType(JavaCompile).configureEach {
     options.compilerArgs.add "-XDstringConcat=inline"
 }
 
+tasks.register('printHubCurves', JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'frc.team2471.frc2026.tests.PrintHubCurves'
+
+    systemProperty 'java.library.path', "${projectDir}/build/jni/release"
+}
+
+tasks.register('printPassCurves', JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'frc.team2471.frc2026.tests.PrintPassCurves'
+
+    systemProperty 'java.library.path', "${projectDir}/build/jni/release"
+}
 
 repositories {
     mavenCentral()

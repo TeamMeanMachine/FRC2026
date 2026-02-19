@@ -4,11 +4,13 @@ import com.ctre.phoenix6.SignalLogger
 import com.ctre.phoenix6.controls.PositionVoltage
 import com.ctre.phoenix6.controls.VelocityVoltage
 import com.ctre.phoenix6.controls.VoltageOut
-import com.ctre.phoenix6.hardware.TalonFX
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue
 import edu.wpi.first.math.geometry.Translation2d
 import edu.wpi.first.math.geometry.Translation3d
-import edu.wpi.first.networktables.NetworkTableInstance
+import edu.wpi.first.math.interpolation.InterpolatingTreeMap
+import edu.wpi.first.math.interpolation.Interpolator
+import edu.wpi.first.math.interpolation.InverseInterpolator
+import edu.wpi.first.math.system.plant.DCMotor
 import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.units.measure.LinearVelocity
 import edu.wpi.first.units.measure.Voltage
@@ -16,8 +18,6 @@ import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.SubsystemBase
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine
-import frc.team2471.frc2026.AimUtils.generateShooterCurve
-import frc.team2471.frc2026.Turret.turretMotor
 import org.littletonrobotics.junction.AutoLogOutput
 import org.littletonrobotics.junction.Logger
 import org.team2471.frc.lib.control.commands.finallyRun
@@ -28,11 +28,19 @@ import org.team2471.frc.lib.ctre.applyConfiguration
 import org.team2471.frc.lib.ctre.brakeMode
 import org.team2471.frc.lib.ctre.coastMode
 import org.team2471.frc.lib.ctre.currentLimits
+import org.team2471.frc.lib.ctre.d
 import org.team2471.frc.lib.ctre.inverted
+import org.team2471.frc.lib.ctre.loggedTalonFX.LoggedTalonFX
 import org.team2471.frc.lib.ctre.p
 import org.team2471.frc.lib.ctre.s
+import org.team2471.frc.lib.ctre.v
+import org.team2471.frc.lib.units.absoluteValue
+import org.team2471.frc.lib.units.asFeet
 import org.team2471.frc.lib.units.asInches
 import org.team2471.frc.lib.units.asInchesPerSecond
+import org.team2471.frc.lib.units.asMeters
+import org.team2471.frc.lib.units.asMetersPerSecond
+import org.team2471.frc.lib.units.asRadians
 import org.team2471.frc.lib.units.asRadiansPerSecond
 import org.team2471.frc.lib.units.asRotation2d
 import org.team2471.frc.lib.units.asVolts
@@ -41,19 +49,166 @@ import org.team2471.frc.lib.units.degrees
 import org.team2471.frc.lib.units.inches
 import org.team2471.frc.lib.units.inchesPerSecond
 import org.team2471.frc.lib.units.metersPerSecond
+import org.team2471.frc.lib.units.radians
+import org.team2471.frc.lib.units.rotations
 import org.team2471.frc.lib.units.seconds
 import org.team2471.frc.lib.units.sin
 import org.team2471.frc.lib.units.volts
 import org.team2471.frc.lib.units.voltsPerSecond
 import org.team2471.frc.lib.util.angleTo
-import kotlin.math.absoluteValue
+import org.team2471.frc.lib.util.isReal
+import org.team2471.frc.lib.util.isSim
+import kotlin.math.abs
+import kotlin.math.cos
 
-// Unless otherwise specified every double here is in meters
 object Shooter: SubsystemBase("Shooter") {
-    val table = NetworkTableInstance.getDefault().getTable("Shooter")
 
-    val shooterMotor = TalonFX(Falcons.SHOOTER_0)
-    val hoodMotor = TalonFX(Falcons.SHOOTER_HOOD)
+    // feet, m/s
+    val hubSpeedCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
+        put(3.0, 6.052)
+        put(4.0, 6.111)
+        put(5.0, 6.339)
+        put(6.0, 6.415)
+        put(7.0, 6.54)
+        put(8.0, 6.68)
+        put(9.0, 6.833)
+        put(10.0, 6.999)
+        put(11.0, 7.144)
+        put(12.0, 7.326)
+        put(13.0, 7.524)
+        put(14.0, 7.718)
+        put(15.0, 7.979)
+        put(16.0, 8.302)
+        put(17.0, 8.538)
+        put(18.0, 8.779)
+        put(19.0, 9.028)
+        put(20.0, 9.282)
+    }
+    // feet, degrees
+    val hubAngleCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
+        put(3.0, 80.849)
+        put(4.0, 77.878)
+        put(5.0, 74.183)
+        put(6.0, 71.514)
+        put(7.0, 68.777)
+        put(8.0, 66.148)
+        put(9.0, 63.632)
+        put(10.0, 61.23)
+        put(11.0, 59.009)
+        put(12.0, 56.836)
+        put(13.0, 54.762)
+        put(14.0, 52.81)
+        put(15.0, 50.912)
+        put(16.0, 49.11)
+        put(17.0, 47.472)
+        put(18.0, 45.922)
+        put(19.0, 44.457)
+        put(20.0, 43.071)
+
+    }
+
+    //feet, s
+//    val hubTimeCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
+//        put(3.0, 0.27)
+//        put(4.0, 0.3)
+//        put(5.0, 1.2)
+//        put(6.0, 1.22)
+//        put(7.0, 1.24)
+//        put(8.0, 1.25)
+//        put(9.0, 1.26)
+//        put(10.0, 1.28)
+//        put(11.0, 1.29)
+//        put(12.0, 1.3)
+//        put(13.0, 1.31)
+//        put(14.0, 1.31)
+//        put(15.0, 1.32)
+//        put(16.0, 1.32)
+//        put(17.0, 1.32)
+//        put(18.0, 1.32)
+//    }
+
+    // feet, m/s
+    val floorSpeedCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
+        put(5.0, 4.754)
+        put(6.0, 4.86)
+        put(7.0, 4.983)
+        put(8.0, 5.121)
+        put(9.0, 5.368)
+        put(10.0, 5.638)
+        put(11.0, 5.78)
+        put(12.0, 5.978)
+        put(13.0, 6.194)
+        put(14.0, 6.419)
+        put(15.0, 6.652)
+        put(16.0, 6.893)
+        put(17.0, 7.14)
+        put(18.0, 7.415)
+        put(19.0, 7.707)
+        put(20.0, 7.925)
+        put(21.0, 8.204)
+        put(22.0, 8.474)
+        put(23.0, 8.748)
+        put(24.0, 9.026)
+        put(25.0, 9.306)
+        put(26.0, 9.69)
+        put(27.0, 9.922)
+        put(28.0, 10.163)
+        put(29.0, 10.453)
+        put(30.0, 10.745)
+        put(31.0, 11.039)
+        put(32.0, 11.411)
+        put(33.0, 11.725)
+        put(34.0, 12.018)
+        put(35.0, 12.346)
+        put(36.0, 12.711)
+        put(37.0, 12.902)
+        put(38.0, 13.263)
+        put(39.0, 13.42)
+        put(40.0, 13.862)
+    }
+    // feet, degrees
+    val floorAngleCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
+        put(5.0, 71.303)
+        put(6.0, 67.898)
+        put(7.0, 64.649)
+        put(8.0, 61.566)
+        put(9.0, 58.406)
+        put(10.0, 55.517)
+        put(11.0, 53.092)
+        put(12.0, 50.741)
+        put(13.0, 48.54)
+        put(14.0, 46.49)
+        put(15.0, 44.582)
+        put(16.0, 42.804)
+        put(17.0, 41.149)
+        put(18.0, 39.621)
+        put(19.0, 38.214)
+        put(20.0, 36.83)
+        put(21.0, 35.587)
+        put(22.0, 34.411)
+        put(23.0, 33.308)
+        put(24.0, 32.274)
+        put(25.0, 31.301)
+        put(26.0, 30.542)
+        put(27.0, 29.6)
+        put(28.0, 28.712)
+        put(29.0, 27.944)
+        put(30.0, 27.219)
+        put(31.0, 26.532)
+        put(32.0, 26.014)
+        put(33.0, 25.426)
+        put(34.0, 24.832)
+        put(35.0, 24.324)
+        put(36.0, 23.907)
+        put(37.0, 23.206)
+        put(38.0, 22.827)
+        put(39.0, 22.105)
+        put(40.0, 21.909)
+    }
+
+
+    val shooterMotor = LoggedTalonFX(Falcons.SHOOTER_0)
+    val hoodMotor = LoggedTalonFX(Falcons.SHOOTER_HOOD)
 
     val WHEEL_DIAMETER = 4.0.inches
 
@@ -61,42 +216,63 @@ object Shooter: SubsystemBase("Shooter") {
     var shooterVelocitySetpoint: LinearVelocity = 0.0.inchesPerSecond
         set(value) {
             field = value
-            shooterMotor.setControl(VelocityVoltage(field.asInchesPerSecond/(WHEEL_DIAMETER.asInches * Math.PI)))
+            shooterMotor.setControl(VelocityVoltage(2.0 * field.asInchesPerSecond/(WHEEL_DIAMETER.asInches * Math.PI)))
         }
 
-    var hoodAngleSetpoint: Angle = 0.0.degrees
-        set(value) {
-            field = value.coerceIn(0.0.degrees, 45.0.degrees)
-            hoodMotor.setControl(PositionVoltage(field))
-        }
 
     @get:AutoLogOutput(key = "Shooter/Shooter Velocity")
     val shooterVelocity: LinearVelocity
-        get() = (shooterMotor.velocity.valueAsDouble * WHEEL_DIAMETER.asInches * Math.PI).inchesPerSecond
+        get() = (shooterMotor.velocity.valueAsDouble * WHEEL_DIAMETER.asInches * Math.PI).inchesPerSecond / 2.0
 
     @get:AutoLogOutput(key = "Shooter/Shooter Current")
     val shooterCurrent: Double
         get() = shooterMotor.supplyCurrent.valueAsDouble
 
+
+    // ball trajectory angle
+    @get:AutoLogOutput(key = "Shooter/Hood Angle Setpoint")
+    var hoodAngleSetpoint: Angle = HOOD_STOW_SETPOINT.degrees
+        set(value) {
+            field = value.coerceIn(0.0.degrees, 90.0.degrees)
+            hoodMotor.setControl(PositionVoltage(field))
+        }
+
+    @get:AutoLogOutput(key = "Shooter/Hood Angle")
+    val hoodAngle: Angle get() = hoodMotor.position.valueAsDouble.rotations
+
+    // degrees
+    const val HOOD_STOW_SETPOINT = 90.0
+
+
+    @get:AutoLogOutput(key = "Shooter/Hood error distance")
+    val hoodErrorDistance get() = abs(AimUtils.distanceToGoal.asFeet * sin(hoodMotor.closedLoopError.valueAsDouble.radians))
+
+    @get:AutoLogOutput(key = "Shooter/Velocity error distance")
+    val velocityErrorDistance get() = abs((if (AimUtils.aimingAtGoal) AimUtils.SHOT_AIRTIME * cos(hubAngleCurve.get(AimUtils.distanceToGoal.asFeet)) else AimUtils.PASS_AIRTIME * cos(floorAngleCurve.get(AimUtils.distanceToGoal.asFeet))) * shooterMotor.closedLoopError.valueAsDouble * WHEEL_DIAMETER.asMeters * Math.PI * 0.5)
+
+
     var fuel: MutableList<FuelSim> = mutableListOf()
+    var fuel2: MutableList<FuelSim> = mutableListOf()
 
-    val hubShooterCurves = generateShooterCurve(AimUtils.HUB_HEIGHT - Turret.turretHeight, AimUtils.SHOT_AIRTIME)
-    val hubSpeedCurve = hubShooterCurves.second
-    val hubAngleCurve = hubShooterCurves.first
-
-    val floorShooterCurves = generateShooterCurve(-Turret.turretHeight, AimUtils.PASS_AIRTIME)
-    val floorSpeedCurve = floorShooterCurves.second
-    val floorAngleCurve = floorShooterCurves.first
+    @get:AutoLogOutput(key = "Shooter/Ramped up")
+    val rampedUp: Boolean get() = (shooterVelocity - shooterVelocitySetpoint).absoluteValue() < 1.0.metersPerSecond
 
     var isShooting = false
     var i = 0
 
     init {
+        shooterMotor.configSim(DCMotor.getKrakenX60(2), 0.1)
+        hoodMotor.configSim(DCMotor.getKrakenX60(1), 0.005)
+
         shooterMotor.applyConfiguration {
             currentLimits(25.0, 30.0, 1.0)
             coastMode()
 
-            p(0.0)
+            Feedback.withSensorToMechanismRatio(1.0/1.5)
+
+            v(0.08)
+            p(if (isReal) 0.0 else 4000.0)
+            d(0.0)
             s(0.0, StaticFeedforwardSignValue.UseVelocitySign)
         }
         shooterMotor.addFollower(Falcons.SHOOTER_1)
@@ -106,7 +282,8 @@ object Shooter: SubsystemBase("Shooter") {
             inverted(true)
             brakeMode()
             s(0.13, StaticFeedforwardSignValue.UseClosedLoopSign)
-            p(0.0)
+            p(if (isReal) 0.0 else 60.0)
+            d(4.0)
 
 //            Feedback.SensorToMechanismRatio = 1.0 / (10.0 / 233.0)
 //            motionMagic(2.1, 12.2)
@@ -118,43 +295,83 @@ object Shooter: SubsystemBase("Shooter") {
 
 
     override fun periodic() {
-        if (isShooting) {
-            if (i > 1) {
-                i = 0
-                shootSimulatedFuel()
-            } else {
-                i++
+        if (isSim) {
+            if (isShooting) {
+                if (i > 1) {
+                    i = 0
+                    shootSimulatedFuelWithMotors()
+                } else {
+                    i++
+                }
             }
+            fuel.forEach { it.update() }
+            logFuel("fuel", *fuel.toTypedArray())
+            fuel.removeFuel()
+
+            fuel2.forEach { it.update() }
+            logFuel("fuel2", *fuel2.toTypedArray())
+            fuel2.removeFuel()
         }
-        fuel.forEach { it.update() }
-        logFuel("fuel", *fuel.toTypedArray())
-        fuel.removeFuel()
     }
 
 
-    fun shoot(): Command = runCommand(Shooter) {
-        shooterVelocitySetpoint = (if (AimUtils.aimingAtGoal) hubSpeedCurve.get(AimUtils.distanceToGoal) else floorSpeedCurve.get(AimUtils.distanceToGoal)).metersPerSecond
+    fun shoot(): Command = runCommand {
+        if (!FieldManager.inTrenchArea) {
+            if (rampedUp) {
+                isShooting = true
+                Spindexer.currentState = Spindexer.State.ON
+            } else {
+                isShooting = false
+                Spindexer.currentState = Spindexer.State.OFF
+            }
 
-        hoodAngleSetpoint = (if (AimUtils.aimingAtGoal) hubAngleCurve.get(AimUtils.distanceToGoal) else floorAngleCurve.get(AimUtils.distanceToGoal)).degrees
+            hoodAngleSetpoint = (
+                if (AimUtils.aimingAtGoal)
+                    hubAngleCurve.get(AimUtils.distanceToGoal.asFeet)
+                else
+                    floorAngleCurve.get(AimUtils.distanceToGoal.asFeet)
+            ).degrees
+        } else {
+            isShooting = false
+            Spindexer.currentState = Spindexer.State.OFF
+            hoodAngleSetpoint = HOOD_STOW_SETPOINT.degrees
+        }
+    }.finallyRun {
+        isShooting = false
+        Spindexer.currentState = Spindexer.State.OFF
+        hoodAngleSetpoint = HOOD_STOW_SETPOINT.degrees
+    }
 
-    }.finallyRun(rampDown())
 
+    fun rampUp(): Command = runCommand(Shooter) {
+        shooterVelocitySetpoint = (if (AimUtils.aimingAtGoal) hubSpeedCurve.get(AimUtils.distanceToGoal.asFeet) else floorSpeedCurve.get(AimUtils.distanceToGoal.asFeet)).metersPerSecond
+    }.finallyRun { rampDown() }
 
     fun rampDown(): Command = runOnceCommand(Shooter) {
-        shooterMotor.setControl(VelocityVoltage(0.0))
+        shooterVelocitySetpoint = 0.0.inchesPerSecond
     }
 
 
     fun shootSimulatedFuel() {
-        val robotVelocity = Drive.velocity
-
-        val exitVelocity = hubSpeedCurve.get(AimUtils.distanceToGoal)
-        val exitAngle = hubAngleCurve.get(AimUtils.distanceToGoal).degrees
-        val angleToTarget = AimUtils.aimTarget.angleTo(Turret.turretPose)
-        val velocity2d = Translation2d(-exitVelocity * exitAngle.cos(), 0.0).rotateBy(angleToTarget.asRotation2d)
+        val exitVelocity = hubSpeedCurve.get(AimUtils.distanceToGoal.asFeet)
+        val exitAngle = hubAngleCurve.get(AimUtils.distanceToGoal.asFeet).degrees
+        val angleToTarget = Turret.turretTranslation.angleTo(AimUtils.aimTarget)
+        val velocity2d = Translation2d(exitVelocity * exitAngle.cos(), 0.0).rotateBy(angleToTarget.asRotation2d)
         val turretVelocity = Translation2d(Turret.turretOffsetFromCenter.x * Drive.gyroYawRate.asRadiansPerSecond, Turret.turretOffsetFromCenter.y * Drive.gyroYawRate.asRadiansPerSecond).rotateBy(Drive.heading) + Drive.velocity
         fuel.add(FuelSim(
-            Translation3d(Turret.turretPose.x, Turret.turretPose.y, 0.4),
+            Translation3d(Turret.turretTranslation.x, Turret.turretTranslation.y, 0.4),
+            Translation3d(velocity2d.x + turretVelocity.x, velocity2d.y + turretVelocity.y, exitVelocity * exitAngle.sin())
+        ))
+    }
+
+    fun shootSimulatedFuelWithMotors() {
+        val exitVelocity = shooterVelocity.asMetersPerSecond
+        val exitAngle = hoodAngle
+//        val angleToTarget = AimUtils.aimTarget.angleTo(Turret.turretPose)
+        val velocity2d = Translation2d(exitVelocity * exitAngle.cos(), 0.0).rotateBy(Turret.fieldCentricAngle.asRotation2d)
+        val turretVelocity = Translation2d(Turret.turretOffsetFromCenter.x * Drive.gyroYawRate.asRadiansPerSecond, Turret.turretOffsetFromCenter.y * Drive.gyroYawRate.asRadiansPerSecond).rotateBy(Drive.heading) + Drive.velocity
+        fuel.add(FuelSim(
+            Translation3d(Turret.turretTranslation.x, Turret.turretTranslation.y, 0.4),
             Translation3d(velocity2d.x + turretVelocity.x, velocity2d.y + turretVelocity.y, exitVelocity * exitAngle.sin())
         ))
     }
