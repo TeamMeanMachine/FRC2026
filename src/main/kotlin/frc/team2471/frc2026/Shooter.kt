@@ -40,7 +40,6 @@ import org.team2471.frc.lib.units.asInches
 import org.team2471.frc.lib.units.asInchesPerSecond
 import org.team2471.frc.lib.units.asMeters
 import org.team2471.frc.lib.units.asMetersPerSecond
-import org.team2471.frc.lib.units.asRadians
 import org.team2471.frc.lib.units.asRadiansPerSecond
 import org.team2471.frc.lib.units.asRotation2d
 import org.team2471.frc.lib.units.asVolts
@@ -219,16 +218,6 @@ object Shooter: SubsystemBase("Shooter") {
             shooterMotor.setControl(VelocityVoltage(2.0 * field.asInchesPerSecond/(WHEEL_DIAMETER.asInches * Math.PI)))
         }
 
-
-    @get:AutoLogOutput(key = "Shooter/Shooter Velocity")
-    val shooterVelocity: LinearVelocity
-        get() = (shooterMotor.velocity.valueAsDouble * WHEEL_DIAMETER.asInches * Math.PI).inchesPerSecond / 2.0
-
-    @get:AutoLogOutput(key = "Shooter/Shooter Current")
-    val shooterCurrent: Double
-        get() = shooterMotor.supplyCurrent.valueAsDouble
-
-
     // ball trajectory angle
     @get:AutoLogOutput(key = "Shooter/Hood Angle Setpoint")
     var hoodAngleSetpoint: Angle = HOOD_STOW_SETPOINT.degrees
@@ -239,6 +228,16 @@ object Shooter: SubsystemBase("Shooter") {
 
     @get:AutoLogOutput(key = "Shooter/Hood Angle")
     val hoodAngle: Angle get() = hoodMotor.position.valueAsDouble.rotations
+
+    @get:AutoLogOutput(key = "Shooter/Shooter Velocity")
+    val shooterVelocity: LinearVelocity
+        get() = (shooterMotor.velocity.valueAsDouble * WHEEL_DIAMETER.asInches * Math.PI).inchesPerSecond / 2.0
+
+    @get:AutoLogOutput(key = "Shooter/Shooter Current")
+    val shooterCurrent: Double get() = shooterMotor.supplyCurrent.valueAsDouble
+
+    @get:AutoLogOutput(key = "Shooter/Hood Current")
+    val hoodCurrent: Double get() = hoodMotor.supplyCurrent.valueAsDouble
 
     // degrees
     const val HOOD_STOW_SETPOINT = 90.0

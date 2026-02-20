@@ -43,36 +43,52 @@ object Spindexer: SubsystemBase("Spindexer") {
     val UPTAKE_SPIT_VELOCITY: Double get() = uptakeSpitVelocityEntry.getDouble(-50.0)
 
     @get:AutoLogOutput(key = "Spindexer/spindexerVelocity")
-    val spindexerVelocity: Double
-        get() = spinMotor.velocity.valueAsDouble
+    val spindexerVelocity: Double get() = spinMotor.velocity.valueAsDouble
+    @get:AutoLogOutput(key = "Spindexer/uptakeVelocity")
+    val uptakeVelocity: Double get() = uptakeMotor.velocity.valueAsDouble
+    @get:AutoLogOutput(key = "Spindexer/sidetakeMotorVelocity")
+    val sidetakeVelocity: Double get() = sidetakeMotor.velocity.valueAsDouble
 
     @get:AutoLogOutput(key = "Spindexer/spindexerCurrent")
-    val spindexerCurrent: Double
-        get() = spinMotor.supplyCurrent.valueAsDouble
-
-    @get:AutoLogOutput(key = "Spindexer/uptakeVelocity")
-    val uptakeVelocity: Double
-        get() = uptakeMotor.velocity.valueAsDouble
-
+    val spindexerCurrent: Double get() = spinMotor.supplyCurrent.valueAsDouble
     @get:AutoLogOutput(key = "Spindexer/uptakeCurrent")
-    val uptakeCurrent: Double
-        get() = uptakeMotor.supplyCurrent.valueAsDouble
-
-    @get:AutoLogOutput(key = "Spindexer/sidetakeMotorVelocity")
-    val sidetakeVelocity: Double
-        get() = sidetakeMotor.velocity.valueAsDouble
-
+    val uptakeCurrent: Double get() = uptakeMotor.supplyCurrent.valueAsDouble
     @get:AutoLogOutput(key = "Spindexer/sidetakeCurrent")
-    val sidetakeCurrent: Double
-        get() = sidetakeMotor.supplyCurrent.valueAsDouble
+    val sidetakeCurrent: Double get() = sidetakeMotor.supplyCurrent.valueAsDouble
 
+    @get:AutoLogOutput(key = "Spindexer/spindexerTorqueCurrent")
+    val spindexerTorqueCurrent: Double get() = spinMotor.torqueCurrent.valueAsDouble
+    @get:AutoLogOutput(key = "Spindexer/uptakeTorqueCurrent")
+    val uptakeTorqueCurrent: Double get() = uptakeMotor.torqueCurrent.valueAsDouble
+    @get:AutoLogOutput(key = "Spindexer/sidetakeTorqueCurrent")
+    val sidetakeTorqueCurrent: Double get() = sidetakeMotor.torqueCurrent.valueAsDouble
+
+
+    @get:AutoLogOutput(key = "Spindexer/spinMotorVelocitySetpoint")
     var spinMotorVelocitySetpoint: Double = 0.0
         set(value) {
-            if (value == 0.0) {
-                spinMotor.setControl(NeutralOut())
-            } else {
-                spinMotor.setControl(MotionMagicVelocityTorqueCurrentFOC(value))
-            }
+            spinMotor.setControl(
+                if (value == 0.0) NeutralOut() else MotionMagicVelocityTorqueCurrentFOC(value)
+            )
+            field = value
+        }
+
+    @get:AutoLogOutput(key = "Spindexer/sidetakeMotorVelocitySetpoint")
+    var sidetakeMotorVelocitySetpoint: Double = 0.0
+        set(value) {
+            sidetakeMotor.setControl(
+                if (value == 0.0) NeutralOut() else VelocityTorqueCurrentFOC(value)
+            )
+            field = value
+        }
+
+    @get:AutoLogOutput(key = "Spindexer/uptakeMotorVelocitySetpoint")
+    var uptakeMotorVelocitySetpoint: Double = 0.0
+        set(value) {
+            uptakeMotor.setControl(
+                if (value == 0.0) NeutralOut() else VelocityTorqueCurrentFOC(value)
+            )
+            field = value
         }
 
     init {
@@ -128,19 +144,19 @@ object Spindexer: SubsystemBase("Spindexer") {
     override fun periodic() {
         when (currentState) {
             State.OFF -> {
-                spinMotor.setControl(NeutralOut())
-                sidetakeMotor.setControl(NeutralOut())
-                uptakeMotor.setControl(NeutralOut())
+                spinMotorVelocitySetpoint = 0.0
+                sidetakeMotorVelocitySetpoint = 0.0
+                uptakeMotorVelocitySetpoint = 0.0
             }
             State.ON -> {
-                spinMotor.setControl(VelocityTorqueCurrentFOC(SPIN_VELOCITY))
-                sidetakeMotor.setControl(VelocityTorqueCurrentFOC(SIDETAKE_VELOCITY))
-                uptakeMotor.setControl(VelocityTorqueCurrentFOC(UPTAKE_VELOCITY))
+                spinMotorVelocitySetpoint = SPIN_VELOCITY
+                sidetakeMotorVelocitySetpoint = SIDETAKE_VELOCITY
+                uptakeMotorVelocitySetpoint = UPTAKE_VELOCITY
             }
             State.SPITTING -> {
-                spinMotor.setControl(VelocityTorqueCurrentFOC(SPIN_SPIT_VELOCITY))
-                sidetakeMotor.setControl(VelocityTorqueCurrentFOC(SIDETAKE_SPIT_VELOCITY))
-                uptakeMotor.setControl(VelocityTorqueCurrentFOC(UPTAKE_SPIT_VELOCITY))
+                spinMotorVelocitySetpoint = SPIN_SPIT_VELOCITY
+                sidetakeMotorVelocitySetpoint = SIDETAKE_SPIT_VELOCITY
+                uptakeMotorVelocitySetpoint = UPTAKE_SPIT_VELOCITY
             }
         }
     }

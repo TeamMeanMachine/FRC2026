@@ -2,10 +2,8 @@ package frc.team2471.frc2026
 
 import com.ctre.phoenix6.controls.DutyCycleOut
 import com.ctre.phoenix6.controls.MotionMagicVoltage
-import com.ctre.phoenix6.controls.PositionVoltage
 import com.ctre.phoenix6.hardware.TalonFX
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue
-import edu.wpi.first.math.filter.Debouncer
 import edu.wpi.first.networktables.NetworkTableInstance
 import edu.wpi.first.wpilibj.DigitalInput
 import edu.wpi.first.wpilibj2.command.Command
@@ -30,23 +28,21 @@ object Intake: SubsystemBase("Intake") {
     val stowPoseEntry = table.getEntry("stowPose")
     val intakePowerEntry = table.getEntry("intakePower")
 
+    val DEPLOY_POSE get() = deployPoseEntry.getDouble(25.75)
+    val STOW_POSE get() = stowPoseEntry.getDouble(0.0)
 
-    val stopSensor = DigitalInput(DigitalSensors.INTAKE_STOP_SENSOR)
-
-    @get:AutoLogOutput(key = "Intake/Hit Hard Stop")
-    val hitHardStop get() = !stopSensor.get()
+    val INTAKE_POWER get() = intakePowerEntry.getDouble(0.84)
+    const val HOMING_POWER = 0.1
 
     val rollerMotor = TalonFX(Falcons.INTAKE_ROLLER_0)
     val deployMotor = TalonFX(Falcons.INTAKE_DEPLOY)
-
-
-    val deployPose get() = deployPoseEntry.getDouble(25.75)
-    val stowPose get() = stowPoseEntry.getDouble(0.0)
-
-    val intakePower get() = intakePowerEntry.getDouble(0.84)
+    val stopSensor = DigitalInput(DigitalSensors.INTAKE_STOP_SENSOR)
 
     @get:AutoLogOutput(key = "Intake/Intake state")
     var intakeState: IntakeState = IntakeState.OFF
+
+    @get:AutoLogOutput(key = "Intake/Hit Hard Stop")
+    val hitHardStop get() = !stopSensor.get()
 
     @get:AutoLogOutput(key = "Intake/Roller Setpoint")
     var rollerSetpoint: Double = 0.0
@@ -83,14 +79,10 @@ object Intake: SubsystemBase("Intake") {
         get() = deployMotor.position.valueAsDouble
 
 
-
-    const val HOMING_POWER = 0.1
-
-
     init {
-        if (!deployPoseEntry.exists()) deployPoseEntry.setDouble(deployPose)
-        if (!stowPoseEntry.exists()) stowPoseEntry.setDouble(stowPose)
-        if (!intakePowerEntry.exists()) intakePowerEntry.setDouble(intakePower)
+        if (!deployPoseEntry.exists()) deployPoseEntry.setDouble(DEPLOY_POSE)
+        if (!stowPoseEntry.exists()) stowPoseEntry.setDouble(STOW_POSE)
+        if (!intakePowerEntry.exists()) intakePowerEntry.setDouble(INTAKE_POWER)
 
         deployPoseEntry.setPersistent()
         stowPoseEntry.setPersistent()
@@ -117,11 +109,11 @@ object Intake: SubsystemBase("Intake") {
     }
 
     fun deploy() {
-        deploySetpoint = deployPose
+        deploySetpoint = DEPLOY_POSE
     }
 
     fun stow() {
-        deploySetpoint = stowPose
+        deploySetpoint = STOW_POSE
     }
 
     fun home(): Command = sequenceCommand(
@@ -143,13 +135,11 @@ object Intake: SubsystemBase("Intake") {
             IntakeState.OFF -> {
                 rollerSetpoint = 0.0
             }
-
             IntakeState.INTAKING -> {
-                rollerSetpoint = intakePower
+                rollerSetpoint = INTAKE_POWER
             }
-
             IntakeState.SPITTING -> {
-                rollerSetpoint = -intakePower
+                rollerSetpoint = -INTAKE_POWER
             }
         }
     }

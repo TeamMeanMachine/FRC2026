@@ -21,7 +21,6 @@ import org.team2471.frc.lib.units.asDegrees
 import org.team2471.frc.lib.units.asFeet
 import org.team2471.frc.lib.units.asMeters
 import org.team2471.frc.lib.units.asMetersPerSecond
-import org.team2471.frc.lib.units.asRadiansPerSecond
 import org.team2471.frc.lib.units.asVolts
 import org.team2471.frc.lib.units.degrees
 import org.team2471.frc.lib.units.feetPerSecond
@@ -31,7 +30,6 @@ import org.team2471.frc.lib.math.round
 import org.team2471.frc.lib.units.asKilograms
 import org.team2471.frc.lib.units.metersPerSecondPerSecond
 import org.team2471.frc.lib.units.pounds
-import org.team2471.frc.lib.units.rpm
 import org.team2471.frc.lib.units.volts
 import org.team2471.frc.lib.util.isReal
 import kotlin.math.roundToInt
@@ -40,7 +38,7 @@ import kotlin.math.roundToInt
 // https://v6.docs.ctr-electronics.com/en/stable/docs/tuner/tuner-swerve/index.html
 object TunerConstants {
     val driveMotor = DCMotor.getKrakenX60Foc(1)!!
-    val steerMotor = DCMotor(12.0, 4.05, 275.0, 1.4, 7530.0.rpm.asRadiansPerSecond, 1) //x44
+    val steerMotor = DCMotor.getKrakenX44(1)!!
 
     private const val driveGearRatio = 6.746031746031747
     private const val steerGearRatio = 21.428571428571427
@@ -98,8 +96,8 @@ object TunerConstants {
               */
             DriveMotorInitialConfigs = TalonFXConfiguration().apply {
                 CurrentLimits.apply {
-                    SupplyCurrentLimit = 30.0
-                    SupplyCurrentLowerLimit = 20.0
+                    SupplyCurrentLimit = 40.0
+                    SupplyCurrentLowerLimit = 30.0
                     SupplyCurrentLowerTime = 1.0
                     SupplyCurrentLimitEnable = true
                 }
@@ -171,7 +169,7 @@ object TunerConstants {
         }
 
     //Usually swerve drives are square
-    val moduleTrackWidth = 12.125.inches
+    val moduleTrackWidth = 11.0.inches
 
     val frontLeft = ModuleConfig(
         Falcons.FRONT_LEFT_DRIVE,
