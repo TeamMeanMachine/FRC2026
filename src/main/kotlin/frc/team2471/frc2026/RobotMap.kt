@@ -22,7 +22,7 @@ object Falcons {
     const val FRONT_LEFT_STEER = 15
 
     const val BACK_RIGHT_DRIVE = 1
-    val BACK_RIGHT_STEER = 24
+    const val BACK_RIGHT_STEER = 24
 
     const val BACK_LEFT_DRIVE = 10
     const val BACK_LEFT_STEER = 11
@@ -33,12 +33,15 @@ object Falcons {
     const val INTAKE_ROLLER_0 = 14
     const val INTAKE_ROLLER_1 = 13
 
-    const val SHOOTER_HOOD = 53
-    const val SHOOTER_0 = 57
-    const val SHOOTER_1 = 56
+    const val SHOOTER_HOOD = 6
 
-    const val TURRET_0 = 55
-    const val TURRET_1 = 54
+    // if electrical problem, add 1
+    const val SHOOTER_0 = 4
+    const val SHOOTER_1 = 5
+
+    // if electrical problem, add 1
+    const val TURRET_0 = 7
+    const val TURRET_1 = 8
 
     const val SPIN_0 = 2
     const val SPIN_1 = 3
@@ -55,8 +58,8 @@ object CANCoders {
     const val BACK_RIGHT = 32
     const val BACK_LEFT = 33
 
-    const val TURRET_1 = 99
-    const val TURRET_2 = 98
+    const val TURRET_1 = 35
+    const val TURRET_2 = 36
 }
 
 object PWMPort {
@@ -71,7 +74,7 @@ object CANivores {
 
 object CANSensors {
     const val PIGEON = 34
-    const val TURRET_PIGEON = 35
+    const val TURRET_PIGEON = 37
 }
 
 object I2CPort {

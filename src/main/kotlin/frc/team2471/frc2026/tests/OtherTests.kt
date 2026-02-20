@@ -4,7 +4,9 @@ import edu.wpi.first.wpilibj2.command.Command
 import frc.team2471.frc2026.AimUtils
 import frc.team2471.frc2026.AimUtils.printShooterCurves
 import frc.team2471.frc2026.Turret
+import org.team2471.frc.lib.control.commands.runCommand
 import org.team2471.frc.lib.control.commands.runOnce
+import org.team2471.frc.lib.units.asDegrees
 
 // Prints the hub curves using a gradle task. Needs a main function in a class so I put it here.
 object PrintHubCurves {
@@ -21,4 +23,9 @@ object PrintPassCurves {
     fun main(args: Array<String>) {
         printShooterCurves( -Turret.turretHeight, 5..40, AimUtils.PASS_AIRTIME)
     }
+}
+
+fun zeroTurretEncoders() = runCommand() {
+    Turret.encoder1Offset.setDouble(Turret.rawEncoder1Angle.asDegrees)
+    Turret.encoder2Offset.setDouble(Turret.rawEncoder2Angle.asDegrees)
 }

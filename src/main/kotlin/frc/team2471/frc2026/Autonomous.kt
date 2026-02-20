@@ -7,6 +7,7 @@ import frc.team2471.frc2026.tests.leftRightStaticFFTest
 import frc.team2471.frc2026.tests.questOffsetTest
 import frc.team2471.frc2026.tests.slipCurrentTest
 import frc.team2471.frc2026.tests.velocityVoltTest
+import frc.team2471.frc2026.tests.zeroTurretEncoders
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser
 import org.team2471.frc.lib.control.Autonomi
 
@@ -38,6 +39,7 @@ object Autonomous: Autonomi() {
             addOption("Drive L/R Static FF Test", Drive.leftRightStaticFFTest())
             addOption("Drive Velocity Volt Test", Drive.velocityVoltTest())
             addOption("Quest offset Test", Drive.questOffsetTest())
+            addOption("Turret Encoder Zero", zeroTurretEncoders())
         }
 
     /** Autonomous commands */

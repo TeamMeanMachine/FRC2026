@@ -223,7 +223,7 @@ object Shooter: SubsystemBase("Shooter") {
     var hoodAngleSetpoint: Angle = HOOD_STOW_SETPOINT.degrees
         set(value) {
             field = value.coerceIn(0.0.degrees, 90.0.degrees)
-            hoodMotor.setControl(PositionVoltage(field))
+//            hoodMotor.setControl(PositionVoltage(field))
         }
 
     @get:AutoLogOutput(key = "Shooter/Hood Angle")
