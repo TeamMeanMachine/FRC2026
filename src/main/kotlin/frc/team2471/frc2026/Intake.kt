@@ -26,10 +26,12 @@ object Intake: SubsystemBase("Intake") {
     private val table = NetworkTableInstance.getDefault().getTable("Intake")
     val deployPoseEntry = table.getEntry("deployPose")
     val stowPoseEntry = table.getEntry("stowPose")
+    val deepStowPoseEntry = table.getEntry("deepStowPose")
     val intakePowerEntry = table.getEntry("intakePower")
 
     val DEPLOY_POSE get() = deployPoseEntry.getDouble(25.75)
-    val STOW_POSE get() = stowPoseEntry.getDouble(0.0)
+    val STOW_POSE get() = stowPoseEntry.getDouble(2.0)
+    val DEEP_STOW_POSE get() = deepStowPoseEntry.getDouble(0.0)
 
     val INTAKE_POWER get() = intakePowerEntry.getDouble(0.84)
     const val HOMING_POWER = 0.1
@@ -82,10 +84,12 @@ object Intake: SubsystemBase("Intake") {
     init {
         if (!deployPoseEntry.exists()) deployPoseEntry.setDouble(DEPLOY_POSE)
         if (!stowPoseEntry.exists()) stowPoseEntry.setDouble(STOW_POSE)
+        if (!deepStowPoseEntry.exists()) deepStowPoseEntry.setDouble(INTAKE_POWER)
         if (!intakePowerEntry.exists()) intakePowerEntry.setDouble(INTAKE_POWER)
 
         deployPoseEntry.setPersistent()
         stowPoseEntry.setPersistent()
+        deepStowPoseEntry.setPersistent()
         intakePowerEntry.setPersistent()
 
 
@@ -114,6 +118,10 @@ object Intake: SubsystemBase("Intake") {
 
     fun stow() {
         deploySetpoint = STOW_POSE
+    }
+
+    fun deepStow() {
+        deploySetpoint = DEEP_STOW_POSE
     }
 
     fun home(): Command = sequenceCommand(
