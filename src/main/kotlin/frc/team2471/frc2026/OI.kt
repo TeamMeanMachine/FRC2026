@@ -103,6 +103,15 @@ object OI: SubsystemBase("OI") {
         driverController.x().onTrue(runOnce { Intake.deploy() })
         driverController.b().onTrue(runOnce { Intake.stow() })
 
+        driverController.povUp().onTrue(runOnce { Shooter.hoodAngleSetpoint += 1.0.degrees })
+        driverController.povDown().onTrue(runOnce { Shooter.hoodAngleSetpoint -= 1.0.degrees })
+
+//        driverController.x().onTrue(runOnce { Shooter.hoodAngleSetpoint = 0.0.degrees })
+//        driverController.y().onTrue(runOnce { Shooter.hoodAngleSetpoint = 15.0.degrees })
+
+//        driverController.a().onTrue(runOnce { Shooter.hoodAngleSetpoint = 25.0.degrees })
+//        driverController.b().onTrue(runOnce { Shooter.hoodAngleSetpoint = 40.0.degrees })
+
         driverController.leftBumper().onTrue(runOnce {
             if (Spindexer.currentState != Spindexer.State.ON) {
                 Spindexer.currentState = Spindexer.State.ON

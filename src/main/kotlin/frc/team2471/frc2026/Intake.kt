@@ -84,7 +84,7 @@ object Intake: SubsystemBase("Intake") {
     init {
         if (!deployPoseEntry.exists()) deployPoseEntry.setDouble(DEPLOY_POSE)
         if (!stowPoseEntry.exists()) stowPoseEntry.setDouble(STOW_POSE)
-        if (!deepStowPoseEntry.exists()) deepStowPoseEntry.setDouble(INTAKE_POWER)
+        if (!deepStowPoseEntry.exists()) deepStowPoseEntry.setDouble(DEEP_STOW_POSE)
         if (!intakePowerEntry.exists()) intakePowerEntry.setDouble(INTAKE_POWER)
 
         deployPoseEntry.setPersistent()

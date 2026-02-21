@@ -47,6 +47,7 @@ import org.team2471.frc.lib.util.isReal
 import kotlin.math.abs
 import org.team2471.frc.lib.coroutines.periodic
 import org.team2471.frc.lib.ctre.coastMode
+import kotlin.math.IEEErem
 
 object Turret: SubsystemBase("Turret") {
     private val table = NetworkTableInstance.getDefault().getTable("Turret")
@@ -84,6 +85,9 @@ object Turret: SubsystemBase("Turret") {
     @get:AutoLogOutput(key = "Turret/rawEncoder2Angle")
     val rawEncoder2Angle get() = turretEncoder2.absolutePosition.valueAsDouble.rotations
 
+    @get:AutoLogOutput(key = "Turret/encoder2AngleCumulative")
+    val encoder2AngleCumulative get() = turretEncoder2.position.value - encoder2Offset.getDouble(ENCODER_2_DEFAULT_OFFSET).degrees
+
     @get:AutoLogOutput(key = "Turret/encoder1Angle")
     private val encoder1Angle get() = (turretEncoder1.absolutePosition.valueAsDouble.rotations - encoder1Offset.getDouble(ENCODER_1_DEFAULT_OFFSET).degrees).asDegrees.mod(360.0).degrees
 
@@ -115,9 +119,9 @@ object Turret: SubsystemBase("Turret") {
             var minError = Double.MAX_VALUE
             var bestAngle = 0.0
             for (angle in validAngles) {
-                val estEncoder2Angle = (angle/encoder2GearRatio) % 360.0
+                val estEncoder2Angle = (angle/encoder2GearRatio).mod(360.0)
                 // rounded because of floating point errors
-                var error = kotlin.math.abs(encoder2Angle.asDegrees - estEncoder2Angle).round(3) % 360.0
+                var error = kotlin.math.abs(encoder2Angle.asDegrees - estEncoder2Angle).round(3).mod(360.0)
                 if (error > 180.0) error = 360.0 - error
                 errors.add(error)
 //                println("angle: ${angle}, estAngle: ${estEncoder2Angle}, error: ${error}")
@@ -126,6 +130,7 @@ object Turret: SubsystemBase("Turret") {
                     bestAngle = angle
                 }
             }
+            Logger.recordOutput("estEnc2Angles", validAngles.map {(it/encoder2GearRatio).mod(360.0)}.toDoubleArray())
             Logger.recordOutput("errors", errors.toDoubleArray())
             Logger.recordOutput("lowestError", minError)
             Logger.recordOutput("best?", bestAngle)
@@ -227,13 +232,13 @@ object Turret: SubsystemBase("Turret") {
             }
 
 //            motionMagic(2.1, 12.2)
-            alternateFeedbackSensor(turretPigeon.deviceID, FeedbackSensorSourceValue.RemotePigeon2Yaw, (10.0 / 58.0 / 234.0))
+//            alternateFeedbackSensor(turretPigeon.deviceID, FeedbackSensorSourceValue.RemotePigeon2Yaw, (10.0 / 58.0 / 234.0))
 
             ClosedLoopGeneral.ContinuousWrap = false
         }
         turretMotor.addFollower(Falcons.TURRET_1)
 
-        turretMotor.setPosition(fusedEncoderAngle)
+//        turretMotor.setPosition(fusedEncoderAngle)
         setTurretOffset(Drive.heading.measure)
 
         //Loop that updates setpoint for constantly updating wrap limits and feedforward
