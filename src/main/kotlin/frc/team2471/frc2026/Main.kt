@@ -153,6 +153,7 @@ object Robot : LoggedRobot() {
 //        enabledTimer.restart()
         println("Enabled init $timeSinceEnabled")
         Drive.brakeMode()
+        Shooter.hoodAngleSetpoint = Shooter.hoodAngle
 
         // TODO: Uncomment when we are sure it won't explode
 //        Intake.home()

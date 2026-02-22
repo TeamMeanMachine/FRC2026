@@ -35,11 +35,11 @@ object Falcons {
 
     const val SHOOTER_HOOD = 6
 
-    // if electrical problem, add 1
+    // if electrical problem, add 1 (they started at 1 smh)
     const val SHOOTER_0 = 4
     const val SHOOTER_1 = 5
 
-    // if electrical problem, add 1
+    // if electrical problem, add 1 (they started at 1 smh)
     const val TURRET_0 = 7
     const val TURRET_1 = 8
 

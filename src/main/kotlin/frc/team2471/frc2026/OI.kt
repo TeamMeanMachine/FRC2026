@@ -7,8 +7,7 @@ import edu.wpi.first.wpilibj.Alert
 import edu.wpi.first.wpilibj2.command.SubsystemBase
 import org.team2471.frc.lib.control.LoopLogger
 import org.team2471.frc.lib.control.MeanCommandXboxController
-import org.team2471.frc.lib.control.b
-import org.team2471.frc.lib.control.commands.parallelCommand
+import org.team2471.frc.lib.control.commands.finallyRun
 import org.team2471.frc.lib.control.commands.toCommand
 import org.team2471.frc.lib.math.deadband
 import org.team2471.frc.lib.math.normalize
@@ -84,7 +83,7 @@ object OI: SubsystemBase("OI") {
 
         Turret.defaultCommand = Turret.aimAtTarget()
 
-        Shooter.defaultCommand = Shooter.rampUp()
+//        Shooter.defaultCommand = Shooter.rampUp()
 
         // Zero Gyro
         driverController.back().onTrue({
@@ -103,6 +102,8 @@ object OI: SubsystemBase("OI") {
         driverController.x().onTrue(runOnce { Intake.deploy() })
         driverController.b().onTrue(runOnce { Intake.stow() })
 
+
+
         driverController.povUp().onTrue(runOnce { Shooter.hoodAngleSetpoint += 1.0.degrees })
         driverController.povDown().onTrue(runOnce { Shooter.hoodAngleSetpoint -= 1.0.degrees })
 
@@ -112,13 +113,9 @@ object OI: SubsystemBase("OI") {
 //        driverController.a().onTrue(runOnce { Shooter.hoodAngleSetpoint = 25.0.degrees })
 //        driverController.b().onTrue(runOnce { Shooter.hoodAngleSetpoint = 40.0.degrees })
 
-        driverController.leftBumper().onTrue(runOnce {
-            if (Spindexer.currentState != Spindexer.State.ON) {
+        driverController.rightTrigger(0.5).whileTrue(run {
                 Spindexer.currentState = Spindexer.State.ON
-            } else {
-                Spindexer.currentState = Spindexer.State.OFF
-            }
-        })
+        }.finallyRun { Spindexer.currentState = Spindexer.State.OFF })
 
         driverController.rightBumper().onTrue(runOnce {
             if (Intake.intakeState != Intake.IntakeState.INTAKING) {

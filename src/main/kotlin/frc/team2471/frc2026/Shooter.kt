@@ -224,7 +224,7 @@ object Shooter: SubsystemBase("Shooter") {
     var shooterVelocitySetpoint: LinearVelocity = 0.0.inchesPerSecond
         set(value) {
             field = value
-            shooterMotor.setControl(VelocityTorqueCurrentFOC(2.0 * field.asInchesPerSecond/(WHEEL_DIAMETER.asInches * Math.PI)))
+//            shooterMotor.setControl(VelocityTorqueCurrentFOC(2.0 * field.asInchesPerSecond/(WHEEL_DIAMETER.asInches * Math.PI)))
         }
 
     // ball trajectory angle
@@ -232,7 +232,7 @@ object Shooter: SubsystemBase("Shooter") {
     var hoodAngleSetpoint: Angle = hoodAngle
         set(value) {
             field = value.coerceIn(0.0.degrees, 45.0.degrees)
-            hoodMotor.setControl(PositionVoltage(field))
+//            hoodMotor.setControl(PositionVoltage(field))
         }
 
     @get:AutoLogOutput(key = "Shooter/Hood Angle")
@@ -290,6 +290,11 @@ object Shooter: SubsystemBase("Shooter") {
             p(if (isReal) 7.0 else 4000.0)
             d(0.0)
             s(0.0, StaticFeedforwardSignValue.UseVelocitySign)
+
+            //Bang bang torque
+            //p(99999999.9)
+//            TorqueCurrent.PeakForwardTorqueCurrent = 40.0
+//            TorqueCurrent.PeakReverseTorqueCurrent = 0.0
         }
         shooterMotor.addFollower(Falcons.SHOOTER_1, MotorAlignmentValue.Opposed)
 
@@ -298,12 +303,9 @@ object Shooter: SubsystemBase("Shooter") {
             inverted(true)
             brakeMode()
             s(0.0, StaticFeedforwardSignValue.UseClosedLoopSign)
-            p(if (isReal) 40.0 else 60.0)
+            p(if (isReal) 120.0 else 60.0)
             d(if (isReal) 0.0 else 4.0)
 
-//            Feedback.SensorToMechanismRatio = 1.0
-//            Feedback.RotorToSensorRatio = 9.64285714285714
-//            motionMagic(2.1, 12.2)
             remoteCANCoder(hoodEncoder.deviceID, 9.64285714285714)
         }
     }

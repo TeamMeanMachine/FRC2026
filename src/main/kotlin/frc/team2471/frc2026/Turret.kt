@@ -1,33 +1,28 @@
 package frc.team2471.frc2026
 
-import com.ctre.phoenix6.controls.PositionVoltage
 import com.ctre.phoenix6.hardware.CANcoder
 import com.ctre.phoenix6.hardware.Pigeon2
-import com.ctre.phoenix6.signals.FeedbackSensorSourceValue
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue
 import edu.wpi.first.math.geometry.Translation2d
 import edu.wpi.first.math.system.plant.DCMotor
 import edu.wpi.first.networktables.NetworkTableInstance
 import edu.wpi.first.units.measure.Angle
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.SubsystemBase
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.littletonrobotics.junction.AutoLogOutput
 import org.littletonrobotics.junction.Logger
+import org.team2471.frc.lib.control.LoopLogger
 import org.team2471.frc.lib.ctre.PhoenixUtil
 import org.team2471.frc.lib.ctre.addFollower
-import org.team2471.frc.lib.ctre.alternateFeedbackSensor
 import org.team2471.frc.lib.ctre.applyConfiguration
-import org.team2471.frc.lib.ctre.brakeMode
 import org.team2471.frc.lib.ctre.currentLimits
 import org.team2471.frc.lib.ctre.d
 import org.team2471.frc.lib.ctre.inverted
 import org.team2471.frc.lib.ctre.loggedTalonFX.LoggedTalonFX
 import org.team2471.frc.lib.ctre.p
 import org.team2471.frc.lib.ctre.s
-import org.team2471.frc.lib.math.round
 import org.team2471.frc.lib.math.toPose2d
 import org.team2471.frc.lib.units.absoluteValue
 import org.team2471.frc.lib.units.asDegrees
@@ -47,21 +42,21 @@ import org.team2471.frc.lib.util.isReal
 import kotlin.math.abs
 import org.team2471.frc.lib.coroutines.periodic
 import org.team2471.frc.lib.ctre.coastMode
-import kotlin.math.IEEErem
+import kotlin.collections.toDoubleArray
 
 object Turret: SubsystemBase("Turret") {
     private val table = NetworkTableInstance.getDefault().getTable("Turret")
-    private val rawEncoder1AngleEntry = table.getEntry("Raw Encoder 1 Angle")
-
-    const val turretRange = 600.0
+    val encoder1Offset = table.getEntry("Turret Encoder 1 Offset")
+    val encoder2Offset = table.getEntry("Turret Encoder 2 Offset")
 
     val turretMotor = LoggedTalonFX(Falcons.TURRET_0, CANivores.TURRET_CAN)
     val turretEncoder1 = CANcoder(CANCoders.TURRET_1, CANivores.TURRET_CAN)
     val turretEncoder2 = CANcoder(CANCoders.TURRET_2, CANivores.TURRET_CAN)
     val turretPigeon = Pigeon2(CANSensors.TURRET_PIGEON, CANivores.TURRET_CAN)
 
-    val encoder1Offset = SmartDashboard.getEntry("Turret Encoder 1 Offset")
-    val encoder2Offset = SmartDashboard.getEntry("Turret Encoder 2 Offset")
+    val TURRET_TOP_LIMIT = 300.0.degrees
+    val TURRET_BOTTOM_LIMIT = -300.0.degrees
+    val TURRET_RANGE = TURRET_TOP_LIMIT - TURRET_BOTTOM_LIMIT
 
     const val ENCODER_1_DEFAULT_OFFSET = 0.0
     const val ENCODER_2_DEFAULT_OFFSET = 0.0
@@ -79,50 +74,63 @@ object Turret: SubsystemBase("Turret") {
     val turretMotorRotorAngle: Angle
         get() = rawTurretMotorRotorAngle + turretMotorRotorPositionOffset
 
-    @get:AutoLogOutput(key = "Turret/rawEncoder1Angle")
-    val rawEncoder1Angle get() = turretEncoder1.absolutePosition.valueAsDouble.rotations
+    @get:AutoLogOutput(key = "Turret/rawEncoder1AngleCumulative")
+    val rawEncoder1AngleCumulative get() = turretEncoder1.position.value
+    @get:AutoLogOutput(key = "Turret/rawEncoder2AngleCumulative")
+    val rawEncoder2AngleCumulative get() = turretEncoder2.position.value
 
-    @get:AutoLogOutput(key = "Turret/rawEncoder2Angle")
-    val rawEncoder2Angle get() = turretEncoder2.absolutePosition.valueAsDouble.rotations
+    @get:AutoLogOutput(key = "Turret/offsetEncoder1AngleCumulative")
+    val offsetEncoder1AngleCumulative get() = rawEncoder1AngleCumulative - encoder1Offset.getDouble(0.0).degrees
+    @get:AutoLogOutput(key = "Turret/offsetEncoder2AngleCumulative")
+    val offsetEncoder2AngleCumulative get() = rawEncoder2AngleCumulative - encoder2Offset.getDouble(0.0).degrees
 
-    @get:AutoLogOutput(key = "Turret/encoder2AngleCumulative")
-    val encoder2AngleCumulative get() = turretEncoder2.position.value - encoder2Offset.getDouble(ENCODER_2_DEFAULT_OFFSET).degrees
+    @get:AutoLogOutput(key = "Turret/multipliedEncoder2AngleCumulative")
+    val multipliedEncoder2AngleCumulative get() = offsetEncoder2AngleCumulative * (11.0 / 46.0)
 
-    @get:AutoLogOutput(key = "Turret/encoder1Angle")
-    private val encoder1Angle get() = (turretEncoder1.absolutePosition.valueAsDouble.rotations - encoder1Offset.getDouble(ENCODER_1_DEFAULT_OFFSET).degrees).asDegrees.mod(360.0).degrees
+    @get:AutoLogOutput(key = "Turret/rawEncoder1AbsolutePosition")
+    val rawEncoder1AbsolutePosition: Angle get() = turretEncoder1.absolutePosition.value
+    @get:AutoLogOutput(key = "Turret/rawEncoder2AbsolutePosition")
+    val rawEncoder2AbsolutePosition: Angle get() = turretEncoder2.absolutePosition.value
 
-    @get:AutoLogOutput(key = "Turret/encoder2Angle")
-    private val encoder2Angle get() = (turretEncoder2.absolutePosition.valueAsDouble.rotations - encoder2Offset.getDouble(ENCODER_2_DEFAULT_OFFSET).degrees).asDegrees.mod(360.0).degrees
+    @get:AutoLogOutput(key = "Turret/encoder1AbsolutePosition")
+    val encoder1AbsolutePosition: Angle get() = (rawEncoder1AbsolutePosition - encoder1Offset.getDouble(ENCODER_1_DEFAULT_OFFSET).degrees).wrap()
+    @get:AutoLogOutput(key = "Turret/encoder2AbsolutePosition")
+    val encoder2AbsolutePosition: Angle get() = (rawEncoder2AbsolutePosition - encoder2Offset.getDouble(ENCODER_2_DEFAULT_OFFSET).degrees).wrap()
+
+    @get:AutoLogOutput(key = "Turret/gyroAngle")
+    val gyroAngle get() = turretPigeon.yaw.value
+
+    var encoder1Angles = arrayListOf<Double>()
+    var encoder2Angles = arrayListOf<Double>()
+    var pigeonAngles = arrayListOf<Double>()
 
     // unwraps encoder 1 angle using encoder 2 angle
     @get:AutoLogOutput(key = "Turret/fusedEncoderAngle")
     val fusedEncoderAngle: Angle
         get() {
             // generate a list of all possible angles based off of encoder 1
-            val validAngles: ArrayList<Double> = arrayListOf()
-            var angle = encoder1Angle.asDegrees * encoder1GearRatio
-            while (angle <= turretRange/2.0){
+            val validAngles: ArrayList<Angle> = arrayListOf()
+            var angle = encoder1AbsolutePosition * encoder1GearRatio
+            while (angle <= TURRET_RANGE / 2.0) {
                 validAngles.add(angle)
-                angle += 360.0 * encoder1GearRatio
+                angle += 360.0.degrees * encoder1GearRatio
             }
-            angle = encoder1Angle.asDegrees * encoder1GearRatio - 360.0 * encoder1GearRatio
-            while (angle >= -turretRange/2.0){
+            angle = (encoder1AbsolutePosition - 360.0.degrees) * encoder1GearRatio
+            while (angle >= -TURRET_RANGE / 2.0) {
                 validAngles.add(angle)
-                angle -= 360.0 * encoder1GearRatio
+                angle -= 360.0.degrees * encoder1GearRatio
             }
 
-            Logger.recordOutput("validAngles", validAngles.toDoubleArray())
+            Logger.recordOutput("validAngles", validAngles.map { it.asDegrees }.toDoubleArray())
 
-            val errors: ArrayList<Double> = arrayListOf()
+            val errors: ArrayList<Angle> = arrayListOf()
 
             // using encoder 2 calculate errors of each valid angle
-            var minError = Double.MAX_VALUE
-            var bestAngle = 0.0
+            var minError = Double.MAX_VALUE.degrees
+            var bestAngle = Double.MIN_VALUE.degrees
             for (angle in validAngles) {
-                val estEncoder2Angle = (angle/encoder2GearRatio).mod(360.0)
-                // rounded because of floating point errors
-                var error = kotlin.math.abs(encoder2Angle.asDegrees - estEncoder2Angle).round(3).mod(360.0)
-                if (error > 180.0) error = 360.0 - error
+                val estEncoder2Angle = (angle / encoder2GearRatio).wrap()
+                val error = (encoder2AbsolutePosition - estEncoder2Angle).wrap().absoluteValue()
                 errors.add(error)
 //                println("angle: ${angle}, estAngle: ${estEncoder2Angle}, error: ${error}")
                 if (error < minError){
@@ -130,11 +138,12 @@ object Turret: SubsystemBase("Turret") {
                     bestAngle = angle
                 }
             }
-            Logger.recordOutput("estEnc2Angles", validAngles.map {(it/encoder2GearRatio).mod(360.0)}.toDoubleArray())
-            Logger.recordOutput("errors", errors.toDoubleArray())
+
+            Logger.recordOutput("errors", errors.map { it.asDegrees }.toDoubleArray())
             Logger.recordOutput("lowestError", minError)
             Logger.recordOutput("best?", bestAngle)
-            return bestAngle.degrees
+
+            return bestAngle
         }
     @get:AutoLogOutput(key = "Turret/FieldCentricFusedEncoderAngle")
     val fieldCentricFusedEncoderAngle: Angle
@@ -143,17 +152,14 @@ object Turret: SubsystemBase("Turret") {
     @get:AutoLogOutput(key = "Turret/fieldCentricAngle")
     val fieldCentricAngle: Angle
         get() = if (isReal) {
-            turretMotor.position.valueAsDouble.rotations
+            turretMotor.position.value
         } else {
-            turretMotor.position.valueAsDouble.rotations + Drive.heading.measure
+            turretMotor.position.value + Drive.heading.measure
         }
 
     @get:AutoLogOutput(key = "Turret/turretFeedforward")
     val turretFeedforward: Double
-        get() = -Drive.speeds.omegaRadiansPerSecond.radians.asRotations * 2.5
-
-    val TURRET_TOP_LIMIT = 300.0.degrees
-    val TURRET_BOTTOM_LIMIT = -300.0.degrees
+        get() = -Drive.speeds.omegaRadiansPerSecond.radians.asRotations * 0.0
 
     @get:AutoLogOutput(key = "Turret/isTurretWrapping")
     var isTurretWrapping = false
@@ -211,6 +217,7 @@ object Turret: SubsystemBase("Turret") {
 
 
     init {
+        println("Turret init")
         if (!encoder1Offset.exists()) encoder1Offset.setDouble(ENCODER_1_DEFAULT_OFFSET); encoder1Offset.setPersistent()
         if (!encoder2Offset.exists()) encoder2Offset.setDouble(ENCODER_2_DEFAULT_OFFSET); encoder2Offset.setPersistent()
 
@@ -251,8 +258,6 @@ object Turret: SubsystemBase("Turret") {
                         fieldCentricSetpoint = fieldCentricSetpoint
                     }
                 }
-
-                rawEncoder1AngleEntry.setDouble(rawEncoder1Angle.asDegrees)
             }
         }
 
@@ -281,9 +286,11 @@ object Turret: SubsystemBase("Turret") {
     }
 
     override fun periodic() {
+        LoopLogger.record("b4 turret periodic")
         Logger.recordOutput("aim target", AimUtils.aimTarget.toPose2d())
         Logger.recordOutput("turret setpoint pose", turretTranslation.toPose2d(fieldCentricSetpoint.asRotation2d))
         Logger.recordOutput("turret pose", turretTranslation.toPose2d(fieldCentricAngle.asRotation2d))
+        LoopLogger.record("turret periodic")
     }
 
     fun aimAtTarget(): Command = run {

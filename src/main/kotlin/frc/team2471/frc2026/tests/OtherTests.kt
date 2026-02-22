@@ -26,6 +26,8 @@ object PrintPassCurves {
 }
 
 fun zeroTurretEncoders() = runCommand() {
-    Turret.encoder1Offset.setDouble(Turret.rawEncoder1Angle.asDegrees)
-    Turret.encoder2Offset.setDouble(Turret.rawEncoder2Angle.asDegrees)
+    Turret.encoder1Offset.setDouble(Turret.rawEncoder1AbsolutePosition.asDegrees)
+    Turret.encoder2Offset.setDouble(Turret.rawEncoder2AbsolutePosition.asDegrees)
+    Turret.turretPigeon.setYaw(0.0)
+    Turret.turretMotor.setPosition(0.0)
 }

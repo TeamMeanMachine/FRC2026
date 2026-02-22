@@ -11,6 +11,7 @@ import edu.wpi.first.units.measure.Current
 import edu.wpi.first.wpilibj.Timer
 import edu.wpi.first.wpilibj2.command.SubsystemBase
 import org.littletonrobotics.junction.AutoLogOutput
+import org.team2471.frc.lib.control.LoopLogger
 import org.team2471.frc.lib.ctre.addFollower
 import org.team2471.frc.lib.ctre.applyConfiguration
 import org.team2471.frc.lib.ctre.coastMode
@@ -174,6 +175,7 @@ object Spindexer: SubsystemBase("Spindexer") {
 
 
     override fun periodic() {
+        LoopLogger.record("b4 spindexer periodic")
         when (currentState) {
             State.OFF -> {
                 spinMotorVelocitySetpoint = 0.0
@@ -206,6 +208,7 @@ object Spindexer: SubsystemBase("Spindexer") {
                 stateOnTimer.stop()
             }
         }
+        LoopLogger.record("spindexer periodic")
     }
 
 
