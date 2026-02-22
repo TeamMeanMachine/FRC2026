@@ -8,10 +8,13 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase
 import org.team2471.frc.lib.control.LoopLogger
 import org.team2471.frc.lib.control.MeanCommandXboxController
 import org.team2471.frc.lib.control.commands.finallyRun
+import org.team2471.frc.lib.control.commands.runCommand
 import org.team2471.frc.lib.control.commands.toCommand
+import org.team2471.frc.lib.control.leftBumper
 import org.team2471.frc.lib.math.deadband
 import org.team2471.frc.lib.math.normalize
 import org.team2471.frc.lib.units.degrees
+import org.team2471.frc.lib.units.metersPerSecond
 
 object OI: SubsystemBase("OI") {
     val driverController = MeanCommandXboxController(0, false)
@@ -104,6 +107,9 @@ object OI: SubsystemBase("OI") {
 
 
 
+
+
+
         driverController.povUp().onTrue(runOnce { Shooter.hoodAngleSetpoint += 1.0.degrees })
         driverController.povDown().onTrue(runOnce { Shooter.hoodAngleSetpoint -= 1.0.degrees })
 
@@ -125,6 +131,8 @@ object OI: SubsystemBase("OI") {
             }
         })
 
+        driverController.leftBumper().toggleOnTrue(runCommand { Shooter.shooterVelocitySetpoint = 8.5.metersPerSecond }.finallyRun { Shooter.shooterVelocitySetpoint =
+            0.0.metersPerSecond })
     }
 
     override fun periodic() {
