@@ -2,6 +2,7 @@ package frc.team2471.frc2026
 
 import com.ctre.phoenix6.controls.DutyCycleOut
 import com.ctre.phoenix6.controls.MotionMagicVoltage
+import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC
 import com.ctre.phoenix6.hardware.TalonFX
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue
 import edu.wpi.first.networktables.NetworkTableInstance
@@ -33,7 +34,7 @@ object Intake: SubsystemBase("Intake") {
     val STOW_POSE get() = stowPoseEntry.getDouble(2.0)
     val DEEP_STOW_POSE get() = deepStowPoseEntry.getDouble(0.0)
 
-    val INTAKE_POWER get() = intakePowerEntry.getDouble(0.84)
+    val INTAKE_POWER get() = intakePowerEntry.getDouble(75.0)
     const val HOMING_POWER = 0.1
 
     val rollerMotor = TalonFX(Falcons.INTAKE_ROLLER_0)
@@ -46,11 +47,11 @@ object Intake: SubsystemBase("Intake") {
     @get:AutoLogOutput(key = "Intake/Hit Hard Stop")
     val hitHardStop get() = !stopSensor.get()
 
-    @get:AutoLogOutput(key = "Intake/Roller Setpoint")
-    var rollerSetpoint: Double = 0.0
+    @get:AutoLogOutput(key = "Intake/Velocity Setpoint")
+    var velocitySetpoint: Double = 0.0
         set(value) {
-            field = value.coerceIn(-1.0, 1.0)
-            rollerMotor.setControl(DutyCycleOut(field))
+            field = value.coerceIn(-100.0, 100.0)
+            rollerMotor.setControl(VelocityTorqueCurrentFOC(field))
         }
 
     @get:AutoLogOutput(key = "Intake/Deploy Setpoint")
@@ -102,7 +103,9 @@ object Intake: SubsystemBase("Intake") {
             motionMagic(750.0, 1500.0)
         }
         rollerMotor.applyConfiguration {
-            currentLimits(20.0, 30.0, 1.0)
+            currentLimits(40.0, 50.0, 1.0)
+            p(7.0)
+            s(10.0, StaticFeedforwardSignValue.UseVelocitySign)
             coastMode()
         }
         rollerMotor.addFollower(Falcons.INTAKE_ROLLER_1)
@@ -141,13 +144,13 @@ object Intake: SubsystemBase("Intake") {
     private fun default(): Command = runCommand(this) {
         when (intakeState) {
             IntakeState.OFF -> {
-                rollerSetpoint = 0.0
+                velocitySetpoint = 0.0
             }
             IntakeState.INTAKING -> {
-                rollerSetpoint = INTAKE_POWER
+                velocitySetpoint = INTAKE_POWER
             }
             IntakeState.SPITTING -> {
-                rollerSetpoint = -INTAKE_POWER
+                velocitySetpoint = -INTAKE_POWER
             }
         }
     }
