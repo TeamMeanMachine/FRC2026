@@ -12,8 +12,11 @@ import org.team2471.frc.lib.units.asDegrees
 object PrintHubCurves {
     @JvmStatic
     fun main(args: Array<String>) {
-//        printShooterCurves(AimUtils.HUB_HEIGHT - Turret.turretHeight, 3..18, AimUtils.SHOT_AIRTIME)
-        printShooterCurves(AimUtils.HUB_HEIGHT - Turret.turretHeight, 3..18, Pair(7.0, 9.0))
+        // constant time
+        printShooterCurves(AimUtils.HUB_HEIGHT - Turret.turretHeight, 3..18, AimUtils.SHOT_AIRTIME)
+
+        // constant(ish) exit velocity
+//        printShooterCurves(AimUtils.HUB_HEIGHT - Turret.turretHeight, 3..18, Pair(7.0, 9.0))
     }
 }
 

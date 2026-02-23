@@ -8,6 +8,7 @@ import frc.team2471.frc2026.AimUtils.FUEL_FRONTAL_AREA
 import frc.team2471.frc2026.AimUtils.FUEL_MASS
 import frc.team2471.frc2026.AimUtils.G
 import org.littletonrobotics.junction.Logger
+import org.team2471.frc.lib.units.asKilograms
 import kotlin.math.pow
 
 class FuelSim(val x0: Translation3d, val v0: Translation3d) {
@@ -45,8 +46,8 @@ class FuelSim(val x0: Translation3d, val v0: Translation3d) {
 }
 
 fun logFuel(name: String, vararg fuel: FuelSim) {
-    val thing = fuel.map { it.pos }.toTypedArray()
-    Logger.recordOutput(name, *thing)
+    val fuelPositions = fuel.map { it.pos }.toTypedArray()
+    Logger.recordOutput(name, *fuelPositions)
 }
 
 fun MutableList<FuelSim>.removeFuel() {
@@ -54,13 +55,13 @@ fun MutableList<FuelSim>.removeFuel() {
 }
 private fun calcDragAccel(v: Translation3d): Translation3d {
     val length = v.norm
-//    Logger.recordOutput("VMag", length)
+
     val newMagnitude = calcDragAccel(length)
-//    Logger.recordOutput("DMag", newMagnitude)
+
     return v.times(-newMagnitude / length)
 
 }
-private fun calcDragAccel(s: Double): Double {
-    //               rho           v^2                          Cd       Frontal Area          mass
-    return (0.5 * AIR_DENSITY * s.pow(2) * FUEL_DRAG_COEFFICIENT * FUEL_FRONTAL_AREA) / FUEL_MASS
+private fun calcDragAccel(speed: Double): Double {
+    //      1/2       rho           v^2                          Cd          Frontal Area             mass
+    return (0.5 * AIR_DENSITY * speed.pow(2) * FUEL_DRAG_COEFFICIENT * FUEL_FRONTAL_AREA) / FUEL_MASS.asKilograms
 }

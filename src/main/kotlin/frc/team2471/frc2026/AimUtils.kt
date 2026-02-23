@@ -6,22 +6,22 @@ import edu.wpi.first.math.interpolation.InterpolatingTreeMap
 import edu.wpi.first.math.interpolation.Interpolator
 import edu.wpi.first.math.interpolation.InverseInterpolator
 import edu.wpi.first.units.measure.Angle
+import edu.wpi.first.units.measure.AngularVelocity
 import edu.wpi.first.units.measure.Distance
+import edu.wpi.first.units.measure.LinearVelocity
 import org.littletonrobotics.junction.AutoLogOutput
 import org.team2471.frc.lib.math.round
 import org.team2471.frc.lib.units.asDegrees
-import org.team2471.frc.lib.units.asFeet
 import org.team2471.frc.lib.units.asMeters
 import org.team2471.frc.lib.units.asRadiansPerSecond
 import org.team2471.frc.lib.units.cos
 import org.team2471.frc.lib.units.degrees
 import org.team2471.frc.lib.units.feet
 import org.team2471.frc.lib.units.inches
+import org.team2471.frc.lib.units.kilograms
 import org.team2471.frc.lib.units.meters
 import org.team2471.frc.lib.units.radians
 import org.team2471.frc.lib.units.sin
-import org.team2471.frc.lib.units.wrap
-import kotlin.math.abs
 import kotlin.math.absoluteValue
 import kotlin.math.atan2
 import kotlin.math.pow
@@ -31,25 +31,28 @@ object AimUtils {
     // seconds
     const val SHOT_AIRTIME = 0.95
     const val PASS_AIRTIME = 1.0
+
     // m/s^2
     const val G = 9.80665
     // kg/m^3
     const val AIR_DENSITY = 1.2
 
     const val FUEL_DRAG_COEFFICIENT = 0.47
+
     // m
-    const val FUEL_RADIUS = 0.075
+    val FUEL_RADIUS = 0.075.meters
+
     // m^2
-    val FUEL_FRONTAL_AREA = FUEL_RADIUS.pow(2) * Math.PI
-    // kg
-    const val FUEL_MASS = 0.2172
+    val FUEL_FRONTAL_AREA = FUEL_RADIUS.asMeters.pow(2) * Math.PI
+
+    val FUEL_MASS = 0.2172.kilograms
 
     val HUB_HEIGHT = 65.0.inches
 
     @get:AutoLogOutput(key = "aim target")
     val aimTarget: Translation2d
         get() {
-            return if (aimingAtGoal) {
+            return if (isAimingAtGoal) {
                 FieldManager.goalPose - calculateAimTargetOffset(SHOT_AIRTIME)
             } else {
                 if (Drive.pose.y.meters > FieldManager.fieldHalfWidth) {
@@ -60,12 +63,15 @@ object AimUtils {
                 } - calculateAimTargetOffset(PASS_AIRTIME)
             }
         }
+
+    // uses turret velocity to offset the aim target for sotm
     fun calculateAimTargetOffset(airTime: Double) : Translation2d {
         val turretVelocity = Translation2d(Turret.turretOffsetFromCenter.x * Drive.gyroYawRate.asRadiansPerSecond, Turret.turretOffsetFromCenter.y * Drive.gyroYawRate.asRadiansPerSecond).rotateBy(Drive.heading) + Drive.velocity
 
         return turretVelocity * airTime
     }
 
+// iterative tof lut method. backup if constant tof method doesn't work
 //    fun calculateAimTargetOffset() : Translation2d {
 //        val turretVelocity = Translation2d(Turret.turretOffsetFromCenter.x * Drive.gyroYawRate.asRadiansPerSecond, Turret.turretOffsetFromCenter.y * Drive.gyroYawRate.asRadiansPerSecond).rotateBy(Drive.heading) + Drive.velocity
 //        var offset : Translation2d = turretVelocity * Shooter.hubTimeCurve.get(Turret.turretTranslation.getDistance(
@@ -78,9 +84,9 @@ object AimUtils {
 //        return offset
 //    }
 
-    val boringAimTarget: Translation2d
+    val staticAimTarget: Translation2d
         get() {
-            return if (aimingAtGoal) {
+            return if (isAimingAtGoal) {
                 FieldManager.goalPose
             } else {
                 if (Drive.pose.y.meters > FieldManager.fieldHalfWidth) {
@@ -92,13 +98,13 @@ object AimUtils {
             }
         }
 
-
-    val aimingAtGoal get() = FieldManager.inScoringZone
+    val isAimingAtGoal get() = FieldManager.inScoringZone
 
     val distanceToGoal get() = Turret.turretTranslation.getDistance(aimTarget).absoluteValue.meters
 
 
     /**
+     * Simulates a fuel shot with the given initial velocity, and calculates both the translational error and the time error
      * @return A pair of doubles, the first is the horizontal error from the target when the ball reaches a specific height, the second is the time error it took the ball to get there.
      */
     fun calcFuelError(vx: Double, vy: Double, goalPos: Translation2d, airTimeTarget: Double, printPoints: Boolean = false): Pair<Double, Double> {
@@ -121,16 +127,14 @@ object AimUtils {
         return Pair(fuel.pos.x - goalPos.x, time - airTimeTarget)
     }
 
+    // Basically the same as calcFuelError, but for generating a shooter curve w/ constant exit velocity. Uses x value instead of y to tell if ball has reached hub, and calculates vertical error instead of horizontal.
     fun calcFuelHeightError(vx: Double, vy: Double, goalPos: Translation2d, printPoints: Boolean = false): Double {
         val fuel = FuelSim(Translation3d(), Translation3d(vx, 0.0, vy))
         var prevFuelPos = Translation2d()
 
         val points = mutableMapOf<Double, Double>()
 
-
-
         while (fuel.pos.x < goalPos.x) {
-//            println("fuel x: ${fuel.pos.x} Goal pos: ${goalPos.x}")
             prevFuelPos = Translation2d(fuel.pos.x, fuel.pos.z)
             fuel.update(0.02, 1)
             points[fuel.pos.x] = fuel.pos.z
@@ -141,12 +145,12 @@ object AimUtils {
         }
 
         // draws a line between final 2 fuel position and calculates where line crosses goalpos
-
         val slope = (fuel.pos.z - prevFuelPos.y)/(fuel.pos.x - prevFuelPos.x)
 
         return (slope * (goalPos.x - prevFuelPos.x) + prevFuelPos.y) - goalPos.y
     }
 
+    // calculates time it took fuel to get to the hub. Used to generate a time lut.
     fun calcFuelTime(vx: Double, vy: Double, goalPos: Translation2d): Double {
         val fuel = FuelSim(Translation3d(), Translation3d(vx, 0.0, vy))
 
@@ -160,23 +164,7 @@ object AimUtils {
         return t
     }
 
-
-    //                                                                               angle,                                    speed
-    fun generateShooterCurve(goalHeight: Distance, airTime: Double): Pair<InterpolatingTreeMap<Double, Double>, InterpolatingTreeMap<Double, Double>> {
-//                         meters,       m/s,  degrees
-        val speedCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble())
-        val angleCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble())
-        for (i in 0..40) {
-            val dist = i.toDouble().feet
-            val angleAndSpeed = getAngleAndSpeed(dist, goalHeight, airTime)
-            angleCurve.put(dist.asMeters, angleAndSpeed.first)
-            speedCurve.put(dist.asMeters, angleAndSpeed.second)
-//            println("Dist: ${dist.asFeet.round(3)} angle: ${angleAndSpeed.first.round(3)} Speed: ${angleAndSpeed.second.round(3)}")
-        }
-
-        return Pair(angleCurve, speedCurve)
-    }
-
+    // constant time method
     fun printShooterCurves(goalHeight: Distance, distRange: IntRange, airTime: Double) {
         val angles = mutableMapOf<Double, Double>()
         val speeds = mutableMapOf<Double, Double>()
@@ -198,6 +186,7 @@ object AimUtils {
         }
     }
 
+    // constant(ish) exit velocity method. (time lut)
     fun printShooterCurves(goalHeight: Distance, distRange: IntRange, speedRange: Pair<Double, Double>) {
 
         val angles = mutableMapOf<Double, Double>()
@@ -229,7 +218,7 @@ object AimUtils {
     }
 
     // angle in degrees, speed in m/s
-    // Performs newtons method in 2 dimensions to estimate
+    // Performs newtons method in 2 dimensions to estimate the angle and exit velocity needed to make shot from the given distance with the given airtime
     fun getAngleAndSpeed(distFromGoal: Distance, goalHeight: Distance, airTime: Double): Pair<Double, Double> {
         val maxTError = 0.1
         val maxDError = 0.1
@@ -268,9 +257,6 @@ object AimUtils {
             val x2 = guessIncremented.first
             val y2 = guessIncremented.second
 
-//            println("($x1,$y1,$errorSum)")
-//            println("($x2,$y2,$errorSumIncremented)")
-
             // Then find the t value for which z is 0
             //  t = -z1       / (           z2       -  z1      )
             val t = -errorSum / (errorSumIncremented - errorSum)
@@ -287,11 +273,11 @@ object AimUtils {
 
             num++
         }
-//        println("Dist: ${distFromGoal.asMeters}, ErrorSum: ${errorSum}, iterations: ${num}")
 
         return Pair(atan2(guess.second, guess.first).radians.asDegrees, sqrt(guess.first.pow(2) + guess.second.pow(2)))
     }
 
+    // same as get angle and speed, except calculates angle for given exit velocity, and calculates time for tof lut
     fun getAngleAndTime(distFromGoal: Distance, goalHeight: Distance, speed: Double): Pair<Angle, Double> {
 
         val toTarget: Translation2d = Translation2d(distFromGoal, goalHeight)
@@ -308,28 +294,13 @@ object AimUtils {
         var num = 0
         while ((error >= 0.1 || num < 10) && guess != 0.0) {
             var slope = (errorIncremented - error)/(guessIncremented - guess)
-//            println(errorIncremented)
-//            println(error)
-            println("guess = ${guess} error = ${error} slope = $slope")
-
-
-
-//            while (abs(slope) < 0.0001) { guessIncremented += 0.1
-//
-//                errorIncremented = calcFuelHeightError(speed * guessIncremented.degrees.cos(), speed * guessIncremented.degrees.sin(), toTarget, AimUtils.SHOT_AIRTIME)
-//                slope = (errorIncremented - error)/(guessIncremented - guess)
-//            }
 
             guess = (-error/slope + guess).coerceIn(0.0, 85.0)
-//            println("error/slope = ${-error/slope}")
-//            println("newguess = ${guess}")
+
             guessIncremented = guess + 0.1
-//            println("before fuel calc guess = ${guess} guessIncremented = ${guessIncremented}")
 
             error = calcFuelHeightError(speed * guess.degrees.cos(), speed * guess.degrees.sin(), toTarget, true)
             errorIncremented = calcFuelHeightError(speed * guessIncremented.degrees.cos(), speed * guessIncremented.degrees.sin(), toTarget, true)
-
-//            println("after fuel calc")
 
             num++
         }

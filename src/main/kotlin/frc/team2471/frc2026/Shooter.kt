@@ -2,10 +2,8 @@ package frc.team2471.frc2026
 
 import com.ctre.phoenix6.SignalLogger
 import com.ctre.phoenix6.controls.PositionVoltage
-import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC
 import com.ctre.phoenix6.controls.VoltageOut
 import com.ctre.phoenix6.hardware.CANcoder
-import com.ctre.phoenix6.signals.GravityTypeValue
 import com.ctre.phoenix6.signals.InvertedValue
 import com.ctre.phoenix6.signals.MotorAlignmentValue
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue
@@ -24,7 +22,6 @@ import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.SubsystemBase
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine
-import frc.team2471.frc2026.Shooter.SHOOTER_GEAR_RATIO
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.littletonrobotics.junction.AutoLogOutput
@@ -40,7 +37,6 @@ import org.team2471.frc.lib.ctre.brakeMode
 import org.team2471.frc.lib.ctre.coastMode
 import org.team2471.frc.lib.ctre.currentLimits
 import org.team2471.frc.lib.ctre.d
-import org.team2471.frc.lib.ctre.g
 import org.team2471.frc.lib.ctre.inverted
 import org.team2471.frc.lib.ctre.loggedTalonFX.LoggedTalonFX
 import org.team2471.frc.lib.ctre.p
@@ -282,7 +278,7 @@ object Shooter: SubsystemBase("Shooter") {
     val hoodErrorDistance get() = abs(AimUtils.distanceToGoal.asFeet * sin(hoodMotor.closedLoopError.valueAsDouble.radians))
 
     @get:AutoLogOutput(key = "Shooter/Velocity error distance")
-    val velocityErrorDistance get() = abs((if (AimUtils.aimingAtGoal) AimUtils.SHOT_AIRTIME * cos(hubAngleCurve.get(AimUtils.distanceToGoal.asFeet)) else AimUtils.PASS_AIRTIME * cos(floorAngleCurve.get(AimUtils.distanceToGoal.asFeet))) * shooterMotor.closedLoopError.valueAsDouble * WHEEL_DIAMETER.asMeters * Math.PI * 0.5)
+    val velocityErrorDistance get() = abs((if (AimUtils.isAimingAtGoal) AimUtils.SHOT_AIRTIME * cos(hubAngleCurve.get(AimUtils.distanceToGoal.asFeet)) else AimUtils.PASS_AIRTIME * cos(floorAngleCurve.get(AimUtils.distanceToGoal.asFeet))) * shooterMotor.closedLoopError.valueAsDouble * WHEEL_DIAMETER.asMeters * Math.PI * 0.5)
 
     @get:AutoLogOutput(key = "Shooter/Requested voltage")
     var requestedVoltage = 0.0
@@ -379,7 +375,7 @@ object Shooter: SubsystemBase("Shooter") {
             }
 
             hoodAngleSetpoint = (
-                if (AimUtils.aimingAtGoal)
+                if (AimUtils.isAimingAtGoal)
                     BALL_ANGLE_AT_HOOD_ZERO - hubAngleCurve.get(AimUtils.distanceToGoal.asFeet)
                 else
                     BALL_ANGLE_AT_HOOD_ZERO - floorAngleCurve.get(AimUtils.distanceToGoal.asFeet)
