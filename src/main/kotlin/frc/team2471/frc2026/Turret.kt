@@ -84,19 +84,6 @@ object Turret: SubsystemBase("Turret") {
     val turretMotorVoltage: Double
         get() = turretMotor.motorVoltage.valueAsDouble
 
-    @get:AutoLogOutput(key = "Turret/rawEncoder1AngleCumulative")
-    val rawEncoder1AngleCumulative get() = turretEncoder1.position.value
-    @get:AutoLogOutput(key = "Turret/rawEncoder2AngleCumulative")
-    val rawEncoder2AngleCumulative get() = turretEncoder2.position.value
-
-    @get:AutoLogOutput(key = "Turret/offsetEncoder1AngleCumulative")
-    val offsetEncoder1AngleCumulative get() = rawEncoder1AngleCumulative - encoder1Offset.getDouble(0.0).degrees
-    @get:AutoLogOutput(key = "Turret/offsetEncoder2AngleCumulative")
-    val offsetEncoder2AngleCumulative get() = rawEncoder2AngleCumulative - encoder2Offset.getDouble(0.0).degrees
-
-    @get:AutoLogOutput(key = "Turret/multipliedEncoder2AngleCumulative")
-    val multipliedEncoder2AngleCumulative get() = offsetEncoder2AngleCumulative * (11.0 / 46.0)
-
     @get:AutoLogOutput(key = "Turret/rawEncoder1AbsolutePosition")
     val rawEncoder1AbsolutePosition: Angle get() = turretEncoder1.absolutePosition.value
     @get:AutoLogOutput(key = "Turret/rawEncoder2AbsolutePosition")
@@ -106,13 +93,6 @@ object Turret: SubsystemBase("Turret") {
     val encoder1AbsolutePosition: Angle get() = (rawEncoder1AbsolutePosition - encoder1Offset.getDouble(ENCODER_1_DEFAULT_OFFSET).degrees).wrap()
     @get:AutoLogOutput(key = "Turret/encoder2AbsolutePosition")
     val encoder2AbsolutePosition: Angle get() = (rawEncoder2AbsolutePosition - encoder2Offset.getDouble(ENCODER_2_DEFAULT_OFFSET).degrees).wrap()
-
-    @get:AutoLogOutput(key = "Turret/gyroAngle")
-    val gyroAngle get() = turretPigeon.yaw.value
-
-    var encoder1Angles = arrayListOf<Double>()
-    var encoder2Angles = arrayListOf<Double>()
-    var pigeonAngles = arrayListOf<Double>()
 
     // unwraps encoder 1 angle using encoder 2 angle
     @get:AutoLogOutput(key = "Turret/fusedEncoderAngle")
@@ -131,27 +111,20 @@ object Turret: SubsystemBase("Turret") {
                 angle -= 360.0.degrees * encoder1GearRatio
             }
 
-            Logger.recordOutput("validAngles", validAngles.map { it.asDegrees }.toDoubleArray())
 
-            val errors: ArrayList<Angle> = arrayListOf()
 
             // using encoder 2 calculate errors of each valid angle
             var minError = Double.MAX_VALUE.degrees
             var bestAngle = Double.MIN_VALUE.degrees
+
             for (angle in validAngles) {
                 val estEncoder2Angle = (angle / encoder2GearRatio).wrap()
                 val error = (encoder2AbsolutePosition - estEncoder2Angle).wrap().absoluteValue()
-                errors.add(error)
-//                println("angle: ${angle}, estAngle: ${estEncoder2Angle}, error: ${error}")
                 if (error < minError){
                     minError = error
                     bestAngle = angle
                 }
             }
-
-            Logger.recordOutput("errors", errors.map { it.asDegrees }.toDoubleArray())
-            Logger.recordOutput("lowestError", minError)
-            Logger.recordOutput("best?", bestAngle)
 
             return bestAngle
         }
