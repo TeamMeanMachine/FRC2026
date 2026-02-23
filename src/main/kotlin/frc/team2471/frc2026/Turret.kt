@@ -51,18 +51,19 @@ object Turret: SubsystemBase("Turret") {
 
     val turretMotor = LoggedTalonFX(Falcons.TURRET_0, CANivores.TURRET_CAN)
     val turretEncoder1 = CANcoder(CANCoders.TURRET_1, CANivores.TURRET_CAN)
-    val turretEncoder2 = CANcoder(CANCoders.TURRET_2, CANivores.TURRET_CAN)
+    val turretEncoder2 = CANcoder(CANCoders.TURRET_2_EXTRA, CANivores.TURRET_CAN)
     val turretPigeon = Pigeon2(CANSensors.TURRET_PIGEON, CANivores.TURRET_CAN)
 
     val TURRET_TOP_LIMIT = 300.0.degrees
     val TURRET_BOTTOM_LIMIT = -300.0.degrees
     val TURRET_RANGE = TURRET_TOP_LIMIT - TURRET_BOTTOM_LIMIT
+    val TURRET_ENCODER_LIMIT = 720.0.degrees
 
     const val ENCODER_1_DEFAULT_OFFSET = 0.0
     const val ENCODER_2_DEFAULT_OFFSET = 0.0
 
     const val encoder1GearRatio = 30.0/200.0
-    const val encoder2GearRatio = encoder1GearRatio * 11.0/46.0
+    const val encoder2GearRatio = encoder1GearRatio * 83.0/32.0
 
     @get:AutoLogOutput(key = "Turret/rawTurretMotorRotorAngle")
     val rawTurretMotorRotorAngle: Angle get() = turretMotor.rotorPosition.valueAsDouble.rotations / 27.88
@@ -111,12 +112,12 @@ object Turret: SubsystemBase("Turret") {
             // generate a list of all possible angles based off of encoder 1
             val validAngles: ArrayList<Angle> = arrayListOf()
             var angle = encoder1AbsolutePosition * encoder1GearRatio
-            while (angle <= TURRET_RANGE / 2.0) {
+            while (angle <= TURRET_ENCODER_LIMIT / 2.0) {
                 validAngles.add(angle)
                 angle += 360.0.degrees * encoder1GearRatio
             }
             angle = (encoder1AbsolutePosition - 360.0.degrees) * encoder1GearRatio
-            while (angle >= -TURRET_RANGE / 2.0) {
+            while (angle >= -TURRET_ENCODER_LIMIT / 2.0) {
                 validAngles.add(angle)
                 angle -= 360.0.degrees * encoder1GearRatio
             }
