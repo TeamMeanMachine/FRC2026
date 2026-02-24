@@ -107,10 +107,10 @@ object OI: SubsystemBase("OI") {
 
 
 
-        driverController.x().onTrue(runOnceCommand { Turret.fieldCentricSetpoint = 90.0.degrees })
-        driverController.y().onTrue(runOnceCommand { Turret.fieldCentricSetpoint = 0.0.degrees })
-        driverController.b().onTrue(runOnceCommand { Turret.fieldCentricSetpoint = -90.0.degrees })
-        driverController.a().onTrue(runOnceCommand { Turret.fieldCentricSetpoint = -180.0.degrees })
+//        driverController.x().onTrue(runOnceCommand { Turret.fieldCentricSetpoint = 90.0.degrees })
+//        driverController.y().onTrue(runOnceCommand { Turret.fieldCentricSetpoint = 0.0.degrees })
+//        driverController.b().onTrue(runOnceCommand { Turret.fieldCentricSetpoint = -90.0.degrees })
+//        driverController.a().onTrue(runOnceCommand { Turret.fieldCentricSetpoint = -180.0.degrees })
 
 
 
@@ -119,11 +119,11 @@ object OI: SubsystemBase("OI") {
         driverController.povUp().onTrue(runOnceCommand { Shooter.hoodAngleSetpoint += 1.0.degrees })
         driverController.povDown().onTrue(runOnceCommand { Shooter.hoodAngleSetpoint -= 1.0.degrees })
 
-//        driverController.x().onTrue(runOnceCommand { Shooter.hoodAngleSetpoint = 0.0.degrees })
-//        driverController.y().onTrue(runOnceCommand { Shooter.hoodAngleSetpoint = 15.0.degrees })
+        driverController.x().onTrue(runOnceCommand { Shooter.hoodAngleSetpoint = 0.0.degrees })
+        driverController.y().onTrue(runOnceCommand { Shooter.hoodAngleSetpoint = 15.0.degrees })
 
-//        driverController.a().onTrue(runOnceCommand { Shooter.hoodAngleSetpoint = 25.0.degrees })
-//        driverController.b().onTrue(runOnceCommand { Shooter.hoodAngleSetpoint = 40.0.degrees })
+        driverController.a().onTrue(runOnceCommand { Shooter.hoodAngleSetpoint = 25.0.degrees })
+        driverController.b().onTrue(runOnceCommand { Shooter.hoodAngleSetpoint = 40.0.degrees })
 
         driverController.rightTrigger(0.5).whileTrue(runCommand {
                 Spindexer.currentState = Spindexer.State.ON
