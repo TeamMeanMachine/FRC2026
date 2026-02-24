@@ -119,6 +119,6 @@ if __name__ == "__main__":
     parser.add_argument("--local", action="store_true")
     args = parser.parse_args()
     Quixsam(
-        "localhost",
+        "10.24.71.2",
         save_logs=not args.local,
     ).run()
