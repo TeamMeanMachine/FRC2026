@@ -241,7 +241,7 @@ object Shooter: SubsystemBase("Shooter") {
     val shooterAngularVelocitySetpoint: AngularVelocity get() = (2.0 * shooterVelocitySetpoint.asInchesPerSecond/(WHEEL_DIAMETER.asInches * Math.PI)).rotationsPerSecond / SHOOTER_GEAR_RATIO
 
     @get:AutoLogOutput(key = "Shooter/Hood Feedforward")
-    val hoodFeedforward: Double get() = 0.7//hoodAngle.cos() * 0.2
+    val hoodFeedforward: Double get() = 0.2//hoodAngle.cos() * 0.2
 
     // ball trajectory angle
     @get:AutoLogOutput(key = "Shooter/Hood Angle Setpoint")
@@ -326,8 +326,8 @@ object Shooter: SubsystemBase("Shooter") {
             currentLimits(25.0, 30.0, 1.0)
             inverted(true)
             brakeMode()
-            s(0.075, StaticFeedforwardSignValue.UseClosedLoopSign)
-            p(if (isReal) 120.0 else 60.0)
+            s(0.15, StaticFeedforwardSignValue.UseClosedLoopSign)
+            p(if (isReal) 60.0 else 60.0)
             d(if (isReal) 0.0 else 4.0)
 
             motionMagic(0.75, 5.0)
