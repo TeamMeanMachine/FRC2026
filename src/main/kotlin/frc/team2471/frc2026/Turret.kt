@@ -45,6 +45,7 @@ import kotlin.math.abs
 import org.team2471.frc.lib.coroutines.periodic
 import org.team2471.frc.lib.ctre.alternateFeedbackSensor
 import org.team2471.frc.lib.ctre.coastMode
+import org.team2471.frc.lib.util.isSim
 import kotlin.collections.toDoubleArray
 
 object Turret: SubsystemBase("Turret") {
@@ -190,7 +191,7 @@ object Turret: SubsystemBase("Turret") {
     var turretHeight = 0.4.meters
 
     val turretTranslation: Translation2d
-        get() = Drive.pose.translation + turretOffsetFromCenter.rotateBy(Drive.heading)
+        get() = Drive.localizer.pose.translation + turretOffsetFromCenter.rotateBy(Drive.heading)
 
 
     @get:AutoLogOutput(key = "Turret/Turret error distance")

@@ -63,7 +63,7 @@ object FieldManager {
     val inTrenchArea: Boolean
         get () {
             for (pose in trenchPositions) {
-                val relativePose = pose - Drive.pose.translation
+                val relativePose = pose - Drive.localizer.pose.translation
                 if (relativePose.y.absoluteValue.meters < (trenchAreaLength/2.0) && relativePose.x.absoluteValue.meters < (trenchAreaWidth/2.0)) {
                     return true
                 }
@@ -78,12 +78,33 @@ object FieldManager {
     val goalPose: Translation2d
         get () = if (isRedAlliance) redGoalPose else blueGoalPose
 
+    val passPose: Translation2d
+        get() {
+            var pose = Translation2d(3.0, 4.0)
+
+            if (isRedAlliance) {
+                pose = Translation2d(fieldLength.asMeters - pose.x, pose.y)
+            }
+
+            if (Drive.localizer.pose.y.meters > FieldManager.fieldHalfWidth) {
+                pose = Translation2d(pose.x, fieldWidth.asMeters - pose.y)
+            }
+
+            return pose
+//
+//            return if (Drive.localizer.pose.y.meters > FieldManager.fieldHalfWidth) {
+//                goalPose + Translation2d(0.0.inches, 70.0.inches)
+//            } else {
+//                goalPose + Translation2d(0.0.inches, -70.0.inches)
+//            } - AimUtils.calculateAimTargetOffset(AimUtils.PASS_AIRTIME)
+        }
+
     @get:AutoLogOutput(key = "FieldManager/Distance From Middle to Score")
-    val distanceFromMiddleToScore = fieldCenter.x.asFeet.feet - lowerRedTrenchPosition.x.feet - 2.0.feet
+    val distanceFromMiddleToScore = fieldCenter.x.asFeet.feet - lowerRedTrenchPosition.x.feet - 5.0.feet
 
     @get:AutoLogOutput(key = "FieldManager/Distance From Center")
     val xRelativeToCenter: Distance
-        get () = (Drive.pose.x.meters - fieldCenter.x.asMeters.meters)
+        get () = (Drive.localizer.pose.x.meters - fieldCenter.x.asMeters.meters)
 
     @get:AutoLogOutput(key = "FieldManager/In Scoring Zone")
     val inScoringZone: Boolean
