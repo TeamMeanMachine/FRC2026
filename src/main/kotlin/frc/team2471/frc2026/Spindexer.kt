@@ -19,6 +19,8 @@ import org.team2471.frc.lib.ctre.currentLimits
 import org.team2471.frc.lib.ctre.inverted
 import org.team2471.frc.lib.ctre.p
 import org.team2471.frc.lib.ctre.s
+import org.team2471.frc.lib.math.deadband
+import org.team2471.frc.lib.math.linearMap
 import kotlin.math.cos
 
 object Spindexer: SubsystemBase("Spindexer") {
@@ -194,7 +196,7 @@ object Spindexer: SubsystemBase("Spindexer") {
                         spinMotorVelocitySetpoint = ((SPIN_VELOCITY - SPIN_LOWER_VELOCITY) * (stateOnTime - spinSlowdownDelayTime) / spinSlowdownTime) + SPIN_LOWER_VELOCITY
                     }
                 } else {
-                    spinMotorVelocitySetpoint = SPIN_VELOCITY
+                    spinMotorVelocitySetpoint = SPIN_VELOCITY * linearMap(0.0, 1.0, 0.25, 1.0, OI.driveRightTrigger.deadband(0.1))
                 }
                 sidetakeMotorVelocitySetpoint = SIDETAKE_VELOCITY
                 uptakeMotorVelocitySetpoint = UPTAKE_VELOCITY

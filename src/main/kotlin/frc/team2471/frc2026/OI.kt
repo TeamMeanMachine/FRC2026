@@ -102,8 +102,8 @@ object OI: SubsystemBase("OI") {
 //        driverController.a().whileTrue(Shooter.shoot())
 
 //        driverController.rightBumper().whileTrue(Drive.snakeMode())
-//        driverController.x().onTrue(runOnceCommand { Intake.deploy() })
-//        driverController.b().onTrue(runOnceCommand { Intake.stow() })
+        driverController.x().onTrue(runOnceCommand { Intake.deploy() })
+        driverController.b().onTrue(runOnceCommand { Intake.stow() })
 
 
 
@@ -119,13 +119,12 @@ object OI: SubsystemBase("OI") {
         driverController.povUp().onTrue(runOnceCommand { Shooter.hoodAngleSetpoint += 1.0.degrees })
         driverController.povDown().onTrue(runOnceCommand { Shooter.hoodAngleSetpoint -= 1.0.degrees })
 
-        driverController.x().onTrue(runOnceCommand { Shooter.hoodAngleSetpoint = 0.0.degrees })
-        driverController.y().onTrue(runOnceCommand { Shooter.hoodAngleSetpoint = 15.0.degrees })
+//        driverController.y().onTrue(runOnceCommand { Shooter.hoodAngleSetpoint = 15.0.degrees })
+//        driverController.a().onTrue(runOnceCommand { Shooter.hoodAngleSetpoint = 25.0.degrees })
+        driverController.a().onTrue(runOnceCommand { Shooter.hoodAngleSetpoint = 0.0.degrees })
+        driverController.y().onTrue(runOnceCommand { Shooter.hoodAngleSetpoint = 40.0.degrees })
 
-        driverController.a().onTrue(runOnceCommand { Shooter.hoodAngleSetpoint = 25.0.degrees })
-        driverController.b().onTrue(runOnceCommand { Shooter.hoodAngleSetpoint = 40.0.degrees })
-
-        driverController.rightTrigger(0.5).whileTrue(runCommand {
+        driverController.rightTrigger(0.1).whileTrue(runCommand {
                 Spindexer.currentState = Spindexer.State.ON
         }.finallyRun { Spindexer.currentState = Spindexer.State.OFF })
 
