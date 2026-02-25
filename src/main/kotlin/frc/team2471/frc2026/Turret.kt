@@ -55,7 +55,7 @@ object Turret: SubsystemBase("Turret") {
 
     val turretMotor = LoggedTalonFX(Falcons.TURRET_0, CANivores.TURRET_CAN)
     val turretEncoder1 = CANcoder(CANCoders.TURRET_1, CANivores.TURRET_CAN)
-    val turretEncoder2 = CANcoder(CANCoders.TURRET_2_EXTRA, CANivores.TURRET_CAN)
+    val turretEncoder2 = CANcoder(CANCoders.TURRET_2, CANivores.TURRET_CAN)
     val turretPigeon = Pigeon2(CANSensors.TURRET_PIGEON, CANivores.TURRET_CAN)
 
     val TURRET_TOP_LIMIT = 270.0.degrees
@@ -63,11 +63,11 @@ object Turret: SubsystemBase("Turret") {
     val TURRET_RANGE = TURRET_TOP_LIMIT - TURRET_BOTTOM_LIMIT
     val TURRET_ENCODER_LIMIT = 720.0.degrees
 
-    const val ENCODER_1_DEFAULT_OFFSET = 125.15625
-    const val ENCODER_2_DEFAULT_OFFSET = 182.548828125
+    const val ENCODER_1_DEFAULT_OFFSET = 99.404
+    const val ENCODER_2_DEFAULT_OFFSET = 328.359
 
     const val encoder1GearRatio = 30.0/200.0
-    const val encoder2GearRatio = encoder1GearRatio * 83.0/32.0
+    const val encoder2GearRatio = encoder1GearRatio * 67.0/25.0
 
     const val motorGearRatio = 30.0/200.0 * 11.0/46.0
 
@@ -102,16 +102,19 @@ object Turret: SubsystemBase("Turret") {
             // generate a list of all possible angles based off of encoder 1
             val validAngles: ArrayList<Angle> = arrayListOf()
             var angle = encoder1AbsolutePosition * encoder1GearRatio
-            while (angle <= TURRET_ENCODER_LIMIT / 2.0) {
+            while (angle <= TURRET_ENCODER_LIMIT) {
                 validAngles.add(angle)
                 angle += 360.0.degrees * encoder1GearRatio
             }
-            angle = (encoder1AbsolutePosition - 360.0.degrees) * encoder1GearRatio
-            while (angle >= -TURRET_ENCODER_LIMIT / 2.0) {
-                validAngles.add(angle)
-                angle -= 360.0.degrees * encoder1GearRatio
-            }
+//            angle = (encoder1AbsolutePosition - 360.0.degrees) * encoder1GearRatio
+//            while (angle >= -TURRET_ENCODER_LIMIT / 2.0) {
+//                validAngles.add(angle)
+//                angle -= 360.0.degrees * encoder1GearRatio
+//            }
 
+            Logger.recordOutput("Turret/ValidAngles", validAngles.map{it.asDegrees}.toDoubleArray())
+
+            val errors = arrayListOf<Double>()
 
 
             // using encoder 2 calculate errors of each valid angle
@@ -121,11 +124,14 @@ object Turret: SubsystemBase("Turret") {
             for (angle in validAngles) {
                 val estEncoder2Angle = (angle / encoder2GearRatio).wrap()
                 val error = (encoder2AbsolutePosition - estEncoder2Angle).wrap().absoluteValue()
+                errors.add(error.asDegrees)
                 if (error < minError){
                     minError = error
                     bestAngle = angle
                 }
             }
+
+            Logger.recordOutput("Turret/Errors", errors.toDoubleArray())
 
             return bestAngle
         }
@@ -172,10 +178,10 @@ object Turret: SubsystemBase("Turret") {
                 //Wrapping if pose error is more than half a rotation
                 isTurretWrapping = (field - turretMotorFieldCentricAngle).absoluteValue() > 180.0.degrees
 
-                turretMotor.setControl(PositionVoltage(field.asRotations).withFeedForward(turretFeedforward))
+//                turretMotor.setControl(PositionVoltage(field.asRotations).withFeedForward(turretFeedforward))
             } else {
                 field = value.unWrap(fieldCentricAngle)
-                turretMotor.setControl(PositionVoltage(field - Drive.heading.measure))
+//                turretMotor.setControl(PositionVoltage(field - Drive.heading.measure))
             }
         }
 

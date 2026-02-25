@@ -87,7 +87,7 @@ object OI: SubsystemBase("OI") {
         // Default command, normal field-relative drive
         Drive.defaultCommand = Drive.joystickDrive()
 
-        Turret.defaultCommand = Turret.aimAtTarget()
+//        Turret.defaultCommand = Turret.aimAtTarget()
 
 //        Shooter.defaultCommand = Shooter.rampUp()
 
@@ -138,6 +138,8 @@ object OI: SubsystemBase("OI") {
                 Intake.intakeState = Intake.IntakeState.OFF
             }
         })
+
+        driverController.leftTrigger(0.2).whileTrue(runCommand { Intake.deepStow() })
 
         driverController.leftBumper().whileTrue(runCommand {
             Shooter.shooterVelocitySetpoint = Shooter.hubSpeedCurve.get(AimUtils.aimTarget.getDistance(Drive.localizer.pose.translation).meters.asFeet).rotationsPerSecond
