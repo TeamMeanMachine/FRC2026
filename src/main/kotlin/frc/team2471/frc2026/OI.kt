@@ -152,8 +152,8 @@ object OI: SubsystemBase("OI") {
 
     override fun periodic() {
         LoopLogger.record("b4 OI piodc")
-        driverNotConnectedAlert.set(driverDebouncer.calculate(driverController.isConnected))
-        operatorNotConnectedAlert.set(operatorDebouncer.calculate(operatorController.isConnected))
+        driverNotConnectedAlert.set(driverDebouncer.calculate(!driverController.isConnected))
+        operatorNotConnectedAlert.set(operatorDebouncer.calculate(!operatorController.isConnected))
 
         LoopLogger.record("OI piodc")
     }

@@ -10,6 +10,7 @@ import edu.wpi.first.math.system.plant.DCMotor
 import edu.wpi.first.networktables.NetworkTableInstance
 import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.units.measure.AngularVelocity
+import edu.wpi.first.wpilibj.Alert
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.SubsystemBase
 import kotlinx.coroutines.GlobalScope
@@ -48,7 +49,6 @@ import org.team2471.frc.lib.coroutines.periodic
 import org.team2471.frc.lib.ctre.alternateFeedbackSensor
 import org.team2471.frc.lib.ctre.coastMode
 import org.team2471.frc.lib.units.degreesPerSecond
-import org.team2471.frc.lib.util.isSim
 import kotlin.collections.toDoubleArray
 
 object Turret: SubsystemBase("Turret") {
@@ -86,7 +86,7 @@ object Turret: SubsystemBase("Turret") {
 
     @get:AutoLogOutput(key = "Turret/fieldCentricTurretMotorRotorAngle")
     val fieldCentricTurretMotorRotorAngle: Angle
-        get() = ((turretMotorRotorAngle + 90.0.degrees) + Drive.heading.measure).wrap()
+        get() = ((turretMotorRotorAngle + 90.0.degrees) + Drive.headingAngleUnwrapped)
 
     @get:AutoLogOutput(key = "Turret/turretMotorVoltage")
     val turretMotorVoltage: Double get() = turretMotor.motorVoltage.valueAsDouble
@@ -154,8 +154,7 @@ object Turret: SubsystemBase("Turret") {
         }
 
     @get:AutoLogOutput(key = "Turret/fieldCentricAngleWrapped")
-    val fieldCentricAngleWrapped: Angle
-        get() = fieldCentricAngle.wrap()
+    val fieldCentricAngleWrapped: Angle get() = fieldCentricAngle.wrap()
 
     @get:AutoLogOutput(key = "Turret/turretFeedforward")
     val turretFeedforward: Double
@@ -218,6 +217,8 @@ object Turret: SubsystemBase("Turret") {
     val turretErrorDistance get() = abs(sin(turretMotor.closedLoopError.valueAsDouble.rotations) * AimUtils.distanceToGoal.asInches).inches
 
     var tempHeadingResetAngle: Angle? = null
+
+    val turretPigeonDisconnectedAlert = Alert("Turret Pigeon Disconnected!", Alert.AlertType.kError)
 
 
     init {
@@ -284,10 +285,10 @@ object Turret: SubsystemBase("Turret") {
         GlobalScope.launch {
             periodic {
 
-                if ((fieldCentricAngleWrapped - fieldCentricTurretMotorRotorAngle).absoluteValue() > 2.0.degrees && turretVelocity < 5.0.degreesPerSecond) {
+                if ((fieldCentricAngle - fieldCentricTurretMotorRotorAngle.unWrap(fieldCentricAngle)).absoluteValue() > 2.0.degrees && turretVelocity.absoluteValue() < 5.0.degreesPerSecond) {
                     GlobalScope.launch {
                         println("setting turret pigeon yaw to motor angle")
-                        turretPigeon.setYaw(fieldCentricTurretMotorRotorAngle)
+                        turretPigeon.setYaw(fieldCentricTurretMotorRotorAngle.unWrap(fieldCentricAngle))
                         println("finished setting turret pigeon yaw")
                     }
                 }
@@ -298,13 +299,15 @@ object Turret: SubsystemBase("Turret") {
                     Drive.headingAngleUnwrapped = tempResetAngle
                     GlobalScope.launch {
                         println("setting turret pigeon yaw")
-                        turretPigeon.setYaw(fieldCentricFusedEncoderAngle)
+                        turretPigeon.setYaw(fieldCentricFusedEncoderAngle.unWrap(fieldCentricAngle))
                         println("finished setting turret pigeon yaw")
                     }
                 }
                 Drive.headingAngleUnwrapped = Drive.heading.measure.unWrap(Drive.headingAngleUnwrapped)
 
-                if (!turretPigeon.isConnected && isReal) {
+                val turretPigeonIsConnected = turretPigeon.isConnected && isReal
+                turretPigeonDisconnectedAlert.set(!turretPigeonIsConnected)
+                if (!turretPigeonIsConnected && isReal) {
                     println("TURRET PIGEON DISCONNECTED!!!!")
                 }
             }
@@ -322,8 +325,7 @@ object Turret: SubsystemBase("Turret") {
     }
 
     fun aimAtTarget(): Command = run {
-        fieldCentricSetpoint =
-            turretTranslation.angleTo(AimUtils.aimTarget)
+        fieldCentricSetpoint = turretTranslation.angleTo(AimUtils.aimTarget)
     }.onlyRunWhileFalse { Robot.isTestEnabled }
 
     fun setTurretOffset(robotHeading: Angle) {
