@@ -129,14 +129,17 @@ object Intake: SubsystemBase("Intake") {
 
     fun home(): Command = sequenceCommand(
         runCommand(this) {
+            println("going in?")
             deployMotor.setControl(DutyCycleOut(HOMING_POWER))
         }.onlyRunWhileTrue { hitHardStop },
         runCommand(this) {
+            println("going out?")
             deployMotor.setControl(DutyCycleOut(-HOMING_POWER))
         }.onlyRunWhileFalse { hitHardStop }.finallyRun {
             deployMotor.setControl(DutyCycleOut(0.0))
-            deployMotor.setPosition(0.0)
-            stow()
+            println("Deploy Pos: ${deployMotor.position}")
+            deployMotor.setPosition(0.13)
+//            stow()
         }
     )
 

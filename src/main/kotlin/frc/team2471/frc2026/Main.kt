@@ -155,8 +155,7 @@ object Robot : LoggedRobot() {
         Drive.brakeMode()
         Shooter.hoodAngleSetpoint = Shooter.hoodAngle
 
-        // TODO: Uncomment when we are sure it won't explode
-//        Intake.home()
+        commandScheduler.schedule(Intake.home())
     }
 
     /** This function is called once when the robot is disabled.  */

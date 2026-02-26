@@ -87,7 +87,7 @@ object OI: SubsystemBase("OI") {
         // Default command, normal field-relative drive
         Drive.defaultCommand = Drive.joystickDrive()
 
-//        Turret.defaultCommand = Turret.aimAtTarget()
+        Turret.defaultCommand = Turret.aimAtTarget()
 
 //        Shooter.defaultCommand = Shooter.rampUp()
 
@@ -125,7 +125,7 @@ object OI: SubsystemBase("OI") {
 //        driverController.y().onTrue(runOnceCommand { Shooter.hoodAngleSetpoint = 15.0.degrees })
 //        driverController.a().onTrue(runOnceCommand { Shooter.hoodAngleSetpoint = 25.0.degrees })
         driverController.a().onTrue(runOnceCommand { Shooter.hoodAngleSetpoint = 0.0.degrees })
-        driverController.y().onTrue(runOnceCommand { Shooter.hoodAngleSetpoint = 40.0.degrees })
+        driverController.y().onTrue(Intake.home())
 
         driverController.rightTrigger(0.1).whileTrue(runCommand {
                 Spindexer.currentState = Spindexer.State.ON

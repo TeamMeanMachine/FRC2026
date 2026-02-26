@@ -86,11 +86,11 @@ object FieldManager {
                 pose = Translation2d(fieldLength.asMeters - pose.x, pose.y)
             }
 
-            if (Drive.localizer.pose.y.meters > FieldManager.fieldHalfWidth) {
+            if (Drive.localizer.pose.y.meters > fieldHalfWidth) {
                 pose = Translation2d(pose.x, fieldWidth.asMeters - pose.y)
             }
 
-            return pose
+            return pose - AimUtils.calculateAimTargetOffset(AimUtils.PASS_AIRTIME)
 //
 //            return if (Drive.localizer.pose.y.meters > FieldManager.fieldHalfWidth) {
 //                goalPose + Translation2d(0.0.inches, 70.0.inches)

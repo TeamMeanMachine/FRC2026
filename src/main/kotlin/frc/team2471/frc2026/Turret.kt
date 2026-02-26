@@ -9,6 +9,7 @@ import edu.wpi.first.math.geometry.Translation2d
 import edu.wpi.first.math.system.plant.DCMotor
 import edu.wpi.first.networktables.NetworkTableInstance
 import edu.wpi.first.units.measure.Angle
+import edu.wpi.first.units.measure.AngularVelocity
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.SubsystemBase
 import kotlinx.coroutines.GlobalScope
@@ -16,6 +17,7 @@ import kotlinx.coroutines.launch
 import org.littletonrobotics.junction.AutoLogOutput
 import org.littletonrobotics.junction.Logger
 import org.team2471.frc.lib.control.LoopLogger
+import org.team2471.frc.lib.control.commands.onlyRunWhileFalse
 import org.team2471.frc.lib.ctre.PhoenixUtil
 import org.team2471.frc.lib.ctre.addFollower
 import org.team2471.frc.lib.ctre.applyConfiguration
@@ -45,6 +47,7 @@ import kotlin.math.abs
 import org.team2471.frc.lib.coroutines.periodic
 import org.team2471.frc.lib.ctre.alternateFeedbackSensor
 import org.team2471.frc.lib.ctre.coastMode
+import org.team2471.frc.lib.units.degreesPerSecond
 import org.team2471.frc.lib.util.isSim
 import kotlin.collections.toDoubleArray
 
@@ -63,11 +66,11 @@ object Turret: SubsystemBase("Turret") {
     val TURRET_RANGE = TURRET_TOP_LIMIT - TURRET_BOTTOM_LIMIT
     val TURRET_ENCODER_LIMIT = 720.0.degrees
 
-    const val ENCODER_1_DEFAULT_OFFSET = 99.404
-    const val ENCODER_2_DEFAULT_OFFSET = 328.359
+    const val ENCODER_1_DEFAULT_OFFSET = -63.457
+    const val ENCODER_2_DEFAULT_OFFSET = -15.469
 
     const val encoder1GearRatio = 30.0/200.0
-    const val encoder2GearRatio = encoder1GearRatio * 67.0/25.0
+    const val encoder2GearRatio = encoder1GearRatio * 83.0/32.0
 
     const val motorGearRatio = 30.0/200.0 * 11.0/46.0
 
@@ -81,9 +84,12 @@ object Turret: SubsystemBase("Turret") {
     val turretMotorRotorAngle: Angle
         get() = rawTurretMotorRotorAngle + turretMotorRotorPositionOffset
 
+    @get:AutoLogOutput(key = "Turret/fieldCentricTurretMotorRotorAngle")
+    val fieldCentricTurretMotorRotorAngle: Angle
+        get() = ((turretMotorRotorAngle + 90.0.degrees) + Drive.heading.measure).wrap()
+
     @get:AutoLogOutput(key = "Turret/turretMotorVoltage")
-    val turretMotorVoltage: Double
-        get() = turretMotor.motorVoltage.valueAsDouble
+    val turretMotorVoltage: Double get() = turretMotor.motorVoltage.valueAsDouble
 
     @get:AutoLogOutput(key = "Turret/rawEncoder1AbsolutePosition")
     val rawEncoder1AbsolutePosition: Angle get() = turretEncoder1.absolutePosition.value
@@ -102,15 +108,15 @@ object Turret: SubsystemBase("Turret") {
             // generate a list of all possible angles based off of encoder 1
             val validAngles: ArrayList<Angle> = arrayListOf()
             var angle = encoder1AbsolutePosition * encoder1GearRatio
-            while (angle <= TURRET_ENCODER_LIMIT) {
+            while (angle <= TURRET_ENCODER_LIMIT / 2.0) {
                 validAngles.add(angle)
                 angle += 360.0.degrees * encoder1GearRatio
             }
-//            angle = (encoder1AbsolutePosition - 360.0.degrees) * encoder1GearRatio
-//            while (angle >= -TURRET_ENCODER_LIMIT / 2.0) {
-//                validAngles.add(angle)
-//                angle -= 360.0.degrees * encoder1GearRatio
-//            }
+            angle = (encoder1AbsolutePosition - 360.0.degrees) * encoder1GearRatio
+            while (angle >= -TURRET_ENCODER_LIMIT / 2.0) {
+                validAngles.add(angle)
+                angle -= 360.0.degrees * encoder1GearRatio
+            }
 
             Logger.recordOutput("Turret/ValidAngles", validAngles.map{it.asDegrees}.toDoubleArray())
 
@@ -147,6 +153,10 @@ object Turret: SubsystemBase("Turret") {
             turretMotor.position.value + Drive.heading.measure
         }
 
+    @get:AutoLogOutput(key = "Turret/fieldCentricAngleWrapped")
+    val fieldCentricAngleWrapped: Angle
+        get() = fieldCentricAngle.wrap()
+
     @get:AutoLogOutput(key = "Turret/turretFeedforward")
     val turretFeedforward: Double
         get() = -Drive.speeds.omegaRadiansPerSecond.radians.asRotations * 0.0
@@ -178,10 +188,10 @@ object Turret: SubsystemBase("Turret") {
                 //Wrapping if pose error is more than half a rotation
                 isTurretWrapping = (field - turretMotorFieldCentricAngle).absoluteValue() > 180.0.degrees
 
-//                turretMotor.setControl(PositionVoltage(field.asRotations).withFeedForward(turretFeedforward))
+                turretMotor.setControl(PositionVoltage(field.asRotations).withFeedForward(turretFeedforward))
             } else {
                 field = value.unWrap(fieldCentricAngle)
-//                turretMotor.setControl(PositionVoltage(field - Drive.heading.measure))
+                turretMotor.setControl(PositionVoltage(field - Drive.heading.measure))
             }
         }
 
@@ -191,6 +201,10 @@ object Turret: SubsystemBase("Turret") {
     @get:AutoLogOutput(key = "Turret/turretSetpointErrorMotor")
     val turretSetpointErrorMotor: Angle
         get() = turretMotor.closedLoopError.valueAsDouble.rotations
+
+    @get:AutoLogOutput(key = "Turret/turretVelocity")
+    val turretVelocity: AngularVelocity
+        get() = turretMotor.rotorVelocity.value
 
 
     val turretOffsetFromCenter = Translation2d(0.0.inches, 0.725.inches)
@@ -210,6 +224,15 @@ object Turret: SubsystemBase("Turret") {
         println("Turret init")
         if (!encoder1Offset.exists()) encoder1Offset.setDouble(ENCODER_1_DEFAULT_OFFSET); encoder1Offset.setPersistent()
         if (!encoder2Offset.exists()) encoder2Offset.setDouble(ENCODER_2_DEFAULT_OFFSET); encoder2Offset.setPersistent()
+
+
+
+        turretEncoder1.applyConfiguration {
+            inverted(false)
+        }
+        turretEncoder2.applyConfiguration {
+            inverted(false)
+        }
 
         turretPigeon.applyConfiguration {
             MountPose.MountPoseYaw = 0.0
@@ -260,6 +283,15 @@ object Turret: SubsystemBase("Turret") {
         //Loop that updates the unwrapped robot heading also sets the turret pigeon offset.
         GlobalScope.launch {
             periodic {
+
+                if ((fieldCentricAngleWrapped - fieldCentricTurretMotorRotorAngle).absoluteValue() > 2.0.degrees && turretVelocity < 5.0.degreesPerSecond) {
+                    GlobalScope.launch {
+                        println("setting turret pigeon yaw to motor angle")
+                        turretPigeon.setYaw(fieldCentricTurretMotorRotorAngle)
+                        println("finished setting turret pigeon yaw")
+                    }
+                }
+
                 val tempResetAngle = tempHeadingResetAngle
                 if (tempResetAngle != null) {
                     tempHeadingResetAngle = null
@@ -278,7 +310,7 @@ object Turret: SubsystemBase("Turret") {
             }
         }
 
-        turretMotorRotorPositionOffset = fusedEncoderAngle - rawTurretMotorRotorAngle
+        zeroTurretMotor()
     }
 
     override fun periodic() {
@@ -292,9 +324,13 @@ object Turret: SubsystemBase("Turret") {
     fun aimAtTarget(): Command = run {
         fieldCentricSetpoint =
             turretTranslation.angleTo(AimUtils.aimTarget)
-    }
+    }.onlyRunWhileFalse { Robot.isTestEnabled }
 
     fun setTurretOffset(robotHeading: Angle) {
         tempHeadingResetAngle = robotHeading
+    }
+    fun zeroTurretMotor() {
+        turretMotorRotorPositionOffset = fusedEncoderAngle - rawTurretMotorRotorAngle
+        println("Zeroing turret motor")
     }
 }
