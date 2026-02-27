@@ -43,6 +43,7 @@ object Intake: SubsystemBase("Intake") {
 
     @get:AutoLogOutput(key = "Intake/Intake state")
     var intakeState: IntakeState = IntakeState.OFF
+    var prevIntakeState = intakeState
 
     @get:AutoLogOutput(key = "Intake/Hit Hard Stop")
     val hitHardStop get() = !stopSensor.get()
@@ -151,11 +152,16 @@ object Intake: SubsystemBase("Intake") {
             }
             IntakeState.INTAKING -> {
                 velocitySetpoint = INTAKE_POWER
+                Spindexer.currentState = Spindexer.State.AGITATING
             }
             IntakeState.SPITTING -> {
                 velocitySetpoint = -INTAKE_POWER
             }
         }
+        if (prevIntakeState == IntakeState.INTAKING && intakeState != IntakeState.INTAKING) {
+            Spindexer.currentState = Spindexer.State.OFF
+        }
+        prevIntakeState = intakeState
     }
 
     enum class IntakeState {

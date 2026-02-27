@@ -48,6 +48,7 @@ import kotlin.math.abs
 import org.team2471.frc.lib.coroutines.periodic
 import org.team2471.frc.lib.ctre.alternateFeedbackSensor
 import org.team2471.frc.lib.ctre.coastMode
+import org.team2471.frc.lib.math.round
 import org.team2471.frc.lib.units.degreesPerSecond
 import kotlin.collections.toDoubleArray
 
@@ -250,7 +251,7 @@ object Turret: SubsystemBase("Turret") {
             coastMode()
             if (isReal) {
                 s(0.3, StaticFeedforwardSignValue.UseClosedLoopSign)
-                p(60.0)
+                p(2.0)
                 d(0.0)
             } else {
                 s(0.13, StaticFeedforwardSignValue.UseClosedLoopSign)
@@ -287,9 +288,11 @@ object Turret: SubsystemBase("Turret") {
 
                 if ((fieldCentricAngle - fieldCentricTurretMotorRotorAngle.unWrap(fieldCentricAngle)).absoluteValue() > 2.0.degrees && turretVelocity.absoluteValue() < 5.0.degreesPerSecond) {
                     GlobalScope.launch {
-                        println("setting turret pigeon yaw to motor angle")
+//                        println("setting turret pigeon yaw to motor angle")
+                        println("Detected Error. Trying to change gyro angle from ${fieldCentricAngle.asDegrees.round(3)} to ${fieldCentricTurretMotorRotorAngle.unWrap(fieldCentricAngle).asDegrees.round(3)}")
+
                         turretPigeon.setYaw(fieldCentricTurretMotorRotorAngle.unWrap(fieldCentricAngle))
-                        println("finished setting turret pigeon yaw")
+//                        println("finished setting turret pigeon yaw")
                     }
                 }
 
