@@ -38,5 +38,4 @@ fun zeroTurretEncoders() = runCommand() {
 fun intakeTest() = runCommand() {
     Intake.stow()
     Intake.deploy()
-    Intake.IntakeState = Intake.IntakeState.INTAKING
 }
