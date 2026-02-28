@@ -13,6 +13,7 @@ import org.team2471.frc.lib.control.commands.finallyRun
 import org.team2471.frc.lib.control.commands.runCommand
 import org.team2471.frc.lib.control.commands.runOnceCommand
 import org.team2471.frc.lib.control.commands.toCommand
+import org.team2471.frc.lib.control.commands.waitCommand
 import org.team2471.frc.lib.math.deadband
 import org.team2471.frc.lib.math.normalize
 import org.team2471.frc.lib.units.asFeet
@@ -104,25 +105,19 @@ object OI: SubsystemBase("OI") {
 //        driverController.a().whileTrue(Shooter.shoot())
 
 //        driverController.rightBumper().whileTrue(Drive.snakeMode())
-        driverController.x().onTrue(runOnceCommand { Intake.deploy() })
-        driverController.b().onTrue(runOnceCommand { Intake.stow() })
-
-
+//        driverController.x().onTrue(runOnceCommand { Intake.deploy() })
+//        driverController.b().onTrue(runOnceCommand { Intake.stow() })
 
 //        driverController.x().onTrue(runOnceCommand { Turret.fieldCentricSetpoint = 90.0.degrees })
 //        driverController.y().onTrue(runOnceCommand { Turret.fieldCentricSetpoint = 0.0.degrees })
 //        driverController.b().onTrue(runOnceCommand { Turret.fieldCentricSetpoint = -90.0.degrees })
 //        driverController.a().onTrue(runOnceCommand { Turret.fieldCentricSetpoint = -180.0.degrees })
 
-
-
-
-
 //        driverController.povUp().onTrue(runOnceCommand { Shooter.hoodAngleSetpoint += 1.0.degrees })
 //        driverController.povDown().onTrue(runOnceCommand { Shooter.hoodAngleSetpoint -= 1.0.degrees })
-
 //        driverController.y().onTrue(runOnceCommand { Shooter.hoodAngleSetpoint = 15.0.degrees })
 //        driverController.a().onTrue(runOnceCommand { Shooter.hoodAngleSetpoint = 25.0.degrees })
+
         driverController.a().onTrue(runOnceCommand { Shooter.hoodAngleSetpoint = 0.0.degrees })
 //        driverController.y().onTrue(Intake.home())
 
@@ -138,9 +133,19 @@ object OI: SubsystemBase("OI") {
             }
         })
 
-        driverController.leftTrigger(0.2).whileTrue(runCommand { Intake.deepStow() })
+        driverController.leftBumper().whileTrue(waitCommand(2.0).finallyRun { wasSuspended ->
+            if (wasSuspended) {
+                if (Intake.isDeployed) {
+                    Intake.stow()
+                } else {
+                    Intake.deploy()
+                }
+            } else {
+                Intake.deepStow()
+            }
+        })
 
-        driverController.leftBumper().whileTrue(runCommand {
+        driverController.leftTrigger(0.2).whileTrue(runCommand {
             Shooter.shooterVelocitySetpoint = Shooter.hubSpeedCurve.get(AimUtils.aimTarget.getDistance(Drive.localizer.pose.translation).meters.asFeet).rotationsPerSecond / Shooter.SHOOTER_GEAR_RATIO
             Shooter.hoodAngleSetpoint =(BALL_ANGLE_AT_HOOD_ZERO -  Shooter.hubAngleCurve.get(AimUtils.aimTarget.getDistance(Drive.localizer.pose.translation).meters.asFeet)).degrees
         }.finallyRun {
@@ -156,7 +161,7 @@ object OI: SubsystemBase("OI") {
 
 
         if (Intake.intakeState == Intake.IntakeState.INTAKING && Robot.isTeleopEnabled) {
-            driverController.setRumble(GenericHID.RumbleType.kBothRumble, 1.0)
+            driverController.setRumble(GenericHID.RumbleType.kBothRumble, 0.5)
         } else {
             driverController.setRumble(GenericHID.RumbleType.kBothRumble, 0.0)
         }

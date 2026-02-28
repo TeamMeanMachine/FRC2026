@@ -83,6 +83,8 @@ object Intake: SubsystemBase("Intake") {
     val deployMotorPosition: Double
         get() = deployMotor.position.valueAsDouble
 
+    var isDeployed: Boolean = false
+
 
     init {
         if (!deployPoseEntry.exists()) deployPoseEntry.setDouble(DEPLOY_POSE)
@@ -120,14 +122,17 @@ object Intake: SubsystemBase("Intake") {
 
     fun deploy() {
         deploySetpoint = DEPLOY_POSE
+        isDeployed = true
     }
 
     fun stow() {
         deploySetpoint = STOW_POSE
+        isDeployed = false
     }
 
     fun deepStow() {
         deploySetpoint = DEEP_STOW_POSE
+        isDeployed = false
     }
 
     fun home(): Command = sequenceCommand(
