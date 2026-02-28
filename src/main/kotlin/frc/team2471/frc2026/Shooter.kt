@@ -3,7 +3,6 @@ package frc.team2471.frc2026
 import com.ctre.phoenix6.SignalLogger
 import com.ctre.phoenix6.controls.MotionMagicVoltage
 import com.ctre.phoenix6.controls.NeutralOut
-import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC
 import com.ctre.phoenix6.controls.VelocityVoltage
 import com.ctre.phoenix6.controls.VoltageOut
 import com.ctre.phoenix6.hardware.CANcoder
@@ -25,16 +24,11 @@ import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.SubsystemBase
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine
 import frc.team2471.frc2026.AimUtils.toExitVelocity
-import frc.team2471.frc2026.Shooter.i
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import org.littletonrobotics.junction.AutoLogOutput
 import org.littletonrobotics.junction.Logger
-import org.team2471.frc.lib.control.PDVelocityController
 import org.team2471.frc.lib.control.commands.finallyRun
 import org.team2471.frc.lib.control.commands.runCommand
 import org.team2471.frc.lib.control.commands.runOnceCommand
-import org.team2471.frc.lib.coroutines.periodic
 import org.team2471.frc.lib.ctre.addFollower
 import org.team2471.frc.lib.ctre.applyConfiguration
 import org.team2471.frc.lib.ctre.brakeMode
@@ -85,11 +79,11 @@ object Shooter: SubsystemBase("Shooter") {
         put(8.0, 61.104)
         put(9.0, 62.507)
         put(10.0, 64.026)
-        put(11.0, 65.347)
-        put(12.0, 67.01)
-        put(13.0, 68.822)
-        put(14.0, 70.602)
-        put(15.0, 72.991)
+        put(11.0, 66.5)
+        put(12.0, 68.0)
+        put(13.0, 69.8)
+        put(14.0, 72.302)
+        put(15.0, 74.5)
         put(16.0, 77.944)
         put(17.0, 80.096)
         put(18.0, 83.309)
@@ -392,7 +386,7 @@ object Shooter: SubsystemBase("Shooter") {
 
     fun rampUp(): Command = runCommand(Shooter) {
         shooterVelocitySetpoint = (if (AimUtils.isAimingAtGoal) hubSpeedCurve.get(AimUtils.distanceToTarget.asFeet) else floorSpeedCurve.get(AimUtils.distanceToTarget.asFeet)).rotationsPerSecond / SHOOTER_GEAR_RATIO
-    }.finallyRun { rampDown() }
+    }.finallyRun { shooterVelocitySetpoint = 0.0.rotationsPerSecond }
 
     fun rampDown(): Command = runOnceCommand(Shooter) {
         shooterVelocitySetpoint = 0.0.rotationsPerSecond

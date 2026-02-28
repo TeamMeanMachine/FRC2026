@@ -49,6 +49,7 @@ import org.team2471.frc.lib.coroutines.periodic
 import org.team2471.frc.lib.ctre.alternateFeedbackSensor
 import org.team2471.frc.lib.ctre.coastMode
 import org.team2471.frc.lib.math.round
+import org.team2471.frc.lib.units.asFeet
 import org.team2471.frc.lib.units.degreesPerSecond
 import kotlin.collections.toDoubleArray
 
@@ -251,7 +252,7 @@ object Turret: SubsystemBase("Turret") {
             coastMode()
             if (isReal) {
                 s(0.3, StaticFeedforwardSignValue.UseClosedLoopSign)
-                p(2.0)
+                p(60.0)
                 d(0.0)
             } else {
                 s(0.13, StaticFeedforwardSignValue.UseClosedLoopSign)
@@ -286,7 +287,7 @@ object Turret: SubsystemBase("Turret") {
         GlobalScope.launch {
             periodic {
 
-                if ((fieldCentricAngle - fieldCentricTurretMotorRotorAngle.unWrap(fieldCentricAngle)).absoluteValue() > 2.0.degrees && turretVelocity.absoluteValue() < 5.0.degreesPerSecond) {
+                if ((fieldCentricAngle - fieldCentricTurretMotorRotorAngle.unWrap(fieldCentricAngle)).absoluteValue() > 1.0.degrees && turretVelocity.absoluteValue() < 5.0.degreesPerSecond) {
                     GlobalScope.launch {
 //                        println("setting turret pigeon yaw to motor angle")
                         println("Detected Error. Trying to change gyro angle from ${fieldCentricAngle.asDegrees.round(3)} to ${fieldCentricTurretMotorRotorAngle.unWrap(fieldCentricAngle).asDegrees.round(3)}")
@@ -322,8 +323,9 @@ object Turret: SubsystemBase("Turret") {
     override fun periodic() {
         LoopLogger.record("b4 turret periodic")
         Logger.recordOutput("aim target", AimUtils.aimTarget.toPose2d())
-        Logger.recordOutput("turret setpoint pose", turretTranslation.toPose2d(fieldCentricSetpoint.asRotation2d))
-        Logger.recordOutput("turret pose", turretTranslation.toPose2d(fieldCentricAngle.asRotation2d))
+        Logger.recordOutput("Turret/turret setpoint pose", turretTranslation.toPose2d(fieldCentricSetpoint.asRotation2d))
+        Logger.recordOutput("Turret/turret pose", turretTranslation.toPose2d(fieldCentricAngle.asRotation2d))
+        Logger.recordOutput("Turret/distToGoalFeet", AimUtils.aimTarget.getDistance(Drive.localizer.pose.translation).meters.asFeet)
         LoopLogger.record("turret periodic")
     }
 

@@ -2,7 +2,7 @@ package frc.team2471.frc2026
 
 import com.ctre.phoenix6.controls.DutyCycleOut
 import com.ctre.phoenix6.controls.MotionMagicVoltage
-import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC
+import com.ctre.phoenix6.controls.NeutralOut
 import com.ctre.phoenix6.hardware.TalonFX
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue
 import edu.wpi.first.networktables.NetworkTableInstance
@@ -53,7 +53,11 @@ object Intake: SubsystemBase("Intake") {
     var velocitySetpoint: Double = 0.0
         set(value) {
             field = value.coerceIn(-100.0, 100.0)
-            rollerMotor.setControl(VelocityTorqueCurrentFOC(field))
+            if (field == 0.0) {
+                rollerMotor.setControl(NeutralOut())
+            } else {
+                rollerMotor.setControl(DutyCycleOut(field / 100.0))
+            }
         }
 
     @get:AutoLogOutput(key = "Intake/Deploy Setpoint")
@@ -101,7 +105,7 @@ object Intake: SubsystemBase("Intake") {
 
         deployMotor.applyConfiguration {
             currentLimits(20.0, 30.0, 1.0)
-            statorCurrentLimit(25.0)
+//            statorCurrentLimit(35.0)
             coastMode()
             p(1.5)
             s(0.25, StaticFeedforwardSignValue.UseClosedLoopSign)

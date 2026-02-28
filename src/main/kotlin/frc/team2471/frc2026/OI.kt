@@ -6,7 +6,6 @@ import edu.wpi.first.math.geometry.Translation2d
 import edu.wpi.first.wpilibj.Alert
 import edu.wpi.first.wpilibj.GenericHID
 import edu.wpi.first.wpilibj2.command.SubsystemBase
-import frc.team2471.frc2026.Shooter.BALL_ANGLE_AT_HOOD_ZERO
 import org.team2471.frc.lib.control.LoopLogger
 import org.team2471.frc.lib.control.MeanCommandXboxController
 import org.team2471.frc.lib.control.commands.finallyRun
@@ -16,10 +15,7 @@ import org.team2471.frc.lib.control.commands.toCommand
 import org.team2471.frc.lib.control.commands.waitCommand
 import org.team2471.frc.lib.math.deadband
 import org.team2471.frc.lib.math.normalize
-import org.team2471.frc.lib.units.asFeet
 import org.team2471.frc.lib.units.degrees
-import org.team2471.frc.lib.units.meters
-import org.team2471.frc.lib.units.rotationsPerSecond
 
 object OI: SubsystemBase("OI") {
     val driverController = MeanCommandXboxController(0, false)
@@ -119,21 +115,19 @@ object OI: SubsystemBase("OI") {
 //        driverController.a().onTrue(runOnceCommand { Shooter.hoodAngleSetpoint = 25.0.degrees })
 
         driverController.a().onTrue(runOnceCommand { Shooter.hoodAngleSetpoint = 0.0.degrees })
-//        driverController.y().onTrue(Intake.home())
+        driverController.y().onTrue(Intake.home())
 
-        driverController.rightTrigger(0.1).whileTrue(runCommand {
-                Spindexer.currentState = Spindexer.State.ON
-        }.finallyRun { Spindexer.currentState = Spindexer.State.OFF })
+//        driverController.rightTrigger(0.1).whileTrue(runCommand {
+//                Spindexer.currentState = Spindexer.State.ON
+//        }.finallyRun { Spindexer.currentState = Spindexer.State.OFF })
+        driverController.rightTrigger(0.1).whileTrue(Shooter.shoot())
+        driverController.rightBumper().whileTrue(Shooter.rampUp())
 
-        driverController.rightBumper().onTrue(runOnceCommand {
-            if (Intake.intakeState != Intake.IntakeState.INTAKING) {
-                Intake.intakeState = Intake.IntakeState.INTAKING
-            } else {
-                Intake.intakeState = Intake.IntakeState.OFF
-            }
-        })
+        driverController.leftTrigger(0.1).whileTrue(runCommand {
+            Intake.intakeState = Intake.IntakeState.INTAKING
+        }.finallyRun { Intake.intakeState = Intake.IntakeState.OFF })
 
-        driverController.leftBumper().whileTrue(waitCommand(2.0).finallyRun { wasSuspended ->
+        driverController.leftBumper().whileTrue(waitCommand(1.0).finallyRun { wasSuspended ->
             if (wasSuspended) {
                 if (Intake.isDeployed) {
                     Intake.stow()
@@ -145,13 +139,13 @@ object OI: SubsystemBase("OI") {
             }
         })
 
-        driverController.leftTrigger(0.2).whileTrue(runCommand {
-            Shooter.shooterVelocitySetpoint = Shooter.hubSpeedCurve.get(AimUtils.aimTarget.getDistance(Drive.localizer.pose.translation).meters.asFeet).rotationsPerSecond / Shooter.SHOOTER_GEAR_RATIO
-            Shooter.hoodAngleSetpoint =(BALL_ANGLE_AT_HOOD_ZERO -  Shooter.hubAngleCurve.get(AimUtils.aimTarget.getDistance(Drive.localizer.pose.translation).meters.asFeet)).degrees
-        }.finallyRun {
-            Shooter.shooterVelocitySetpoint = 0.0.rotationsPerSecond
-            Shooter.hoodAngleSetpoint = 0.0.degrees
-        })
+//        driverController.leftTrigger(0.2).whileTrue(runCommand {
+//            Shooter.shooterVelocitySetpoint = Shooter.hubSpeedCurve.get(AimUtils.aimTarget.getDistance(Drive.localizer.pose.translation).meters.asFeet).rotationsPerSecond / Shooter.SHOOTER_GEAR_RATIO
+//            Shooter.hoodAngleSetpoint =(BALL_ANGLE_AT_HOOD_ZERO -  Shooter.hubAngleCurve.get(AimUtils.aimTarget.getDistance(Drive.localizer.pose.translation).meters.asFeet)).degrees
+//        }.finallyRun {
+//            Shooter.shooterVelocitySetpoint = 0.0.rotationsPerSecond
+//            Shooter.hoodAngleSetpoint = 0.0.degrees
+//        })
     }
 
     override fun periodic() {
@@ -161,9 +155,9 @@ object OI: SubsystemBase("OI") {
 
 
         if (Intake.intakeState == Intake.IntakeState.INTAKING && Robot.isTeleopEnabled) {
-            driverController.setRumble(GenericHID.RumbleType.kBothRumble, 0.5)
+            driverController.setRumble(GenericHID.RumbleType.kRightRumble, 0.013)
         } else {
-            driverController.setRumble(GenericHID.RumbleType.kBothRumble, 0.0)
+            driverController.setRumble(GenericHID.RumbleType.kRightRumble, 0.0)
         }
 
         LoopLogger.record("OI piodc")
