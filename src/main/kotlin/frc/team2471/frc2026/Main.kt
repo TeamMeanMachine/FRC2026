@@ -132,8 +132,8 @@ object Robot : LoggedRobot() {
 
         if (Robot.isEnabled) {
             if (wasDisabled) {
-                beforeFirstEnable = false
                 enabledInit()
+                beforeFirstEnable = false
                 wasDisabled = false
             }
         } else {
@@ -155,7 +155,9 @@ object Robot : LoggedRobot() {
         Drive.brakeMode()
         Shooter.hoodAngleSetpoint = Shooter.hoodAngle
 
-        commandScheduler.schedule(Intake.home())
+        if (beforeFirstEnable) {
+            commandScheduler.schedule(Intake.home())
+        }
     }
 
     /** This function is called once when the robot is disabled.  */

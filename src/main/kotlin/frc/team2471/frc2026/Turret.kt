@@ -215,7 +215,7 @@ object Turret: SubsystemBase("Turret") {
 
 
     @get:AutoLogOutput(key = "Turret/Turret error distance")
-    val turretErrorDistance get() = abs(sin(turretMotor.closedLoopError.valueAsDouble.rotations) * AimUtils.distanceToGoal.asInches).inches
+    val turretErrorDistance get() = abs(sin(turretMotor.closedLoopError.valueAsDouble.rotations) * AimUtils.distanceToTarget.asInches).inches
 
     var tempHeadingResetAngle: Angle? = null
 

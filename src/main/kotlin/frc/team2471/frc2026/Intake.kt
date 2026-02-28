@@ -22,6 +22,7 @@ import org.team2471.frc.lib.ctre.currentLimits
 import org.team2471.frc.lib.ctre.motionMagic
 import org.team2471.frc.lib.ctre.p
 import org.team2471.frc.lib.ctre.s
+import org.team2471.frc.lib.ctre.statorCurrentLimit
 
 object Intake: SubsystemBase("Intake") {
     private val table = NetworkTableInstance.getDefault().getTable("Intake")
@@ -98,6 +99,7 @@ object Intake: SubsystemBase("Intake") {
 
         deployMotor.applyConfiguration {
             currentLimits(20.0, 30.0, 1.0)
+            statorCurrentLimit(25.0)
             coastMode()
             p(1.5)
             s(0.25, StaticFeedforwardSignValue.UseClosedLoopSign)
@@ -136,7 +138,7 @@ object Intake: SubsystemBase("Intake") {
         runCommand(this) {
             println("going out?")
             deployMotor.setControl(DutyCycleOut(-HOMING_POWER))
-        }.onlyRunWhileFalse { hitHardStop }.finallyRun {
+        }.onlyRunWhileFalse { hitHardStop }.withTimeout(10.0).finallyRun {
             deployMotor.setControl(DutyCycleOut(0.0))
             println("Deploy Pos: ${deployMotor.position}")
             deployMotor.setPosition(0.13)

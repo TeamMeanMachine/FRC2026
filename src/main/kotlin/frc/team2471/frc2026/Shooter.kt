@@ -2,7 +2,9 @@ package frc.team2471.frc2026
 
 import com.ctre.phoenix6.SignalLogger
 import com.ctre.phoenix6.controls.MotionMagicVoltage
-import com.ctre.phoenix6.controls.PositionVoltage
+import com.ctre.phoenix6.controls.NeutralOut
+import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC
+import com.ctre.phoenix6.controls.VelocityVoltage
 import com.ctre.phoenix6.controls.VoltageOut
 import com.ctre.phoenix6.hardware.CANcoder
 import com.ctre.phoenix6.signals.InvertedValue
@@ -23,6 +25,7 @@ import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.SubsystemBase
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine
 import frc.team2471.frc2026.AimUtils.toExitVelocity
+import frc.team2471.frc2026.Shooter.i
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.littletonrobotics.junction.AutoLogOutput
@@ -38,6 +41,7 @@ import org.team2471.frc.lib.ctre.brakeMode
 import org.team2471.frc.lib.ctre.coastMode
 import org.team2471.frc.lib.ctre.currentLimits
 import org.team2471.frc.lib.ctre.d
+import org.team2471.frc.lib.ctre.i
 import org.team2471.frc.lib.ctre.inverted
 import org.team2471.frc.lib.ctre.loggedTalonFX.LoggedTalonFX
 import org.team2471.frc.lib.ctre.motionMagic
@@ -71,24 +75,24 @@ import kotlin.math.cos
 object Shooter: SubsystemBase("Shooter") {
     val table = NetworkTableInstance.getDefault().getTable("Shooter")
 
-    // feet, rot/s
+    // feet, rot/s (of the wheel not the motor)
     val hubSpeedCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
-        put(3.0, 84.899)
-        put(4.0, 85.73)
-        put(5.0, 88.918)
-        put(6.0, 89.99)
-        put(7.0, 91.748)
-        put(8.0, 93.708)
-        put(9.0, 95.859)
-        put(10.0, 98.189)
-        put(11.0, 100.215)
-        put(12.0, 102.765)
-        put(13.0, 105.544)
-        put(14.0, 108.274)
-        put(15.0, 111.938)
-        put(16.0, 116.466)
-        put(17.0, 119.766)
-        put(18.0, 123.16)
+        put(3.0, 55.36)
+        put(4.0, 55.902)
+        put(5.0, 57.981)
+        put(6.0, 58.679)
+        put(7.0, 59.826)
+        put(8.0, 61.104)
+        put(9.0, 62.507)
+        put(10.0, 64.026)
+        put(11.0, 65.347)
+        put(12.0, 67.01)
+        put(13.0, 68.822)
+        put(14.0, 70.602)
+        put(15.0, 72.991)
+        put(16.0, 77.944)
+        put(17.0, 80.096)
+        put(18.0, 83.309)
     }
     // feet, degrees
     val hubAngleCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
@@ -106,10 +110,8 @@ object Shooter: SubsystemBase("Shooter") {
         put(14.0, 52.81)
         put(15.0, 50.912)
         put(16.0, 49.11)
-        put(17.0, 47.472)
-        put(18.0, 45.922)
-        put(19.0, 44.457)
-        put(20.0, 43.071)
+        put(17.0, 49.0)
+        put(18.0, 48.8)
 
     }
 
@@ -222,13 +224,17 @@ object Shooter: SubsystemBase("Shooter") {
 
     val WHEEL_DIAMETER = 4.0.inches
 
-    const val SHOOTER_GEAR_RATIO = 16.0/24.0
+    const val SHOOTER_GEAR_RATIO = 18.0/22.0
 
     @get:AutoLogOutput(key = "Shooter/Shooter Angular Velocity Setpoint")
     var shooterVelocitySetpoint: AngularVelocity = 0.0.rotationsPerSecond
         set(value) {
-            field = value// / SHOOTER_GEAR_RATIO
-//            shooterMotor.setControl(VelocityTorqueCurrentFOC(field)))
+            field = value.coerceAtLeast(0.0.rotationsPerSecond)// / SHOOTER_GEAR_RATIO
+            if (field > 0.0.rotationsPerSecond) {
+                shooterMotor.setControl(VelocityVoltage(field))
+            } else {
+                shooterMotor.setControl(NeutralOut())
+            }
         }
 
     @get:AutoLogOutput(key = "Shooter/Hood Feedforward")
@@ -264,15 +270,15 @@ object Shooter: SubsystemBase("Shooter") {
     const val BALL_ANGLE_AT_HOOD_ZERO = 90.0
 
     @get:AutoLogOutput(key = "Shooter/Hood error distance")
-    val hoodErrorDistance get() = abs(AimUtils.distanceToGoal.asFeet * sin(hoodMotor.closedLoopError.valueAsDouble.radians))
+    val hoodErrorDistance get() = abs(AimUtils.distanceToTarget.asFeet * sin(hoodMotor.closedLoopError.valueAsDouble.radians))
 
     @get:AutoLogOutput(key = "Shooter/Velocity error distance")
-    val velocityErrorDistance get() = abs((if (AimUtils.isAimingAtGoal) AimUtils.SHOT_AIRTIME * cos(hubAngleCurve.get(AimUtils.distanceToGoal.asFeet)) else AimUtils.PASS_AIRTIME * cos(floorAngleCurve.get(AimUtils.distanceToGoal.asFeet))) * shooterMotor.closedLoopError.valueAsDouble * WHEEL_DIAMETER.asMeters * Math.PI * 0.5)
+    val velocityErrorDistance get() = abs((if (AimUtils.isAimingAtGoal) AimUtils.SHOT_AIRTIME * cos(hubAngleCurve.get(AimUtils.distanceToTarget.asFeet)) else AimUtils.PASS_AIRTIME * cos(floorAngleCurve.get(AimUtils.distanceToTarget.asFeet))) * shooterMotor.closedLoopError.valueAsDouble * WHEEL_DIAMETER.asMeters * Math.PI * 0.5)
 
-    @get:AutoLogOutput(key = "Shooter/Requested voltage")
-    var requestedVoltage = 0.0
+//    @get:AutoLogOutput(key = "Shooter/Requested voltage")
+//    var requestedVoltage = 0.0
 
-    val shooterController = PDVelocityController(0.1, 0.0, 0.1 * 6.0/7.0, true)
+//    val shooterController = PDVelocityController(0.1, 0.0, 0.1 * 6.0/7.0, true)
 
     var fuel: MutableList<FuelSim> = mutableListOf()
     var fuel2: MutableList<FuelSim> = mutableListOf()
@@ -298,7 +304,8 @@ object Shooter: SubsystemBase("Shooter") {
 
             inverted(InvertedValue.Clockwise_Positive)
 
-//            p(if (isReal) 7.0 else 4000.0)
+            p(if (isReal) 0.35 else 4000.0)
+            i(if (isReal) 0.25 else 0.0)
 //            d(0.0)
 //            s(0.0, StaticFeedforwardSignValue.UseVelocitySign)
 
@@ -322,12 +329,12 @@ object Shooter: SubsystemBase("Shooter") {
             remoteCANCoder(hoodEncoder.deviceID, 9.64285714285714)
         }
 
-        GlobalScope.launch {
-            periodic(0.01) {
-                requestedVoltage = shooterController.updateVoltage(shooterVelocitySetpoint.asRotationsPerSecond, shooterVelocity.asRotationsPerSecond).coerceIn(0.0, 13.0)
-                shooterMotor.setControl(VoltageOut(requestedVoltage))
-            }
-        }
+//        GlobalScope.launch {
+//            periodic(0.01) {
+//                requestedVoltage = shooterController.updateVoltage(shooterVelocitySetpoint.asRotationsPerSecond, shooterVelocity.asRotationsPerSecond).coerceIn(0.0, 13.0)
+////                shooterMotor.setControl(VoltageOut(requestedVoltage))
+//            }
+//        }
     }
 
 
@@ -367,9 +374,9 @@ object Shooter: SubsystemBase("Shooter") {
 
             hoodAngleSetpoint = (
                 if (AimUtils.isAimingAtGoal)
-                    BALL_ANGLE_AT_HOOD_ZERO - hubAngleCurve.get(AimUtils.distanceToGoal.asFeet)
+                    BALL_ANGLE_AT_HOOD_ZERO - hubAngleCurve.get(AimUtils.distanceToTarget.asFeet)
                 else
-                    BALL_ANGLE_AT_HOOD_ZERO - floorAngleCurve.get(AimUtils.distanceToGoal.asFeet)
+                    BALL_ANGLE_AT_HOOD_ZERO - floorAngleCurve.get(AimUtils.distanceToTarget.asFeet)
             ).degrees
         } else {
             isShooting = false
@@ -384,18 +391,16 @@ object Shooter: SubsystemBase("Shooter") {
 
 
     fun rampUp(): Command = runCommand(Shooter) {
-//        shooterMotor.setControl(VelocityTorqueCurrentFOC(shooterShootingSpeed))
-//        shooterAngularVelocitySetpoint = (if (AimUtils.isAimingAtGoal) hubSpeedCurve.get(AimUtils.distanceToGoal.asFeet) else floorSpeedCurve.get(AimUtils.distanceToGoal.asFeet)).rotationsPerSecond
+        shooterVelocitySetpoint = (if (AimUtils.isAimingAtGoal) hubSpeedCurve.get(AimUtils.distanceToTarget.asFeet) else floorSpeedCurve.get(AimUtils.distanceToTarget.asFeet)).rotationsPerSecond / SHOOTER_GEAR_RATIO
     }.finallyRun { rampDown() }
 
     fun rampDown(): Command = runOnceCommand(Shooter) {
         shooterVelocitySetpoint = 0.0.rotationsPerSecond
     }
 
-
     fun shootSimulatedFuel() {
-        val exitVelocity = hubSpeedCurve.get(AimUtils.distanceToGoal.asFeet)
-        val exitAngle = hubAngleCurve.get(AimUtils.distanceToGoal.asFeet).degrees
+        val exitVelocity = hubSpeedCurve.get(AimUtils.distanceToTarget.asFeet) / SHOOTER_GEAR_RATIO
+        val exitAngle = hubAngleCurve.get(AimUtils.distanceToTarget.asFeet).degrees
         val angleToTarget = Turret.turretTranslation.angleTo(AimUtils.aimTarget)
         val velocity2d = Translation2d(exitVelocity * exitAngle.cos(), 0.0).rotateBy(angleToTarget.asRotation2d)
         val turretVelocity = Translation2d(Turret.turretOffsetFromCenter.x * Drive.gyroYawRate.asRadiansPerSecond, Turret.turretOffsetFromCenter.y * Drive.gyroYawRate.asRadiansPerSecond).rotateBy(Drive.heading) + Drive.velocity

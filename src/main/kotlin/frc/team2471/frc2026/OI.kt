@@ -4,6 +4,7 @@ import edu.wpi.first.math.filter.Debouncer
 import edu.wpi.first.math.geometry.Pose2d
 import edu.wpi.first.math.geometry.Translation2d
 import edu.wpi.first.wpilibj.Alert
+import edu.wpi.first.wpilibj.GenericHID
 import edu.wpi.first.wpilibj2.command.SubsystemBase
 import frc.team2471.frc2026.Shooter.BALL_ANGLE_AT_HOOD_ZERO
 import org.team2471.frc.lib.control.LoopLogger
@@ -89,8 +90,6 @@ object OI: SubsystemBase("OI") {
 
         Turret.defaultCommand = Turret.aimAtTarget()
 
-//        Shooter.defaultCommand = Shooter.rampUp()
-
         // Zero Gyro
         driverController.back().onTrue({
                 println("zero gyro")
@@ -119,13 +118,13 @@ object OI: SubsystemBase("OI") {
 
 
 
-        driverController.povUp().onTrue(runOnceCommand { Shooter.hoodAngleSetpoint += 1.0.degrees })
-        driverController.povDown().onTrue(runOnceCommand { Shooter.hoodAngleSetpoint -= 1.0.degrees })
+//        driverController.povUp().onTrue(runOnceCommand { Shooter.hoodAngleSetpoint += 1.0.degrees })
+//        driverController.povDown().onTrue(runOnceCommand { Shooter.hoodAngleSetpoint -= 1.0.degrees })
 
 //        driverController.y().onTrue(runOnceCommand { Shooter.hoodAngleSetpoint = 15.0.degrees })
 //        driverController.a().onTrue(runOnceCommand { Shooter.hoodAngleSetpoint = 25.0.degrees })
         driverController.a().onTrue(runOnceCommand { Shooter.hoodAngleSetpoint = 0.0.degrees })
-        driverController.y().onTrue(Intake.home())
+//        driverController.y().onTrue(Intake.home())
 
         driverController.rightTrigger(0.1).whileTrue(runCommand {
                 Spindexer.currentState = Spindexer.State.ON
@@ -142,7 +141,7 @@ object OI: SubsystemBase("OI") {
         driverController.leftTrigger(0.2).whileTrue(runCommand { Intake.deepStow() })
 
         driverController.leftBumper().whileTrue(runCommand {
-            Shooter.shooterVelocitySetpoint = Shooter.hubSpeedCurve.get(AimUtils.aimTarget.getDistance(Drive.localizer.pose.translation).meters.asFeet).rotationsPerSecond
+            Shooter.shooterVelocitySetpoint = Shooter.hubSpeedCurve.get(AimUtils.aimTarget.getDistance(Drive.localizer.pose.translation).meters.asFeet).rotationsPerSecond / Shooter.SHOOTER_GEAR_RATIO
             Shooter.hoodAngleSetpoint =(BALL_ANGLE_AT_HOOD_ZERO -  Shooter.hubAngleCurve.get(AimUtils.aimTarget.getDistance(Drive.localizer.pose.translation).meters.asFeet)).degrees
         }.finallyRun {
             Shooter.shooterVelocitySetpoint = 0.0.rotationsPerSecond
@@ -154,6 +153,13 @@ object OI: SubsystemBase("OI") {
         LoopLogger.record("b4 OI piodc")
         driverNotConnectedAlert.set(driverDebouncer.calculate(!driverController.isConnected))
         operatorNotConnectedAlert.set(operatorDebouncer.calculate(!operatorController.isConnected))
+
+
+        if (Intake.intakeState == Intake.IntakeState.INTAKING && Robot.isTeleopEnabled) {
+            driverController.setRumble(GenericHID.RumbleType.kBothRumble, 1.0)
+        } else {
+            driverController.setRumble(GenericHID.RumbleType.kBothRumble, 0.0)
+        }
 
         LoopLogger.record("OI piodc")
     }

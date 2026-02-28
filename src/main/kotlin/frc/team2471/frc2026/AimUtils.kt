@@ -98,7 +98,7 @@ object AimUtils {
 
     val isAimingAtGoal get() = FieldManager.inScoringZone
 
-    val distanceToGoal get() = Turret.turretTranslation.getDistance(aimTarget).absoluteValue.meters
+    val distanceToTarget get() = Turret.turretTranslation.getDistance(aimTarget).absoluteValue.meters
 
 
     /**
@@ -171,7 +171,7 @@ object AimUtils {
             val dist = i.toDouble()
             val angleAndSpeed = getAngleAndSpeed(dist.feet, goalHeight, airTime)
             angles[dist] = angleAndSpeed.first
-            speeds[dist] = angleAndSpeed.second.metersPerSecond.toMotorSpeed().asRotationsPerSecond
+            speeds[dist] = angleAndSpeed.second.metersPerSecond.toWheelSpeed().asRotationsPerSecond
         }
 
         println("Angle Curve:")
@@ -196,7 +196,7 @@ object AimUtils {
             val speed = ((speedRange.second - speedRange.first)/(distRange.endInclusive.toDouble() - distRange.start.toDouble()))*(i.toDouble() - distRange.start.toDouble()) + speedRange.first
             val angleAndTime = getAngleAndTime(dist.feet, goalHeight, speed)
             angles[dist] = angleAndTime.first.asDegrees
-            speeds[dist] = speed.metersPerSecond.toMotorSpeed().asRotationsPerSecond
+            speeds[dist] = speed.metersPerSecond.toWheelSpeed().asRotationsPerSecond
             times[dist] = angleAndTime.second
         }
         println("Angle Curve:")
@@ -308,11 +308,11 @@ object AimUtils {
         return Pair(guess.degrees, calcFuelTime(speed * guess.degrees.cos(), speed * guess.degrees.sin(), toTarget))
     }
 
-    fun LinearVelocity.toMotorSpeed(): AngularVelocity {
-        return ((2.0 * this.asInchesPerSecond/(Shooter.WHEEL_DIAMETER.asInches * Math.PI)).rotationsPerSecond / Shooter.SHOOTER_GEAR_RATIO) / 0.685
+    fun LinearVelocity.toWheelSpeed(): AngularVelocity {
+        return ((2.0 * this.asInchesPerSecond/(Shooter.WHEEL_DIAMETER.asInches * Math.PI)).rotationsPerSecond) / 0.685
     }
 
     fun AngularVelocity.toExitVelocity(): LinearVelocity {
-        return (this.times(Shooter.SHOOTER_GEAR_RATIO * 0.685).asRotationsPerSecond * (Shooter.WHEEL_DIAMETER.asInches * Math.PI) / 2.0).inchesPerSecond
+        return (this.times(0.685).asRotationsPerSecond * (Shooter.WHEEL_DIAMETER.asInches * Math.PI) / 2.0).inchesPerSecond
     }
 }

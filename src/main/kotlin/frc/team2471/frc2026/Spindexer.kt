@@ -121,7 +121,7 @@ object Spindexer: SubsystemBase("Spindexer") {
         if (!spinLowerVelocityEntry.exists()) spinLowerVelocityEntry.setDouble(SPIN_LOWER_VELOCITY)
         if (!sidetakeVelocityEntry.exists()) sidetakeVelocityEntry.setDouble(SIDETAKE_VELOCITY)
         if (!uptakeVelocityEntry.exists()) uptakeVelocityEntry.setDouble(UPTAKE_VELOCITY)
-        if (!agitateVelocityEntry.exists()) uptakeVelocityEntry.setDouble(AGITATE_VELOCITY)
+        if (!agitateVelocityEntry.exists()) agitateVelocityEntry.setDouble(AGITATE_VELOCITY)
 
 //        if (!spinSpitVelocityEntry.exists()) spinSpitVelocityEntry.setDouble(SPIN_SPIT_VELOCITY)
         if (!sidetakeSpitVelocityEntry.exists()) sidetakeSpitVelocityEntry.setDouble(SIDETAKE_SPIT_VELOCITY)
