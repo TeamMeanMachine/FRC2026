@@ -3,10 +3,12 @@ package frc.team2471.frc2026.tests
 import edu.wpi.first.wpilibj2.command.Command
 import frc.team2471.frc2026.AimUtils
 import frc.team2471.frc2026.AimUtils.printShooterCurves
+import frc.team2471.frc2026.Drive
 import frc.team2471.frc2026.Turret
 import frc.team2471.frc2026.Intake
 import org.team2471.frc.lib.control.commands.runCommand
 import org.team2471.frc.lib.control.commands.runOnce
+import org.team2471.frc.lib.control.commands.runOnceCommand
 import org.team2471.frc.lib.units.asDegrees
 
 // Prints the hub curves using a gradle task. Needs a main function in a class so I put it here.
@@ -29,11 +31,13 @@ object PrintPassCurves {
     }
 }
 
-fun zeroTurretEncoders() = runCommand() {
+fun zeroTurretEncoders() = runOnceCommand(Turret) {
     Turret.encoder1Offset.setDouble(Turret.rawEncoder1AbsolutePosition.asDegrees)
     Turret.encoder2Offset.setDouble(Turret.rawEncoder2AbsolutePosition.asDegrees)
-    Turret.turretPigeon.setYaw(0.0)
-    Turret.turretMotor.setPosition(0.0)
+    Turret.setTurretOffset(Drive.heading.measure)
+    Turret.zeroTurretMotor()
+
+    println("Zeroed turret encoders")
 }
 fun intakeTest() = runCommand() {
     Intake.stow()

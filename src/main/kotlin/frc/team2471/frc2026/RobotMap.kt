@@ -11,7 +11,7 @@ object AnalogSensors {
 }
 
 object DigitalSensors {
-    const val INTAKE_STOP_SENSOR = 0
+    const val INTAKE_STOP_SENSOR = 9
 }
 
 object Falcons {
@@ -60,7 +60,6 @@ object CANCoders {
 
     const val TURRET_1 = 35
     const val TURRET_2 = 36
-    const val TURRET_2_EXTRA = 55
 
     const val HOOD = 37
 }

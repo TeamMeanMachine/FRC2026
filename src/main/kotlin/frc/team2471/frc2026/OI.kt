@@ -5,6 +5,7 @@ import edu.wpi.first.math.geometry.Pose2d
 import edu.wpi.first.math.geometry.Translation2d
 import edu.wpi.first.wpilibj.Alert
 import edu.wpi.first.wpilibj2.command.SubsystemBase
+import frc.team2471.frc2026.Shooter.BALL_ANGLE_AT_HOOD_ZERO
 import org.team2471.frc.lib.control.LoopLogger
 import org.team2471.frc.lib.control.MeanCommandXboxController
 import org.team2471.frc.lib.control.commands.finallyRun
@@ -13,8 +14,10 @@ import org.team2471.frc.lib.control.commands.runOnceCommand
 import org.team2471.frc.lib.control.commands.toCommand
 import org.team2471.frc.lib.math.deadband
 import org.team2471.frc.lib.math.normalize
+import org.team2471.frc.lib.units.asFeet
 import org.team2471.frc.lib.units.degrees
-import org.team2471.frc.lib.units.metersPerSecond
+import org.team2471.frc.lib.units.meters
+import org.team2471.frc.lib.units.rotationsPerSecond
 
 object OI: SubsystemBase("OI") {
     val driverController = MeanCommandXboxController(0, false)
@@ -84,7 +87,7 @@ object OI: SubsystemBase("OI") {
         // Default command, normal field-relative drive
         Drive.defaultCommand = Drive.joystickDrive()
 
-//        Turret.defaultCommand = Turret.aimAtTarget()
+        Turret.defaultCommand = Turret.aimAtTarget()
 
 //        Shooter.defaultCommand = Shooter.rampUp()
 
@@ -122,7 +125,7 @@ object OI: SubsystemBase("OI") {
 //        driverController.y().onTrue(runOnceCommand { Shooter.hoodAngleSetpoint = 15.0.degrees })
 //        driverController.a().onTrue(runOnceCommand { Shooter.hoodAngleSetpoint = 25.0.degrees })
         driverController.a().onTrue(runOnceCommand { Shooter.hoodAngleSetpoint = 0.0.degrees })
-        driverController.y().onTrue(runOnceCommand { Shooter.hoodAngleSetpoint = 40.0.degrees })
+        driverController.y().onTrue(Intake.home())
 
         driverController.rightTrigger(0.1).whileTrue(runCommand {
                 Spindexer.currentState = Spindexer.State.ON
@@ -136,14 +139,21 @@ object OI: SubsystemBase("OI") {
             }
         })
 
-        driverController.leftBumper().toggleOnTrue(runCommand { Shooter.shooterVelocitySetpoint = 8.5.metersPerSecond }.finallyRun { Shooter.shooterVelocitySetpoint =
-            0.0.metersPerSecond })
+        driverController.leftTrigger(0.2).whileTrue(runCommand { Intake.deepStow() })
+
+        driverController.leftBumper().whileTrue(runCommand {
+            Shooter.shooterVelocitySetpoint = Shooter.hubSpeedCurve.get(AimUtils.aimTarget.getDistance(Drive.localizer.pose.translation).meters.asFeet).rotationsPerSecond
+            Shooter.hoodAngleSetpoint =(BALL_ANGLE_AT_HOOD_ZERO -  Shooter.hubAngleCurve.get(AimUtils.aimTarget.getDistance(Drive.localizer.pose.translation).meters.asFeet)).degrees
+        }.finallyRun {
+            Shooter.shooterVelocitySetpoint = 0.0.rotationsPerSecond
+            Shooter.hoodAngleSetpoint = 0.0.degrees
+        })
     }
 
     override fun periodic() {
         LoopLogger.record("b4 OI piodc")
-        driverNotConnectedAlert.set(driverDebouncer.calculate(driverController.isConnected))
-        operatorNotConnectedAlert.set(operatorDebouncer.calculate(operatorController.isConnected))
+        driverNotConnectedAlert.set(driverDebouncer.calculate(!driverController.isConnected))
+        operatorNotConnectedAlert.set(operatorDebouncer.calculate(!operatorController.isConnected))
 
         LoopLogger.record("OI piodc")
     }

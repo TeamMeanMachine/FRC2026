@@ -94,7 +94,7 @@ def mock_robot():
 
 
 def run_quixsam():
-    Quixsam("localhost", save_logs=False, view3d=True).run()
+    Quixsam("10.24.71.2", save_logs=False, view3d=True).run()
 
 
 if __name__ == "__main__":

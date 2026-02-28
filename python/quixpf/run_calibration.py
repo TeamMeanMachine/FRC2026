@@ -267,5 +267,5 @@ if __name__ == "__main__":
     parser.add_argument("--local", action="store_true")
     args = parser.parse_args()
     Calibration(
-        "localhost" if args.local else "10.6.4.2",
+        "10.24.71.2" if args.local else "10.6.4.2",
     ).run()

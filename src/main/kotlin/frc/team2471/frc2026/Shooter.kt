@@ -17,12 +17,12 @@ import edu.wpi.first.math.system.plant.DCMotor
 import edu.wpi.first.networktables.NetworkTableInstance
 import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.units.measure.AngularVelocity
-import edu.wpi.first.units.measure.LinearVelocity
 import edu.wpi.first.units.measure.Voltage
 import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.SubsystemBase
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine
+import frc.team2471.frc2026.AimUtils.toExitVelocity
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.littletonrobotics.junction.AutoLogOutput
@@ -46,8 +46,6 @@ import org.team2471.frc.lib.ctre.remoteCANCoder
 import org.team2471.frc.lib.ctre.s
 import org.team2471.frc.lib.units.absoluteValue
 import org.team2471.frc.lib.units.asFeet
-import org.team2471.frc.lib.units.asInches
-import org.team2471.frc.lib.units.asInchesPerSecond
 import org.team2471.frc.lib.units.asMeters
 import org.team2471.frc.lib.units.asMetersPerSecond
 import org.team2471.frc.lib.units.asRadiansPerSecond
@@ -57,8 +55,6 @@ import org.team2471.frc.lib.units.asVolts
 import org.team2471.frc.lib.units.cos
 import org.team2471.frc.lib.units.degrees
 import org.team2471.frc.lib.units.inches
-import org.team2471.frc.lib.units.inchesPerSecond
-import org.team2471.frc.lib.units.metersPerSecond
 import org.team2471.frc.lib.units.radians
 import org.team2471.frc.lib.units.rotations
 import org.team2471.frc.lib.units.rotationsPerSecond
@@ -75,26 +71,24 @@ import kotlin.math.cos
 object Shooter: SubsystemBase("Shooter") {
     val table = NetworkTableInstance.getDefault().getTable("Shooter")
 
-    // feet, m/s
+    // feet, rot/s
     val hubSpeedCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
-        put(3.0, 6.052)
-        put(4.0, 6.111)
-        put(5.0, 6.339)
-        put(6.0, 6.415)
-        put(7.0, 6.54)
-        put(8.0, 6.68)
-        put(9.0, 6.833)
-        put(10.0, 6.999)
-        put(11.0, 7.144)
-        put(12.0, 7.326)
-        put(13.0, 7.524)
-        put(14.0, 7.718)
-        put(15.0, 7.979)
-        put(16.0, 8.302)
-        put(17.0, 8.538)
-        put(18.0, 8.779)
-        put(19.0, 9.028)
-        put(20.0, 9.282)
+        put(3.0, 84.899)
+        put(4.0, 85.73)
+        put(5.0, 88.918)
+        put(6.0, 89.99)
+        put(7.0, 91.748)
+        put(8.0, 93.708)
+        put(9.0, 95.859)
+        put(10.0, 98.189)
+        put(11.0, 100.215)
+        put(12.0, 102.765)
+        put(13.0, 105.544)
+        put(14.0, 108.274)
+        put(15.0, 111.938)
+        put(16.0, 116.466)
+        put(17.0, 119.766)
+        put(18.0, 123.16)
     }
     // feet, degrees
     val hubAngleCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
@@ -230,15 +224,12 @@ object Shooter: SubsystemBase("Shooter") {
 
     const val SHOOTER_GEAR_RATIO = 16.0/24.0
 
-    @get:AutoLogOutput(key = "Shooter/Shooter Setpoint")
-    var shooterVelocitySetpoint: LinearVelocity = 0.0.inchesPerSecond
-        set(value) {
-            field = value
-//            shooterMotor.setControl(VelocityTorqueCurrentFOC(2.0 * field.asInchesPerSecond/(WHEEL_DIAMETER.asInches * Math.PI)))
-        }
-
     @get:AutoLogOutput(key = "Shooter/Shooter Angular Velocity Setpoint")
-    val shooterAngularVelocitySetpoint: AngularVelocity get() = (2.0 * shooterVelocitySetpoint.asInchesPerSecond/(WHEEL_DIAMETER.asInches * Math.PI)).rotationsPerSecond / SHOOTER_GEAR_RATIO
+    var shooterVelocitySetpoint: AngularVelocity = 0.0.rotationsPerSecond
+        set(value) {
+            field = value// / SHOOTER_GEAR_RATIO
+//            shooterMotor.setControl(VelocityTorqueCurrentFOC(field)))
+        }
 
     @get:AutoLogOutput(key = "Shooter/Hood Feedforward")
     val hoodFeedforward: Double get() = 0.2//hoodAngle.cos() * 0.2
@@ -257,13 +248,9 @@ object Shooter: SubsystemBase("Shooter") {
     @get:AutoLogOutput(key = "Shooter/Hood Encoder Angle")
     val hoodEncoderAngle: Angle get() = hoodEncoder.position.value
 
-    @get:AutoLogOutput(key = "Shooter/Shooter Velocity")
-    val shooterVelocity: LinearVelocity
-        get() = ((shooterMotor.velocity.valueAsDouble * WHEEL_DIAMETER.asInches * Math.PI).inchesPerSecond / 2.0) * SHOOTER_GEAR_RATIO
-
     @get:AutoLogOutput(key = "Shooter/Shooter Angular Velocity")
-    val shooterAngularVelocity: AngularVelocity
-        get() = shooterMotor.velocity.valueAsDouble.rotationsPerSecond * SHOOTER_GEAR_RATIO
+    val shooterVelocity: AngularVelocity
+        get() = shooterMotor.velocity.valueAsDouble.rotationsPerSecond// * SHOOTER_GEAR_RATIO
 
     @get:AutoLogOutput(key = "Shooter/Shooter Current")
     val shooterCurrent: Double get() = shooterMotor.supplyCurrent.valueAsDouble
@@ -274,7 +261,7 @@ object Shooter: SubsystemBase("Shooter") {
     // degrees
     const val HOOD_STOW_SETPOINT = 0.0
 
-    private const val BALL_ANGLE_AT_HOOD_ZERO = 90.0
+    const val BALL_ANGLE_AT_HOOD_ZERO = 90.0
 
     @get:AutoLogOutput(key = "Shooter/Hood error distance")
     val hoodErrorDistance get() = abs(AimUtils.distanceToGoal.asFeet * sin(hoodMotor.closedLoopError.valueAsDouble.radians))
@@ -285,13 +272,13 @@ object Shooter: SubsystemBase("Shooter") {
     @get:AutoLogOutput(key = "Shooter/Requested voltage")
     var requestedVoltage = 0.0
 
-    val shooterController = PDVelocityController(1.2, 0.0, 0.1 * 6.0/7.0, true)
+    val shooterController = PDVelocityController(0.1, 0.0, 0.1 * 6.0/7.0, true)
 
     var fuel: MutableList<FuelSim> = mutableListOf()
     var fuel2: MutableList<FuelSim> = mutableListOf()
 
     @get:AutoLogOutput(key = "Shooter/Ramped up")
-    val rampedUp: Boolean get() = (shooterVelocity - shooterVelocitySetpoint).absoluteValue() < 1.0.metersPerSecond
+    val rampedUp: Boolean get() = (shooterVelocity - shooterVelocitySetpoint).absoluteValue() < 10.0.rotationsPerSecond
 
     var isShooting = false
     var i = 0
@@ -337,7 +324,7 @@ object Shooter: SubsystemBase("Shooter") {
 
         GlobalScope.launch {
             periodic(0.01) {
-                requestedVoltage = shooterController.updateVoltage(shooterAngularVelocitySetpoint.asRotationsPerSecond, shooterAngularVelocity.asRotationsPerSecond).coerceAtMost(13.0)
+                requestedVoltage = shooterController.updateVoltage(shooterVelocitySetpoint.asRotationsPerSecond, shooterVelocity.asRotationsPerSecond).coerceIn(0.0, 13.0)
                 shooterMotor.setControl(VoltageOut(requestedVoltage))
             }
         }
@@ -398,11 +385,11 @@ object Shooter: SubsystemBase("Shooter") {
 
     fun rampUp(): Command = runCommand(Shooter) {
 //        shooterMotor.setControl(VelocityTorqueCurrentFOC(shooterShootingSpeed))
-//        shooterVelocitySetpoint = (if (AimUtils.aimingAtGoal) hubSpeedCurve.get(AimUtils.distanceToGoal.asFeet) else floorSpeedCurve.get(AimUtils.distanceToGoal.asFeet)).metersPerSecond
+//        shooterAngularVelocitySetpoint = (if (AimUtils.isAimingAtGoal) hubSpeedCurve.get(AimUtils.distanceToGoal.asFeet) else floorSpeedCurve.get(AimUtils.distanceToGoal.asFeet)).rotationsPerSecond
     }.finallyRun { rampDown() }
 
     fun rampDown(): Command = runOnceCommand(Shooter) {
-        shooterVelocitySetpoint = 0.0.inchesPerSecond
+        shooterVelocitySetpoint = 0.0.rotationsPerSecond
     }
 
 
@@ -419,7 +406,7 @@ object Shooter: SubsystemBase("Shooter") {
     }
 
     fun shootSimulatedFuelWithMotors() {
-        val exitVelocity = shooterVelocity.asMetersPerSecond
+        val exitVelocity = shooterVelocity.toExitVelocity().asMetersPerSecond
         val exitAngle = hoodAngle
 //        val angleToTarget = AimUtils.aimTarget.angleTo(Turret.turretPose)
         val velocity2d = Translation2d(exitVelocity * exitAngle.cos(), 0.0).rotateBy(Turret.fieldCentricAngle.asRotation2d)

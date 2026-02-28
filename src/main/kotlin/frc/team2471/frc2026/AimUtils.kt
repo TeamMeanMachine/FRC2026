@@ -2,9 +2,6 @@ package frc.team2471.frc2026
 
 import edu.wpi.first.math.geometry.Translation2d
 import edu.wpi.first.math.geometry.Translation3d
-import edu.wpi.first.math.interpolation.InterpolatingTreeMap
-import edu.wpi.first.math.interpolation.Interpolator
-import edu.wpi.first.math.interpolation.InverseInterpolator
 import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.units.measure.AngularVelocity
 import edu.wpi.first.units.measure.Distance
@@ -12,15 +9,21 @@ import edu.wpi.first.units.measure.LinearVelocity
 import org.littletonrobotics.junction.AutoLogOutput
 import org.team2471.frc.lib.math.round
 import org.team2471.frc.lib.units.asDegrees
+import org.team2471.frc.lib.units.asInches
+import org.team2471.frc.lib.units.asInchesPerSecond
 import org.team2471.frc.lib.units.asMeters
 import org.team2471.frc.lib.units.asRadiansPerSecond
+import org.team2471.frc.lib.units.asRotationsPerSecond
 import org.team2471.frc.lib.units.cos
 import org.team2471.frc.lib.units.degrees
 import org.team2471.frc.lib.units.feet
 import org.team2471.frc.lib.units.inches
+import org.team2471.frc.lib.units.inchesPerSecond
 import org.team2471.frc.lib.units.kilograms
 import org.team2471.frc.lib.units.meters
+import org.team2471.frc.lib.units.metersPerSecond
 import org.team2471.frc.lib.units.radians
+import org.team2471.frc.lib.units.rotationsPerSecond
 import org.team2471.frc.lib.units.sin
 import kotlin.math.absoluteValue
 import kotlin.math.atan2
@@ -55,12 +58,7 @@ object AimUtils {
             return if (isAimingAtGoal) {
                 FieldManager.goalPose - calculateAimTargetOffset(SHOT_AIRTIME)
             } else {
-                if (Drive.pose.y.meters > FieldManager.fieldHalfWidth) {
-                    // This is the stuff making the robot aim in the middle of the hump. Keeping it until we are sure it doesn't work.
-                    FieldManager.goalPose + Translation2d(0.0.inches, 70.0.inches)
-                } else {
-                    FieldManager.goalPose + Translation2d(0.0.inches, -70.0.inches)
-                } - calculateAimTargetOffset(PASS_AIRTIME)
+                FieldManager.passPose
             }
         }
 
@@ -89,7 +87,7 @@ object AimUtils {
             return if (isAimingAtGoal) {
                 FieldManager.goalPose
             } else {
-                if (Drive.pose.y.meters > FieldManager.fieldHalfWidth) {
+                if (Drive.localizer.pose.y.meters > FieldManager.fieldHalfWidth) {
                     // This is the stuff making the robot aim in the middle of the hump. Keeping it until we are sure it doesn't work.
                     FieldManager.goalPose + Translation2d(0.0.inches, 70.0.inches)
                 } else {
@@ -173,7 +171,7 @@ object AimUtils {
             val dist = i.toDouble()
             val angleAndSpeed = getAngleAndSpeed(dist.feet, goalHeight, airTime)
             angles[dist] = angleAndSpeed.first
-            speeds[dist] = angleAndSpeed.second
+            speeds[dist] = angleAndSpeed.second.metersPerSecond.toMotorSpeed().asRotationsPerSecond
         }
 
         println("Angle Curve:")
@@ -198,7 +196,7 @@ object AimUtils {
             val speed = ((speedRange.second - speedRange.first)/(distRange.endInclusive.toDouble() - distRange.start.toDouble()))*(i.toDouble() - distRange.start.toDouble()) + speedRange.first
             val angleAndTime = getAngleAndTime(dist.feet, goalHeight, speed)
             angles[dist] = angleAndTime.first.asDegrees
-            speeds[dist] = speed
+            speeds[dist] = speed.metersPerSecond.toMotorSpeed().asRotationsPerSecond
             times[dist] = angleAndTime.second
         }
         println("Angle Curve:")
@@ -308,5 +306,13 @@ object AimUtils {
 
 
         return Pair(guess.degrees, calcFuelTime(speed * guess.degrees.cos(), speed * guess.degrees.sin(), toTarget))
+    }
+
+    fun LinearVelocity.toMotorSpeed(): AngularVelocity {
+        return ((2.0 * this.asInchesPerSecond/(Shooter.WHEEL_DIAMETER.asInches * Math.PI)).rotationsPerSecond / Shooter.SHOOTER_GEAR_RATIO) / 0.685
+    }
+
+    fun AngularVelocity.toExitVelocity(): LinearVelocity {
+        return (this.times(Shooter.SHOOTER_GEAR_RATIO * 0.685).asRotationsPerSecond * (Shooter.WHEEL_DIAMETER.asInches * Math.PI) / 2.0).inchesPerSecond
     }
 }

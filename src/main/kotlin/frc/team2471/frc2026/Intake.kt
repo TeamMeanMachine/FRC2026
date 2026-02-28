@@ -43,6 +43,7 @@ object Intake: SubsystemBase("Intake") {
 
     @get:AutoLogOutput(key = "Intake/Intake state")
     var intakeState: IntakeState = IntakeState.OFF
+    var prevIntakeState = intakeState
 
     @get:AutoLogOutput(key = "Intake/Hit Hard Stop")
     val hitHardStop get() = !stopSensor.get()
@@ -129,14 +130,17 @@ object Intake: SubsystemBase("Intake") {
 
     fun home(): Command = sequenceCommand(
         runCommand(this) {
+            println("going in?")
             deployMotor.setControl(DutyCycleOut(HOMING_POWER))
         }.onlyRunWhileTrue { hitHardStop },
         runCommand(this) {
+            println("going out?")
             deployMotor.setControl(DutyCycleOut(-HOMING_POWER))
         }.onlyRunWhileFalse { hitHardStop }.finallyRun {
             deployMotor.setControl(DutyCycleOut(0.0))
-            deployMotor.setPosition(0.0)
-            stow()
+            println("Deploy Pos: ${deployMotor.position}")
+            deployMotor.setPosition(0.13)
+//            stow()
         }
     )
 
@@ -148,11 +152,16 @@ object Intake: SubsystemBase("Intake") {
             }
             IntakeState.INTAKING -> {
                 velocitySetpoint = INTAKE_POWER
+                Spindexer.currentState = Spindexer.State.AGITATING
             }
             IntakeState.SPITTING -> {
                 velocitySetpoint = -INTAKE_POWER
             }
         }
+        if (prevIntakeState == IntakeState.INTAKING && intakeState != IntakeState.INTAKING) {
+            Spindexer.currentState = Spindexer.State.OFF
+        }
+        prevIntakeState = intakeState
     }
 
     enum class IntakeState {
