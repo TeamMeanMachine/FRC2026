@@ -357,14 +357,9 @@ object Shooter: SubsystemBase("Shooter") {
 
 
     fun shoot(): Command = runCommand {
-        if (!FieldManager.inTrenchArea) {
-            if (rampedUp) {
-                isShooting = true
-                Spindexer.currentState = Spindexer.State.ON
-            } else {
-                isShooting = false
-                Spindexer.currentState = Spindexer.State.OFF
-            }
+        if (!FieldManager.inTrenchArea && !Turret.isTurretWrapping && rampedUp) {
+            isShooting = true
+            Spindexer.currentState = Spindexer.State.ON
 
             hoodAngleSetpoint = (
                 if (AimUtils.isAimingAtGoal)
