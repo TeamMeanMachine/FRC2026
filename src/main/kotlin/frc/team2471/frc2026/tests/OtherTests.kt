@@ -4,6 +4,7 @@ import edu.wpi.first.wpilibj2.command.Command
 import frc.team2471.frc2026.AimUtils
 import frc.team2471.frc2026.AimUtils.printShooterCurves
 import frc.team2471.frc2026.Turret
+import frc.team2471.frc2026.Intake
 import org.team2471.frc.lib.control.commands.runCommand
 import org.team2471.frc.lib.control.commands.runOnce
 import org.team2471.frc.lib.units.asDegrees
@@ -33,4 +34,9 @@ fun zeroTurretEncoders() = runCommand() {
     Turret.encoder2Offset.setDouble(Turret.rawEncoder2AbsolutePosition.asDegrees)
     Turret.turretPigeon.setYaw(0.0)
     Turret.turretMotor.setPosition(0.0)
+}
+fun intakeTest() = runCommand() {
+    Intake.stow()
+    Intake.deploy()
+    Intake.IntakeState = Intake.IntakeState.INTAKING
 }
