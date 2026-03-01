@@ -9,6 +9,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase
 import org.team2471.frc.lib.control.LoopLogger
 import org.team2471.frc.lib.control.MeanCommandXboxController
 import org.team2471.frc.lib.control.commands.finallyRun
+import org.team2471.frc.lib.control.commands.parallelCommand
 import org.team2471.frc.lib.control.commands.runCommand
 import org.team2471.frc.lib.control.commands.runOnceCommand
 import org.team2471.frc.lib.control.commands.toCommand
@@ -123,9 +124,11 @@ object OI: SubsystemBase("OI") {
         driverController.rightTrigger(0.1).whileTrue(Shooter.shoot())
         driverController.rightBumper().whileTrue(Shooter.rampUp())
 
-        driverController.leftTrigger(0.1).whileTrue(runCommand {
+        driverController.leftTrigger(0.1).whileTrue(parallelCommand( runCommand {
             Intake.intakeState = Intake.IntakeState.INTAKING
-        }.finallyRun { Intake.intakeState = Intake.IntakeState.OFF })
+        }.finallyRun { Intake.intakeState = Intake.IntakeState.OFF },
+//            Drive.snakeMode()
+        ))
 
         driverController.leftBumper().whileTrue(waitCommand(1.0).finallyRun { wasSuspended ->
             if (wasSuspended) {
@@ -138,14 +141,6 @@ object OI: SubsystemBase("OI") {
                 Intake.deepStow()
             }
         })
-
-//        driverController.leftTrigger(0.2).whileTrue(runCommand {
-//            Shooter.shooterVelocitySetpoint = Shooter.hubSpeedCurve.get(AimUtils.aimTarget.getDistance(Drive.localizer.pose.translation).meters.asFeet).rotationsPerSecond / Shooter.SHOOTER_GEAR_RATIO
-//            Shooter.hoodAngleSetpoint =(BALL_ANGLE_AT_HOOD_ZERO -  Shooter.hubAngleCurve.get(AimUtils.aimTarget.getDistance(Drive.localizer.pose.translation).meters.asFeet)).degrees
-//        }.finallyRun {
-//            Shooter.shooterVelocitySetpoint = 0.0.rotationsPerSecond
-//            Shooter.hoodAngleSetpoint = 0.0.degrees
-//        })
     }
 
     override fun periodic() {

@@ -60,7 +60,7 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
     override var pose: Pose2d
         get() = savedState.Pose
         set(value) {
-            tempQuestPose = value.transformBy(robotToQuestTransformMeters)
+            tempQuestPose = Pose3d(value).transformBy(robotToQuestTransformMeters)
             resetQuestTranslation = true
             resetPose(value)
             localizer.resetPose(value) // Possibly not needed, but good for a quick response.
@@ -73,10 +73,10 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
             resetRotation(value)
             localizer.resetRotation(value) // Not needed and redundant but may prevent some heading bugs
             if (resetQuestTranslation) {
-                quest.setPose(Pose3d(Pose2d(tempQuestPose.translation, value + robotToQuestTransformMeters.rotation)))
+                quest.setPose(tempQuestPose)
                 resetQuestTranslation = false
             } else {
-                quest.setPose(Pose3d(Pose2d(questPose.transformBy(robotToQuestTransformMeters).translation, value + robotToQuestTransformMeters.rotation)))
+                quest.setPose(Pose3d(questPose.translation, Rotation3d(value)).transformBy(robotToQuestTransformMeters))
             }
             Turret.setTurretOffset(value.measure)
         }
@@ -98,7 +98,7 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
 
     val headingHistory: DynamicInterpolatingTreeMap<Double, Double> = DynamicInterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble(), 75)
 
-    private var tempQuestPose = Pose2d()
+    private var tempQuestPose = Pose3d()
     private var resetQuestTranslation = false
 
     val quest = QuestNav()
@@ -106,9 +106,9 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
     var simulateQuest = true
     val questConnected: Boolean
         get() = if (isReal) quest.isConnected else simulateQuest
-    val robotToQuestTransformMeters = Transform2d(-12.0.inches, 12.0.inches, 180.0.degrees.asRotation2d)
+    val robotToQuestTransformMeters = Transform3d(-12.5.inches.asMeters, -12.5.inches.asMeters, 12.5.inches.asMeters, Rotation3d(90.0.degrees, 0.0.degrees, 180.0.degrees))
 
-    var questPose: Pose2d = Pose2d()
+    var questPose: Pose3d = Pose3d()
         private set
 
     val DRIVE_STD_DEVS: Matrix<N3?, N1?> = VecBuilder.fill(0.1, 0.1, 0.05)
@@ -164,18 +164,18 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
         if (questConnected) {
             if (isReal) {
                 quest.allUnreadPoseFrames.forEach {
-                    val pose = it.questPose3d.toPose2d().transformBy(robotToQuestTransformMeters.inverse())
+                    val pose = it.questPose3d.transformBy(robotToQuestTransformMeters.inverse())
                     val ctreTimestamp = Utils.fpgaToCurrentTime(it.dataTimestamp)
 
                     Logger.recordOutput("Drive/Quest/DataTimestamp", it.dataTimestamp)
                     Logger.recordOutput("Drive/Quest/CtreTimestamp", ctreTimestamp)
-                    addVisionMeasurement(pose, ctreTimestamp, QUEST_STD_DEVS)
+                    addVisionMeasurement(pose.toPose2d(), ctreTimestamp, QUEST_STD_DEVS)
                     questPose = pose
                 }
             } else {
                 // Simulate quest data
                 addVisionMeasurement(pose, stateTimestamp, QUEST_STD_DEVS)
-                questPose = pose.transformBy(robotToQuestTransformMeters.inverse())
+                questPose = Pose3d(pose.x, pose.y, robotToQuestTransformMeters.z, robotToQuestTransformMeters.rotation)
             }
         }
 
@@ -217,6 +217,9 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
         Logger.recordOutput("Swerve/SingleTagPose", localizer.singleTagPose)
 
 
+        Logger.recordOutput("Trench Poses", *FieldManager.trenchPositions)
+
+
         LoopLogger.record("Drive pirdc")
     }
 
@@ -226,7 +229,7 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
     override fun getJoystickPercentageSpeeds(): ChassisSpeeds {
         val rawJoystick = OI.rawDriveTranslation
         // Square drive input and apply demoSpeed
-        val power = rawJoystick.norm.square() * demoSpeed * if (Shooter.isShooting) 0.6 else if (inSnakeMode) 0.8 else 1.0
+        val power = rawJoystick.norm.square() * demoSpeed * if (Shooter.isShooting) 0.4 else if (inSnakeMode) 0.8 else 1.0
         // Apply modified power to joystick vector and flip depending on alliance
         val joystickTranslation = rawJoystick * power * if (isBlueAlliance) -1.0 else 1.0
 

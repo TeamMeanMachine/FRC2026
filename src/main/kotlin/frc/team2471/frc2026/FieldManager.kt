@@ -23,6 +23,7 @@ import org.team2471.frc.lib.units.wrap
 import org.team2471.frc.lib.util.isRedAlliance
 import kotlin.math.absoluteValue
 import kotlin.math.floor
+import kotlin.math.sign
 
 object FieldManager {
     val aprilTagFieldLayout: AprilTagFieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded) //AprilTagFieldLayout(Filesystem.getDeployDirectory().path + "/2026Field.json")
@@ -49,7 +50,7 @@ object FieldManager {
             addOption("Blue", "B")
         }
 
-    val trenchAreaWidth = 75.0.inches
+    val trenchAreaWidth = 27.0.inches
     val trenchAreaLength = 50.0.inches
 
     val lowerBlueTrenchPosition = ((allAprilTags[21].pose.toPose2d().translation + allAprilTags[22].pose.toPose2d().translation)/2.0)
@@ -65,6 +66,12 @@ object FieldManager {
             for (pose in trenchPositions) {
                 val relativePose = pose - Drive.localizer.pose.translation
                 if (relativePose.y.absoluteValue.meters < (trenchAreaLength/2.0) && relativePose.x.absoluteValue.meters < (trenchAreaWidth/2.0)) {
+                    return true
+                }
+                val predictedPose = Drive.localizer.pose.translation + Drive.velocity * Shooter.HOOD_DOWN_TIME
+                Logger.recordOutput("Drive/predictedPose", predictedPose)
+                val predictedRelativePose = pose - predictedPose
+                if (predictedRelativePose.x.sign != relativePose.x.sign) {
                     return true
                 }
             }

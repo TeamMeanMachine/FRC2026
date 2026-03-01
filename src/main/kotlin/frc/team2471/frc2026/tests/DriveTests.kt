@@ -247,7 +247,7 @@ fun Drive.questOffsetTest(): Command {
     return run {
         val questPose = questPose
         println(questPose)
-        allPoints.add(Pair(questPose.rotation.measure, questPose))
+        allPoints.add(Pair(questPose.rotation.toRotation2d().measure, questPose.toPose2d()))
         Drive.driveVelocity(ChassisSpeeds(0.0.feetPerSecond, 0.0.feetPerSecond, 18.0.degreesPerSecond))
     }.withTimeout(40.0).andThen(runOnce {
         val radiusGuesses = mutableListOf<Distance>()

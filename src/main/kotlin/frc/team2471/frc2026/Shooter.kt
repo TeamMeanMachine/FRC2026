@@ -220,6 +220,9 @@ object Shooter: SubsystemBase("Shooter") {
 
     const val SHOOTER_GEAR_RATIO = 18.0/22.0
 
+    // seconds
+    const val HOOD_DOWN_TIME = 0.75
+
     @get:AutoLogOutput(key = "Shooter/Shooter Angular Velocity Setpoint")
     var shooterVelocitySetpoint: AngularVelocity = 0.0.rotationsPerSecond
         set(value) {
