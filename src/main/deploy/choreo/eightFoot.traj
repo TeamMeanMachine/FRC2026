@@ -1,6 +1,6 @@
 {
- "name":"8 foot",
- "version":2,
+ "name":"eightFoot",
+ "version":3,
  "snapshot":{
   "waypoints":[
     {"x":0.0, "y":0.0, "heading":0.0, "intervals":75, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
@@ -27,6 +27,29 @@
   }
  },
  "trajectory":{
+  "config":{
+   "frontLeft":{
+    "x":0.2794,
+    "y":0.2794
+   },
+   "backLeft":{
+    "x":-0.2794,
+    "y":0.2794
+   },
+   "mass":68.0388555,
+   "inertia":100.0,
+   "gearing":6.746031746031747,
+   "radius":0.04826,
+   "vmax":523.5987755982989,
+   "tmax":1.0,
+   "cof":1.5,
+   "bumper":{
+    "front":0.4064,
+    "side":0.4064,
+    "back":0.4064
+   },
+   "differentialTrackWidth":0.5588
+  },
   "sampleType":"Swerve",
   "waypoints":[0.0,3.73387],
   "samples":[

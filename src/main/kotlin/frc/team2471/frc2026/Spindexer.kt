@@ -200,7 +200,11 @@ object Spindexer: SubsystemBase("Spindexer") {
                         spinMotorVelocitySetpoint = ((SPIN_VELOCITY - SPIN_LOWER_VELOCITY) * (stateOnTime - spinSlowdownDelayTime) / spinSlowdownTime) + SPIN_LOWER_VELOCITY
                     }
                 } else {
-                    spinMotorVelocitySetpoint = SPIN_VELOCITY * linearMap(0.0, 1.0, 0.25, 1.0, OI.driveRightTrigger.deadband(0.1))
+                    if (Robot.isAutonomous) {
+                        spinMotorVelocitySetpoint = SPIN_VELOCITY
+                    } else {
+                        spinMotorVelocitySetpoint = SPIN_VELOCITY * linearMap(0.0, 1.0, 0.25, 1.0, OI.driveRightTrigger.deadband(0.1))
+                    }
                 }
                 sidetakeMotorVelocitySetpoint = SIDETAKE_VELOCITY
                 uptakeMotorVelocitySetpoint = UPTAKE_VELOCITY
@@ -215,6 +219,9 @@ object Spindexer: SubsystemBase("Spindexer") {
             }
             State.AGITATING -> {
                 spinMotorVelocitySetpoint = -AGITATE_VELOCITY
+                sidetakeMotorVelocitySetpoint = 0.0
+                uptakeMotorVelocitySetpoint = 0.0
+                stateOnTimer.stop()
             }
         }
         LoopLogger.record("spindexer periodic")

@@ -61,7 +61,6 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
         get() = savedState.Pose
         set(value) {
             tempQuestPose = Pose3d(value).transformBy(robotToQuestTransformMeters)
-            resetQuestTranslation = true
             resetPose(value)
             localizer.resetPose(value) // Possibly not needed, but good for a quick response.
         }
@@ -72,12 +71,14 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
 //            println("resting heading to ${value.degrees}")
             resetRotation(value)
             localizer.resetRotation(value) // Not needed and redundant but may prevent some heading bugs
-            if (resetQuestTranslation) {
+            val tempQuestPose = tempQuestPose
+            if (tempQuestPose != null) {
                 quest.setPose(tempQuestPose)
-                resetQuestTranslation = false
+                this.tempQuestPose = null
             } else {
                 quest.setPose(Pose3d(questPose.translation, Rotation3d(value)).transformBy(robotToQuestTransformMeters))
             }
+            resetPoseTime = Timer.getFPGATimestamp()
             Turret.setTurretOffset(value.measure)
         }
 
@@ -98,8 +99,8 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
 
     val headingHistory: DynamicInterpolatingTreeMap<Double, Double> = DynamicInterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble(), 75)
 
-    private var tempQuestPose = Pose3d()
-    private var resetQuestTranslation = false
+    private var tempQuestPose: Pose3d? = null
+    private var resetPoseTime = 0.0
 
     val quest = QuestNav()
 
@@ -161,16 +162,18 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
         LoopLogger.record("Inside Drive periodic")
 
         // Apply quest measurements
-        if (questConnected) {
+        if (questConnected && tempQuestPose == null) {
             if (isReal) {
                 quest.allUnreadPoseFrames.forEach {
-                    val pose = it.questPose3d.transformBy(robotToQuestTransformMeters.inverse())
-                    val ctreTimestamp = Utils.fpgaToCurrentTime(it.dataTimestamp)
+                    if (resetPoseTime < it.dataTimestamp) {
+                        val pose = it.questPose3d.transformBy(robotToQuestTransformMeters.inverse())
+                        val ctreTimestamp = Utils.fpgaToCurrentTime(it.dataTimestamp)
 
-                    Logger.recordOutput("Drive/Quest/DataTimestamp", it.dataTimestamp)
-                    Logger.recordOutput("Drive/Quest/CtreTimestamp", ctreTimestamp)
-                    addVisionMeasurement(pose.toPose2d(), ctreTimestamp, QUEST_STD_DEVS)
-                    questPose = pose
+                        Logger.recordOutput("Drive/Quest/DataTimestamp", it.dataTimestamp)
+                        Logger.recordOutput("Drive/Quest/CtreTimestamp", ctreTimestamp)
+                        addVisionMeasurement(pose.toPose2d(), ctreTimestamp, QUEST_STD_DEVS)
+                        questPose = pose
+                    }
                 }
             } else {
                 // Simulate quest data

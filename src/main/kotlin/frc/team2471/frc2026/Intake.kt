@@ -87,6 +87,8 @@ object Intake: SubsystemBase("Intake") {
     val deployMotorPosition: Double
         get() = deployMotor.position.valueAsDouble
 
+    var finishedHoming: Boolean = false
+
     var isDeployed: Boolean = false
 
 
@@ -151,6 +153,7 @@ object Intake: SubsystemBase("Intake") {
             deployMotor.setControl(DutyCycleOut(0.0))
             println("Deploy Pos: ${deployMotor.position}")
             deployMotor.setPosition(0.13)
+            finishedHoming = true
 //            stow()
         }
     )

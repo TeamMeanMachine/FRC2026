@@ -383,7 +383,11 @@ object Shooter: SubsystemBase("Shooter") {
 
 
     fun rampUp(): Command = runCommand(Shooter) {
-        shooterVelocitySetpoint = (if (AimUtils.isAimingAtGoal) hubSpeedCurve.get(AimUtils.distanceToTarget.asFeet) else floorSpeedCurve.get(AimUtils.distanceToTarget.asFeet)).rotationsPerSecond / SHOOTER_GEAR_RATIO
+        if (Robot.isAutonomous) {
+            shooterVelocitySetpoint = (if (AimUtils.isAimingAtGoal) hubSpeedCurve.get(AimUtils.distanceToTarget.asFeet) else hubSpeedCurve.get(11.0)).rotationsPerSecond / SHOOTER_GEAR_RATIO
+        } else {
+            shooterVelocitySetpoint = (if (AimUtils.isAimingAtGoal) hubSpeedCurve.get(AimUtils.distanceToTarget.asFeet) else floorSpeedCurve.get(AimUtils.distanceToTarget.asFeet)).rotationsPerSecond / SHOOTER_GEAR_RATIO
+        }
     }.finallyRun { shooterVelocitySetpoint = 0.0.rotationsPerSecond }
 
     fun rampDown(): Command = runOnceCommand(Shooter) {

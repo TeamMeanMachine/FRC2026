@@ -1,6 +1,6 @@
 {
  "name":"autos",
- "version":1,
+ "version":2,
  "type":"Swerve",
  "variables":{
   "expressions":{},
@@ -24,22 +24,22 @@
  "config":{
   "frontLeft":{
    "x":{
-    "exp":"12.125 in",
-    "val":0.307975
+    "exp":"11 in",
+    "val":0.2794
    },
    "y":{
-    "exp":"12.125 in",
-    "val":0.307975
+    "exp":"11 in",
+    "val":0.2794
    }
   },
   "backLeft":{
    "x":{
-    "exp":"-12.125 in",
-    "val":-0.307975
+    "exp":"-11 in",
+    "val":-0.2794
    },
    "y":{
-    "exp":"12.125 in",
-    "val":0.307975
+    "exp":"11 in",
+    "val":0.2794
    }
   },
   "mass":{
@@ -89,5 +89,11 @@
    "val":0.5588
   }
  },
- "generationFeatures":[]
+ "generationFeatures":[],
+ "codegen":{
+  "root":null,
+  "genVars":true,
+  "genTrajData":true,
+  "useChoreoLib":true
+ }
 }

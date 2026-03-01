@@ -10,6 +10,14 @@ import frc.team2471.frc2026.tests.velocityVoltTest
 import frc.team2471.frc2026.tests.zeroTurretEncoders
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser
 import org.team2471.frc.lib.control.Autonomi
+import org.team2471.frc.lib.control.commands.beforeWait
+import org.team2471.frc.lib.control.commands.finallyRun
+import org.team2471.frc.lib.control.commands.parallelCommand
+import org.team2471.frc.lib.control.commands.runCommand
+import org.team2471.frc.lib.control.commands.runOnceCommand
+import org.team2471.frc.lib.control.commands.sequenceCommand
+import org.team2471.frc.lib.control.commands.waitCommand
+import org.team2471.frc.lib.control.commands.waitUntilCommand
 
 
 object Autonomous: Autonomi() {
@@ -24,6 +32,7 @@ object Autonomous: Autonomi() {
         LoggedDashboardChooser<AutoCommand?>("Auto Chooser").apply {
             addOption("8 Foot Straight", AutoCommand(eightFootStraight()))
             addOption("6x6 Square", AutoCommand(squarePathTest()))
+            addOption("Left Side", AutoCommand(leftSide(), { paths["LeftSide"]!!.getInitialPose(Drive.flipChoreoPaths).get() }))
         }
 
     /** Chooser for test commands */
@@ -45,10 +54,61 @@ object Autonomous: Autonomi() {
     /** Autonomous commands */
 
     private fun eightFootStraight(): Command {
-        return Drive.driveAlongChoreoPath(paths["8 foot"]!!, resetOdometry = true)
+        return Drive.driveAlongChoreoPath(paths["eightFoot"]!!, resetOdometry = true)
     }
 
     private fun squarePathTest(): Command {
         return Drive.driveAlongChoreoPath(paths["square"]!!, resetOdometry = true)
+    }
+
+    private fun leftSide(): Command {
+        val path = paths["LeftSide"]!!
+        return parallelCommand(
+            sequenceCommand(
+                parallelCommand(
+                    sequenceCommand(
+                        waitUntilCommand { Intake.finishedHoming },
+                        runOnceCommand {
+                            Intake.deploy()
+                            Intake.intakeState = Intake.IntakeState.INTAKING
+                            println("Intake finished homing. Running Intake")
+                        }
+                    ),
+                    sequenceCommand(
+                        Drive.driveAlongChoreoPath(path.getSplit(0).get(), resetOdometry = true, poseSupplier = Drive::pose),
+                        Drive.driveAlongChoreoPath(path.getSplit(1).get(), resetOdometry = false, poseSupplier = Drive::pose),
+                        runOnceCommand {
+                            Intake.intakeState = Intake.IntakeState.OFF
+                        }
+                    ),
+                ),
+                parallelCommand(
+                    Shooter.shoot(),
+                    runOnceCommand {
+                        Intake.stow()
+                    }.beforeWait(2.0)
+                ).withTimeout(3.5),
+                parallelCommand(
+                    runOnceCommand {
+                        Intake.deploy()
+                        Intake.intakeState = Intake.IntakeState.INTAKING
+                                   },
+                    Drive.driveAlongChoreoPath(path.getSplit(2).get(), resetOdometry = false, poseSupplier = Drive::pose),
+                    ),
+                parallelCommand(
+                    Shooter.shoot(),
+                    sequenceCommand(
+                        runOnceCommand {
+                            Intake.intakeState = Intake.IntakeState.OFF
+                        },
+                        waitCommand(2.0),
+                        runOnceCommand {
+                            Intake.stow()
+                        }
+                    )
+                )
+            ),
+            Shooter.rampUp()
+        )
     }
 }
