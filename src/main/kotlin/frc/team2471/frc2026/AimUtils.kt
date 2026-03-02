@@ -32,7 +32,7 @@ import kotlin.math.sqrt
 
 object AimUtils {
     // seconds
-    const val SHOT_AIRTIME = 0.95
+    const val SHOT_AIRTIME = 1.0
     const val PASS_AIRTIME = 1.0
 
     // m/s^2
@@ -51,6 +51,9 @@ object AimUtils {
     val FUEL_MASS = 0.2172.kilograms
 
     val HUB_HEIGHT = 65.0.inches
+
+    // Percent of surface speed of shooter that gets transferred into the ball
+    val SHOOTER_EFFICIENCY = 0.66
 
     @get:AutoLogOutput(key = "aim target")
     val aimTarget: Translation2d
@@ -309,10 +312,10 @@ object AimUtils {
     }
 
     fun LinearVelocity.toWheelSpeed(): AngularVelocity {
-        return ((2.0 * this.asInchesPerSecond/(Shooter.WHEEL_DIAMETER.asInches * Math.PI)).rotationsPerSecond) / 0.685
+        return ((2.0 * this.asInchesPerSecond/(Shooter.WHEEL_DIAMETER.asInches * Math.PI)).rotationsPerSecond) / SHOOTER_EFFICIENCY
     }
 
     fun AngularVelocity.toExitVelocity(): LinearVelocity {
-        return (this.times(0.685).asRotationsPerSecond * (Shooter.WHEEL_DIAMETER.asInches * Math.PI) / 2.0).inchesPerSecond
+        return (this.times(SHOOTER_EFFICIENCY).asRotationsPerSecond * (Shooter.WHEEL_DIAMETER.asInches * Math.PI) / 2.0).inchesPerSecond
     }
 }

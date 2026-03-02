@@ -155,7 +155,7 @@ object Spindexer: SubsystemBase("Spindexer") {
             s(2.0, StaticFeedforwardSignValue.UseVelocitySign)
             p(7.0)
 
-            MotionMagic.MotionMagicAcceleration = 70.0
+            MotionMagic.MotionMagicAcceleration = 100.0
 
             OpenLoopRamps.TorqueOpenLoopRampPeriod = 10.0
         }

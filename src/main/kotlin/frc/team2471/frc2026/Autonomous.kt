@@ -11,7 +11,6 @@ import frc.team2471.frc2026.tests.zeroTurretEncoders
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser
 import org.team2471.frc.lib.control.Autonomi
 import org.team2471.frc.lib.control.commands.beforeWait
-import org.team2471.frc.lib.control.commands.finallyRun
 import org.team2471.frc.lib.control.commands.parallelCommand
 import org.team2471.frc.lib.control.commands.runCommand
 import org.team2471.frc.lib.control.commands.runOnceCommand
@@ -76,7 +75,7 @@ object Autonomous: Autonomi() {
                     ),
                     sequenceCommand(
                         Drive.driveAlongChoreoPath(path.getSplit(0).get(), resetOdometry = true, poseSupplier = Drive::pose),
-                        Drive.driveAlongChoreoPath(path.getSplit(1).get(), resetOdometry = false, poseSupplier = Drive::pose),
+                        Drive.driveAlongChoreoPath(path.getSplit(1).get(), resetOdometry = false, poseSupplier = Drive.localizer::pose),
                         runOnceCommand {
                             Intake.intakeState = Intake.IntakeState.OFF
                         }
@@ -86,14 +85,14 @@ object Autonomous: Autonomi() {
                     Shooter.shoot(),
                     runOnceCommand {
                         Intake.stow()
-                    }.beforeWait(2.0)
-                ).withTimeout(3.5),
+                    }.beforeWait(0.25)
+                ).withTimeout(1.75),
                 parallelCommand(
                     runOnceCommand {
                         Intake.deploy()
                         Intake.intakeState = Intake.IntakeState.INTAKING
                                    },
-                    Drive.driveAlongChoreoPath(path.getSplit(2).get(), resetOdometry = false, poseSupplier = Drive::pose),
+                    Drive.driveAlongChoreoPath(path.getSplit(2).get(), resetOdometry = false, poseSupplier = Drive.localizer::pose),
                     ),
                 parallelCommand(
                     Shooter.shoot(),
@@ -101,14 +100,17 @@ object Autonomous: Autonomi() {
                         runOnceCommand {
                             Intake.intakeState = Intake.IntakeState.OFF
                         },
-                        waitCommand(2.0),
+                        waitCommand(1.0),
                         runOnceCommand {
                             Intake.stow()
                         }
-                    )
+                    ),
+                    Drive.driveAlongChoreoPath(path.getSplit(3).get(), resetOdometry = false, poseSupplier = Drive.localizer::pose),
                 )
             ),
-            Shooter.rampUp()
+            runCommand {
+                Shooter.rampUpLoop()
+            }
         )
     }
 }

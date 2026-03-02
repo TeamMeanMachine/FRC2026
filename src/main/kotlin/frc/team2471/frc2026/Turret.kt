@@ -50,7 +50,7 @@ import org.team2471.frc.lib.ctre.alternateFeedbackSensor
 import org.team2471.frc.lib.ctre.coastMode
 import org.team2471.frc.lib.math.round
 import org.team2471.frc.lib.units.asFeet
-import org.team2471.frc.lib.units.degreesPerSecond
+import org.team2471.frc.lib.units.rotationsPerSecond
 import kotlin.collections.toDoubleArray
 
 object Turret: SubsystemBase("Turret") {
@@ -160,7 +160,7 @@ object Turret: SubsystemBase("Turret") {
 
     @get:AutoLogOutput(key = "Turret/turretFeedforward")
     val turretFeedforward: Double
-        get() = -Drive.speeds.omegaRadiansPerSecond.radians.asRotations * 0.0
+        get() = -Drive.speeds.omegaRadiansPerSecond.radians.asRotations * 3.0
 
     @get:AutoLogOutput(key = "Turret/isTurretWrapping")
     var isTurretWrapping = false
@@ -287,7 +287,7 @@ object Turret: SubsystemBase("Turret") {
         GlobalScope.launch {
             periodic {
 
-                if ((fieldCentricAngle - fieldCentricTurretMotorRotorAngle.unWrap(fieldCentricAngle)).absoluteValue() > 1.0.degrees && turretVelocity.absoluteValue() < 5.0.degreesPerSecond) {
+                if ((fieldCentricAngle - fieldCentricTurretMotorRotorAngle.unWrap(fieldCentricAngle)).absoluteValue() > 1.0.degrees && turretVelocity.absoluteValue() < 3.0.rotationsPerSecond) {
                     GlobalScope.launch {
 //                        println("setting turret pigeon yaw to motor angle")
                         println("Detected Error. Trying to change gyro angle from ${fieldCentricAngle.asDegrees.round(3)} to ${fieldCentricTurretMotorRotorAngle.unWrap(fieldCentricAngle).asDegrees.round(3)}")

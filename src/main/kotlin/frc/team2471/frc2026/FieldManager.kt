@@ -118,6 +118,8 @@ object FieldManager {
         get () = xRelativeToCenter.absoluteValue() > distanceFromMiddleToScore
                 && if (isRedAlliance) xRelativeToCenter > 0.0.meters else xRelativeToCenter < 0.0.meters
 
+    const val HUB_PROCESSING_TIME = 1.0
+
     @get:AutoLogOutput(key = "FieldManager/gameData")
     val gameData: String
         get() = if (overrideAutoWinner.get() == null) DriverStation.getGameSpecificMessage() else overrideAutoWinner.get()
@@ -143,13 +145,17 @@ object FieldManager {
     val matchTime: Double
         get() = DriverStation.getMatchTime()
 
+    @get:AutoLogOutput(key = "FieldManager/matchCountdown")
+    val hubCountdown: Double
+        get() = if (matchTime > 130.0) matchTime - 130.0 else if (matchTime < 30.0) matchTime else (matchTime - 5) % 25.0
+
     @get:AutoLogOutput(key = "FieldManager/hubIsActive")
     val hubIsActive: Boolean
         get () {
-            if (matchTime > 130.0 || matchTime < 30.0 || isAutonomous) {
+            if (matchTime > 130.0 - AimUtils.SHOT_AIRTIME - HUB_PROCESSING_TIME || matchTime < 30.0 - AimUtils.SHOT_AIRTIME - HUB_PROCESSING_TIME || isAutonomous) {
                 return true
             }
-            if ((floor((matchTime - 30.0)/25.0)) % 2 == 0.0) {
+            if ((floor((matchTime - 30.0 - AimUtils.SHOT_AIRTIME - HUB_PROCESSING_TIME)/25.0)) % 2 == 0.0) {
                 return weWonAuto
             } else {
                 return !weWonAuto

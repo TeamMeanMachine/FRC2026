@@ -155,8 +155,11 @@ object Robot : LoggedRobot() {
         Drive.brakeMode()
         Shooter.hoodAngleSetpoint = Shooter.hoodAngle
 
-        if (beforeFirstEnable) {
+        if (beforeFirstEnable && !isAutonomous) {
             commandScheduler.schedule(Intake.home())
+        } else if (beforeFirstEnable) {
+            Intake.deployMotor.setPosition(0.0)
+            Intake.finishedHoming = true
         }
     }
 
@@ -169,7 +172,11 @@ object Robot : LoggedRobot() {
 
     /** This function is called periodically when disabled.  */
     override fun disabledPeriodic() {
-        Autonomous.updateSelectedAuto()
+        if (beforeFirstEnable) {
+            Autonomous.updateSelectedAuto(true)
+        } else {
+            Autonomous.updateSelectedAuto(false)
+        }
     }
 
     /** This function is called once when auto is enabled.  */

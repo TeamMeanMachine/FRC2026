@@ -17,6 +17,7 @@ import org.team2471.frc.lib.control.commands.waitCommand
 import org.team2471.frc.lib.math.deadband
 import org.team2471.frc.lib.math.normalize
 import org.team2471.frc.lib.units.degrees
+import org.team2471.frc.lib.units.rotationsPerSecond
 
 object OI: SubsystemBase("OI") {
     val driverController = MeanCommandXboxController(0, false)
@@ -88,6 +89,11 @@ object OI: SubsystemBase("OI") {
 
         Turret.defaultCommand = Turret.aimAtTarget()
 
+        Shooter.defaultCommand = runCommand(Shooter) {
+            Shooter.hoodAngleSetpoint = Shooter.HOOD_STOW_SETPOINT.degrees
+            Shooter.shooterVelocitySetpoint = 0.0.rotationsPerSecond
+        }
+
         // Zero Gyro
         driverController.back().onTrue({
                 println("zero gyro")
@@ -99,36 +105,26 @@ object OI: SubsystemBase("OI") {
             Drive.pose = Pose2d(Translation2d(3.0, 3.0), Drive.heading)
         }.toCommand(Drive).ignoringDisable(true))
 
-//        driverController.a().whileTrue(Shooter.shoot())
-
-//        driverController.rightBumper().whileTrue(Drive.snakeMode())
-//        driverController.x().onTrue(runOnceCommand { Intake.deploy() })
-//        driverController.b().onTrue(runOnceCommand { Intake.stow() })
-
-//        driverController.x().onTrue(runOnceCommand { Turret.fieldCentricSetpoint = 90.0.degrees })
-//        driverController.y().onTrue(runOnceCommand { Turret.fieldCentricSetpoint = 0.0.degrees })
-//        driverController.b().onTrue(runOnceCommand { Turret.fieldCentricSetpoint = -90.0.degrees })
-//        driverController.a().onTrue(runOnceCommand { Turret.fieldCentricSetpoint = -180.0.degrees })
-
-//        driverController.povUp().onTrue(runOnceCommand { Shooter.hoodAngleSetpoint += 1.0.degrees })
-//        driverController.povDown().onTrue(runOnceCommand { Shooter.hoodAngleSetpoint -= 1.0.degrees })
-//        driverController.y().onTrue(runOnceCommand { Shooter.hoodAngleSetpoint = 15.0.degrees })
-//        driverController.a().onTrue(runOnceCommand { Shooter.hoodAngleSetpoint = 25.0.degrees })
-
         driverController.a().onTrue(runOnceCommand { Shooter.hoodAngleSetpoint = 0.0.degrees })
         driverController.y().onTrue(Intake.home())
 
 //        driverController.rightTrigger(0.1).whileTrue(runCommand {
 //                Spindexer.currentState = Spindexer.State.ON
 //        }.finallyRun { Spindexer.currentState = Spindexer.State.OFF })
-        driverController.rightTrigger(0.1).whileTrue(Shooter.shoot())
-        driverController.rightBumper().whileTrue(Shooter.rampUp())
+        driverController.rightTrigger(0.1).or(driverController.rightBumper()).whileTrue(
+            Shooter.shootOrRamp()
+        )
+//        driverController.rightTrigger(0.1).whileTrue(Shooter.shoot())
+//        driverController.rightBumper().whileTrue(runCommand { Shooter.rampUpLoop() })
 
-        driverController.leftTrigger(0.1).whileTrue(parallelCommand( runCommand {
+        driverController.leftTrigger(0.05).whileTrue(parallelCommand( runCommand {
             Intake.intakeState = Intake.IntakeState.INTAKING
         }.finallyRun { Intake.intakeState = Intake.IntakeState.OFF },
 //            Drive.snakeMode()
         ))
+        driverController.leftStick().whileTrue(runCommand {
+            Intake.intakeState = Intake.IntakeState.SPITTING
+        }.finallyRun { Intake.intakeState = Intake.IntakeState.OFF })
 
         driverController.leftBumper().whileTrue(waitCommand(1.0).finallyRun { wasSuspended ->
             if (wasSuspended) {

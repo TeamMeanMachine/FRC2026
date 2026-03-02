@@ -9,7 +9,6 @@ import edu.wpi.first.math.geometry.Pose2d
 import edu.wpi.first.math.geometry.Pose3d
 import edu.wpi.first.math.geometry.Rotation2d
 import edu.wpi.first.math.geometry.Rotation3d
-import edu.wpi.first.math.geometry.Transform2d
 import edu.wpi.first.math.geometry.Transform3d
 import edu.wpi.first.math.geometry.Translation2d
 import edu.wpi.first.math.geometry.Translation3d
@@ -23,6 +22,7 @@ import edu.wpi.first.wpilibj.Timer
 import edu.wpi.first.wpilibj2.command.Command
 import frc.team2471.frc2026.OI.driverController
 import gg.questnav.questnav.QuestNav
+import org.littletonrobotics.junction.AutoLogOutput
 import org.littletonrobotics.junction.Logger
 import org.team2471.frc.lib.control.LoopLogger
 import org.team2471.frc.lib.control.commands.finallyRun
@@ -105,8 +105,14 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
     val quest = QuestNav()
 
     var simulateQuest = true
+    @get:AutoLogOutput(key = "Drive/Quest/isConnected")
     val questConnected: Boolean
         get() = if (isReal) quest.isConnected else simulateQuest
+    @get:AutoLogOutput(key = "Drive/Quest/isTracking")
+    val questTracking: Boolean
+        get() = if (isReal) quest.isTracking else simulateQuest
+    @get:AutoLogOutput(key = "Drive/Quest/isTrackingMaybe")
+    var questTrackingMaybe: Boolean = false
     val robotToQuestTransformMeters = Transform3d(-12.5.inches.asMeters, -12.5.inches.asMeters, 12.5.inches.asMeters, Rotation3d(90.0.degrees, 0.0.degrees, 180.0.degrees))
 
     var questPose: Pose3d = Pose3d()
@@ -162,10 +168,11 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
         LoopLogger.record("Inside Drive periodic")
 
         // Apply quest measurements
-        if (questConnected && tempQuestPose == null) {
+        if (questConnected && questTracking && tempQuestPose == null) {
             if (isReal) {
                 quest.allUnreadPoseFrames.forEach {
-                    if (resetPoseTime < it.dataTimestamp) {
+                    questTrackingMaybe = it.isTracking
+                    if (resetPoseTime < it.dataTimestamp && it.isTracking) {
                         val pose = it.questPose3d.transformBy(robotToQuestTransformMeters.inverse())
                         val ctreTimestamp = Utils.fpgaToCurrentTime(it.dataTimestamp)
 
@@ -202,10 +209,6 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
 
         quest.commandPeriodic()
         LoopLogger.record("Drive quest periodic")
-
-        Logger.recordOutput("Drive/Quest/isConnected", questConnected)
-
-        LoopLogger.record("Drive questConnected")
 
         headingHistory.put(Timer.getFPGATimestamp(), heading.degrees)
         LoopLogger.record("Recorded HeadingHistory")

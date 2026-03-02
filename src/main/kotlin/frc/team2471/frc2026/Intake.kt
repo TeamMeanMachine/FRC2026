@@ -22,7 +22,7 @@ import org.team2471.frc.lib.ctre.currentLimits
 import org.team2471.frc.lib.ctre.motionMagic
 import org.team2471.frc.lib.ctre.p
 import org.team2471.frc.lib.ctre.s
-import org.team2471.frc.lib.ctre.statorCurrentLimit
+import kotlin.math.absoluteValue
 
 object Intake: SubsystemBase("Intake") {
     private val table = NetworkTableInstance.getDefault().getTable("Intake")
@@ -87,9 +87,14 @@ object Intake: SubsystemBase("Intake") {
     val deployMotorPosition: Double
         get() = deployMotor.position.valueAsDouble
 
-    var finishedHoming: Boolean = false
+    @get:AutoLogOutput(key = "Intake/Deploy Motor Error")
+    val deployMotorError: Double
+        get() = deployMotorPosition - deploySetpoint//deployMotor.closedLoopError.valueAsDouble
 
+    var finishedHoming: Boolean = false
     var isDeployed: Boolean = false
+
+    var goingToSetpoint: Boolean = false
 
 
     init {
@@ -111,6 +116,10 @@ object Intake: SubsystemBase("Intake") {
             coastMode()
             p(1.5)
             s(0.25, StaticFeedforwardSignValue.UseClosedLoopSign)
+
+            p(0.05, 1)
+            s(0.25, StaticFeedforwardSignValue.UseClosedLoopSign, 1)
+
             motionMagic(750.0, 1500.0)
         }
         rollerMotor.applyConfiguration {
@@ -127,16 +136,19 @@ object Intake: SubsystemBase("Intake") {
     }
 
     fun deploy() {
+        goingToSetpoint = true
         deploySetpoint = DEPLOY_POSE
         isDeployed = true
     }
 
     fun stow() {
+        goingToSetpoint = true
         deploySetpoint = STOW_POSE
         isDeployed = false
     }
 
     fun deepStow() {
+        goingToSetpoint = true
         deploySetpoint = DEEP_STOW_POSE
         isDeployed = false
     }
@@ -176,6 +188,18 @@ object Intake: SubsystemBase("Intake") {
             Spindexer.currentState = Spindexer.State.OFF
         }
         prevIntakeState = intakeState
+
+        if (goingToSetpoint && deployMotorError.absoluteValue < 1.0) {
+            goingToSetpoint = false
+        }
+
+        if (!goingToSetpoint) {
+            if (deployMotorError < -0.5) {
+                deployMotor.setControl(DutyCycleOut(0.05))
+            } else {
+                deployMotor.setControl(NeutralOut())
+            }
+        }
     }
 
     enum class IntakeState {

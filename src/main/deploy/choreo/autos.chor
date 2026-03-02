@@ -5,18 +5,18 @@
  "variables":{
   "expressions":{},
   "poses":{
-   "LeftShootLocation":{
+   "LeftShootPose":{
     "x":{
-     "exp":"5.45 m",
-     "val":5.45
+     "exp":"3.982003688812256 m",
+     "val":3.982003688812256
     },
     "y":{
-     "exp":"4.76 m",
-     "val":4.76
+     "exp":"7.401848316192627 m",
+     "val":7.401848316192627
     },
     "heading":{
-     "exp":"0 deg",
-     "val":0.0
+     "exp":"LeftShootPose.heading",
+     "val":3.141592653589793
     }
    }
   }

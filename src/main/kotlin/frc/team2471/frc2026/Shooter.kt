@@ -27,6 +27,9 @@ import frc.team2471.frc2026.AimUtils.toExitVelocity
 import org.littletonrobotics.junction.AutoLogOutput
 import org.littletonrobotics.junction.Logger
 import org.team2471.frc.lib.control.commands.finallyRun
+import org.team2471.frc.lib.control.commands.onlyRunWhileFalse
+import org.team2471.frc.lib.control.commands.onlyRunWhileTrue
+import org.team2471.frc.lib.control.commands.parallelCommand
 import org.team2471.frc.lib.control.commands.runCommand
 import org.team2471.frc.lib.control.commands.runOnceCommand
 import org.team2471.frc.lib.ctre.addFollower
@@ -48,7 +51,6 @@ import org.team2471.frc.lib.units.asMeters
 import org.team2471.frc.lib.units.asMetersPerSecond
 import org.team2471.frc.lib.units.asRadiansPerSecond
 import org.team2471.frc.lib.units.asRotation2d
-import org.team2471.frc.lib.units.asRotationsPerSecond
 import org.team2471.frc.lib.units.asVolts
 import org.team2471.frc.lib.units.cos
 import org.team2471.frc.lib.units.degrees
@@ -71,42 +73,41 @@ object Shooter: SubsystemBase("Shooter") {
 
     // feet, rot/s (of the wheel not the motor)
     val hubSpeedCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
-        put(3.0, 55.36)
-        put(4.0, 55.902)
-        put(5.0, 57.981)
-        put(6.0, 58.679)
-        put(7.0, 59.826)
-        put(8.0, 61.104)
-        put(9.0, 62.507)
-        put(10.0, 64.026)
-        put(11.0, 66.5)
-        put(12.0, 68.0)
-        put(13.0, 69.8)
-        put(14.0, 72.302)
-        put(15.0, 74.5)
-        put(16.0, 77.944)
-        put(17.0, 80.096)
-        put(18.0, 83.309)
+        put(3.0, 59.07)
+        put(4.0, 59.564)
+        put(5.0, 61.646)
+        put(6.0, 62.255)
+        put(7.0, 63.053)
+        put(8.0, 64.763)
+        put(9.0, 66.095)
+        put(10.0, 67.538)
+        put(11.0, 69.085)
+        put(12.0, 70.73)
+        put(13.0, 72.466)
+        put(14.0, 74.287)
+        put(15.0, 76.187)
+        put(16.0, 78.161)
+        put(17.0, 79.961)
+        put(18.0, 81.863)
     }
     // feet, degrees
     val hubAngleCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
-        put(3.0, 80.849)
-        put(4.0, 77.878)
-        put(5.0, 74.183)
-        put(6.0, 71.514)
-        put(7.0, 68.777)
-        put(8.0, 66.148)
-        put(9.0, 63.632)
-        put(10.0, 61.23)
-        put(11.0, 59.009)
-        put(12.0, 56.836)
-        put(13.0, 54.762)
-        put(14.0, 52.81)
-        put(15.0, 50.912)
-        put(16.0, 49.11)
-        put(17.0, 49.0)
-        put(18.0, 48.8)
-
+        put(3.0, 81.549)
+        put(4.0, 78.795)
+        put(5.0, 75.281)
+        put(6.0, 72.803)
+        put(7.0, 70.346)
+        put(8.0, 67.655)
+        put(9.0, 65.271)
+        put(10.0, 62.985)
+        put(11.0, 60.797)
+        put(12.0, 58.708)
+        put(13.0, 56.716)
+        put(14.0, 54.819)
+        put(15.0, 53.015)
+        put(16.0, 51.299)
+        put(17.0, 49.684)
+        put(18.0, 48.14)
     }
 
     //feet, s
@@ -131,42 +132,42 @@ object Shooter: SubsystemBase("Shooter") {
 
     // feet, m/s
     val floorSpeedCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
-        put(5.0, 4.754)
-        put(6.0, 4.86)
-        put(7.0, 4.983)
-        put(8.0, 5.121)
-        put(9.0, 5.368)
-        put(10.0, 5.638)
-        put(11.0, 5.78)
-        put(12.0, 5.978)
-        put(13.0, 6.194)
-        put(14.0, 6.419)
-        put(15.0, 6.652)
-        put(16.0, 6.893)
-        put(17.0, 7.14)
-        put(18.0, 7.415)
-        put(19.0, 7.707)
-        put(20.0, 7.925)
-        put(21.0, 8.204)
-        put(22.0, 8.474)
-        put(23.0, 8.748)
-        put(24.0, 9.026)
-        put(25.0, 9.306)
-        put(26.0, 9.69)
-        put(27.0, 9.922)
-        put(28.0, 10.163)
-        put(29.0, 10.453)
-        put(30.0, 10.745)
-        put(31.0, 11.039)
-        put(32.0, 11.411)
-        put(33.0, 11.725)
-        put(34.0, 12.018)
-        put(35.0, 12.346)
-        put(36.0, 12.711)
-        put(37.0, 12.902)
-        put(38.0, 13.263)
-        put(39.0, 13.42)
-        put(40.0, 13.862)
+        put(5.0, 44.462)
+        put(6.0, 45.456)
+        put(7.0, 46.604)
+        put(8.0, 47.893)
+        put(9.0, 50.202)
+        put(10.0, 52.728)
+        put(11.0, 54.052)
+        put(12.0, 55.907)
+        put(13.0, 57.927)
+        put(14.0, 60.032)
+        put(15.0, 62.214)
+        put(16.0, 64.464)
+        put(17.0, 66.777)
+        put(18.0, 69.349)
+        put(19.0, 72.074)
+        put(20.0, 74.115)
+        put(21.0, 76.721)
+        put(22.0, 79.251)
+        put(23.0, 81.814)
+        put(24.0, 84.409)
+        put(25.0, 87.031)
+        put(26.0, 90.626)
+        put(27.0, 92.792)
+        put(28.0, 95.046)
+        put(29.0, 97.76)
+        put(30.0, 100.493)
+        put(31.0, 103.242)
+        put(32.0, 106.72)
+        put(33.0, 109.65)
+        put(34.0, 112.396)
+        put(35.0, 115.459)
+        put(36.0, 118.88)
+        put(37.0, 120.661)
+        put(38.0, 124.042)
+        put(39.0, 125.51)
+        put(40.0, 129.644)
     }
     // feet, degrees
     val floorAngleCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
@@ -281,7 +282,7 @@ object Shooter: SubsystemBase("Shooter") {
     var fuel2: MutableList<FuelSim> = mutableListOf()
 
     @get:AutoLogOutput(key = "Shooter/Ramped up")
-    val rampedUp: Boolean get() = (shooterVelocity - shooterVelocitySetpoint).absoluteValue() < 10.0.rotationsPerSecond
+    val rampedUp: Boolean get() = (shooterVelocity - shooterVelocitySetpoint).absoluteValue() < 5.0.rotationsPerSecond
 
     var isShooting = false
     var i = 0
@@ -358,37 +359,67 @@ object Shooter: SubsystemBase("Shooter") {
 //        shooterMotor.setControl(VoltageOut(shooterController.updateVoltage(shooterAngularVelocitySetpoint.asRotationsPerSecond, shooterAngularVelocity.asRotationsPerSecond)))
     }
 
-
-    fun shoot(): Command = runCommand {
-        if (!FieldManager.inTrenchArea && !Turret.isTurretWrapping && rampedUp) {
-            isShooting = true
-            Spindexer.currentState = Spindexer.State.ON
-
-            hoodAngleSetpoint = (
-                if (AimUtils.isAimingAtGoal)
-                    BALL_ANGLE_AT_HOOD_ZERO - hubAngleCurve.get(AimUtils.distanceToTarget.asFeet)
-                else
-                    BALL_ANGLE_AT_HOOD_ZERO - floorAngleCurve.get(AimUtils.distanceToTarget.asFeet)
-            ).degrees
-        } else {
+    fun shootOrRamp(): Command {
+        return parallelCommand(
+            runCommand(Shooter) {
+                rampUpLoop()
+            },
+            runCommand {
+                shootLoop()
+            }.onlyRunWhileTrue { OI.driverController.rightTriggerAxis >= 0.1 }.repeatedly(),
+            runCommand {
+                isShooting = false
+                Spindexer.currentState = Spindexer.State.OFF
+                hoodAngleSetpoint = HOOD_STOW_SETPOINT.degrees
+            }.onlyRunWhileFalse { OI.driverController.rightTriggerAxis >= 0.1 }.repeatedly()
+        ).finallyRun {
             isShooting = false
             Spindexer.currentState = Spindexer.State.OFF
             hoodAngleSetpoint = HOOD_STOW_SETPOINT.degrees
         }
+    }
+
+
+    fun shoot(): Command = runCommand(Shooter) {
+        shootLoop()
+        rampUpLoop()
     }.finallyRun {
         isShooting = false
         Spindexer.currentState = Spindexer.State.OFF
         hoodAngleSetpoint = HOOD_STOW_SETPOINT.degrees
     }
 
-
-    fun rampUp(): Command = runCommand(Shooter) {
+    fun rampUpLoop() {
         if (Robot.isAutonomous) {
             shooterVelocitySetpoint = (if (AimUtils.isAimingAtGoal) hubSpeedCurve.get(AimUtils.distanceToTarget.asFeet) else hubSpeedCurve.get(11.0)).rotationsPerSecond / SHOOTER_GEAR_RATIO
         } else {
             shooterVelocitySetpoint = (if (AimUtils.isAimingAtGoal) hubSpeedCurve.get(AimUtils.distanceToTarget.asFeet) else floorSpeedCurve.get(AimUtils.distanceToTarget.asFeet)).rotationsPerSecond / SHOOTER_GEAR_RATIO
         }
-    }.finallyRun { shooterVelocitySetpoint = 0.0.rotationsPerSecond }
+    }
+
+    fun shootLoop() {
+        println("Shoot Loop!!!")
+        if (!FieldManager.inTrenchArea && !Turret.isTurretWrapping && rampedUp && (FieldManager.hubIsActive || !AimUtils.isAimingAtGoal)) {
+            isShooting = true
+            Spindexer.currentState = Spindexer.State.ON
+        } else {
+            isShooting = false
+            Spindexer.currentState = Spindexer.State.OFF
+        }
+
+        hoodAngleSetpoint = (
+                if (AimUtils.isAimingAtGoal)
+                    BALL_ANGLE_AT_HOOD_ZERO - hubAngleCurve.get(AimUtils.distanceToTarget.asFeet)
+                else
+                    BALL_ANGLE_AT_HOOD_ZERO - floorAngleCurve.get(AimUtils.distanceToTarget.asFeet)
+                ).degrees
+
+    }
+
+
+    fun rampUp(): Command = runCommand(Shooter) {
+        rampUpLoop()
+    }
 
     fun rampDown(): Command = runOnceCommand(Shooter) {
         shooterVelocitySetpoint = 0.0.rotationsPerSecond
