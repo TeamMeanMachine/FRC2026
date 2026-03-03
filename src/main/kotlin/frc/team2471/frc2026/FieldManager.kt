@@ -7,20 +7,13 @@ import edu.wpi.first.math.geometry.Translation2d
 import edu.wpi.first.networktables.NetworkTableInstance
 import edu.wpi.first.units.measure.Distance
 import edu.wpi.first.wpilibj.DriverStation
+import frc.team2471.frc2026.FieldManager.reflectAcrossField
+import frc.team2471.frc2026.FieldManager.rotateAroundField
 import frc.team2471.frc2026.Robot.isAutonomous
 import org.littletonrobotics.junction.AutoLogOutput
 import org.littletonrobotics.junction.Logger
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser
-import org.team2471.frc.lib.units.asMeters
-import org.team2471.frc.lib.units.asRotation2d
-import org.team2471.frc.lib.units.degrees
-import org.team2471.frc.lib.units.meters
-import org.team2471.frc.lib.units.UTranslation2d
-import org.team2471.frc.lib.units.absoluteValue
-import org.team2471.frc.lib.units.asFeet
-import org.team2471.frc.lib.units.feet
-import org.team2471.frc.lib.units.inches
-import org.team2471.frc.lib.units.wrap
+import org.team2471.frc.lib.units.*
 import org.team2471.frc.lib.util.isRedAlliance
 import kotlin.math.absoluteValue
 import kotlin.math.floor
@@ -28,7 +21,6 @@ import kotlin.math.sign
 
 object FieldManager {
     private val table = NetworkTableInstance.getDefault().getTable("FieldManager")
-    val redWonAutoOverrideEntry = table.getEntry("RedWonAuto?")
 
     val aprilTagFieldLayout: AprilTagFieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded) //AprilTagFieldLayout(Filesystem.getDeployDirectory().path + "/2026Field.json")
     val allAprilTags = aprilTagFieldLayout.tags
@@ -47,9 +39,9 @@ object FieldManager {
     val blueHubTags = allAprilTags.filter { it.ID in 18..21 || it.ID in 24..27 }
     val hubTags = redHubTags + blueHubTags
 
-    val overrideAutoWinner: LoggedDashboardChooser<String> =
-        LoggedDashboardChooser<String>("Override Auto Winner").apply {
-            addOption("None", null)
+    val overrideAutoWinner: LoggedDashboardChooser<String?> =
+        LoggedDashboardChooser<String?>("Override Auto Winner").apply {
+            addDefaultOption("No Override", null)
             addOption("Red", "R")
             addOption("Blue", "B")
         }
@@ -126,20 +118,17 @@ object FieldManager {
 
     @get:AutoLogOutput(key = "FieldManager/gameData")
     val gameData: String
-        get() = if (overrideAutoWinner.get() == null) DriverStation.getGameSpecificMessage() else overrideAutoWinner.get()
+        get() = overrideAutoWinner.get() ?: DriverStation.getGameSpecificMessage()
 
     @get:AutoLogOutput(key = "FieldManager/redWonAuto")
     val redWonAuto: Boolean
-        get () = when (gameData) {
+        get() = when (gameData) {
             "R" -> true
             "B" -> false
-            else -> redWonAutoOverride
+            else -> prevRedWonAuto
         }.also { prevRedWonAuto = it }
 
-    val redWonAutoOverride: Boolean
-        get() = redWonAutoOverrideEntry.getBoolean(true)
-
-    private var prevRedWonAuto: Boolean = true
+    private var prevRedWonAuto: Boolean = true //By default, we assume red won
 
     val blueWonAuto: Boolean
         get () = !redWonAuto

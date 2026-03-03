@@ -17,6 +17,7 @@ import org.team2471.frc.lib.control.commands.runOnceCommand
 import org.team2471.frc.lib.control.commands.sequenceCommand
 import org.team2471.frc.lib.control.commands.waitCommand
 import org.team2471.frc.lib.control.commands.waitUntilCommand
+import org.team2471.frc.lib.swerve.sideToSideFlip
 
 
 object Autonomous: Autonomi() {
@@ -31,7 +32,8 @@ object Autonomous: Autonomi() {
         LoggedDashboardChooser<AutoCommand?>("Auto Chooser").apply {
             addOption("8 Foot Straight", AutoCommand(eightFootStraight()))
             addOption("6x6 Square", AutoCommand(squarePathTest()))
-            addOption("Left Side", AutoCommand(leftSide(), { paths["LeftSide"]!!.getInitialPose(Drive.flipChoreoPaths).get() }))
+            addOption("Double Swipe Left", AutoCommand(doubleSwipe(false), { paths["LeftSideDoubleSwipe"]!!.sideToSideFlip(false).getInitialPose(Drive.flipChoreoPaths).get() }))
+            addOption("Double Swipe Right", AutoCommand(doubleSwipe(true), { paths["LeftSideDoubleSwipe"]!!.sideToSideFlip(true).getInitialPose(Drive.flipChoreoPaths).get() }))
         }
 
     /** Chooser for test commands */
@@ -60,8 +62,8 @@ object Autonomous: Autonomi() {
         return Drive.driveAlongChoreoPath(paths["square"]!!, resetOdometry = true)
     }
 
-    private fun leftSide(): Command {
-        val path = paths["LeftSide"]!!
+    private fun doubleSwipe(doSideToSideFlip: Boolean): Command {
+        val path = paths["LeftSideDoubleSwipe"]!!.sideToSideFlip(doSideToSideFlip)
         return parallelCommand(
             sequenceCommand(
                 parallelCommand(
@@ -105,7 +107,7 @@ object Autonomous: Autonomi() {
                             Intake.stow()
                         }
                     ),
-                    Drive.driveAlongChoreoPath(path.getSplit(3).get(), resetOdometry = false, poseSupplier = Drive.localizer::pose),
+//                    Drive.driveAlongChoreoPath(path.getSplit(3).get(), resetOdometry = false, poseSupplier = Drive.localizer::pose),
                 )
             ),
             runCommand {
