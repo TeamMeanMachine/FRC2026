@@ -116,9 +116,13 @@ object FieldManager {
 
     const val HUB_PROCESSING_TIME = 1.0
 
+    @get:AutoLogOutput(key = "FieldManager/rawGameData")
+    val rawGameData: String
+        get() = DriverStation.getGameSpecificMessage()
+
     @get:AutoLogOutput(key = "FieldManager/gameData")
     val gameData: String
-        get() = overrideAutoWinner.get() ?: DriverStation.getGameSpecificMessage()
+        get() = overrideAutoWinner.get() ?: rawGameData
 
     @get:AutoLogOutput(key = "FieldManager/redWonAuto")
     val redWonAuto: Boolean
