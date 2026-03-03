@@ -4,6 +4,7 @@ import edu.wpi.first.apriltag.AprilTagFieldLayout
 import edu.wpi.first.apriltag.AprilTagFields
 import edu.wpi.first.math.geometry.Pose2d
 import edu.wpi.first.math.geometry.Translation2d
+import edu.wpi.first.networktables.NetworkTableInstance
 import edu.wpi.first.units.measure.Distance
 import edu.wpi.first.wpilibj.DriverStation
 import frc.team2471.frc2026.Robot.isAutonomous
@@ -26,6 +27,9 @@ import kotlin.math.floor
 import kotlin.math.sign
 
 object FieldManager {
+    private val table = NetworkTableInstance.getDefault().getTable("FieldManager")
+    val redWonAutoOverrideEntry = table.getEntry("RedWonAuto?")
+
     val aprilTagFieldLayout: AprilTagFieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded) //AprilTagFieldLayout(Filesystem.getDeployDirectory().path + "/2026Field.json")
     val allAprilTags = aprilTagFieldLayout.tags
 
@@ -129,8 +133,11 @@ object FieldManager {
         get () = when (gameData) {
             "R" -> true
             "B" -> false
-            else -> prevRedWonAuto
+            else -> redWonAutoOverride
         }.also { prevRedWonAuto = it }
+
+    val redWonAutoOverride: Boolean
+        get() = redWonAutoOverrideEntry.getBoolean(true)
 
     private var prevRedWonAuto: Boolean = true
 
@@ -152,7 +159,7 @@ object FieldManager {
     @get:AutoLogOutput(key = "FieldManager/hubIsActive")
     val hubIsActive: Boolean
         get () {
-            if (matchTime > 130.0 - AimUtils.SHOT_AIRTIME - HUB_PROCESSING_TIME || matchTime < 30.0 - AimUtils.SHOT_AIRTIME - HUB_PROCESSING_TIME || isAutonomous) {
+            if (matchTime > 130.0 + AimUtils.SHOT_AIRTIME + HUB_PROCESSING_TIME || matchTime < 30.0 + AimUtils.SHOT_AIRTIME + HUB_PROCESSING_TIME || isAutonomous) {
                 return true
             }
             if ((floor((matchTime - 30.0 - AimUtils.SHOT_AIRTIME - HUB_PROCESSING_TIME)/25.0)) % 2 == 0.0) {

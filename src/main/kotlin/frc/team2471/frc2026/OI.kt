@@ -94,6 +94,10 @@ object OI: SubsystemBase("OI") {
             Shooter.shooterVelocitySetpoint = 0.0.rotationsPerSecond
         }
 
+        if (!FieldManager.redWonAutoOverrideEntry.exists()) {
+            FieldManager.redWonAutoOverrideEntry.setBoolean(true)
+        }
+
         // Zero Gyro
         driverController.back().onTrue({
                 println("zero gyro")
