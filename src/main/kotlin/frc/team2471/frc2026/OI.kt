@@ -94,10 +94,6 @@ object OI: SubsystemBase("OI") {
             Shooter.shooterVelocitySetpoint = 0.0.rotationsPerSecond
         }
 
-        if (!FieldManager.redWonAutoOverrideEntry.exists()) {
-            FieldManager.redWonAutoOverrideEntry.setBoolean(true)
-        }
-
         // Zero Gyro
         driverController.back().onTrue({
                 println("zero gyro")
@@ -109,8 +105,7 @@ object OI: SubsystemBase("OI") {
             Drive.pose = Pose2d(Translation2d(3.0, 3.0), Drive.heading)
         }.toCommand(Drive).ignoringDisable(true))
 
-        driverController.a().onTrue(runOnceCommand { Shooter.hoodAngleSetpoint = 0.0.degrees })
-        driverController.y().onTrue(Intake.home())
+        (driverController.y().and(driverController.povDown().negate())).onTrue(Intake.home())
 
 //        driverController.rightTrigger(0.1).whileTrue(runCommand {
 //                Spindexer.currentState = Spindexer.State.ON
@@ -121,7 +116,7 @@ object OI: SubsystemBase("OI") {
 //        driverController.rightTrigger(0.1).whileTrue(Shooter.shoot())
 //        driverController.rightBumper().whileTrue(runCommand { Shooter.rampUpLoop() })
 
-        driverController.leftTrigger(0.05).whileTrue(parallelCommand( runCommand {
+        driverController.leftTrigger(0.04).whileTrue(parallelCommand( runCommand {
             Intake.intakeState = Intake.IntakeState.INTAKING
         }.finallyRun { Intake.intakeState = Intake.IntakeState.OFF },
 //            Drive.snakeMode()
@@ -141,6 +136,8 @@ object OI: SubsystemBase("OI") {
                 Intake.deepStow()
             }
         })
+
+        (driverController.povDown().and(driverController.y())).onTrue(Intake.homeDeploy())
     }
 
     override fun periodic() {

@@ -27,9 +27,6 @@ import kotlin.math.floor
 import kotlin.math.sign
 
 object FieldManager {
-    private val table = NetworkTableInstance.getDefault().getTable("FieldManager")
-    val redWonAutoOverrideEntry = table.getEntry("RedWonAuto?")
-
     val aprilTagFieldLayout: AprilTagFieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded) //AprilTagFieldLayout(Filesystem.getDeployDirectory().path + "/2026Field.json")
     val allAprilTags = aprilTagFieldLayout.tags
 
@@ -133,11 +130,9 @@ object FieldManager {
         get () = when (gameData) {
             "R" -> true
             "B" -> false
-            else -> redWonAutoOverride
+            else -> prevRedWonAuto
         }.also { prevRedWonAuto = it }
 
-    val redWonAutoOverride: Boolean
-        get() = redWonAutoOverrideEntry.getBoolean(true)
 
     private var prevRedWonAuto: Boolean = true
 

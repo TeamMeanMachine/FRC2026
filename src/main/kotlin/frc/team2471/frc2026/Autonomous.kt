@@ -105,7 +105,7 @@ object Autonomous: Autonomi() {
                             Intake.stow()
                         }
                     ),
-                    Drive.driveAlongChoreoPath(path.getSplit(3).get(), resetOdometry = false, poseSupplier = Drive.localizer::pose),
+//                    Drive.driveAlongChoreoPath(path.getSplit(3).get(), resetOdometry = false, poseSupplier = Drive.localizer::pose),
                 )
             ),
             runCommand {

@@ -407,12 +407,18 @@ object Shooter: SubsystemBase("Shooter") {
             Spindexer.currentState = Spindexer.State.OFF
         }
 
-        hoodAngleSetpoint = (
+        if (!FieldManager.inTrenchArea) {
+            hoodAngleSetpoint = (
                 if (AimUtils.isAimingAtGoal)
                     BALL_ANGLE_AT_HOOD_ZERO - hubAngleCurve.get(AimUtils.distanceToTarget.asFeet)
                 else
                     BALL_ANGLE_AT_HOOD_ZERO - floorAngleCurve.get(AimUtils.distanceToTarget.asFeet)
-                ).degrees
+            ).degrees
+        } else {
+            hoodAngleSetpoint = HOOD_STOW_SETPOINT.degrees
+        }
+
+
 
     }
 

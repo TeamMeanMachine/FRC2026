@@ -9,6 +9,7 @@ import edu.wpi.first.networktables.NetworkTableInstance
 import edu.wpi.first.wpilibj.DigitalInput
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.SubsystemBase
+import edu.wpi.first.wpilibj2.command.button.NetworkButton
 import org.littletonrobotics.junction.AutoLogOutput
 import org.team2471.frc.lib.control.commands.finallyRun
 import org.team2471.frc.lib.control.commands.onlyRunWhileFalse
@@ -26,6 +27,7 @@ import kotlin.math.absoluteValue
 
 object Intake: SubsystemBase("Intake") {
     private val table = NetworkTableInstance.getDefault().getTable("Intake")
+
     val deployPoseEntry = table.getEntry("deployPose")
     val stowPoseEntry = table.getEntry("stowPose")
     val deepStowPoseEntry = table.getEntry("deepStowPose")
@@ -169,6 +171,11 @@ object Intake: SubsystemBase("Intake") {
 //            stow()
         }
     )
+
+
+    fun homeDeploy(): Command = runOnce {
+        deployMotor.setPosition(deployPosition)
+    }
 
 
     private fun default(): Command = runCommand(this) {

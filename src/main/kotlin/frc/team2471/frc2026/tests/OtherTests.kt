@@ -1,15 +1,19 @@
 package frc.team2471.frc2026.tests
 
-import edu.wpi.first.wpilibj2.command.Command
 import frc.team2471.frc2026.AimUtils
 import frc.team2471.frc2026.AimUtils.printShooterCurves
 import frc.team2471.frc2026.Drive
 import frc.team2471.frc2026.Turret
 import frc.team2471.frc2026.Intake
-import org.team2471.frc.lib.control.commands.runCommand
+import frc.team2471.frc2026.Shooter
+import frc.team2471.frc2026.Spindexer
 import org.team2471.frc.lib.control.commands.runOnce
 import org.team2471.frc.lib.control.commands.runOnceCommand
+import org.team2471.frc.lib.control.commands.sequenceCommand
+import org.team2471.frc.lib.control.commands.waitCommand
+import org.team2471.frc.lib.coroutines.delay
 import org.team2471.frc.lib.units.asDegrees
+import org.team2471.frc.lib.units.degrees
 
 // Prints the hub curves using a gradle task. Needs a main function in a class so I put it here.
 object PrintHubCurves {
@@ -39,7 +43,38 @@ fun zeroTurretEncoders() = runOnceCommand(Turret) {
 
     println("Zeroed turret encoders")
 }
-fun intakeTest() = runCommand() {
-    Intake.stow()
-    Intake.deploy()
-}
+
+fun intakeTest() = sequenceCommand(
+    runOnce{Intake.stow()},
+    waitCommand(2.0),
+    runOnce{Intake.deploy()},
+    waitCommand(2.0),
+    runOnce{Intake.intakeState = Intake.IntakeState.INTAKING},
+    waitCommand(2.0),
+    runOnce{Intake.intakeState = Intake.IntakeState.SPITTING},
+    waitCommand(2.0),
+    runOnce{Intake.stow()},
+    waitCommand(2.0),
+    runOnce{println("Intake tested")},
+    )
+
+// TODO: NOT USE FIELD CENTRIC SETPOINT
+fun turretTest() = sequenceCommand(
+    runOnce {Turret.setTurretOffset(270.0.degrees)},
+    waitCommand(2.0),
+    runOnce{Turret.setTurretOffset(-540.0.degrees)},
+    waitCommand(2.0),
+    runOnce{Turret.setTurretOffset(270.0.degrees)},
+    waitCommand(2.0),
+    runOnce{Turret.setTurretOffset(-90.0.degrees)},
+    waitCommand(2.0),
+    runOnce{Turret.setTurretOffset(180.0.degrees)},
+    waitCommand(2.0),
+    runOnce{Turret.setTurretOffset(-90.0.degrees) },
+    runOnce{println("Turret tested")}
+)
+fun spindexerAndShooterTest() = sequenceCommand(
+    runOnce{Spindexer.State.ON},
+    waitCommand(2.0),
+    runOnce{ Shooter.shoot()}
+)

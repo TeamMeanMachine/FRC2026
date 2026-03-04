@@ -48,9 +48,9 @@ object Spindexer: SubsystemBase("Spindexer") {
     val doSpinSlowdownEntry = table.getEntry("Do Spin Slowdown")
     val doSineSpinSlowdownEntry = table.getEntry("Do Sin Spin Slowdown")
 
-    val SPIN_VELOCITY: Double get() = spinVelocityEntry.getDouble(81.5)
+    val SPIN_VELOCITY: Double get() = spinVelocityEntry.getDouble(78.0)
     val SPIN_LOWER_VELOCITY: Double get() = spinLowerVelocityEntry.getDouble(40.0)
-    val SIDETAKE_VELOCITY: Double get() = sidetakeVelocityEntry.getDouble(105.0)
+    val SIDETAKE_VELOCITY: Double get() = sidetakeVelocityEntry.getDouble(115.0)
     val UPTAKE_VELOCITY: Double get() = uptakeVelocityEntry.getDouble(129.0)
     val AGITATE_VELOCITY: Double get() = agitateVelocityEntry.getDouble(20.0)
 
@@ -89,7 +89,7 @@ object Spindexer: SubsystemBase("Spindexer") {
     var spinMotorVelocitySetpoint: Double = 0.0
         set(value) {
             spinMotor.setControl(
-                if (value == 0.0) NeutralOut() else MotionMagicVelocityTorqueCurrentFOC(value)
+                if (value == 0.0) NeutralOut() else VelocityTorqueCurrentFOC(value)
             )
             field = value
         }
@@ -153,9 +153,8 @@ object Spindexer: SubsystemBase("Spindexer") {
             inverted(false)
             coastMode()
             s(2.0, StaticFeedforwardSignValue.UseVelocitySign)
-            p(7.0)
+            p(6.0)
 
-            MotionMagic.MotionMagicAcceleration = 100.0
 
             OpenLoopRamps.TorqueOpenLoopRampPeriod = 10.0
         }
