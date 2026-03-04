@@ -121,9 +121,9 @@ object OI: SubsystemBase("OI") {
         }.finallyRun { Intake.intakeState = Intake.IntakeState.OFF },
 //            Drive.snakeMode()
         ))
-        driverController.leftStick().whileTrue(runCommand {
-            Intake.intakeState = Intake.IntakeState.SPITTING
-        }.finallyRun { Intake.intakeState = Intake.IntakeState.OFF })
+//        driverController.leftStick().whileTrue(runCommand {
+//            Intake.intakeState = Intake.IntakeState.SPITTING
+//        }.finallyRun { Intake.intakeState = Intake.IntakeState.OFF })
 
         driverController.leftBumper().whileTrue(waitCommand(1.0).finallyRun { wasSuspended ->
             if (wasSuspended) {
