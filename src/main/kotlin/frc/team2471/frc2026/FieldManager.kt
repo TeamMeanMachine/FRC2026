@@ -151,7 +151,7 @@ object FieldManager {
     val hubCountdownEntry = table.getEntry("HubCountdown")
     val activeHubEntry = table.getEntry("ActiveHub")
 
-    // this is offset by shoot time. for shooting
+    // this is offset by shoot time. for shooting /O\
     @get:AutoLogOutput(key = "FieldManager/shouldShoot")
     val shouldShoot: Boolean
         get () {

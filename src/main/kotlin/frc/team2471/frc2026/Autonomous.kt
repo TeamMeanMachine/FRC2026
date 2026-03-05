@@ -74,15 +74,15 @@ object Autonomous: Autonomi() {
                             Intake.intakeState = Intake.IntakeState.INTAKING
                             println("Intake finished homing. Running Intake")
                         }
-                    ),
+                    ).withName("Intake homing"),
                     sequenceCommand(
                         Drive.driveAlongChoreoPath(path.getSplit(0).get(), resetOdometry = true, poseSupplier = Drive::pose),
                         Drive.driveAlongChoreoPath(path.getSplit(1).get(), resetOdometry = false, poseSupplier = Drive.localizer::pose),
                         runOnceCommand {
                             Intake.intakeState = Intake.IntakeState.OFF
                         }
-                    ),
-                ),
+                    ).withName("first driving double swipe auto")
+                ).withName("First component Double swipe auto"),
                 parallelCommand(
                     Shooter.shoot(),
                     runOnceCommand {
@@ -109,10 +109,10 @@ object Autonomous: Autonomi() {
                     ),
 //                    Drive.driveAlongChoreoPath(path.getSplit(3).get(), resetOdometry = false, poseSupplier = Drive.localizer::pose),
                 )
-            ),
+            ).withName("Double Swipe auto sequence"),
             runCommand {
                 Shooter.rampUpLoop()
-            }
-        )
+            }.withName("Shooter ramp up loop")
+        ).withName("Double swipe auto")
     }
 }

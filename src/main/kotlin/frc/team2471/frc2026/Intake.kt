@@ -9,8 +9,8 @@ import edu.wpi.first.networktables.NetworkTableInstance
 import edu.wpi.first.wpilibj.DigitalInput
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.SubsystemBase
-import edu.wpi.first.wpilibj2.command.button.NetworkButton
 import org.littletonrobotics.junction.AutoLogOutput
+import org.team2471.frc.lib.control.LoopLogger
 import org.team2471.frc.lib.control.commands.finallyRun
 import org.team2471.frc.lib.control.commands.onlyRunWhileFalse
 import org.team2471.frc.lib.control.commands.onlyRunWhileTrue
@@ -179,6 +179,7 @@ object Intake: SubsystemBase("Intake") {
 
 
     private fun default(): Command = runCommand(this) {
+        LoopLogger.record("b4 Intake default")
         when (intakeState) {
             IntakeState.OFF -> {
                 velocitySetpoint = 0.0
@@ -207,6 +208,7 @@ object Intake: SubsystemBase("Intake") {
                 deployMotor.setControl(NeutralOut())
             }
         }
+        LoopLogger.record("Intake default")
     }
 
     enum class IntakeState {

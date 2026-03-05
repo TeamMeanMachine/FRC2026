@@ -48,7 +48,6 @@ import kotlin.math.abs
 import org.team2471.frc.lib.coroutines.periodic
 import org.team2471.frc.lib.ctre.alternateFeedbackSensor
 import org.team2471.frc.lib.ctre.coastMode
-import org.team2471.frc.lib.math.round
 import org.team2471.frc.lib.units.asFeet
 import org.team2471.frc.lib.units.rotationsPerSecond
 import kotlin.collections.toDoubleArray
@@ -290,7 +289,7 @@ object Turret: SubsystemBase("Turret") {
                 if ((fieldCentricAngle - fieldCentricTurretMotorRotorAngle.unWrap(fieldCentricAngle)).absoluteValue() > 1.0.degrees && turretVelocity.absoluteValue() < 3.0.rotationsPerSecond) {
                     GlobalScope.launch {
 //                        println("setting turret pigeon yaw to motor angle")
-                        println("Detected Error. Trying to change gyro angle from ${fieldCentricAngle.asDegrees.round(3)} to ${fieldCentricTurretMotorRotorAngle.unWrap(fieldCentricAngle).asDegrees.round(3)}")
+//                        println("Detected Error. Trying to change gyro angle from ${fieldCentricAngle.asDegrees.round(3)} to ${fieldCentricTurretMotorRotorAngle.unWrap(fieldCentricAngle).asDegrees.round(3)}")
 
                         turretPigeon.setYaw(fieldCentricTurretMotorRotorAngle.unWrap(fieldCentricAngle))
 //                        println("finished setting turret pigeon yaw")
@@ -302,9 +301,9 @@ object Turret: SubsystemBase("Turret") {
                     tempHeadingResetAngle = null
                     Drive.headingAngleUnwrapped = tempResetAngle
                     GlobalScope.launch {
-                        println("setting turret pigeon yaw")
+//                        println("setting turret pigeon yaw")
                         turretPigeon.setYaw(fieldCentricFusedEncoderAngle.unWrap(fieldCentricAngle))
-                        println("finished setting turret pigeon yaw")
+//                        println("finished setting turret pigeon yaw")
                     }
                 }
                 Drive.headingAngleUnwrapped = Drive.heading.measure.unWrap(Drive.headingAngleUnwrapped)
