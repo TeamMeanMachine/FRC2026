@@ -399,7 +399,7 @@ object Shooter: SubsystemBase("Shooter") {
 
     fun shootLoop() {
         println("Shoot Loop!!!")
-        if (!FieldManager.inTrenchArea && !Turret.isTurretWrapping && rampedUp && (FieldManager.hubIsActive || !AimUtils.isAimingAtGoal)) {
+        if (!FieldManager.inTrenchArea && !Turret.isTurretWrapping && rampedUp && (FieldManager.shouldShoot || !AimUtils.isAimingAtGoal)) {
             isShooting = true
             Spindexer.currentState = Spindexer.State.ON
         } else {

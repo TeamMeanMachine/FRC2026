@@ -10,9 +10,12 @@ import edu.wpi.first.wpilibj.DriverStation
 import frc.team2471.frc2026.FieldManager.reflectAcrossField
 import frc.team2471.frc2026.FieldManager.rotateAroundField
 import frc.team2471.frc2026.Robot.isAutonomous
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import org.littletonrobotics.junction.AutoLogOutput
 import org.littletonrobotics.junction.Logger
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser
+import org.team2471.frc.lib.coroutines.periodic
 import org.team2471.frc.lib.units.*
 import org.team2471.frc.lib.util.isRedAlliance
 import kotlin.math.absoluteValue
@@ -145,12 +148,12 @@ object FieldManager {
     val matchTime: Double
         get() = DriverStation.getMatchTime()
 
-    @get:AutoLogOutput(key = "FieldManager/matchCountdown")
-    val hubCountdown: Double
-        get() = if (matchTime > 130.0) matchTime - 130.0 else if (matchTime < 30.0) matchTime else (matchTime - 5) % 25.0
+    val hubCountdownEntry = table.getEntry("HubCountdown")
+    val activeHubEntry = table.getEntry("ActiveHub")
 
-    @get:AutoLogOutput(key = "FieldManager/hubIsActive")
-    val hubIsActive: Boolean
+    // this is offset by shoot time. for shooting
+    @get:AutoLogOutput(key = "FieldManager/shouldShoot")
+    val shouldShoot: Boolean
         get () {
             if (matchTime > 130.0 + AimUtils.SHOT_AIRTIME + HUB_PROCESSING_TIME || matchTime < 30.0 + AimUtils.SHOT_AIRTIME + HUB_PROCESSING_TIME || isAutonomous) {
                 return true
@@ -162,12 +165,39 @@ object FieldManager {
             }
         }
 
+    @get:AutoLogOutput(key = "FieldManager/hubIsActive")
+    val hubIsActive: Boolean
+        get () {
+            if (matchTime !in 30.0..130.0 || isAutonomous) {
+                return true
+            }
+            return if ((floor((matchTime - 30.0)/25.0)) % 2 == 0.0) {
+                weWonAuto
+            } else {
+                !weWonAuto
+            }
+        }
+
     init {
         val apriltagPositions = allAprilTags.map { it.pose }
         Logger.recordOutput("All apriltags", *apriltagPositions.toTypedArray())
         println("FieldManager init. Field dimensions: $fieldDimensions. ${allAprilTags.size} tags.")
-    }
 
+        GlobalScope.launch {
+            periodic {
+                hubCountdownEntry.setDouble(if (matchTime > 130.0) matchTime - 130.0 else if (matchTime < 30.0) matchTime else (matchTime - 5) % 25.0)
+                activeHubEntry.setString(
+                    if (isAutonomous || matchTime > 130.0 || matchTime < 30.0) {
+                        "Both"
+                    } else if (isRedAlliance == hubIsActive) {
+                        "Red"
+                    } else {
+                        "Blue"
+                    }
+                )
+            }
+        }
+    }
 
     /**
      * Reflects [Translation2d] across the midline of the field. Useful for mirrored field layouts (2023, 2024).
