@@ -89,7 +89,7 @@ object Spindexer: SubsystemBase("Spindexer") {
     var spinMotorVelocitySetpoint: Double = 0.0
         set(value) {
             spinMotor.setControl(
-                if (value == 0.0) NeutralOut() else VelocityTorqueCurrentFOC(value)
+                if (value == 0.0) NeutralOut() else MotionMagicVelocityTorqueCurrentFOC(value)
             )
             field = value
         }
@@ -154,6 +154,7 @@ object Spindexer: SubsystemBase("Spindexer") {
             coastMode()
             s(2.0, StaticFeedforwardSignValue.UseVelocitySign)
             p(6.0)
+            MotionMagic.MotionMagicAcceleration = 120.0
 
 
             OpenLoopRamps.TorqueOpenLoopRampPeriod = 10.0

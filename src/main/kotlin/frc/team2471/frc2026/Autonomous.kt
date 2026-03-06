@@ -87,8 +87,8 @@ object Autonomous: Autonomi() {
                     Shooter.shoot(),
                     runOnceCommand {
                         Intake.stow()
-                    }.beforeWait(0.25)
-                ).withTimeout(1.75),
+                    }.beforeWait(0.75)
+                ).withTimeout(2.0),
                 parallelCommand(
                     runOnceCommand {
                         Intake.deploy()
