@@ -68,20 +68,20 @@ object Autonomous: Autonomi() {
             sequenceCommand(
                 parallelCommand(
                     sequenceCommand(
+                        Drive.driveAlongChoreoPath(path.getSplit(0).get(), resetOdometry = true, poseSupplier = Drive::pose),
+                        Drive.driveAlongChoreoPath(path.getSplit(1).get(), resetOdometry = false, poseSupplier = Drive.localizer::pose),
+                        runOnceCommand {
+                            Intake.intakeState = Intake.IntakeState.OFF
+                        }
+                    ).withName("first driving double swipe auto"),
+                    sequenceCommand(
                         waitUntilCommand { Intake.finishedHoming },
                         runOnceCommand {
                             Intake.deploy()
                             Intake.intakeState = Intake.IntakeState.INTAKING
                             println("Intake finished homing. Running Intake")
                         }
-                    ).withName("Intake homing"),
-                    sequenceCommand(
-                        Drive.driveAlongChoreoPath(path.getSplit(0).get(), resetOdometry = true, poseSupplier = Drive::pose),
-                        Drive.driveAlongChoreoPath(path.getSplit(1).get(), resetOdometry = false, poseSupplier = Drive.localizer::pose),
-                        runOnceCommand {
-                            Intake.intakeState = Intake.IntakeState.OFF
-                        }
-                    ).withName("first driving double swipe auto")
+                    ).withName("Intake homing")
                 ).withName("First component Double swipe auto"),
                 parallelCommand(
                     Shooter.shoot(),

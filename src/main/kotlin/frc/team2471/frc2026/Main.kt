@@ -46,9 +46,6 @@ object Robot : LoggedRobot() {
 
     val commandScheduler = CommandScheduler.getInstance()
 
-    private val enabledTimer = Timer()
-    val timeSinceEnabled get() = enabledTimer.get()
-
     @get:JvmName("RobotIsEnabled")
     var isEnabled = false
         private set
@@ -161,9 +158,7 @@ object Robot : LoggedRobot() {
         LoopLogger.record("Robot periodic()")
     }
 
-    fun enabledInit() {
-        enabledTimer.restart()
-    }
+    fun enabledInit() {}
 
     /** Runs on alternate thread for loop times. Doesn't run sequential with rest of robot. Runs when robot is enabled */
     fun enabledInitAsync() {
@@ -210,8 +205,6 @@ object Robot : LoggedRobot() {
 
     /** This function is called once when teleop is enabled.  */
     override fun teleopInit() {
-        enabledTimer.restart()
-
     }
 
     /** This function is called periodically during operator control.  */
@@ -219,7 +212,6 @@ object Robot : LoggedRobot() {
 
     /** This function is called once when test mode is enabled.  */
     override fun testInit() {
-        enabledTimer.restart()
         CommandScheduler.getInstance().cancelAll() // Cancels all running commands at the start of test mode.
         CommandScheduler.getInstance().schedule((Autonomous.testCommand ?: Commands.runOnce({println("THE TEST COMMAND IS NULL")})))
     }
