@@ -183,6 +183,8 @@ object FieldManager {
         Logger.recordOutput("All apriltags", *apriltagPositions.toTypedArray())
         println("FieldManager init. Field dimensions: $fieldDimensions. ${allAprilTags.size} tags.")
 
+        Logger.recordOutput("Trench Poses", *trenchPositions)
+
         GlobalScope.launch {
             periodic {
                 hubCountdownEntry.setDouble(if (matchTime > 130.0) matchTime - 130.0 else if (matchTime < 30.0) matchTime else (matchTime - 5) % 25.0)
