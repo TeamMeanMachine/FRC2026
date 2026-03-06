@@ -197,11 +197,11 @@ object Robot : LoggedRobot() {
 
     /** This function is called once when auto is enabled.  */
     override fun autonomousInit() {
-        enabledTimer.restart()
+//        enabledTimer.restart()
 //        println("Autonomous init $timeSinceEnabled")
 //        Autonomous.setDrivePositionToAutoStartPose()
 //        println("scheduling auto command $timeSinceEnabled")
-        commandScheduler.schedule((Autonomous.autonomousCommand ?:Commands.runOnce({ println("THE AUTONOMOUS COMMAND IS NULL") })))
+        commandScheduler.schedule(Autonomous.autonomousCommand ?: Commands.runOnce({ println("THE AUTONOMOUS COMMAND IS NULL") }))
 //        println("scheduled auto command $timeSinceEnabled")
     }
 
