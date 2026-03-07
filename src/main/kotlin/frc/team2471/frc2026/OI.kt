@@ -9,9 +9,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase
 import org.team2471.frc.lib.control.LoopLogger
 import org.team2471.frc.lib.control.MeanCommandXboxController
 import org.team2471.frc.lib.control.commands.finallyRun
-import org.team2471.frc.lib.control.commands.parallelCommand
 import org.team2471.frc.lib.control.commands.runCommand
-import org.team2471.frc.lib.control.commands.runOnceCommand
 import org.team2471.frc.lib.control.commands.toCommand
 import org.team2471.frc.lib.control.commands.waitCommand
 import org.team2471.frc.lib.math.deadband
@@ -107,23 +105,26 @@ object OI: SubsystemBase("OI") {
 
         (driverController.y().and(driverController.povDown().negate())).onTrue(Intake.home())
 
-//        driverController.rightTrigger(0.1).whileTrue(runCommand {
-//                Spindexer.currentState = Spindexer.State.ON
-//        }.finallyRun { Spindexer.currentState = Spindexer.State.OFF })
-        driverController.rightTrigger(0.1).or(driverController.rightBumper()).whileTrue(
+        driverController.rightTrigger(0.1)
+            .or(driverController.rightBumper())
+            .or(driverController.povRight())
+            .whileTrue(
             Shooter.shootOrRamp()
         )
-//        driverController.rightTrigger(0.1).whileTrue(Shooter.shoot())
-//        driverController.rightBumper().whileTrue(runCommand { Shooter.rampUpLoop() })
 
-        driverController.leftTrigger(0.04).whileTrue(parallelCommand( runCommand {
+        driverController.povRight().whileTrue(
+            runCommand {
+                Intake.intakeState = Intake.IntakeState.INTAKING
+                Intake.deploy()
+            }.finallyRun {
+                Intake.intakeState = Intake.IntakeState.OFF
+                Intake.stow()
+            }
+        )
+
+        driverController.leftTrigger(0.04).whileTrue(runCommand {
             Intake.intakeState = Intake.IntakeState.INTAKING
-        }.finallyRun { Intake.intakeState = Intake.IntakeState.OFF },
-//            Drive.snakeMode()
-        ))
-//        driverController.leftStick().whileTrue(runCommand {
-//            Intake.intakeState = Intake.IntakeState.SPITTING
-//        }.finallyRun { Intake.intakeState = Intake.IntakeState.OFF })
+        }.finallyRun { Intake.intakeState = Intake.IntakeState.OFF })
 
         driverController.leftBumper().whileTrue(waitCommand(1.0).finallyRun { wasSuspended ->
             if (wasSuspended) {

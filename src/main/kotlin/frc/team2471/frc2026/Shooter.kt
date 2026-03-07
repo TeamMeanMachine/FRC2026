@@ -26,6 +26,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine
 import frc.team2471.frc2026.AimUtils.toExitVelocity
 import org.littletonrobotics.junction.AutoLogOutput
 import org.littletonrobotics.junction.Logger
+import org.team2471.frc.lib.control.Direction
 import org.team2471.frc.lib.control.LoopLogger
 import org.team2471.frc.lib.control.commands.finallyRun
 import org.team2471.frc.lib.control.commands.onlyRunWhileFalse
@@ -33,6 +34,7 @@ import org.team2471.frc.lib.control.commands.onlyRunWhileTrue
 import org.team2471.frc.lib.control.commands.parallelCommand
 import org.team2471.frc.lib.control.commands.runCommand
 import org.team2471.frc.lib.control.commands.runOnceCommand
+import org.team2471.frc.lib.control.dPad
 import org.team2471.frc.lib.ctre.addFollower
 import org.team2471.frc.lib.ctre.applyConfiguration
 import org.team2471.frc.lib.ctre.brakeMode
@@ -369,12 +371,12 @@ object Shooter: SubsystemBase("Shooter") {
             },
             runCommand {
                 shootLoop()
-            }.onlyRunWhileTrue { OI.driverController.rightTriggerAxis >= 0.1 }.repeatedly(),
+            }.onlyRunWhileTrue { OI.driverController.rightTriggerAxis >= 0.1 || OI.driverController.dPad == Direction.RIGHT }.repeatedly(),
             runCommand {
                 isShooting = false
                 Spindexer.currentState = Spindexer.State.OFF
                 hoodAngleSetpoint = HOOD_STOW_SETPOINT.degrees
-            }.onlyRunWhileFalse { OI.driverController.rightTriggerAxis >= 0.1 }.repeatedly()
+            }.onlyRunWhileFalse { OI.driverController.rightTriggerAxis >= 0.1 || OI.driverController.dPad == Direction.RIGHT }.repeatedly()
         ).finallyRun {
             isShooting = false
             Spindexer.currentState = Spindexer.State.OFF
