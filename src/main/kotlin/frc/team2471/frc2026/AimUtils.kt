@@ -12,6 +12,7 @@ import org.team2471.frc.lib.units.asDegrees
 import org.team2471.frc.lib.units.asInches
 import org.team2471.frc.lib.units.asInchesPerSecond
 import org.team2471.frc.lib.units.asMeters
+import org.team2471.frc.lib.units.asMetersPerSecond
 import org.team2471.frc.lib.units.asRadiansPerSecond
 import org.team2471.frc.lib.units.asRotationsPerSecond
 import org.team2471.frc.lib.units.cos
@@ -187,8 +188,8 @@ object AimUtils {
         }
     }
 
-    // constant(ish) exit velocity method. (time lut)
-    fun printShooterCurves(goalHeight: Distance, distRange: IntRange, speedRange: Pair<Double, Double>) {
+    // constant(ish) exit velocity method. (lut)
+    fun printShooterCurves(goalHeight: Distance, distRange: IntRange, speedRange: Pair<Double, Double>, printTimeCurve: Boolean = true) {
 
         val angles = mutableMapOf<Double, Double>()
         val speeds = mutableMapOf<Double, Double>()
@@ -196,7 +197,7 @@ object AimUtils {
 
         for (i in distRange) {
             val dist = i.toDouble()
-            val speed = ((speedRange.second - speedRange.first)/(distRange.endInclusive.toDouble() - distRange.start.toDouble()))*(i.toDouble() - distRange.start.toDouble()) + speedRange.first
+            val speed = (((speedRange.second - speedRange.first)/(distRange.endInclusive.toDouble() - distRange.start.toDouble()))*(i.toDouble() - distRange.start.toDouble()) + speedRange.first).rotationsPerSecond.toExitVelocity().asMetersPerSecond
             val angleAndTime = getAngleAndTime(dist.feet, goalHeight, speed)
             angles[dist] = angleAndTime.first.asDegrees
             speeds[dist] = speed.metersPerSecond.toWheelSpeed().asRotationsPerSecond
@@ -211,9 +212,11 @@ object AimUtils {
             println("put(${dist.round(3)}, ${speed.round(3)})")
         }
 
-        println("Time Curve:")
-        times.forEach { (dist, time) ->
-            println("put(${dist.round(3)}, ${time.round(3)})")
+        if (printTimeCurve) {
+            println("Time Curve:")
+            times.forEach { (dist, time) ->
+                println("put(${dist.round(3)}, ${time.round(3)})")
+            }
         }
 
     }

@@ -205,6 +205,7 @@ object Robot : LoggedRobot() {
 
     /** This function is called once when teleop is enabled.  */
     override fun teleopInit() {
+        Turret.disableTurret = false
     }
 
     /** This function is called periodically during operator control.  */

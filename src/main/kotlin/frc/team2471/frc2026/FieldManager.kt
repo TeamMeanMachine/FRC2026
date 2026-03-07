@@ -86,7 +86,7 @@ object FieldManager {
 
     val passPose: Translation2d
         get() {
-            var pose = Translation2d(3.0, 2.0)
+            var pose = Translation2d(0.5, 2.0)
 
             if (isRedAlliance) {
                 pose = Translation2d(fieldLength.asMeters - pose.x, pose.y)

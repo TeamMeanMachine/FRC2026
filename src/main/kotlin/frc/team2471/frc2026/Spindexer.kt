@@ -52,7 +52,7 @@ object Spindexer: SubsystemBase("Spindexer") {
     val SPIN_LOWER_VELOCITY: Double get() = spinLowerVelocityEntry.getDouble(40.0)
     val SIDETAKE_VELOCITY: Double get() = sidetakeVelocityEntry.getDouble(115.0)
     val UPTAKE_VELOCITY: Double get() = uptakeVelocityEntry.getDouble(129.0)
-    val AGITATE_VELOCITY: Double get() = agitateVelocityEntry.getDouble(20.0)
+    val AGITATE_VELOCITY: Double get() = agitateVelocityEntry.getDouble(40.0)
 
 //    val SPIN_SPIT_VELOCITY: Double get() = spinSpitVelocityEntry.getDouble(0.0)
     val SIDETAKE_SPIT_VELOCITY: Double get() = sidetakeSpitVelocityEntry.getDouble(-50.0)

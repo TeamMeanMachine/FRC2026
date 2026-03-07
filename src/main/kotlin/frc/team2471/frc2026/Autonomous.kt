@@ -11,6 +11,7 @@ import frc.team2471.frc2026.tests.zeroTurretEncoders
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser
 import org.team2471.frc.lib.control.Autonomi
 import org.team2471.frc.lib.control.commands.beforeWait
+import org.team2471.frc.lib.control.commands.finallyRun
 import org.team2471.frc.lib.control.commands.parallelCommand
 import org.team2471.frc.lib.control.commands.runCommand
 import org.team2471.frc.lib.control.commands.runOnceCommand
@@ -81,9 +82,15 @@ object Autonomous: Autonomi() {
                             Intake.intakeState = Intake.IntakeState.INTAKING
                             println("Intake finished homing. Running Intake")
                         }
-                    ).withName("Intake homing")
+                    ).withName("Intake homing"),
+                    runOnceCommand {
+                        Turret.disableTurret = true
+                    }
                 ).withName("First component Double swipe auto"),
                 parallelCommand(
+                    runOnceCommand {
+                        Turret.disableTurret = false
+                    },
                     Shooter.shoot(),
                     runOnceCommand {
                         Intake.stow()
@@ -93,10 +100,14 @@ object Autonomous: Autonomi() {
                     runOnceCommand {
                         Intake.deploy()
                         Intake.intakeState = Intake.IntakeState.INTAKING
+                        Turret.disableTurret = true
                                    },
                     Drive.driveAlongChoreoPath(path.getSplit(2).get(), resetOdometry = false, poseSupplier = Drive.localizer::pose),
                     ),
                 parallelCommand(
+                    runOnceCommand {
+                        Turret.disableTurret = false
+                    },
                     Shooter.shoot(),
                     sequenceCommand(
                         runOnceCommand {

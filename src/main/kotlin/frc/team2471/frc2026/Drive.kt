@@ -151,6 +151,7 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
 
     var latestAppliedQuestDataTimestamp = 0.0
     var latestAppliedQuestCTRETimestamp = 0.0
+    var asyncPeriodicTime = 0.0
 
     init {
         println("inside Drive init")
@@ -170,40 +171,45 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
         // Launch a new thread and run vision loop
         GlobalScope.launch {
             org.team2471.frc.lib.coroutines.periodic {
-                Logger.recordOutput("Drive/AsyncPeriodicTime", LoopLogger.measureTimeFPGA {
-                    // Apply quest measurements
-                    if (questConnected && questTracking && tempQuestPose == null) {
-                        if (isReal) {
-                            quest.allUnreadPoseFrames.forEach {
-                                questTrackingMaybe = it.isTracking
-                                if (resetPoseTime < it.dataTimestamp && it.isTracking) {
-                                    val pose = it.questPose3d.transformBy(robotToQuestTransformMeters.inverse())
-                                    val ctreTimestamp = Utils.fpgaToCurrentTime(it.dataTimestamp)
-
-                                    latestAppliedQuestDataTimestamp = it.dataTimestamp
-                                    latestAppliedQuestCTRETimestamp = ctreTimestamp
-                                    addVisionMeasurement(pose.toPose2d(), ctreTimestamp, QUEST_STD_DEVS)
-                                    questPose = pose
-                                }
-                            }
-                        } else {
-                            // Simulate quest data
-                            addVisionMeasurement(pose, stateTimestamp, QUEST_STD_DEVS)
-                            questPose = Pose3d(pose.x, pose.y, robotToQuestTransformMeters.z, robotToQuestTransformMeters.rotation)
+                try {
+                    asyncPeriodicTime = LoopLogger.measureTimeFPGA {
+                        // Apply quest measurements
+//                    if (questConnected && questTracking && tempQuestPose == null) {
+//                        if (isReal) {
+//                            quest.allUnreadPoseFrames.forEach {
+//                                questTrackingMaybe = it.isTracking
+//                                if (resetPoseTime < it.dataTimestamp && it.isTracking) {
+//                                    val pose = it.questPose3d.transformBy(robotToQuestTransformMeters.inverse())
+//                                    val ctreTimestamp = Utils.fpgaToCurrentTime(it.dataTimestamp)
+//
+//                                    latestAppliedQuestDataTimestamp = it.dataTimestamp
+//                                    latestAppliedQuestCTRETimestamp = ctreTimestamp
+//                                    addVisionMeasurement(pose.toPose2d(), ctreTimestamp, QUEST_STD_DEVS)
+//                                    questPose = pose
+//                                }
+//                            }
+//                        } else {
+//                            // Simulate quest data
+//                            addVisionMeasurement(pose, stateTimestamp, QUEST_STD_DEVS)
+//                            questPose = Pose3d(pose.x, pose.y, robotToQuestTransformMeters.z, robotToQuestTransformMeters.rotation)
+//                        }
+//                    }
+//
+//                    // Update Vision
+                        cameras.forEach {
+                            it.updateInputs()
                         }
+//                    // Update poses with processed particle filter estimates.
+                        localizer.updateWithLatestPoseEstimate()
+//                    // Create an odom measurement with a timestamp converted from phoenix time to fpga time.
+                        val poseMeasurement = PoseLocalizer.OdometryMeasurement(pose, PhoenixUtil.currentToFpgaTime(stateTimestamp))
+//                    // Publish the latest camera data to NT and also update pose from swerve odometry measurements.
+                        localizer.update(poseMeasurement, cameras.map { it.latestMeasurement }, speeds)
                     }
-
-                    // Update Vision
-                    cameras.forEach {
-                        it.updateInputs()
-                    }
-                    // Update poses with processed particle filter estimates.
-                    localizer.updateWithLatestPoseEstimate()
-                    // Create an odom measurement with a timestamp converted from phoenix time to fpga time.
-                    val poseMeasurement = PoseLocalizer.OdometryMeasurement(pose, PhoenixUtil.currentToFpgaTime(stateTimestamp))
-                    // Publish the latest camera data to NT and also update pose from swerve odometry measurements.
-                    localizer.update(poseMeasurement, cameras.map { it.latestMeasurement }, speeds)
-                })
+                } catch (e: Exception) {
+                    println("Exception in drive async periodic")
+                    println(e)
+                }
             }
         }
     }
@@ -231,6 +237,7 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
         Logger.recordOutput("Swerve/SingleTagPose", localizer.singleTagPose)
         Logger.recordOutput("Drive/Quest/DataTimestamp", latestAppliedQuestDataTimestamp)
         Logger.recordOutput("Drive/Quest/CtreTimestamp", latestAppliedQuestCTRETimestamp)
+        Logger.recordOutput("Drive/AsyncPeriodicTime", asyncPeriodicTime)
 
         LoopLogger.record("Drive pirdc")
     }
@@ -241,7 +248,7 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
     override fun getJoystickPercentageSpeeds(): ChassisSpeeds {
         val rawJoystick = OI.rawDriveTranslation
         // Square drive input and apply demoSpeed
-        val power = rawJoystick.norm.square() * demoSpeed * if (Shooter.isShooting) 0.4 else if (inSnakeMode) 0.8 else 1.0
+        val power = rawJoystick.norm.square() * demoSpeed * if (Shooter.isShooting) 0.3 else if (inSnakeMode) 0.8 else 1.0
         // Apply modified power to joystick vector and flip depending on alliance
         val joystickTranslation = rawJoystick * power * if (isBlueAlliance) -1.0 else 1.0
 

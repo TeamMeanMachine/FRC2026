@@ -1,5 +1,6 @@
 package frc.team2471.frc2026
 
+import com.ctre.phoenix6.controls.NeutralOut
 import com.ctre.phoenix6.controls.PositionVoltage
 import com.ctre.phoenix6.hardware.CANcoder
 import com.ctre.phoenix6.hardware.Pigeon2
@@ -188,7 +189,11 @@ object Turret: SubsystemBase("Turret") {
                 //Wrapping if pose error is more than half a rotation
                 isTurretWrapping = (field - turretMotorFieldCentricAngle).absoluteValue() > 180.0.degrees
 
-                turretMotor.setControl(PositionVoltage(field.asRotations).withFeedForward(turretFeedforward))
+                if (disableTurret) {
+                    turretMotor.setControl(NeutralOut())
+                } else {
+                    turretMotor.setControl(PositionVoltage(field.asRotations).withFeedForward(turretFeedforward))
+                }
             } else {
                 field = value.unWrap(fieldCentricAngle)
                 turretMotor.setControl(PositionVoltage(field - Drive.heading.measure))
@@ -206,6 +211,11 @@ object Turret: SubsystemBase("Turret") {
     val turretVelocity: AngularVelocity
         get() = turretMotor.rotorVelocity.value
 
+    @get:AutoLogOutput(key = "Turret/turretCurrent")
+    val turretCurrent: Double
+        get() = turretMotor.supplyCurrent.valueAsDouble
+
+    var disableTurret: Boolean = false
 
     val turretOffsetFromCenter = Translation2d(0.0.inches, 0.725.inches)
     var turretHeight = 0.4.meters
