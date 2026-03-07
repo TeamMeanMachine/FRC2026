@@ -11,7 +11,6 @@ import frc.team2471.frc2026.tests.zeroTurretEncoders
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser
 import org.team2471.frc.lib.control.Autonomi
 import org.team2471.frc.lib.control.commands.beforeWait
-import org.team2471.frc.lib.control.commands.finallyRun
 import org.team2471.frc.lib.control.commands.parallelCommand
 import org.team2471.frc.lib.control.commands.runCommand
 import org.team2471.frc.lib.control.commands.runOnceCommand
@@ -69,7 +68,7 @@ object Autonomous: Autonomi() {
             sequenceCommand(
                 parallelCommand(
                     sequenceCommand(
-                        Drive.driveAlongChoreoPath(path.getSplit(0).get(), resetOdometry = true, poseSupplier = Drive::pose),
+                        Drive.driveAlongChoreoPath(path.getSplit(0).get(), resetOdometry = false, poseSupplier = Drive::pose),
                         Drive.driveAlongChoreoPath(path.getSplit(1).get(), resetOdometry = false, poseSupplier = Drive.localizer::pose),
                         runOnceCommand {
                             Intake.intakeState = Intake.IntakeState.OFF
