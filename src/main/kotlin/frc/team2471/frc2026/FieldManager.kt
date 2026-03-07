@@ -7,6 +7,7 @@ import edu.wpi.first.math.geometry.Translation2d
 import edu.wpi.first.networktables.NetworkTableInstance
 import edu.wpi.first.units.measure.Distance
 import edu.wpi.first.wpilibj.DriverStation
+import frc.team2471.frc2026.FieldManager.matchTime
 import frc.team2471.frc2026.FieldManager.reflectAcrossField
 import frc.team2471.frc2026.FieldManager.rotateAroundField
 import frc.team2471.frc2026.Robot.isAutonomous
@@ -20,6 +21,7 @@ import org.team2471.frc.lib.units.*
 import org.team2471.frc.lib.util.isRedAlliance
 import kotlin.math.absoluteValue
 import kotlin.math.floor
+import kotlin.math.round
 import kotlin.math.sign
 
 object FieldManager {
@@ -155,10 +157,12 @@ object FieldManager {
     @get:AutoLogOutput(key = "FieldManager/shouldShoot")
     val shouldShoot: Boolean
         get () {
-            if (matchTime > 130.0 + AimUtils.SHOT_AIRTIME + HUB_PROCESSING_TIME || matchTime < 30.0 + AimUtils.SHOT_AIRTIME + HUB_PROCESSING_TIME || isAutonomous) {
+            if (matchTime > 130.0 || matchTime < 30.0 + AimUtils.SHOT_AIRTIME + HUB_PROCESSING_TIME || isAutonomous) {
                 return true
             }
-            if ((floor((matchTime - 30.0 - AimUtils.SHOT_AIRTIME - HUB_PROCESSING_TIME)/25.0)) % 2 == 0.0) {
+            val shiftStartTimes = arrayOf(130.0, 105.0, 80.0, 55.0).map { it + AimUtils.SHOT_AIRTIME + HUB_PROCESSING_TIME }
+            val shiftEndTimes = arrayOf(105.0, 80.0, 55.0, 30.0)
+            if (matchTime in shiftStartTimes[1]..shiftEndTimes[1] || matchTime in shiftStartTimes[3]..shiftEndTimes[3])   {
                 return weWonAuto
             } else {
                 return !weWonAuto
