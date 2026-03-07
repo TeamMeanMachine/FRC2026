@@ -88,7 +88,7 @@ object FieldManager {
 
     val passPose: Translation2d
         get() {
-            var pose = Translation2d(3.0, 2.0)
+            var pose = Translation2d(0.5, 2.0)
 
             if (isRedAlliance) {
                 pose = Translation2d(fieldLength.asMeters - pose.x, pose.y)
@@ -153,7 +153,7 @@ object FieldManager {
     val hubCountdownEntry = table.getEntry("HubCountdown")
     val activeHubEntry = table.getEntry("ActiveHub")
 
-    // this is offset by shoot time. for shooting
+    // this is offset by shoot time. for shooting /O\
     @get:AutoLogOutput(key = "FieldManager/shouldShoot")
     val shouldShoot: Boolean
         get () {
@@ -186,6 +186,8 @@ object FieldManager {
         val apriltagPositions = allAprilTags.map { it.pose }
         Logger.recordOutput("All apriltags", *apriltagPositions.toTypedArray())
         println("FieldManager init. Field dimensions: $fieldDimensions. ${allAprilTags.size} tags.")
+
+        Logger.recordOutput("Trench Poses", *trenchPositions)
 
         GlobalScope.launch {
             periodic {

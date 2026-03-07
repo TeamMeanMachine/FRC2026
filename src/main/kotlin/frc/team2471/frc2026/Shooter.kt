@@ -26,6 +26,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine
 import frc.team2471.frc2026.AimUtils.toExitVelocity
 import org.littletonrobotics.junction.AutoLogOutput
 import org.littletonrobotics.junction.Logger
+import org.team2471.frc.lib.control.LoopLogger
 import org.team2471.frc.lib.control.commands.finallyRun
 import org.team2471.frc.lib.control.commands.onlyRunWhileFalse
 import org.team2471.frc.lib.control.commands.onlyRunWhileTrue
@@ -85,10 +86,10 @@ object Shooter: SubsystemBase("Shooter") {
         put(12.0, 70.73)
         put(13.0, 72.466)
         put(14.0, 74.287)
-        put(15.0, 76.187)
-        put(16.0, 78.161)
-        put(17.0, 79.961)
-        put(18.0, 81.863)
+        put(15.0, 77.0)
+        put(16.0, 79.0)
+        put(17.0, 80.0)
+        put(18.0, 85.0)
     }
     // feet, degrees
     val hubAngleCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
@@ -105,7 +106,7 @@ object Shooter: SubsystemBase("Shooter") {
         put(13.0, 56.716)
         put(14.0, 54.819)
         put(15.0, 53.015)
-        put(16.0, 51.299)
+        put(16.0, 50.5)
         put(17.0, 49.684)
         put(18.0, 48.14)
     }
@@ -338,6 +339,7 @@ object Shooter: SubsystemBase("Shooter") {
 
 
     override fun periodic() {
+        LoopLogger.record("b4 Shooter periodic")
         if (isSim) {
             if (isShooting) {
                 if (i > 1) {
@@ -357,6 +359,7 @@ object Shooter: SubsystemBase("Shooter") {
         }
 
 //        shooterMotor.setControl(VoltageOut(shooterController.updateVoltage(shooterAngularVelocitySetpoint.asRotationsPerSecond, shooterAngularVelocity.asRotationsPerSecond)))
+        LoopLogger.record("Shooter periodic")
     }
 
     fun shootOrRamp(): Command {

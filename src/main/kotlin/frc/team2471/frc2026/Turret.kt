@@ -1,5 +1,6 @@
 package frc.team2471.frc2026
 
+import com.ctre.phoenix6.controls.NeutralOut
 import com.ctre.phoenix6.controls.PositionVoltage
 import com.ctre.phoenix6.hardware.CANcoder
 import com.ctre.phoenix6.hardware.Pigeon2
@@ -48,7 +49,6 @@ import kotlin.math.abs
 import org.team2471.frc.lib.coroutines.periodic
 import org.team2471.frc.lib.ctre.alternateFeedbackSensor
 import org.team2471.frc.lib.ctre.coastMode
-import org.team2471.frc.lib.math.round
 import org.team2471.frc.lib.units.asFeet
 import org.team2471.frc.lib.units.rotationsPerSecond
 import kotlin.collections.toDoubleArray
@@ -189,7 +189,11 @@ object Turret: SubsystemBase("Turret") {
                 //Wrapping if pose error is more than half a rotation
                 isTurretWrapping = (field - turretMotorFieldCentricAngle).absoluteValue() > 180.0.degrees
 
-                turretMotor.setControl(PositionVoltage(field.asRotations).withFeedForward(turretFeedforward))
+                if (disableTurret) {
+                    turretMotor.setControl(NeutralOut())
+                } else {
+                    turretMotor.setControl(PositionVoltage(field.asRotations).withFeedForward(turretFeedforward))
+                }
             } else {
                 field = value.unWrap(fieldCentricAngle)
                 turretMotor.setControl(PositionVoltage(field - Drive.heading.measure))
@@ -207,6 +211,11 @@ object Turret: SubsystemBase("Turret") {
     val turretVelocity: AngularVelocity
         get() = turretMotor.rotorVelocity.value
 
+    @get:AutoLogOutput(key = "Turret/turretCurrent")
+    val turretCurrent: Double
+        get() = turretMotor.supplyCurrent.valueAsDouble
+
+    var disableTurret: Boolean = false
 
     val turretOffsetFromCenter = Translation2d(0.0.inches, 0.725.inches)
     var turretHeight = 0.4.meters
@@ -290,7 +299,7 @@ object Turret: SubsystemBase("Turret") {
                 if ((fieldCentricAngle - fieldCentricTurretMotorRotorAngle.unWrap(fieldCentricAngle)).absoluteValue() > 1.0.degrees && turretVelocity.absoluteValue() < 3.0.rotationsPerSecond) {
                     GlobalScope.launch {
 //                        println("setting turret pigeon yaw to motor angle")
-                        println("Detected Error. Trying to change gyro angle from ${fieldCentricAngle.asDegrees.round(3)} to ${fieldCentricTurretMotorRotorAngle.unWrap(fieldCentricAngle).asDegrees.round(3)}")
+//                        println("Detected Error. Trying to change gyro angle from ${fieldCentricAngle.asDegrees.round(3)} to ${fieldCentricTurretMotorRotorAngle.unWrap(fieldCentricAngle).asDegrees.round(3)}")
 
                         turretPigeon.setYaw(fieldCentricTurretMotorRotorAngle.unWrap(fieldCentricAngle))
 //                        println("finished setting turret pigeon yaw")
@@ -302,9 +311,9 @@ object Turret: SubsystemBase("Turret") {
                     tempHeadingResetAngle = null
                     Drive.headingAngleUnwrapped = tempResetAngle
                     GlobalScope.launch {
-                        println("setting turret pigeon yaw")
+//                        println("setting turret pigeon yaw")
                         turretPigeon.setYaw(fieldCentricFusedEncoderAngle.unWrap(fieldCentricAngle))
-                        println("finished setting turret pigeon yaw")
+//                        println("finished setting turret pigeon yaw")
                     }
                 }
                 Drive.headingAngleUnwrapped = Drive.heading.measure.unWrap(Drive.headingAngleUnwrapped)

@@ -144,7 +144,6 @@ jar {
 
 def copyVendordeps = {
     subprojects {
-        printf("hiiii")
         def vendordepsDir = file("$projectDir/vendordeps")
         if (vendordepsDir.exists()) {
             rootProject.copy {

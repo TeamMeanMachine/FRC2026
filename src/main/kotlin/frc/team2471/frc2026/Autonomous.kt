@@ -11,6 +11,7 @@ import frc.team2471.frc2026.tests.zeroTurretEncoders
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser
 import org.team2471.frc.lib.control.Autonomi
 import org.team2471.frc.lib.control.commands.beforeWait
+import org.team2471.frc.lib.control.commands.finallyRun
 import org.team2471.frc.lib.control.commands.parallelCommand
 import org.team2471.frc.lib.control.commands.runCommand
 import org.team2471.frc.lib.control.commands.runOnceCommand
@@ -68,35 +69,45 @@ object Autonomous: Autonomi() {
             sequenceCommand(
                 parallelCommand(
                     sequenceCommand(
+                        Drive.driveAlongChoreoPath(path.getSplit(0).get(), resetOdometry = true, poseSupplier = Drive::pose),
+                        Drive.driveAlongChoreoPath(path.getSplit(1).get(), resetOdometry = false, poseSupplier = Drive.localizer::pose),
+                        runOnceCommand {
+                            Intake.intakeState = Intake.IntakeState.OFF
+                        }
+                    ).withName("first driving double swipe auto"),
+                    sequenceCommand(
                         waitUntilCommand { Intake.finishedHoming },
                         runOnceCommand {
                             Intake.deploy()
                             Intake.intakeState = Intake.IntakeState.INTAKING
                             println("Intake finished homing. Running Intake")
                         }
-                    ),
-                    sequenceCommand(
-                        Drive.driveAlongChoreoPath(path.getSplit(0).get(), resetOdometry = true, poseSupplier = Drive::pose),
-                        Drive.driveAlongChoreoPath(path.getSplit(1).get(), resetOdometry = false, poseSupplier = Drive.localizer::pose),
-                        runOnceCommand {
-                            Intake.intakeState = Intake.IntakeState.OFF
-                        }
-                    ),
-                ),
+                    ).withName("Intake homing"),
+                    runOnceCommand {
+                        Turret.disableTurret = true
+                    }
+                ).withName("First component Double swipe auto"),
                 parallelCommand(
+                    runOnceCommand {
+                        Turret.disableTurret = false
+                    },
                     Shooter.shoot(),
                     runOnceCommand {
                         Intake.stow()
-                    }.beforeWait(0.25)
-                ).withTimeout(1.75),
+                    }.beforeWait(0.75)
+                ).withTimeout(2.0),
                 parallelCommand(
                     runOnceCommand {
                         Intake.deploy()
                         Intake.intakeState = Intake.IntakeState.INTAKING
+                        Turret.disableTurret = true
                                    },
                     Drive.driveAlongChoreoPath(path.getSplit(2).get(), resetOdometry = false, poseSupplier = Drive.localizer::pose),
                     ),
                 parallelCommand(
+                    runOnceCommand {
+                        Turret.disableTurret = false
+                    },
                     Shooter.shoot(),
                     sequenceCommand(
                         runOnceCommand {
@@ -109,10 +120,10 @@ object Autonomous: Autonomi() {
                     ),
 //                    Drive.driveAlongChoreoPath(path.getSplit(3).get(), resetOdometry = false, poseSupplier = Drive.localizer::pose),
                 )
-            ),
+            ).withName("Double Swipe auto sequence"),
             runCommand {
                 Shooter.rampUpLoop()
-            }
-        )
+            }.withName("Shooter ramp up loop")
+        ).withName("Double swipe auto")
     }
 }

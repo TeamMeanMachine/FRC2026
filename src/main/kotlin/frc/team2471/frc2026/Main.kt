@@ -38,13 +38,13 @@ import kotlin.collections.iterator
 object Robot : LoggedRobot() {
     val isCompBot = getCompBotBoolean()
     private var wasDisabled = true
+    private var doEnableInitAsync = false
     var beforeFirstEnable = true
+        private set
+    var beforeFirstEnableAsync = true
         private set
 
     val commandScheduler = CommandScheduler.getInstance()
-
-    private val enabledTimer = Timer()
-    val timeSinceEnabled get() = enabledTimer.get()
 
     @get:JvmName("RobotIsEnabled")
     var isEnabled = false
@@ -118,6 +118,13 @@ object Robot : LoggedRobot() {
                 isDisabled = !isEnabled
                 isAutonomous = DriverStation.isAutonomous()
                 isAutonomousEnabled = isAutonomous && isEnabled
+
+                if (doEnableInitAsync) {
+                    enabledInitAsync()
+                    doEnableInitAsync = false
+                    beforeFirstEnableAsync = false
+                }
+
                 delay(10.toLong())
             }
         }
@@ -126,13 +133,15 @@ object Robot : LoggedRobot() {
     /** This function is called periodically during all modes.  */
     override fun robotPeriodic() {
         LoopLogger.reset()
+        LoopLogger.record("after LL reset")
         // Optionally switch the thread to high priority to improve loop
         // timing (see the template project documentation for details)
 //         Threads.setCurrentThreadPriority(true, 99);
 
-        if (Robot.isEnabled) {
+        if (isEnabled) {
             if (wasDisabled) {
                 enabledInit()
+                doEnableInitAsync = true
                 beforeFirstEnable = false
                 wasDisabled = false
             }
@@ -149,18 +158,20 @@ object Robot : LoggedRobot() {
         LoopLogger.record("Robot periodic()")
     }
 
-    fun enabledInit() {
-//        enabledTimer.restart()
-        println("Enabled init $timeSinceEnabled")
-        Drive.brakeMode()
-        Shooter.hoodAngleSetpoint = Shooter.hoodAngle
+    fun enabledInit() {}
 
-        if (beforeFirstEnable && !isAutonomous) {
-            commandScheduler.schedule(Intake.home())
-        } else if (beforeFirstEnable) {
-            Intake.deployMotor.setPosition(0.0)
-            Intake.finishedHoming = true
+    /** Runs on alternate thread for loop times. Doesn't run sequential with rest of robot. Runs when robot is enabled */
+    fun enabledInitAsync() {
+        if (beforeFirstEnableAsync) {
+            if (!isAutonomous) {
+                commandScheduler.schedule(Intake.home())
+            } else {
+                Intake.deployMotor.setPosition(0.0)
+                Intake.finishedHoming = true
+            }
         }
+
+        Shooter.hoodAngleSetpoint = Shooter.hoodAngle
     }
 
     /** This function is called once when the robot is disabled.  */
@@ -181,12 +192,12 @@ object Robot : LoggedRobot() {
 
     /** This function is called once when auto is enabled.  */
     override fun autonomousInit() {
-        enabledTimer.restart()
-        println("Autonomous init $timeSinceEnabled")
-        Autonomous.setDrivePositionToAutoStartPose()
-        println("scheduling auto command $timeSinceEnabled")
-        CommandScheduler.getInstance().schedule((Autonomous.autonomousCommand ?:Commands.runOnce({ println("THE AUTONOMOUS COMMAND IS NULL") })))
-        println("scheduled auto command $timeSinceEnabled")
+//        enabledTimer.restart()
+//        println("Autonomous init $timeSinceEnabled")
+//        Autonomous.setDrivePositionToAutoStartPose()
+//        println("scheduling auto command $timeSinceEnabled")
+        commandScheduler.schedule(Autonomous.autonomousCommand ?: Commands.runOnce({ println("THE AUTONOMOUS COMMAND IS NULL") }))
+//        println("scheduled auto command $timeSinceEnabled")
     }
 
     /** This function is called periodically during autonomous.  */
@@ -194,8 +205,7 @@ object Robot : LoggedRobot() {
 
     /** This function is called once when teleop is enabled.  */
     override fun teleopInit() {
-        enabledTimer.restart()
-
+        Turret.disableTurret = false
     }
 
     /** This function is called periodically during operator control.  */
@@ -203,7 +213,6 @@ object Robot : LoggedRobot() {
 
     /** This function is called once when test mode is enabled.  */
     override fun testInit() {
-        enabledTimer.restart()
         CommandScheduler.getInstance().cancelAll() // Cancels all running commands at the start of test mode.
         CommandScheduler.getInstance().schedule((Autonomous.testCommand ?: Commands.runOnce({println("THE TEST COMMAND IS NULL")})))
     }
