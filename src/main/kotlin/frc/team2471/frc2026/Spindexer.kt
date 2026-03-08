@@ -203,7 +203,7 @@ object Spindexer: SubsystemBase("Spindexer") {
                     if (Robot.isAutonomous) {
                         spinMotorVelocitySetpoint = SPIN_VELOCITY
                     } else {
-                        spinMotorVelocitySetpoint = SPIN_VELOCITY * linearMap(0.0, 1.0, 0.25, 1.0, OI.driveRightTrigger.deadband(0.1))
+                        spinMotorVelocitySetpoint = SPIN_VELOCITY * linearMap(0.0, 1.0, 0.40, 1.0, OI.driveRightTrigger.deadband(0.1))
                     }
                 }
                 sidetakeMotorVelocitySetpoint = SIDETAKE_VELOCITY

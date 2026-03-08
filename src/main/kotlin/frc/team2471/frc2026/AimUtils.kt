@@ -26,6 +26,7 @@ import org.team2471.frc.lib.units.metersPerSecond
 import org.team2471.frc.lib.units.radians
 import org.team2471.frc.lib.units.rotationsPerSecond
 import org.team2471.frc.lib.units.sin
+import org.team2471.frc.lib.util.isRedAlliance
 import kotlin.math.absoluteValue
 import kotlin.math.atan2
 import kotlin.math.pow
@@ -33,7 +34,7 @@ import kotlin.math.sqrt
 
 object AimUtils {
     // seconds
-    const val SHOT_AIRTIME = 1.0
+    const val SHOT_AIRTIME = 1.25
     const val PASS_AIRTIME = 1.0
 
     // m/s^2
@@ -54,17 +55,37 @@ object AimUtils {
     val HUB_HEIGHT = 65.0.inches
 
     // Percent of surface speed of shooter that gets transferred into the ball
-    val SHOOTER_EFFICIENCY = 0.66
+    val SHOOTER_EFFICIENCY = 0.70
 
     @get:AutoLogOutput(key = "aim target")
     val aimTarget: Translation2d
         get() {
+            if (!Drive.useAprilTags) {
+                FieldManager.goalPose
+            }
+
             return if (isAimingAtGoal) {
                 FieldManager.goalPose - calculateAimTargetOffset(SHOT_AIRTIME)
             } else {
                 FieldManager.passPose
             }
         }
+
+    val staticShotPos: Translation2d
+        get() = if (Drive.heading.measure > 0.0.degrees) {
+                if (isRedAlliance) {
+                    FieldManager.upperRedStaticShotPosition
+                } else {
+                    FieldManager.upperBlueStaticShotPosition
+                }
+            } else {
+                if (isRedAlliance) {
+                    FieldManager.lowerRedStaticShotPosition
+                } else {
+                    FieldManager.lowerBlueStaticShotPosition
+                }
+            }
+
 
     // uses turret velocity to offset the aim target for sotm
     fun calculateAimTargetOffset(airTime: Double) : Translation2d {
@@ -85,20 +106,6 @@ object AimUtils {
 //
 //        return offset
 //    }
-
-    val staticAimTarget: Translation2d
-        get() {
-            return if (isAimingAtGoal) {
-                FieldManager.goalPose
-            } else {
-                if (Drive.localizer.pose.y.meters > FieldManager.fieldHalfWidth) {
-                    // This is the stuff making the robot aim in the middle of the hump. Keeping it until we are sure it doesn't work.
-                    FieldManager.goalPose + Translation2d(0.0.inches, 70.0.inches)
-                } else {
-                    FieldManager.goalPose + Translation2d(0.0.inches, -70.0.inches)
-                }
-            }
-        }
 
     val isAimingAtGoal get() = FieldManager.inScoringZone
 

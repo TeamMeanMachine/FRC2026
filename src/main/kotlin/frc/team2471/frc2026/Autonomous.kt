@@ -10,12 +10,10 @@ import frc.team2471.frc2026.tests.velocityVoltTest
 import frc.team2471.frc2026.tests.zeroTurretEncoders
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser
 import org.team2471.frc.lib.control.Autonomi
-import org.team2471.frc.lib.control.commands.beforeWait
 import org.team2471.frc.lib.control.commands.parallelCommand
 import org.team2471.frc.lib.control.commands.runCommand
 import org.team2471.frc.lib.control.commands.runOnceCommand
 import org.team2471.frc.lib.control.commands.sequenceCommand
-import org.team2471.frc.lib.control.commands.waitCommand
 import org.team2471.frc.lib.control.commands.waitUntilCommand
 import org.team2471.frc.lib.swerve.sideToSideFlip
 
@@ -82,40 +80,25 @@ object Autonomous: Autonomi() {
                             println("Intake finished homing. Running Intake")
                         }
                     ).withName("Intake homing"),
-                    runOnceCommand {
-                        Turret.disableTurret = true
-                    }
                 ).withName("First component Double swipe auto"),
                 parallelCommand(
-                    runOnceCommand {
-                        Turret.disableTurret = false
-                    },
                     Shooter.shoot(),
-                    runOnceCommand {
-                        Intake.stow()
-                    }.beforeWait(0.75)
+                    Intake.pulse()
                 ).withTimeout(2.0),
                 parallelCommand(
                     runOnceCommand {
                         Intake.deploy()
                         Intake.intakeState = Intake.IntakeState.INTAKING
-                        Turret.disableTurret = true
                                    },
                     Drive.driveAlongChoreoPath(path.getSplit(2).get(), resetOdometry = false, poseSupplier = Drive.localizer::pose),
                     ),
                 parallelCommand(
-                    runOnceCommand {
-                        Turret.disableTurret = false
-                    },
                     Shooter.shoot(),
                     sequenceCommand(
                         runOnceCommand {
                             Intake.intakeState = Intake.IntakeState.OFF
                         },
-                        waitCommand(1.0),
-                        runOnceCommand {
-                            Intake.stow()
-                        }
+                        Intake.pulse()
                     ),
 //                    Drive.driveAlongChoreoPath(path.getSplit(3).get(), resetOdometry = false, poseSupplier = Drive.localizer::pose),
                 )

@@ -9,13 +9,13 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase
 import org.team2471.frc.lib.control.LoopLogger
 import org.team2471.frc.lib.control.MeanCommandXboxController
 import org.team2471.frc.lib.control.commands.finallyRun
+import org.team2471.frc.lib.control.commands.onlyRunWhileTrue
+import org.team2471.frc.lib.control.commands.parallelCommand
 import org.team2471.frc.lib.control.commands.runCommand
+import org.team2471.frc.lib.control.commands.runOnceCommand
 import org.team2471.frc.lib.control.commands.toCommand
-import org.team2471.frc.lib.control.commands.waitCommand
 import org.team2471.frc.lib.math.deadband
 import org.team2471.frc.lib.math.normalize
-import org.team2471.frc.lib.units.degrees
-import org.team2471.frc.lib.units.rotationsPerSecond
 
 object OI: SubsystemBase("OI") {
     val driverController = MeanCommandXboxController(0, false)
@@ -87,10 +87,7 @@ object OI: SubsystemBase("OI") {
 
         Turret.defaultCommand = Turret.aimAtTarget()
 
-        Shooter.defaultCommand = runCommand(Shooter) {
-            Shooter.hoodAngleSetpoint = Shooter.HOOD_STOW_SETPOINT.degrees
-            Shooter.shooterVelocitySetpoint = 0.0.rotationsPerSecond
-        }
+        Shooter.defaultCommand = Shooter.default()
 
         // Zero Gyro
         driverController.back().onTrue({
@@ -107,38 +104,34 @@ object OI: SubsystemBase("OI") {
 
         driverController.rightTrigger(0.1)
             .or(driverController.rightBumper())
-            .or(driverController.povRight())
+//            .or(driverController.povRight())
             .whileTrue(
-            Shooter.shootOrRamp()
+            parallelCommand(
+                Shooter.shootOrRamp(),
+                Intake.pulse().onlyRunWhileTrue { driverController.rightTriggerAxis > 0.75 }.repeatedly()
+            )
         )
 
-        driverController.povRight().whileTrue(
-            runCommand {
-                Intake.intakeState = Intake.IntakeState.INTAKING
-                Intake.deploy()
-            }.finallyRun {
-                Intake.intakeState = Intake.IntakeState.OFF
-                Intake.stow()
-            }
-        )
-
-        driverController.leftTrigger(0.04).whileTrue(runCommand {
+        driverController.leftBumper().whileTrue(runCommand {
             Intake.intakeState = Intake.IntakeState.INTAKING
-        }.finallyRun { Intake.intakeState = Intake.IntakeState.OFF })
+            Intake.deploy()
+        }.finallyRun {
+            Intake.stow()
+            Intake.intakeState = Intake.IntakeState.OFF
+        })
 
-        driverController.leftBumper().whileTrue(waitCommand(1.0).finallyRun { wasSuspended ->
-            if (wasSuspended) {
-                if (Intake.isDeployed) {
-                    Intake.stow()
-                } else {
-                    Intake.deploy()
-                }
+        driverController.leftTrigger(0.04).onTrue(runCommand {
+            if (Intake.isDeployed) {
+                Intake.stow()
             } else {
-                Intake.deepStow()
+                Intake.deploy()
             }
         })
 
         (driverController.povDown().and(driverController.y())).onTrue(Intake.homeDeploy())
+        (driverController.povDown().and(driverController.leftBumper())).onTrue(runOnceCommand { Intake.deepStow() })
+
+        driverController.povLeft().onTrue(Turret.staticAimAtTarget())
     }
 
     override fun periodic() {

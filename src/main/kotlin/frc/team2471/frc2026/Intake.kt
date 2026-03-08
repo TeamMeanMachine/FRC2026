@@ -15,7 +15,9 @@ import org.team2471.frc.lib.control.commands.finallyRun
 import org.team2471.frc.lib.control.commands.onlyRunWhileFalse
 import org.team2471.frc.lib.control.commands.onlyRunWhileTrue
 import org.team2471.frc.lib.control.commands.runCommand
+import org.team2471.frc.lib.control.commands.runOnceCommand
 import org.team2471.frc.lib.control.commands.sequenceCommand
+import org.team2471.frc.lib.control.commands.waitCommand
 import org.team2471.frc.lib.ctre.addFollower
 import org.team2471.frc.lib.ctre.applyConfiguration
 import org.team2471.frc.lib.ctre.coastMode
@@ -171,6 +173,15 @@ object Intake: SubsystemBase("Intake") {
 //            stow()
         }
     )
+
+    fun pulse(): Command = sequenceCommand(
+        runOnceCommand { stow() },
+        waitCommand(0.25),
+        runOnceCommand { deploy() },
+        waitCommand(0.25),
+    ).repeatedly().finallyRun {
+        stow()
+    }
 
 
     fun homeDeploy(): Command = runOnce {

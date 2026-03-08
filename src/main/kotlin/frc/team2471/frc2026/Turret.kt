@@ -57,6 +57,7 @@ object Turret: SubsystemBase("Turret") {
     private val table = NetworkTableInstance.getDefault().getTable("Turret")
     val encoder1Offset = table.getEntry("Turret Encoder 1 Offset")
     val encoder2Offset = table.getEntry("Turret Encoder 2 Offset")
+    val disableTurretEntry = table.getEntry("Disable Turret")
 
     val turretMotor = LoggedTalonFX(Falcons.TURRET_0, CANivores.TURRET_CAN)
     val turretEncoder1 = CANcoder(CANCoders.TURRET_1, CANivores.TURRET_CAN)
@@ -215,7 +216,8 @@ object Turret: SubsystemBase("Turret") {
     val turretCurrent: Double
         get() = turretMotor.supplyCurrent.valueAsDouble
 
-    var disableTurret: Boolean = false
+    val disableTurret: Boolean
+        get() = disableTurretEntry.getBoolean(false)
 
     val turretOffsetFromCenter = Translation2d(0.0.inches, 0.725.inches)
     var turretHeight = 0.4.meters
@@ -236,6 +238,7 @@ object Turret: SubsystemBase("Turret") {
         println("Turret init")
         if (!encoder1Offset.exists()) encoder1Offset.setDouble(ENCODER_1_DEFAULT_OFFSET); encoder1Offset.setPersistent()
         if (!encoder2Offset.exists()) encoder2Offset.setDouble(ENCODER_2_DEFAULT_OFFSET); encoder2Offset.setPersistent()
+        if (!disableTurretEntry.exists()) disableTurretEntry.setBoolean(false); disableTurretEntry.setPersistent()
 
 
 
@@ -339,8 +342,12 @@ object Turret: SubsystemBase("Turret") {
     }
 
     fun aimAtTarget(): Command = run {
-        fieldCentricSetpoint = turretTranslation.angleTo(AimUtils.aimTarget)
-    }.onlyRunWhileFalse { Robot.isTestEnabled }
+            fieldCentricSetpoint = turretTranslation.angleTo(AimUtils.aimTarget)
+    }.onlyRunWhileFalse { Robot.isTestEnabled && Drive.useAprilTags }
+
+    fun staticAimAtTarget(): Command = run {
+        AimUtils.staticShotPos.angleTo(AimUtils.aimTarget)
+    }
 
     fun setTurretOffset(robotHeading: Angle) {
         tempHeadingResetAngle = robotHeading

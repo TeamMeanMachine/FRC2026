@@ -2,7 +2,6 @@ package frc.team2471.frc2026
 
 import com.ctre.phoenix6.SignalLogger
 import com.ctre.phoenix6.controls.MotionMagicVoltage
-import com.ctre.phoenix6.controls.NeutralOut
 import com.ctre.phoenix6.controls.VelocityVoltage
 import com.ctre.phoenix6.controls.VoltageOut
 import com.ctre.phoenix6.hardware.CANcoder
@@ -57,6 +56,7 @@ import org.team2471.frc.lib.units.asRotation2d
 import org.team2471.frc.lib.units.asVolts
 import org.team2471.frc.lib.units.cos
 import org.team2471.frc.lib.units.degrees
+import org.team2471.frc.lib.units.feet
 import org.team2471.frc.lib.units.inches
 import org.team2471.frc.lib.units.radians
 import org.team2471.frc.lib.units.rotations
@@ -76,41 +76,42 @@ object Shooter: SubsystemBase("Shooter") {
 
     // feet, rot/s (of the wheel not the motor)
     val hubSpeedCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
-        put(3.0, 59.07)
-        put(4.0, 59.564)
-        put(5.0, 61.646)
-        put(6.0, 62.255)
-        put(7.0, 63.053)
-        put(8.0, 64.763)
-        put(9.0, 66.095)
-        put(10.0, 67.538)
-        put(11.0, 69.085)
-        put(12.0, 70.73)
-        put(13.0, 72.466)
-        put(14.0, 74.287)
-        put(15.0, 77.0)
-        put(16.0, 79.0)
-        put(17.0, 80.0)
-        put(18.0, 85.0)
+        put(3.0, 64.158)
+        put(4.0, 65.119)
+        put(5.0, 65.993)
+        put(6.0, 66.591)
+        put(7.0, 67.263)
+        put(8.0, 68.009)
+        put(9.0, 68.825)
+        put(10.0, 69.711)
+        put(11.0, 70.663)
+        put(12.0, 71.68)
+        put(13.0, 72.759)
+        put(14.0, 73.898)
+        put(15.0, 75.094)
+        put(16.0, 76.345)
+        put(17.0, 77.648)
+        put(18.0, 79.4)
     }
     // feet, degrees
     val hubAngleCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
-        put(3.0, 81.549)
-        put(4.0, 78.795)
-        put(5.0, 75.281)
-        put(6.0, 72.803)
-        put(7.0, 70.346)
-        put(8.0, 67.655)
-        put(9.0, 65.271)
-        put(10.0, 62.985)
-        put(11.0, 60.797)
-        put(12.0, 58.708)
-        put(13.0, 56.716)
-        put(14.0, 54.819)
-        put(15.0, 53.015)
-        put(16.0, 50.5)
-        put(17.0, 49.684)
-        put(18.0, 48.14)
+        put(3.0, 84.142)
+        put(4.0, 81.743)
+        put(5.0, 79.536)
+        put(6.0, 77.592)
+        put(7.0, 75.685)
+        put(8.0, 73.818)
+        put(9.0, 71.993)
+        put(10.0, 70.213)
+        put(11.0, 68.478)
+        put(12.0, 66.791)
+        put(13.0, 65.151)
+        put(14.0, 63.56)
+        put(15.0, 62.018)
+        put(16.0, 60.526)
+        put(17.0, 59.081)
+        put(18.0, 57.621)
+
     }
 
     //feet, s
@@ -213,7 +214,10 @@ object Shooter: SubsystemBase("Shooter") {
     }
 
     val shooterShootingSpeedEntry = table.getEntry("Shooter Shooting Speed")
+    val doAutoShootEntry = table.getEntry("Do Auto Shoot")
+
     val shooterShootingSpeed: Double get() = shooterShootingSpeedEntry.getDouble(40.0)
+    val doAutoShoot: Boolean get() = doAutoShootEntry.getBoolean(true)
 
 
     val shooterMotor = LoggedTalonFX(Falcons.SHOOTER_0, CANivores.TURRET_CAN)
@@ -234,7 +238,7 @@ object Shooter: SubsystemBase("Shooter") {
             if (field > 0.0.rotationsPerSecond) {
                 shooterMotor.setControl(VelocityVoltage(field))
             } else {
-                shooterMotor.setControl(NeutralOut())
+                shooterMotor.setControl(MotionMagicVoltage(0.0))
             }
         }
 
@@ -245,7 +249,7 @@ object Shooter: SubsystemBase("Shooter") {
     @get:AutoLogOutput(key = "Shooter/Hood Angle Setpoint")
     var hoodAngleSetpoint: Angle = hoodAngle
         set(value) {
-            field = value.coerceIn(0.0.degrees, 45.0.degrees)
+            field = value.coerceIn(0.0.degrees, 44.0.degrees)
             hoodMotor.setControl(MotionMagicVoltage(field).withFeedForward(hoodFeedforward))
         }
 
@@ -287,6 +291,9 @@ object Shooter: SubsystemBase("Shooter") {
     @get:AutoLogOutput(key = "Shooter/Ramped up")
     val rampedUp: Boolean get() = (shooterVelocity - shooterVelocitySetpoint).absoluteValue() < 5.0.rotationsPerSecond
 
+    @get:AutoLogOutput(key = "Shooter/Ramped up")
+    val rampedUpPassing: Boolean get() = (shooterVelocity - shooterVelocitySetpoint).absoluteValue() < 20.0.rotationsPerSecond
+
     var isShooting = false
     var i = 0
 
@@ -295,7 +302,9 @@ object Shooter: SubsystemBase("Shooter") {
         hoodMotor.configSim(DCMotor.getKrakenX60(1), 0.005)
 
         if (!shooterShootingSpeedEntry.exists()) shooterShootingSpeedEntry.setDouble(shooterShootingSpeed)
+        if (!doAutoShootEntry.exists()) doAutoShootEntry.setBoolean(true)
         shooterShootingSpeedEntry.setPersistent()
+        doAutoShootEntry.setPersistent()
 
         shooterMotor.applyConfiguration {
             currentLimits(39.0, 50.0, 1.0)
@@ -309,6 +318,8 @@ object Shooter: SubsystemBase("Shooter") {
             i(if (isReal) 0.25 else 0.0)
 //            d(0.0)
 //            s(0.0, StaticFeedforwardSignValue.UseVelocitySign)
+
+            MotionMagic.MotionMagicAcceleration = 30.0
 
             //Bang bang torque
 //            p(99999999.9)
@@ -364,6 +375,31 @@ object Shooter: SubsystemBase("Shooter") {
         LoopLogger.record("Shooter periodic")
     }
 
+    fun default(): Command = runCommand(this) {
+        if (doAutoShoot && Drive.useAprilTags && AimUtils.isAimingAtGoal) {
+            if (FieldManager.inScoringZone && !FieldManager.inTrenchArea && AimUtils.distanceToTarget < 13.0.feet && FieldManager.shouldShoot) {
+                shootLoop()
+            } else {
+                isShooting = false
+                if (Intake.intakeState != Intake.IntakeState.INTAKING) {
+                    Spindexer.currentState = Spindexer.State.OFF
+                }
+                hoodAngleSetpoint = HOOD_STOW_SETPOINT.degrees
+            }
+            if (FieldManager.shouldShoot && FieldManager.inScoringZone) {
+                rampUpLoop()
+            }
+        } else {
+            hoodAngleSetpoint = HOOD_STOW_SETPOINT.degrees
+            shooterVelocitySetpoint = 0.0.rotationsPerSecond
+            isShooting = false
+            if (Intake.intakeState != Intake.IntakeState.INTAKING) {
+                Spindexer.currentState = Spindexer.State.OFF
+            }
+        }
+    }
+
+
     fun shootOrRamp(): Command {
         return parallelCommand(
             runCommand(Shooter) {
@@ -395,7 +431,9 @@ object Shooter: SubsystemBase("Shooter") {
     }
 
     fun rampUpLoop() {
-        if (Robot.isAutonomous) {
+        if (!Drive.useAprilTags) {
+            shooterVelocitySetpoint = hubSpeedCurve.get(AimUtils.staticShotPos.getDistance(AimUtils.aimTarget)).rotationsPerSecond
+        } else if (Robot.isAutonomous) {
             shooterVelocitySetpoint = (if (AimUtils.isAimingAtGoal) hubSpeedCurve.get(AimUtils.distanceToTarget.asFeet) else hubSpeedCurve.get(11.0)).rotationsPerSecond / SHOOTER_GEAR_RATIO
         } else {
             shooterVelocitySetpoint = (if (AimUtils.isAimingAtGoal) hubSpeedCurve.get(AimUtils.distanceToTarget.asFeet) else floorSpeedCurve.get(AimUtils.distanceToTarget.asFeet)).rotationsPerSecond / SHOOTER_GEAR_RATIO
@@ -403,8 +441,8 @@ object Shooter: SubsystemBase("Shooter") {
     }
 
     fun shootLoop() {
-        println("Shoot Loop!!!")
-        if (!FieldManager.inTrenchArea && !Turret.isTurretWrapping && rampedUp && (FieldManager.shouldShoot || !AimUtils.isAimingAtGoal)) {
+//        println("Shoot Loop!!!")
+        if (!FieldManager.inTrenchArea && !Turret.isTurretWrapping && ((rampedUp && AimUtils.isAimingAtGoal) || (rampedUpPassing && !AimUtils.isAimingAtGoal)) && (FieldManager.shouldShoot || !AimUtils.isAimingAtGoal)) {
             isShooting = true
             Spindexer.currentState = Spindexer.State.ON
         } else {
@@ -422,8 +460,6 @@ object Shooter: SubsystemBase("Shooter") {
         } else {
             hoodAngleSetpoint = HOOD_STOW_SETPOINT.degrees
         }
-
-
 
     }
 

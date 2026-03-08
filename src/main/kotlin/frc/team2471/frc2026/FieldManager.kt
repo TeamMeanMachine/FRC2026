@@ -7,7 +7,6 @@ import edu.wpi.first.math.geometry.Translation2d
 import edu.wpi.first.networktables.NetworkTableInstance
 import edu.wpi.first.units.measure.Distance
 import edu.wpi.first.wpilibj.DriverStation
-import frc.team2471.frc2026.FieldManager.matchTime
 import frc.team2471.frc2026.FieldManager.reflectAcrossField
 import frc.team2471.frc2026.FieldManager.rotateAroundField
 import frc.team2471.frc2026.Robot.isAutonomous
@@ -21,7 +20,6 @@ import org.team2471.frc.lib.units.*
 import org.team2471.frc.lib.util.isRedAlliance
 import kotlin.math.absoluteValue
 import kotlin.math.floor
-import kotlin.math.round
 import kotlin.math.sign
 
 object FieldManager {
@@ -59,11 +57,20 @@ object FieldManager {
     val lowerRedTrenchPosition = ((allAprilTags[0].pose.toPose2d().translation + allAprilTags[11].pose.toPose2d().translation)/2.0)
     val upperRedTrenchPosition = ((allAprilTags[5].pose.toPose2d().translation + allAprilTags[6].pose.toPose2d().translation)/2.0)
 
+    val lowerBlueStaticShotPosition = lowerBlueTrenchPosition + Translation2d((-24.0).inches.asMeters, (-15.0).inches.asMeters)
+    val upperBlueStaticShotPosition = upperBlueTrenchPosition + Translation2d((-24.0).inches.asMeters, (15.0).inches.asMeters)
+    val lowerRedStaticShotPosition = lowerRedTrenchPosition + Translation2d((24.0).inches.asMeters, (-15.0).inches.asMeters)
+    val upperRedStaticShotPosition = upperRedTrenchPosition + Translation2d((24.0).inches.asMeters, (15.0).inches.asMeters)
+
     val trenchPositions: Array<Translation2d> = arrayOf(lowerBlueTrenchPosition, lowerRedTrenchPosition, upperRedTrenchPosition, upperBlueTrenchPosition)
 
     @get:AutoLogOutput(key = "FieldManager/In Trench Area")
     val inTrenchArea: Boolean
         get () {
+            if (!autoHoodRetraction || !Drive.useAprilTags) {
+                return false
+            }
+
             for (pose in trenchPositions) {
                 val relativePose = pose - Drive.localizer.pose.translation
                 if (relativePose.y.absoluteValue.meters < (trenchAreaLength/2.0) && relativePose.x.absoluteValue.meters < (trenchAreaWidth/2.0)) {
@@ -88,7 +95,7 @@ object FieldManager {
 
     val passPose: Translation2d
         get() {
-            var pose = Translation2d(0.5, 2.0)
+            var pose = Translation2d(4.0, 2.0)
 
             if (isRedAlliance) {
                 pose = Translation2d(fieldLength.asMeters - pose.x, pose.y)
@@ -150,22 +157,32 @@ object FieldManager {
     val matchTime: Double
         get() = DriverStation.getMatchTime()
 
+    val doShiftTimingEntry = table.getEntry("DoShiftTiming")
+    val autoHoodRetractionEntry = table.getEntry("AutoHoodRetraction")
+
     val hubCountdownEntry = table.getEntry("HubCountdown")
     val activeHubEntry = table.getEntry("ActiveHub")
+
+    val doShiftTiming get() = doShiftTimingEntry.getBoolean(true)
+    val autoHoodRetraction get() = autoHoodRetractionEntry.getBoolean(true)
+
+    val shiftStartTimes = arrayOf(130.0, 105.0, 80.0, 55.0).map { it + AimUtils.SHOT_AIRTIME + HUB_PROCESSING_TIME }
+    val shiftEndTimes = arrayOf(105.0, 80.0, 55.0, 30.0)
 
     // this is offset by shoot time. for shooting /O\
     @get:AutoLogOutput(key = "FieldManager/shouldShoot")
     val shouldShoot: Boolean
         get () {
+            if (!doShiftTiming) {
+                return true
+            }
             if (matchTime > 130.0 || matchTime < 30.0 + AimUtils.SHOT_AIRTIME + HUB_PROCESSING_TIME || isAutonomous) {
                 return true
             }
-            val shiftStartTimes = arrayOf(130.0, 105.0, 80.0, 55.0).map { it + AimUtils.SHOT_AIRTIME + HUB_PROCESSING_TIME }
-            val shiftEndTimes = arrayOf(105.0, 80.0, 55.0, 30.0)
-            if (matchTime in shiftStartTimes[1]..shiftEndTimes[1] || matchTime in shiftStartTimes[3]..shiftEndTimes[3])   {
-                return weWonAuto
+            return if (matchTime in shiftEndTimes[1]..shiftStartTimes[1] || matchTime in shiftEndTimes[3]..shiftStartTimes[3])   {
+                weWonAuto
             } else {
-                return !weWonAuto
+                !weWonAuto
             }
         }
 
@@ -183,6 +200,9 @@ object FieldManager {
         }
 
     init {
+        if (!doShiftTimingEntry.exists()) doShiftTimingEntry.setBoolean(true)
+        if (!autoHoodRetractionEntry.exists()) autoHoodRetractionEntry.setBoolean(true)
+
         val apriltagPositions = allAprilTags.map { it.pose }
         Logger.recordOutput("All apriltags", *apriltagPositions.toTypedArray())
         println("FieldManager init. Field dimensions: $fieldDimensions. ${allAprilTags.size} tags.")

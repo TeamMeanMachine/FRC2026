@@ -17,6 +17,7 @@ import edu.wpi.first.math.interpolation.InverseInterpolator
 import edu.wpi.first.math.kinematics.ChassisSpeeds
 import edu.wpi.first.math.numbers.N1
 import edu.wpi.first.math.numbers.N3
+import edu.wpi.first.networktables.NetworkTableInstance
 import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.wpilibj.Timer
 import edu.wpi.first.wpilibj2.command.Command
@@ -55,6 +56,10 @@ import kotlin.math.atan2
 
 
 object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerConstants.moduleConfigs) {
+    private val table = NetworkTableInstance.getDefault().getTable("Drive")
+
+    val useAprilTagsEntry = table.getEntry("UseAprilTags")
+    val useAprilTags: Boolean get() = useAprilTagsEntry.getBoolean(true)
 
     // To reset position use this, also add other pose sources that need reset here.
     override var pose: Pose2d
@@ -149,6 +154,8 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
 
     init {
         println("inside Drive init")
+
+        if (!useAprilTagsEntry.exists()) useAprilTagsEntry.setBoolean(true)
 
         // MUST start inside the field on bootup for accurate heading measurements due to a PoseLocalizer bug.
         pose = Pose2d(3.0, 3.0, heading)
