@@ -82,9 +82,9 @@ object Autonomous: Autonomi() {
                     ).withName("Intake homing"),
                 ).withName("First component Double swipe auto"),
                 parallelCommand(
-                    Shooter.shoot(),
+                    Shooter.shoot(true),
                     Intake.pulse()
-                ).withTimeout(2.0),
+                ).withTimeout(3.5),
                 parallelCommand(
                     runOnceCommand {
                         Intake.deploy()
@@ -93,7 +93,7 @@ object Autonomous: Autonomi() {
                     Drive.driveAlongChoreoPath(path.getSplit(2).get(), resetOdometry = false, poseSupplier = Drive.localizer::pose),
                     ),
                 parallelCommand(
-                    Shooter.shoot(),
+                    Shooter.shoot(true),
                     sequenceCommand(
                         runOnceCommand {
                             Intake.intakeState = Intake.IntakeState.OFF

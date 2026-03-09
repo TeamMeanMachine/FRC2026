@@ -76,22 +76,22 @@ object Shooter: SubsystemBase("Shooter") {
 
     // feet, rot/s (of the wheel not the motor)
     val hubSpeedCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
-        put(3.0, 64.158)
-        put(4.0, 65.119)
-        put(5.0, 65.993)
-        put(6.0, 66.591)
-        put(7.0, 67.263)
-        put(8.0, 68.009)
-        put(9.0, 68.825)
-        put(10.0, 69.711)
-        put(11.0, 70.663)
-        put(12.0, 71.68)
-        put(13.0, 72.759)
-        put(14.0, 73.898)
-        put(15.0, 75.094)
-        put(16.0, 76.345)
-        put(17.0, 77.648)
-        put(18.0, 79.4)
+        put(3.0, 63.254)
+        put(4.0, 64.202)
+        put(5.0, 65.063)
+        put(6.0, 65.653)
+        put(7.0, 66.316)
+        put(8.0, 67.051)
+        put(9.0, 67.856)
+        put(10.0, 68.729)
+        put(11.0, 69.668)
+        put(12.0, 70.67)
+        put(13.0, 71.734)
+        put(14.0, 72.857)
+        put(15.0, 74.036)
+        put(16.0, 75.27)
+        put(17.0, 76.555)
+        put(18.0, 78.282)
     }
     // feet, degrees
     val hubAngleCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
@@ -292,7 +292,7 @@ object Shooter: SubsystemBase("Shooter") {
     val rampedUp: Boolean get() = (shooterVelocity - shooterVelocitySetpoint).absoluteValue() < 5.0.rotationsPerSecond
 
     @get:AutoLogOutput(key = "Shooter/Ramped up")
-    val rampedUpPassing: Boolean get() = (shooterVelocity - shooterVelocitySetpoint).absoluteValue() < 20.0.rotationsPerSecond
+    val rampedUpPassing: Boolean get() = (shooterVelocity - shooterVelocitySetpoint).absoluteValue() < 15.0.rotationsPerSecond
 
     var isShooting = false
     var i = 0
@@ -421,8 +421,8 @@ object Shooter: SubsystemBase("Shooter") {
     }
 
 
-    fun shoot(): Command = runCommand(Shooter) {
-        shootLoop()
+    fun shoot(ignoreRampUp: Boolean = false): Command = runCommand(Shooter) {
+        shootLoop(ignoreRampUp)
         rampUpLoop()
     }.finallyRun {
         isShooting = false
@@ -440,9 +440,9 @@ object Shooter: SubsystemBase("Shooter") {
         }
     }
 
-    fun shootLoop() {
+    fun shootLoop(ignoreRampUp: Boolean = false) {
 //        println("Shoot Loop!!!")
-        if (!FieldManager.inTrenchArea && !Turret.isTurretWrapping && ((rampedUp && AimUtils.isAimingAtGoal) || (rampedUpPassing && !AimUtils.isAimingAtGoal)) && (FieldManager.shouldShoot || !AimUtils.isAimingAtGoal)) {
+        if (!FieldManager.inTrenchArea && !Turret.isTurretWrapping && (((rampedUp || ignoreRampUp) && AimUtils.isAimingAtGoal) || (rampedUpPassing && !AimUtils.isAimingAtGoal)) && (FieldManager.shouldShoot || !AimUtils.isAimingAtGoal)) {
             isShooting = true
             Spindexer.currentState = Spindexer.State.ON
         } else {

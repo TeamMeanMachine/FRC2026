@@ -127,6 +127,7 @@ object FieldManager {
                 && if (isRedAlliance) xRelativeToCenter > 0.0.meters else xRelativeToCenter < 0.0.meters
 
     const val HUB_PROCESSING_TIME = 1.0
+    const val RAMP_TIME = 3.0
 
     @get:AutoLogOutput(key = "FieldManager/rawGameData")
     val rawGameData: String
@@ -166,8 +167,9 @@ object FieldManager {
     val doShiftTiming get() = doShiftTimingEntry.getBoolean(true)
     val autoHoodRetraction get() = autoHoodRetractionEntry.getBoolean(true)
 
-    val shiftStartTimes = arrayOf(130.0, 105.0, 80.0, 55.0).map { it + AimUtils.SHOT_AIRTIME + HUB_PROCESSING_TIME }
-    val shiftEndTimes = arrayOf(105.0, 80.0, 55.0, 30.0)
+    val shouldShootStartTimes = arrayOf(130.0, 105.0, 80.0, 55.0).map { it + AimUtils.SHOT_AIRTIME + HUB_PROCESSING_TIME }
+    val shouldRampStartTimes = shouldShootStartTimes.map { it + RAMP_TIME}
+    val shouldShootEndTimes = arrayOf(105.0, 80.0, 55.0, 30.0)
 
     // this is offset by shoot time. for shooting /O\
     @get:AutoLogOutput(key = "FieldManager/shouldShoot")
@@ -179,7 +181,23 @@ object FieldManager {
             if (matchTime > 130.0 || matchTime < 30.0 + AimUtils.SHOT_AIRTIME + HUB_PROCESSING_TIME || isAutonomous) {
                 return true
             }
-            return if (matchTime in shiftEndTimes[1]..shiftStartTimes[1] || matchTime in shiftEndTimes[3]..shiftStartTimes[3])   {
+            return if (matchTime in shouldShootEndTimes[1]..shouldShootStartTimes[1] || matchTime in shouldShootEndTimes[3]..shouldShootStartTimes[3])   {
+                weWonAuto
+            } else {
+                !weWonAuto
+            }
+        }
+
+    @get:AutoLogOutput(key = "FieldManager/shouldRamp")
+    val shouldRamp: Boolean
+        get () {
+            if (!doShiftTiming) {
+                return true
+            }
+            if (matchTime > 130.0 || matchTime < 30.0 + AimUtils.SHOT_AIRTIME + HUB_PROCESSING_TIME + RAMP_TIME || isAutonomous) {
+                return true
+            }
+            return if (matchTime in shouldShootEndTimes[1]..shouldRampStartTimes[1] || matchTime in shouldShootEndTimes[3]..shouldRampStartTimes[3])   {
                 weWonAuto
             } else {
                 !weWonAuto

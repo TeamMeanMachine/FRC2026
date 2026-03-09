@@ -115,7 +115,7 @@ object Intake: SubsystemBase("Intake") {
 
 
         deployMotor.applyConfiguration {
-            currentLimits(20.0, 30.0, 1.0)
+            currentLimits(5.0, 25.0, 0.25)
 //            statorCurrentLimit(35.0)
             coastMode()
             p(1.5)
@@ -165,7 +165,7 @@ object Intake: SubsystemBase("Intake") {
         runCommand(this) {
             println("going out?")
             deployMotor.setControl(DutyCycleOut(-HOMING_POWER))
-        }.onlyRunWhileFalse { hitHardStop }.withTimeout(10.0).finallyRun {
+        }.onlyRunWhileFalse { hitHardStop }.withTimeout(6.0).finallyRun {
             deployMotor.setControl(DutyCycleOut(0.0))
             println("Deploy Pos: ${deployMotor.position}")
             deployMotor.setPosition(0.13)
