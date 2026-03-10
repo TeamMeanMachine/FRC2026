@@ -76,11 +76,11 @@ object Shooter: SubsystemBase("Shooter") {
 
     // feet, rot/s (of the wheel not the motor)
     val hubSpeedCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
-        put(3.0, 63.254)
-        put(4.0, 64.202)
-        put(5.0, 65.063)
-        put(6.0, 65.653)
-        put(7.0, 66.316)
+        put(3.0, 63.0)
+        put(4.0, 64.0)
+        put(5.0, 64.5)
+        put(6.0, 65.5)
+        put(7.0, 66.0)
         put(8.0, 67.051)
         put(9.0, 67.856)
         put(10.0, 68.729)
@@ -436,7 +436,7 @@ object Shooter: SubsystemBase("Shooter") {
         } else if (Robot.isAutonomous) {
             shooterVelocitySetpoint = (if (AimUtils.isAimingAtGoal) hubSpeedCurve.get(AimUtils.distanceToTarget.asFeet) else hubSpeedCurve.get(11.0)).rotationsPerSecond / SHOOTER_GEAR_RATIO
         } else {
-            shooterVelocitySetpoint = (if (AimUtils.isAimingAtGoal) hubSpeedCurve.get(AimUtils.distanceToTarget.asFeet) else floorSpeedCurve.get(AimUtils.distanceToTarget.asFeet)).rotationsPerSecond / SHOOTER_GEAR_RATIO
+            shooterVelocitySetpoint = (if (AimUtils.isAimingAtGoal || FieldManager.shouldRamp) hubSpeedCurve.get(AimUtils.distanceToTarget.asFeet) else floorSpeedCurve.get(AimUtils.distanceToTarget.asFeet)).rotationsPerSecond / SHOOTER_GEAR_RATIO
         }
     }
 
