@@ -84,6 +84,14 @@ object TunerConstants {
         Pigeon2Configs = null //Leave this null to skip applying Pigeon 2 configs
     }
 
+    val driveAutoCurrentLimit = 40.0
+    val driveAutoLowerLimit = 30.0
+    val driveAutoLowerTime = 1.0
+
+    val driveTeleCurrentLimit = 40.0
+    val driveTeleLowerLimit = 30.0
+    val driveTeleLowerTime = 1.0
+
     private val constantCreator: SwerveModuleConstantsFactory<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration> =
         SwerveModuleConstantsFactory<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>().apply {
             /**
@@ -96,9 +104,9 @@ object TunerConstants {
               */
             DriveMotorInitialConfigs = TalonFXConfiguration().apply {
                 CurrentLimits.apply {
-                    SupplyCurrentLimit = 40.0
-                    SupplyCurrentLowerLimit = 30.0
-                    SupplyCurrentLowerTime = 1.0
+                    SupplyCurrentLimit = driveAutoCurrentLimit
+                    SupplyCurrentLowerLimit = driveAutoLowerLimit
+                    SupplyCurrentLowerTime = driveAutoLowerTime
                     SupplyCurrentLimitEnable = true
                 }
             }

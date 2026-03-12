@@ -22,6 +22,7 @@ import org.littletonrobotics.junction.Logger
 import org.littletonrobotics.junction.networktables.NT4Publisher
 import org.littletonrobotics.junction.wpilog.WPILOGReader
 import org.littletonrobotics.junction.wpilog.WPILOGWriter
+import org.team2471.frc.lib.ctre.modifyConfiguration
 import org.team2471.frc.lib.util.RobotMode
 import org.team2471.frc.lib.util.robotMode
 import java.net.NetworkInterface
@@ -42,6 +43,9 @@ object Robot : LoggedRobot() {
         private set
     var beforeFirstEnableAsync = true
         private set
+
+    private var wasAutonomous = false
+    private var wasTeleop = false
 
     val commandScheduler = CommandScheduler.getInstance()
 
@@ -178,6 +182,39 @@ object Robot : LoggedRobot() {
         Drive.coastMode()
         Autonomous.autonomousCommand?.cancel() // This makes sure that the autonomous stops running when teleop starts running.
         Autonomous.testCommand?.cancel()
+
+        if (wasAutonomous) {
+            wasAutonomous = false
+            println("Was autonomous")
+            Drive.modules.forEach {
+                GlobalScope.launch {
+                    it.driveMotor.modifyConfiguration {
+                        CurrentLimits.apply {
+                            SupplyCurrentLimit = TunerConstants.driveTeleCurrentLimit
+                            SupplyCurrentLowerLimit = TunerConstants.driveTeleLowerLimit
+                            SupplyCurrentLowerTime = TunerConstants.driveTeleLowerTime
+                            SupplyCurrentLimitEnable = false
+                        }
+                    }
+                }
+            }
+        }
+        if (wasTeleop) {
+            wasTeleop = false
+            println("Was teleop")
+//            Drive.modules.forEach {
+//                GlobalScope.launch {
+//                    it.driveMotor.modifyConfiguration {
+//                        CurrentLimits.apply {
+//                            SupplyCurrentLimit = TunerConstants.driveAutoLowerLimit
+//                            SupplyCurrentLowerLimit = TunerConstants.driveAutoLowerLimit
+//                            SupplyCurrentLowerTime = TunerConstants.driveAutoLowerLimit
+//                            SupplyCurrentLimitEnable = false
+//                        }
+//                    }
+//                }
+//            }
+        }
     }
 
     /** This function is called periodically when disabled.  */
@@ -196,6 +233,7 @@ object Robot : LoggedRobot() {
 //        Autonomous.setDrivePositionToAutoStartPose()
 //        println("scheduling auto command $timeSinceEnabled")
         commandScheduler.schedule(Autonomous.autonomousCommand ?: Commands.runOnce({ println("THE AUTONOMOUS COMMAND IS NULL") }))
+        wasAutonomous = true
 //        println("scheduled auto command $timeSinceEnabled")
     }
 
@@ -204,6 +242,7 @@ object Robot : LoggedRobot() {
 
     /** This function is called once when teleop is enabled.  */
     override fun teleopInit() {
+        wasTeleop = true
     }
 
     /** This function is called periodically during operator control.  */
