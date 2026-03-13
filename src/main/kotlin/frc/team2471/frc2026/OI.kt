@@ -109,10 +109,10 @@ object OI: SubsystemBase("OI") {
             parallelCommand(
                 Shooter.shootOrRamp(),
                 Intake.pulse().onlyRunWhileTrue { driverController.rightTriggerAxis > 0.75 }.repeatedly()
-            )
+            ).ignoringDisable(true)
         )
 
-        driverController.leftBumper().whileTrue(runCommand {
+        driverController.leftBumper().and(driverController.povDown().negate()).whileTrue(runCommand {
             Intake.intakeState = Intake.IntakeState.INTAKING
             Intake.deploy()
         }.finallyRun {
@@ -131,7 +131,7 @@ object OI: SubsystemBase("OI") {
         (driverController.povDown().and(driverController.y())).onTrue(Intake.homeDeploy())
         (driverController.povDown().and(driverController.leftBumper())).onTrue(runOnceCommand { Intake.deepStow() })
 
-        driverController.povLeft().onTrue(Turret.staticAimAtTarget())
+        driverController.povLeft().whileTrue(Turret.staticAimAtTarget())
     }
 
     override fun periodic() {

@@ -20,6 +20,7 @@ import org.littletonrobotics.junction.AutoLogOutput
 import org.littletonrobotics.junction.Logger
 import org.team2471.frc.lib.control.LoopLogger
 import org.team2471.frc.lib.control.commands.onlyRunWhileFalse
+import org.team2471.frc.lib.control.commands.runCommand
 import org.team2471.frc.lib.ctre.PhoenixUtil
 import org.team2471.frc.lib.ctre.addFollower
 import org.team2471.frc.lib.ctre.applyConfiguration
@@ -69,8 +70,8 @@ object Turret: SubsystemBase("Turret") {
     val TURRET_RANGE = TURRET_TOP_LIMIT - TURRET_BOTTOM_LIMIT
     val TURRET_ENCODER_LIMIT = 720.0.degrees
 
-    const val ENCODER_1_DEFAULT_OFFSET = -95.09
-    const val ENCODER_2_DEFAULT_OFFSET = 117.8
+    const val ENCODER_1_DEFAULT_OFFSET = 105.908
+    const val ENCODER_2_DEFAULT_OFFSET = -163.125
 
     const val encoder1GearRatio = 30.0/200.0
     const val encoder2GearRatio = encoder1GearRatio * 83.0/32.0
@@ -238,7 +239,7 @@ object Turret: SubsystemBase("Turret") {
         println("Turret init")
         if (!encoder1Offset.exists()) encoder1Offset.setDouble(ENCODER_1_DEFAULT_OFFSET); encoder1Offset.setPersistent()
         if (!encoder2Offset.exists()) encoder2Offset.setDouble(ENCODER_2_DEFAULT_OFFSET); encoder2Offset.setPersistent()
-        if (!disableTurretEntry.exists()) disableTurretEntry.setBoolean(false); disableTurretEntry.setPersistent()
+        disableTurretEntry.setBoolean(false)
 
 
 
@@ -342,11 +343,11 @@ object Turret: SubsystemBase("Turret") {
     }
 
     fun aimAtTarget(): Command = run {
-            fieldCentricSetpoint = turretTranslation.angleTo(AimUtils.aimTarget)
+        fieldCentricSetpoint = turretTranslation.angleTo(AimUtils.aimTarget)
     }.onlyRunWhileFalse { Robot.isTestEnabled && Drive.useAprilTags }
 
     fun staticAimAtTarget(): Command = run {
-        AimUtils.staticShotPos.angleTo(AimUtils.aimTarget)
+        fieldCentricSetpoint = AimUtils.staticShotPos.angleTo(AimUtils.aimTarget)
     }
 
     fun setTurretOffset(robotHeading: Angle) {

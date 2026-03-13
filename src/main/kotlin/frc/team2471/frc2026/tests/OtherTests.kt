@@ -20,10 +20,10 @@ object PrintHubCurves {
     @JvmStatic
     fun main(args: Array<String>) {
         // constant time
-        printShooterCurves(AimUtils.HUB_HEIGHT - Turret.turretHeight, 3..18, AimUtils.SHOT_AIRTIME)
+        printShooterCurves(AimUtils.HUB_HEIGHT - Turret.turretHeight, 3..18, AimUtils.MEASURED_SHOT_AIRTIME)
 
         // constant(ish) exit velocity
-//        printShooterCurves(AimUtils.HUB_HEIGHT - Turret.turretHeight, 3..18, Pair(7.0, 9.0))
+//        printShooterCurves(AimUtils.HUB_HEIGHT - Turret.turretHeight, 3..18, Pair(70.0, 78.0))
     }
 }
 

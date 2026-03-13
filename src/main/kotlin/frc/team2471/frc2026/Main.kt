@@ -26,6 +26,7 @@ import org.team2471.frc.lib.ctre.modifyConfiguration
 import org.team2471.frc.lib.util.RobotMode
 import org.team2471.frc.lib.util.robotMode
 import java.net.NetworkInterface
+import java.util.ConcurrentModificationException
 import kotlin.collections.iterator
 
 /**
@@ -154,7 +155,11 @@ object Robot : LoggedRobot() {
 
 
         LoopLogger.record("b4 CommandScheduler")
-        commandScheduler.run()
+        try {
+            commandScheduler.run()
+        } catch (e: ConcurrentModificationException) {
+            println("ConcurrentModificationException!!!! $e")
+        }
 
         // Return to non-RT thread priority (do not modify the first argument)
 //         Threads.setCurrentThreadPriority(false, 10);
@@ -173,8 +178,6 @@ object Robot : LoggedRobot() {
                 Intake.finishedHoming = true
             }
         }
-
-        Shooter.hoodAngleSetpoint = Shooter.hoodAngle
     }
 
     /** This function is called once when the robot is disabled.  */

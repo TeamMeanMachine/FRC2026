@@ -127,7 +127,7 @@ object Intake: SubsystemBase("Intake") {
             motionMagic(750.0, 1500.0)
         }
         rollerMotor.applyConfiguration {
-            currentLimits(40.0, 50.0, 1.0)
+            currentLimits(15.0, 40.0, 0.2)
             p(7.0)
             s(10.0, StaticFeedforwardSignValue.UseVelocitySign)
             coastMode()
@@ -197,7 +197,9 @@ object Intake: SubsystemBase("Intake") {
             }
             IntakeState.INTAKING -> {
                 velocitySetpoint = INTAKE_POWER
-                Spindexer.currentState = Spindexer.State.AGITATING
+                if (!Shooter.isShooting) {
+                    Spindexer.currentState = Spindexer.State.AGITATING
+                }
             }
             IntakeState.SPITTING -> {
                 velocitySetpoint = -INTAKE_POWER

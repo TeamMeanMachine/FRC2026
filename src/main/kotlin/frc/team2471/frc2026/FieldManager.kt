@@ -167,7 +167,7 @@ object FieldManager {
     val doShiftTiming get() = doShiftTimingEntry.getBoolean(true)
     val autoHoodRetraction get() = autoHoodRetractionEntry.getBoolean(true)
 
-    val shouldShootStartTimes = arrayOf(130.0, 105.0, 80.0, 55.0).map { it + AimUtils.SHOT_AIRTIME + HUB_PROCESSING_TIME }
+    val shouldShootStartTimes = arrayOf(130.0, 105.0, 80.0, 55.0).map { it + AimUtils.MEASURED_SHOT_AIRTIME + HUB_PROCESSING_TIME }
     val shouldRampStartTimes = shouldShootStartTimes.map { it + RAMP_TIME}
     val shouldShootEndTimes = arrayOf(105.0, 80.0, 55.0, 30.0)
 
@@ -178,7 +178,7 @@ object FieldManager {
             if (!doShiftTiming) {
                 return true
             }
-            if (matchTime > 130.0 || matchTime < 30.0 + AimUtils.SHOT_AIRTIME + HUB_PROCESSING_TIME || isAutonomous) {
+            if (matchTime > 130.0 || matchTime < 30.0 + AimUtils.MEASURED_SHOT_AIRTIME + HUB_PROCESSING_TIME || isAutonomous) {
                 return true
             }
             return if (matchTime in shouldShootEndTimes[1]..shouldShootStartTimes[1] || matchTime in shouldShootEndTimes[3]..shouldShootStartTimes[3])   {
@@ -194,7 +194,7 @@ object FieldManager {
             if (!doShiftTiming) {
                 return true
             }
-            if (matchTime > 130.0 || matchTime < 30.0 + AimUtils.SHOT_AIRTIME + HUB_PROCESSING_TIME + RAMP_TIME || isAutonomous) {
+            if (matchTime > 130.0 || matchTime < 30.0 + AimUtils.MEASURED_SHOT_AIRTIME + HUB_PROCESSING_TIME + RAMP_TIME || isAutonomous) {
                 return true
             }
             return if (matchTime in shouldShootEndTimes[1]..shouldRampStartTimes[1] || matchTime in shouldShootEndTimes[3]..shouldRampStartTimes[3])   {
@@ -218,8 +218,8 @@ object FieldManager {
         }
 
     init {
-        if (!doShiftTimingEntry.exists()) doShiftTimingEntry.setBoolean(true)
-        if (!autoHoodRetractionEntry.exists()) autoHoodRetractionEntry.setBoolean(true)
+        doShiftTimingEntry.setBoolean(true)
+        autoHoodRetractionEntry.setBoolean(true)
 
         val apriltagPositions = allAprilTags.map { it.pose }
         Logger.recordOutput("All apriltags", *apriltagPositions.toTypedArray())

@@ -34,7 +34,8 @@ import kotlin.math.sqrt
 
 object AimUtils {
     // seconds
-    const val SHOT_AIRTIME = 1.25
+    const val SIM_SHOT_AIRTIME = 1.25
+    const val MEASURED_SHOT_AIRTIME = 1.0
     const val PASS_AIRTIME = 1.0
 
     // m/s^2
@@ -65,7 +66,7 @@ object AimUtils {
             }
 
             return if (isAimingAtGoal) {
-                FieldManager.goalPose - calculateAimTargetOffset(SHOT_AIRTIME)
+                FieldManager.goalPose - calculateAimTargetOffset(MEASURED_SHOT_AIRTIME)
             } else {
                 FieldManager.passPose
             }
@@ -100,7 +101,7 @@ object AimUtils {
 //        var offset : Translation2d = turretVelocity * Shooter.hubTimeCurve.get(Turret.turretTranslation.getDistance(
 //            FieldManager.goalPose).meters.asFeet)
 //
-//        for (i in 1..4) {
+//        for (i in 1..6) {
 //            offset = turretVelocity * Shooter.hubTimeCurve.get(Turret.turretTranslation.getDistance(FieldManager.goalPose - offset).meters.asFeet)
 //        }
 //

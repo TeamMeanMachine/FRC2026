@@ -155,7 +155,7 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
     init {
         println("inside Drive init")
 
-        if (!useAprilTagsEntry.exists()) useAprilTagsEntry.setBoolean(true)
+        useAprilTagsEntry.setBoolean(true)
 
         // MUST start inside the field on bootup for accurate heading measurements due to a PoseLocalizer bug.
         pose = Pose2d(3.0, 3.0, heading)
