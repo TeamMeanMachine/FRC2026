@@ -75,24 +75,24 @@ import kotlin.math.cos
 object Shooter: SubsystemBase("Shooter") {
     val table = NetworkTableInstance.getDefault().getTable("Shooter")
 
-    // feet, rot/s (of the wheel not the motor)
+    // feet, rot/s (of the wheel not the motor) (in an ideal condition. need to divide by SHOOTER_EFFICIENCY)
     val hubSpeedCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
-        put(3.0, 60.0)
-        put(4.0, 61.0)
-        put(5.0, 62.0)
-        put(6.0, 63.5)
-        put(7.0, 65.0)
-        put(8.0, 67.051)
-        put(9.0, 67.856)
-        put(10.0, 68.729)
-        put(11.0, 69.668)
-        put(12.0, 70.67)
-        put(13.0, 71.734)
-        put(14.0, 75.5)
-        put(15.0, 77.2)
-        put(16.0, 80.4)
-        put(17.0, 82.7)
-        put(18.0, 84.282)
+        put(3.0, 42.6)
+        put(4.0, 43.31)
+        put(5.0, 44.02)
+        put(6.0, 45.085)
+        put(7.0, 46.15)
+        put(8.0, 47.606)
+        put(9.0, 48.178)
+        put(10.0, 48.798)
+        put(11.0, 49.464)
+        put(12.0, 50.176)
+        put(13.0, 50.931)
+        put(14.0, 53.605)
+        put(15.0, 54.812)
+        put(16.0, 57.084)
+        put(17.0, 58.717)
+        put(18.0, 59.840)
     }
     // feet, degrees
     val hubAngleCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
@@ -135,44 +135,44 @@ object Shooter: SubsystemBase("Shooter") {
 //        put(18.0, 1.32)
 //    }
 
-    // feet, m/s
+    // feet, rot/s (of the wheel not the motor) (in an ideal condition. need to divide by SHOOTER_EFFICIENCY)
     val floorSpeedCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
-        put(5.0, 44.462)
-        put(6.0, 45.456)
-        put(7.0, 46.604)
-        put(8.0, 47.893)
-        put(9.0, 50.202)
-        put(10.0, 52.728)
-        put(11.0, 54.052)
-        put(12.0, 55.907)
-        put(13.0, 57.927)
-        put(14.0, 60.032)
-        put(15.0, 62.214)
-        put(16.0, 64.464)
-        put(17.0, 66.777)
-        put(18.0, 69.349)
-        put(19.0, 72.074)
-        put(20.0, 74.115)
-        put(21.0, 76.721)
-        put(22.0, 79.251)
-        put(23.0, 81.814)
-        put(24.0, 84.409)
-        put(25.0, 87.031)
-        put(26.0, 90.626)
-        put(27.0, 92.792)
-        put(28.0, 95.046)
-        put(29.0, 97.76)
-        put(30.0, 100.493)
-        put(31.0, 103.242)
-        put(32.0, 106.72)
-        put(33.0, 109.65)
-        put(34.0, 112.396)
-        put(35.0, 115.459)
-        put(36.0, 118.88)
-        put(37.0, 120.661)
-        put(38.0, 124.042)
-        put(39.0, 125.51)
-        put(40.0, 129.644)
+        put(5.0, 29.79)
+        put(6.0, 30.456)
+        put(7.0, 31.224)
+        put(8.0, 32.089)
+        put(9.0, 33.635)
+        put(10.0, 35.328)
+        put(11.0, 36.215)
+        put(12.0, 37.457)
+        put(13.0, 38.811)
+        put(14.0, 40.222)
+        put(15.0, 41.683)
+        put(16.0, 43.191)
+        put(17.0, 44.741)
+        put(18.0, 46.464)
+        put(19.0, 48.289)
+        put(20.0, 49.657)
+        put(21.0, 51.403)
+        put(22.0, 53.098)
+        put(23.0, 54.815)
+        put(24.0, 56.554)
+        put(25.0, 58.311)
+        put(26.0, 60.719)
+        put(27.0, 62.17)
+        put(28.0, 63.681)
+        put(29.0, 65.499)
+        put(30.0, 67.33)
+        put(31.0, 69.172)
+        put(32.0, 71.502)
+        put(33.0, 73.465)
+        put(34.0, 75.305)
+        put(35.0, 77.357)
+        put(36.0, 79.649)
+        put(37.0, 80.843)
+        put(38.0, 83.108)
+        put(39.0, 84.092)
+        put(40.0, 86.862)
     }
     // feet, degrees
     val floorAngleCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
@@ -440,13 +440,7 @@ object Shooter: SubsystemBase("Shooter") {
     }
 
     fun rampUpLoop() {
-        if (!Drive.useAprilTags) {
-            shooterVelocitySetpoint = hubSpeedCurve.get(AimUtils.staticShotPos.getDistance(AimUtils.aimTarget)).rotationsPerSecond
-        } else if (Robot.isAutonomous) {
-            shooterVelocitySetpoint = (if (AimUtils.isAimingAtGoal) hubSpeedCurve.get(AimUtils.distanceToTarget.asFeet) else hubSpeedCurve.get(11.0)).rotationsPerSecond / SHOOTER_GEAR_RATIO
-        } else {
-            shooterVelocitySetpoint = (if (AimUtils.isAimingAtGoal || FieldManager.shouldRamp) hubSpeedCurve.get(AimUtils.distanceToTarget.asFeet) else floorSpeedCurve.get(AimUtils.distanceToTarget.asFeet)).rotationsPerSecond / SHOOTER_GEAR_RATIO
-        }
+        shooterVelocitySetpoint = AimUtils.getShooterRPS()
     }
 
     fun shootLoop(ignoreRampUp: Boolean = false) {

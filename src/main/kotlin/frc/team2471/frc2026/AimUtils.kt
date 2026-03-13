@@ -6,9 +6,13 @@ import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.units.measure.AngularVelocity
 import edu.wpi.first.units.measure.Distance
 import edu.wpi.first.units.measure.LinearVelocity
+import frc.team2471.frc2026.Shooter.SHOOTER_GEAR_RATIO
+import frc.team2471.frc2026.Shooter.floorSpeedCurve
+import frc.team2471.frc2026.Shooter.hubSpeedCurve
 import org.littletonrobotics.junction.AutoLogOutput
 import org.team2471.frc.lib.math.round
 import org.team2471.frc.lib.units.asDegrees
+import org.team2471.frc.lib.units.asFeet
 import org.team2471.frc.lib.units.asInches
 import org.team2471.frc.lib.units.asInchesPerSecond
 import org.team2471.frc.lib.units.asMeters
@@ -86,6 +90,16 @@ object AimUtils {
                     FieldManager.lowerBlueStaticShotPosition
                 }
             }
+
+    fun getShooterRPS(): AngularVelocity {
+        return if (!Drive.useAprilTags) {
+            hubSpeedCurve.get(staticShotPos.getDistance(aimTarget)).rotationsPerSecond
+        } else if (Robot.isAutonomous) {
+            (if (isAimingAtGoal) hubSpeedCurve.get(distanceToTarget.asFeet) else hubSpeedCurve.get(11.0)).rotationsPerSecond
+        } else {
+            (if (isAimingAtGoal || FieldManager.shouldRamp) hubSpeedCurve.get(distanceToTarget.asFeet) else floorSpeedCurve.get(distanceToTarget.asFeet)).rotationsPerSecond
+        } / SHOOTER_GEAR_RATIO / SHOOTER_EFFICIENCY
+    }
 
 
     // uses turret velocity to offset the aim target for sotm
@@ -323,10 +337,10 @@ object AimUtils {
     }
 
     fun LinearVelocity.toWheelSpeed(): AngularVelocity {
-        return ((2.0 * this.asInchesPerSecond/(Shooter.WHEEL_DIAMETER.asInches * Math.PI)).rotationsPerSecond) / SHOOTER_EFFICIENCY
+        return ((2.0 * this.asInchesPerSecond/(Shooter.WHEEL_DIAMETER.asInches * Math.PI)).rotationsPerSecond)
     }
 
     fun AngularVelocity.toExitVelocity(): LinearVelocity {
-        return (this.times(SHOOTER_EFFICIENCY).asRotationsPerSecond * (Shooter.WHEEL_DIAMETER.asInches * Math.PI) / 2.0).inchesPerSecond
+        return (this.asRotationsPerSecond * (Shooter.WHEEL_DIAMETER.asInches * Math.PI) / 2.0).inchesPerSecond
     }
 }
