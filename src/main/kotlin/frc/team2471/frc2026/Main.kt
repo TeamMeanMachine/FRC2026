@@ -22,6 +22,7 @@ import org.littletonrobotics.junction.Logger
 import org.littletonrobotics.junction.networktables.NT4Publisher
 import org.littletonrobotics.junction.wpilog.WPILOGReader
 import org.littletonrobotics.junction.wpilog.WPILOGWriter
+import org.team2471.frc.lib.ctre.currentLimits
 import org.team2471.frc.lib.ctre.modifyConfiguration
 import org.team2471.frc.lib.util.RobotMode
 import org.team2471.frc.lib.util.robotMode
@@ -192,14 +193,20 @@ object Robot : LoggedRobot() {
             Drive.modules.forEach {
                 GlobalScope.launch {
                     it.driveMotor.modifyConfiguration {
-                        CurrentLimits.apply {
-                            SupplyCurrentLimit = TunerConstants.driveTeleCurrentLimit
-                            SupplyCurrentLowerLimit = TunerConstants.driveTeleLowerLimit
-                            SupplyCurrentLowerTime = TunerConstants.driveTeleLowerTime
-                            SupplyCurrentLimitEnable = false
-                        }
+                        currentLimits(
+                            TunerConstants.driveTeleCurrentLimits.continuousLimit,
+                            TunerConstants.driveTeleCurrentLimits.peakLimit,
+                            TunerConstants.driveTeleCurrentLimits.peakDuration
+                            )
                     }
                 }
+            }
+            Intake.rollerMotor.modifyConfiguration {
+                currentLimits(
+                    Intake.teleopCurrentLimits.continuousLimit,
+                    Intake.teleopCurrentLimits.peakLimit,
+                    Intake.teleopCurrentLimits.peakDuration
+                )
             }
         }
         if (wasTeleop) {

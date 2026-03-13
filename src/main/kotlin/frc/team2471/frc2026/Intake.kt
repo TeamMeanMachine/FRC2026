@@ -10,6 +10,7 @@ import edu.wpi.first.wpilibj.DigitalInput
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.SubsystemBase
 import org.littletonrobotics.junction.AutoLogOutput
+import org.team2471.frc.lib.control.CurrentLimits
 import org.team2471.frc.lib.control.LoopLogger
 import org.team2471.frc.lib.control.commands.finallyRun
 import org.team2471.frc.lib.control.commands.onlyRunWhileFalse
@@ -43,6 +44,7 @@ object Intake: SubsystemBase("Intake") {
     const val HOMING_POWER = 0.1
 
     val rollerMotor = TalonFX(Falcons.INTAKE_ROLLER_0)
+    val rollerMotorFollower = TalonFX(Falcons.INTAKE_ROLLER_1)
     val deployMotor = TalonFX(Falcons.INTAKE_DEPLOY)
     val stopSensor = DigitalInput(DigitalSensors.INTAKE_STOP_SENSOR)
 
@@ -100,6 +102,9 @@ object Intake: SubsystemBase("Intake") {
 
     var goingToSetpoint: Boolean = false
 
+    val autoCurrentLimits = CurrentLimits(30.0, 40.0, 1.0)
+    val teleopCurrentLimits = CurrentLimits(15.0, 40.0, 0.2)
+
 
     init {
         if (!deployPoseEntry.exists()) deployPoseEntry.setDouble(DEPLOY_POSE)
@@ -127,12 +132,13 @@ object Intake: SubsystemBase("Intake") {
             motionMagic(750.0, 1500.0)
         }
         rollerMotor.applyConfiguration {
-            currentLimits(15.0, 40.0, 0.2)
+            currentLimits(autoCurrentLimits.peakLimit, autoCurrentLimits.continuousLimit, autoCurrentLimits.peakDuration)
+//            currentLimits(15.0, 40.0, 0.2)
             p(7.0)
             s(10.0, StaticFeedforwardSignValue.UseVelocitySign)
             coastMode()
         }
-        rollerMotor.addFollower(Falcons.INTAKE_ROLLER_1)
+        rollerMotor.addFollower(rollerMotorFollower)
 
         deployMotor.setPosition(0.0)
 

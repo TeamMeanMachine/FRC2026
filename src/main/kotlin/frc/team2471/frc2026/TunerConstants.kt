@@ -16,6 +16,7 @@ import edu.wpi.first.units.measure.LinearAcceleration
 import edu.wpi.first.units.measure.LinearVelocity
 import edu.wpi.first.wpilibj.Alert
 import edu.wpi.first.wpilibj.Preferences
+import org.team2471.frc.lib.control.CurrentLimits
 import org.team2471.frc.lib.ctre.getMagnetSensorOffset
 import org.team2471.frc.lib.units.asDegrees
 import org.team2471.frc.lib.units.asFeet
@@ -84,13 +85,8 @@ object TunerConstants {
         Pigeon2Configs = null //Leave this null to skip applying Pigeon 2 configs
     }
 
-    val driveAutoCurrentLimit = 40.0
-    val driveAutoLowerLimit = 30.0
-    val driveAutoLowerTime = 1.0
-
-    val driveTeleCurrentLimit = 40.0
-    val driveTeleLowerLimit = 30.0
-    val driveTeleLowerTime = 1.0
+    val driveAutoCurrentLimits = CurrentLimits(30.0, 40.0, 1.0)
+    val driveTeleCurrentLimits = CurrentLimits(30.0, 40.0, 1.0)
 
     private val constantCreator: SwerveModuleConstantsFactory<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration> =
         SwerveModuleConstantsFactory<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>().apply {
@@ -104,9 +100,9 @@ object TunerConstants {
               */
             DriveMotorInitialConfigs = TalonFXConfiguration().apply {
                 CurrentLimits.apply {
-                    SupplyCurrentLimit = driveAutoCurrentLimit
-                    SupplyCurrentLowerLimit = driveAutoLowerLimit
-                    SupplyCurrentLowerTime = driveAutoLowerTime
+                    SupplyCurrentLimit = driveAutoCurrentLimits.peakLimit
+                    SupplyCurrentLowerLimit = driveAutoCurrentLimits.continuousLimit
+                    SupplyCurrentLowerTime = driveAutoCurrentLimits.peakDuration
                     SupplyCurrentLimitEnable = true
                 }
             }
