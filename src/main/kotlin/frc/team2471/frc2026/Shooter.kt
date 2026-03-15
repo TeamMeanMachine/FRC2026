@@ -9,6 +9,7 @@ import com.ctre.phoenix6.hardware.CANcoder
 import com.ctre.phoenix6.signals.InvertedValue
 import com.ctre.phoenix6.signals.MotorAlignmentValue
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue
+import edu.wpi.first.math.filter.Debouncer
 import edu.wpi.first.math.geometry.Translation2d
 import edu.wpi.first.math.geometry.Translation3d
 import edu.wpi.first.math.interpolation.InterpolatingTreeMap
@@ -89,10 +90,10 @@ object Shooter: SubsystemBase("Shooter") {
         put(12.0, 50.176)
         put(13.0, 50.931)
         put(14.0, 53.605)
-        put(15.0, 54.812)
-        put(16.0, 57.084)
-        put(17.0, 58.717)
-        put(18.0, 59.840)
+        put(15.0, 55.812)
+        put(16.0, 59.0)
+        put(17.0, 61.0)
+        put(18.0, 62.0)
     }
     // feet, degrees
     val hubAngleCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
@@ -108,10 +109,10 @@ object Shooter: SubsystemBase("Shooter") {
         put(12.0, 66.791)
         put(13.0, 65.151)
         put(14.0, 64.56)
-        put(15.0, 63.018)
-        put(16.0, 62.026)
-        put(17.0, 61.081)
-        put(18.0, 60.621)
+        put(15.0, 64.018)
+        put(16.0, 63.026)
+        put(17.0, 62.081)
+        put(18.0, 61.621)
 
     }
 
@@ -297,12 +298,19 @@ object Shooter: SubsystemBase("Shooter") {
     var fuel: MutableList<FuelSim> = mutableListOf()
     var fuel2: MutableList<FuelSim> = mutableListOf()
 
+
+    @get:AutoLogOutput(key = "Shooter/raw ramped up")
+    val rawRampedUp: Boolean get() = (shooterVelocity - shooterVelocitySetpoint).absoluteValue() < 5.0.rotationsPerSecond
+
+    var rampedUpDebouncer = Debouncer(0.1, Debouncer.DebounceType.kFalling)
+
     @get:AutoLogOutput(key = "Shooter/Ramped up")
-    val rampedUp: Boolean get() = (shooterVelocity - shooterVelocitySetpoint).absoluteValue() < 5.0.rotationsPerSecond
+    val rampedUp: Boolean get() = rampedUpDebouncer.calculate(rawRampedUp)
 
     @get:AutoLogOutput(key = "Shooter/Ramped up")
     val rampedUpPassing: Boolean get() = (shooterVelocity - shooterVelocitySetpoint).absoluteValue() < 15.0.rotationsPerSecond
 
+    @get:AutoLogOutput(key = "Shooter/isShooting")
     var isShooting = false
     var i = 0
 
@@ -385,7 +393,7 @@ object Shooter: SubsystemBase("Shooter") {
     }
 
     fun default(): Command = runCommand(this) {
-        if (doAutoShoot && Drive.useAprilTags && AimUtils.isAimingAtGoal) {
+        if ((doAutoShoot && !Drive.cameraDisconnected) && Drive.useAprilTags && AimUtils.isAimingAtGoal) {
             if (FieldManager.inScoringZone && !FieldManager.inTrenchArea && AimUtils.distanceToTarget < 13.0.feet && FieldManager.shouldShoot) {
                 shootLoop()
             } else {
@@ -445,7 +453,7 @@ object Shooter: SubsystemBase("Shooter") {
 
     fun shootLoop(ignoreRampUp: Boolean = false) {
 //        println("Shoot Loop!!!")
-        if (!FieldManager.inTrenchArea && !Turret.isTurretWrapping && (((rampedUp || ignoreRampUp) && AimUtils.isAimingAtGoal) || (rampedUpPassing && !AimUtils.isAimingAtGoal)) && (FieldManager.shouldShoot || !AimUtils.isAimingAtGoal)) {
+        if (!FieldManager.inTrenchArea && (!Turret.isTurretWrapping || Turret.disableTurret) && (((rampedUp || ignoreRampUp) && AimUtils.isAimingAtGoal) || (rampedUpPassing && !AimUtils.isAimingAtGoal)) && (FieldManager.shouldShoot || !AimUtils.isAimingAtGoal)) {
             isShooting = true
             Spindexer.currentState = Spindexer.State.ON
         } else {

@@ -3,6 +3,7 @@ package frc.team2471.frc2026
 import edu.wpi.first.math.filter.Debouncer
 import edu.wpi.first.math.geometry.Pose2d
 import edu.wpi.first.math.geometry.Translation2d
+import edu.wpi.first.networktables.NetworkTableInstance
 import edu.wpi.first.wpilibj.Alert
 import edu.wpi.first.wpilibj.GenericHID
 import edu.wpi.first.wpilibj2.command.SubsystemBase
@@ -20,6 +21,11 @@ import org.team2471.frc.lib.math.normalize
 import org.team2471.frc.lib.units.degrees
 
 object OI: SubsystemBase("OI") {
+    private val table = NetworkTableInstance.getDefault().getTable("OI")
+
+    val rotationMultiplierEntry = table.getEntry("Rotation Multiplier")
+    val rotationMultiplier = rotationMultiplierEntry.getDouble(1.0)
+
     val driverController = MeanCommandXboxController(0, false)
     val operatorController = MeanCommandXboxController(1)
 
@@ -43,7 +49,7 @@ object OI: SubsystemBase("OI") {
         }
 
     val driveRotation: Double
-        get() = -driverController.rightX.deadband(deadbandDriver)
+        get() = -driverController.rightX.deadband(deadbandDriver) * rotationMultiplier
 
     val driveLeftTrigger: Double
         get() = driverController.leftTriggerAxis
@@ -84,6 +90,10 @@ object OI: SubsystemBase("OI") {
 
     init {
         println("inside OI init")
+
+        if (!rotationMultiplierEntry.exists()) rotationMultiplierEntry.setDouble(rotationMultiplier)
+        rotationMultiplierEntry.setPersistent()
+
         // Default command, normal field-relative drive
         Drive.defaultCommand = Drive.joystickDrive()
 

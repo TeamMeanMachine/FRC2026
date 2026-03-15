@@ -4,6 +4,7 @@ import com.ctre.phoenix6.controls.DutyCycleOut
 import com.ctre.phoenix6.controls.MotionMagicVoltage
 import com.ctre.phoenix6.controls.NeutralOut
 import com.ctre.phoenix6.hardware.TalonFX
+import com.ctre.phoenix6.signals.ControlModeValue
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue
 import edu.wpi.first.networktables.NetworkTableInstance
 import edu.wpi.first.wpilibj.DigitalInput
@@ -188,7 +189,7 @@ object Intake: SubsystemBase("Intake") {
         waitCommand(0.25),
         runOnceCommand { deploy() },
         waitCommand(0.25),
-    ).repeatedly().finallyRun {
+    ).repeatedly().onlyRunWhileTrue { Robot.isAutonomous || OI.driverController.rightTriggerAxis > 0.75 }.finallyRun {
         stow()
     }
 
@@ -205,7 +206,7 @@ object Intake: SubsystemBase("Intake") {
                 velocitySetpoint = 0.0
             }
             IntakeState.INTAKING -> {
-                velocitySetpoint = INTAKE_POWER
+                velocitySetpoint = if (Robot.isAutonomous) 100.0 else INTAKE_POWER
                 if (!Shooter.isShooting) {
                     Spindexer.currentState = Spindexer.State.AGITATING
                 }
@@ -224,7 +225,7 @@ object Intake: SubsystemBase("Intake") {
         }
 
         if (!goingToSetpoint) {
-            if (deployMotorError < -0.5) {
+            if (deployMotorError < -0.5 && deployMotor.controlMode.value != ControlModeValue.NeutralOut) {
                 deployMotor.setControl(DutyCycleOut(0.05))
             } else {
                 deployMotor.setControl(NeutralOut())
