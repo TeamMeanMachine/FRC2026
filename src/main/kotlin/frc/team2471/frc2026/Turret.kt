@@ -56,6 +56,9 @@ import kotlin.collections.toDoubleArray
 
 object Turret: SubsystemBase("Turret") {
     private val table = NetworkTableInstance.getDefault().getTable("Turret")
+
+//    val motorRotorOffsetEntry = table.getEntry("Turret Motor Rotor Offset")
+
     val encoder1Offset = table.getEntry("Turret Encoder 1 Offset")
     val encoder2Offset = table.getEntry("Turret Encoder 2 Offset")
     val disableTurretEntry = table.getEntry("Disable Turret")
@@ -65,13 +68,13 @@ object Turret: SubsystemBase("Turret") {
     val turretEncoder2 = CANcoder(CANCoders.TURRET_2, CANivores.TURRET_CAN)
     val turretPigeon = Pigeon2(CANSensors.TURRET_PIGEON, CANivores.TURRET_CAN)
 
-    val TURRET_TOP_LIMIT = 270.0.degrees
-    val TURRET_BOTTOM_LIMIT = -270.0.degrees
+    val TURRET_TOP_LIMIT = 190.0.degrees
+    val TURRET_BOTTOM_LIMIT = -190.0.degrees
     val TURRET_RANGE = TURRET_TOP_LIMIT - TURRET_BOTTOM_LIMIT
     val TURRET_ENCODER_LIMIT = 720.0.degrees
 
-    const val ENCODER_1_DEFAULT_OFFSET = -157.6
-    const val ENCODER_2_DEFAULT_OFFSET = -43.3
+    const val ENCODER_1_DEFAULT_OFFSET = -144.22851
+    const val ENCODER_2_DEFAULT_OFFSET = 60.29075
 
     const val encoder1GearRatio = 30.0/200.0
     const val encoder2GearRatio = encoder1GearRatio * 83.0/32.0
@@ -105,10 +108,13 @@ object Turret: SubsystemBase("Turret") {
     @get:AutoLogOutput(key = "Turret/encoder2AbsolutePosition")
     val encoder2AbsolutePosition: Angle get() = (rawEncoder2AbsolutePosition - encoder2Offset.getDouble(ENCODER_2_DEFAULT_OFFSET).degrees).wrap()
 
+    const val FUSED_ANGLE_FUDGE: Double = (180.0/175.0)
+
     // unwraps encoder 1 angle using encoder 2 angle
     @get:AutoLogOutput(key = "Turret/fusedEncoderAngle")
     val fusedEncoderAngle: Angle
         get() {
+//            return rawTurretMotorRotorAngle - motorRotorOffsetEntry.getDouble(0.0).degrees
             // generate a list of all possible angles based off of encoder 1
             val validAngles: ArrayList<Angle> = arrayListOf()
             var angle = encoder1AbsolutePosition * encoder1GearRatio
@@ -143,7 +149,7 @@ object Turret: SubsystemBase("Turret") {
 
             Logger.recordOutput("Turret/Errors", errors.toDoubleArray())
 
-            return bestAngle
+            return bestAngle * FUSED_ANGLE_FUDGE
         }
     @get:AutoLogOutput(key = "Turret/FieldCentricFusedEncoderAngle")
     val fieldCentricFusedEncoderAngle: Angle
@@ -259,7 +265,7 @@ object Turret: SubsystemBase("Turret") {
         turretMotor.configSim(DCMotor.getKrakenX60(1), 0.01)
 
         turretMotor.applyConfiguration {
-            currentLimits(20.0, 20.0, 1.0)
+            currentLimits(10.0, 10.0, 1.0)
             inverted(false)
 //            brakeMode()
             coastMode()
@@ -355,6 +361,7 @@ object Turret: SubsystemBase("Turret") {
     }
     fun zeroTurretMotor() {
         turretMotorRotorPositionOffset = fusedEncoderAngle - rawTurretMotorRotorAngle
+//        motorRotorOffsetEntry.setDouble(rawTurretMotorRotorAngle.asDegrees)
         println("Zeroing turret motor")
     }
 }

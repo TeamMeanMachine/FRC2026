@@ -58,6 +58,11 @@ import kotlin.math.atan2
 object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerConstants.moduleConfigs) {
     private val table = NetworkTableInstance.getDefault().getTable("Drive")
 
+    private val frontLeftConnectedEntry = table.getEntry("FrontLeftConnected")
+    private val frontRightConnectedEntry = table.getEntry("FrontRightConnected")
+    private val backLeftConnectedEntry = table.getEntry("BackLeftConnected")
+    private val backRightConnectedEntry = table.getEntry("BackRightConnected")
+
     val useAprilTagsEntry = table.getEntry("UseAprilTags")
     val useAprilTags: Boolean get() = useAprilTagsEntry.getBoolean(true)
 
@@ -101,6 +106,16 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
         PhotonVisionCamera("BackLeft", Transform3d(Translation3d(-13.7.inches.asMeters, 10.7.inches.asMeters, 21.0.inches.asMeters), Rotation3d(0.0, -25.0.degrees.asRadians, 130.0.degrees.asRadians)), arrayOf(PipelineConfig())),
         PhotonVisionCamera("BackRight", Transform3d(Translation3d(-13.7.inches.asMeters, -10.7.inches.asMeters, 21.0.inches.asMeters), Rotation3d(0.0, -25.0.degrees.asRadians, -130.0.degrees.asRadians)), arrayOf(PipelineConfig())),
     )
+
+    val cameraDisconnected: Boolean
+        get() {
+            cameras.forEach {
+                if (!it.isConnected) return true
+            }
+            return false
+        }
+//        get() = cameras[0].isConnected && cameras[1].isConnected && cameras[2].isConnected && cameras[3].isConnected
+
 
     val headingHistory: DynamicInterpolatingTreeMap<Double, Double> = DynamicInterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble(), 75)
 
@@ -154,6 +169,11 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
 
     init {
         println("inside Drive init")
+
+        frontLeftConnectedEntry.setBoolean(cameras[0].isConnected)
+        frontRightConnectedEntry.setBoolean(cameras[1].isConnected)
+        backLeftConnectedEntry.setBoolean(cameras[2].isConnected)
+        backRightConnectedEntry.setBoolean(cameras[3].isConnected)
 
         useAprilTagsEntry.setBoolean(true)
 

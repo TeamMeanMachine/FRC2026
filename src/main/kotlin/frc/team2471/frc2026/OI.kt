@@ -1,8 +1,10 @@
 package frc.team2471.frc2026
 
+import com.ctre.phoenix6.controls.NeutralOut
 import edu.wpi.first.math.filter.Debouncer
 import edu.wpi.first.math.geometry.Pose2d
 import edu.wpi.first.math.geometry.Translation2d
+import edu.wpi.first.networktables.NetworkTableInstance
 import edu.wpi.first.wpilibj.Alert
 import edu.wpi.first.wpilibj.GenericHID
 import edu.wpi.first.wpilibj2.command.SubsystemBase
@@ -18,6 +20,11 @@ import org.team2471.frc.lib.math.deadband
 import org.team2471.frc.lib.math.normalize
 
 object OI: SubsystemBase("OI") {
+    private val table = NetworkTableInstance.getDefault().getTable("OI")
+
+    val rotationMultiplierEntry = table.getEntry("Rotation Multiplier")
+    val rotationMultiplier = rotationMultiplierEntry.getDouble(0.7)
+
     val driverController = MeanCommandXboxController(0, false)
     val operatorController = MeanCommandXboxController(1)
 
@@ -41,7 +48,7 @@ object OI: SubsystemBase("OI") {
         }
 
     val driveRotation: Double
-        get() = -driverController.rightX.deadband(deadbandDriver)
+        get() = -driverController.rightX.deadband(deadbandDriver) * rotationMultiplier
 
     val driveLeftTrigger: Double
         get() = driverController.leftTriggerAxis
@@ -82,6 +89,10 @@ object OI: SubsystemBase("OI") {
 
     init {
         println("inside OI init")
+
+        if (!rotationMultiplierEntry.exists()) rotationMultiplierEntry.setDouble(rotationMultiplier)
+        rotationMultiplierEntry.setPersistent()
+
         // Default command, normal field-relative drive
         Drive.defaultCommand = Drive.joystickDrive()
 
@@ -116,16 +127,13 @@ object OI: SubsystemBase("OI") {
             Intake.intakeState = Intake.IntakeState.INTAKING
             Intake.deploy()
         }.finallyRun {
-            Intake.stow()
+//            Intake.stow()
+            Intake.deployMotor.setControl(NeutralOut())
             Intake.intakeState = Intake.IntakeState.OFF
         })
 
-        driverController.leftTrigger(0.04).onTrue(runCommand {
-            if (Intake.isDeployed) {
-                Intake.stow()
-            } else {
-                Intake.deploy()
-            }
+        driverController.leftTrigger(0.1).onTrue(runOnceCommand {
+            Intake.stow()
         })
 
         (driverController.povDown().and(driverController.y())).onTrue(Intake.homeDeploy())
