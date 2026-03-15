@@ -1,5 +1,7 @@
 package frc.team2471.frc2026.tests
 
+import edu.wpi.first.units.measure.Angle
+import edu.wpi.first.wpilibj2.command.Command
 import frc.team2471.frc2026.AimUtils
 import frc.team2471.frc2026.AimUtils.printShooterCurves
 import frc.team2471.frc2026.Drive
@@ -14,6 +16,7 @@ import org.team2471.frc.lib.control.commands.waitCommand
 import org.team2471.frc.lib.coroutines.delay
 import org.team2471.frc.lib.units.asDegrees
 import org.team2471.frc.lib.units.degrees
+import org.team2471.frc.lib.units.unWrap
 
 // Prints the hub curves using a gradle task. Needs a main function in a class so I put it here.
 object PrintHubCurves {
@@ -44,37 +47,58 @@ fun zeroTurretEncoders() = runOnceCommand(Turret) {
     println("Zeroed turret encoders")
 }
 
-fun intakeTest() = sequenceCommand(
-    runOnce{Intake.stow()},
+fun intakeDeployTest() = sequenceCommand(
+    runOnce{ Intake.stow() },
     waitCommand(2.0),
-    runOnce{Intake.deploy()},
+    runOnce{ Intake.deploy() },
     waitCommand(2.0),
-    runOnce{Intake.intakeState = Intake.IntakeState.INTAKING},
+    runOnce{ Intake.stow() },
     waitCommand(2.0),
-    runOnce{Intake.intakeState = Intake.IntakeState.SPITTING},
-    waitCommand(2.0),
-    runOnce{Intake.stow()},
-    waitCommand(2.0),
-    runOnce{println("Intake tested")},
-    )
-
-// TODO: NOT USE FIELD CENTRIC SETPOINT
-fun turretTest() = sequenceCommand(
-    runOnce {Turret.setTurretOffset(270.0.degrees)},
-    waitCommand(2.0),
-    runOnce{Turret.setTurretOffset(-540.0.degrees)},
-    waitCommand(2.0),
-    runOnce{Turret.setTurretOffset(270.0.degrees)},
-    waitCommand(2.0),
-    runOnce{Turret.setTurretOffset(-90.0.degrees)},
-    waitCommand(2.0),
-    runOnce{Turret.setTurretOffset(180.0.degrees)},
-    waitCommand(2.0),
-    runOnce{Turret.setTurretOffset(-90.0.degrees) },
-    runOnce{println("Turret tested")}
+    runOnce{ println("Intake deploy tested") },
 )
-fun spindexerAndShooterTest() = sequenceCommand(
-    runOnce{Spindexer.State.ON},
+
+fun intakeRollerTest() = sequenceCommand(
+    runOnce{ Intake.deploy() },
     waitCommand(2.0),
-    runOnce{ Shooter.shoot()}
+    runOnce{ Intake.velocitySetpoint = 10.0 },
+    waitCommand(2.0),
+    runOnce{ Intake.velocitySetpoint = 100.0 },
+    waitCommand(2.0),
+    runOnce{  Intake.velocitySetpoint = 0.0 },
+    waitCommand(2.0),
+    runOnce{ println("Intake roller tested") },
+)
+
+fun turretTest(): Command {
+    fun localToField(local: Angle) = ((local) - Drive.heading.measure).unWrap(Turret.fieldCentricAngle)
+
+    return sequenceCommand(
+        runOnce{ Turret.fieldCentricSetpoint = localToField(0.0.degrees) },
+        waitCommand(2.0),
+        runOnce{ Turret.fieldCentricSetpoint = localToField(90.0.degrees) },
+        waitCommand(2.0),
+        runOnce{ Turret.fieldCentricSetpoint = localToField(180.0.degrees) },
+        waitCommand(2.0),
+        runOnce{ Turret.fieldCentricSetpoint = localToField(Turret.TURRET_TOP_LIMIT) },
+        waitCommand(2.0),
+        runOnce{ Turret.fieldCentricSetpoint = localToField(-90.0.degrees) },
+        waitCommand(2.0),
+        runOnce{ Turret.fieldCentricSetpoint = localToField(-180.0.degrees) },
+        waitCommand(2.0),
+        runOnce{ Turret.fieldCentricSetpoint = localToField(Turret.TURRET_BOTTOM_LIMIT) },
+        waitCommand(2.0),
+        runOnce{ Turret.fieldCentricSetpoint = localToField(0.0.degrees) },
+        waitCommand(2.0),
+        runOnce{ println("Turret tested") }
+    )
+}
+
+fun spindexerAndShooterTest() = sequenceCommand(
+    runOnce{ Spindexer.currentState = Spindexer.State.ON },
+    waitCommand(2.0),
+    runOnce{ Spindexer.currentState = Spindexer.State.AGITATING },
+    waitCommand(2.0),
+    runOnce{ Spindexer.currentState = Spindexer.State.OFF },
+    waitCommand(1.0),
+    Shooter.shoot().withTimeout(4.0)
 )

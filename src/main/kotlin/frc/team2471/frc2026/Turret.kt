@@ -70,13 +70,16 @@ object Turret: SubsystemBase("Turret") {
     val TURRET_RANGE = TURRET_TOP_LIMIT - TURRET_BOTTOM_LIMIT
     val TURRET_ENCODER_LIMIT = 720.0.degrees
 
-    const val ENCODER_1_DEFAULT_OFFSET = -157.6
-    const val ENCODER_2_DEFAULT_OFFSET = -43.3
+    const val ENCODER_1_DEFAULT_OFFSET = 115.576
+    const val ENCODER_2_DEFAULT_OFFSET = 106.084
 
     const val encoder1GearRatio = 30.0/200.0
     const val encoder2GearRatio = encoder1GearRatio * 83.0/32.0
 
     const val motorGearRatio = 30.0/200.0 * 11.0/46.0
+
+    @AutoLogOutput(key = "Turret/offset")
+    var offset: Angle = 0.0.degrees
 
     @get:AutoLogOutput(key = "Turret/rawTurretMotorRotorAngle")
     val rawTurretMotorRotorAngle: Angle get() = turretMotor.rotorPosition.valueAsDouble.rotations * motorGearRatio
@@ -143,7 +146,7 @@ object Turret: SubsystemBase("Turret") {
 
             Logger.recordOutput("Turret/Errors", errors.toDoubleArray())
 
-            return bestAngle
+            return bestAngle + offset
         }
     @get:AutoLogOutput(key = "Turret/FieldCentricFusedEncoderAngle")
     val fieldCentricFusedEncoderAngle: Angle

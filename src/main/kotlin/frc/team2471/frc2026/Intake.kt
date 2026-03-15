@@ -55,6 +55,9 @@ object Intake: SubsystemBase("Intake") {
     @get:AutoLogOutput(key = "Intake/Hit Hard Stop")
     val hitHardStop get() = !stopSensor.get()
 
+    @get:AutoLogOutput(key = "Intake/Roller Motor Temp")
+    val rollerTemp get() = rollerMotor.deviceTemp.valueAsDouble
+
     @get:AutoLogOutput(key = "Intake/Velocity Setpoint")
     var velocitySetpoint: Double = 0.0
         set(value) {
@@ -62,7 +65,7 @@ object Intake: SubsystemBase("Intake") {
             if (field == 0.0) {
                 rollerMotor.setControl(NeutralOut())
             } else {
-                rollerMotor.setControl(DutyCycleOut(field / 100.0))
+                rollerMotor.setControl(DutyCycleOut(field / 100.0).withEnableFOC(true))
             }
         }
 

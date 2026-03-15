@@ -14,8 +14,10 @@ import org.team2471.frc.lib.control.commands.parallelCommand
 import org.team2471.frc.lib.control.commands.runCommand
 import org.team2471.frc.lib.control.commands.runOnceCommand
 import org.team2471.frc.lib.control.commands.toCommand
+import org.team2471.frc.lib.control.leftBumper
 import org.team2471.frc.lib.math.deadband
 import org.team2471.frc.lib.math.normalize
+import org.team2471.frc.lib.units.degrees
 
 object OI: SubsystemBase("OI") {
     val driverController = MeanCommandXboxController(0, false)
@@ -113,25 +115,26 @@ object OI: SubsystemBase("OI") {
         )
 
         driverController.leftBumper().and(driverController.povDown().negate()).whileTrue(runCommand {
-            Intake.intakeState = Intake.IntakeState.INTAKING
             Intake.deploy()
+//            if (!Intake.goingToSetpoint) {
+                Intake.intakeState = Intake.IntakeState.INTAKING
+//            }
         }.finallyRun {
             Intake.stow()
             Intake.intakeState = Intake.IntakeState.OFF
         })
 
-        driverController.leftTrigger(0.04).onTrue(runCommand {
-            if (Intake.isDeployed) {
-                Intake.stow()
-            } else {
-                Intake.deploy()
-            }
+        driverController.leftTrigger(0.1).onTrue(runCommand {
+            Intake.stow()
         })
 
         (driverController.povDown().and(driverController.y())).onTrue(Intake.homeDeploy())
         (driverController.povDown().and(driverController.leftBumper())).onTrue(runOnceCommand { Intake.deepStow() })
 
         driverController.povLeft().whileTrue(Turret.staticAimAtTarget())
+
+        driverController.povUp().onTrue(runOnceCommand { Turret.offset -= 2.0.degrees})
+        driverController.povDown().and(driverController.y().negate()).and(driverController.leftBumper().negate()).onTrue(runOnceCommand { Turret.offset += 2.0.degrees})
     }
 
     override fun periodic() {
