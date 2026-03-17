@@ -13,7 +13,6 @@ import org.team2471.frc.lib.control.commands.runOnce
 import org.team2471.frc.lib.control.commands.runOnceCommand
 import org.team2471.frc.lib.control.commands.sequenceCommand
 import org.team2471.frc.lib.control.commands.waitCommand
-import org.team2471.frc.lib.coroutines.delay
 import org.team2471.frc.lib.units.asDegrees
 import org.team2471.frc.lib.units.degrees
 import org.team2471.frc.lib.units.unWrap
@@ -70,24 +69,24 @@ fun intakeRollerTest() = sequenceCommand(
 )
 
 fun turretTest(): Command {
-    fun localToField(local: Angle) = ((local) - Drive.heading.measure).unWrap(Turret.fieldCentricAngle)
+    fun localToFieldCentric(local: Angle) = ((local) + Drive.heading.measure).unWrap(Turret.fieldCentricAngle)
 
     return sequenceCommand(
-        runOnce{ Turret.fieldCentricSetpoint = localToField(0.0.degrees) },
+        runOnce{ Turret.fieldCentricSetpoint = localToFieldCentric(0.0.degrees) },
         waitCommand(2.0),
-        runOnce{ Turret.fieldCentricSetpoint = localToField(90.0.degrees) },
+        runOnce{ Turret.fieldCentricSetpoint = localToFieldCentric(90.0.degrees) },
         waitCommand(2.0),
-        runOnce{ Turret.fieldCentricSetpoint = localToField(180.0.degrees) },
+        runOnce{ Turret.fieldCentricSetpoint = localToFieldCentric(180.0.degrees) },
         waitCommand(2.0),
-        runOnce{ Turret.fieldCentricSetpoint = localToField(Turret.TURRET_TOP_LIMIT) },
+        runOnce{ Turret.fieldCentricSetpoint = localToFieldCentric(Turret.TURRET_TOP_LIMIT) },
         waitCommand(2.0),
-        runOnce{ Turret.fieldCentricSetpoint = localToField(-90.0.degrees) },
+        runOnce{ Turret.fieldCentricSetpoint = localToFieldCentric(-90.0.degrees) },
         waitCommand(2.0),
-        runOnce{ Turret.fieldCentricSetpoint = localToField(-180.0.degrees) },
+        runOnce{ Turret.fieldCentricSetpoint = localToFieldCentric(-180.0.degrees) },
         waitCommand(2.0),
-        runOnce{ Turret.fieldCentricSetpoint = localToField(Turret.TURRET_BOTTOM_LIMIT) },
+        runOnce{ Turret.fieldCentricSetpoint = localToFieldCentric(Turret.TURRET_BOTTOM_LIMIT) },
         waitCommand(2.0),
-        runOnce{ Turret.fieldCentricSetpoint = localToField(0.0.degrees) },
+        runOnce{ Turret.fieldCentricSetpoint = localToFieldCentric(0.0.degrees) },
         waitCommand(2.0),
         runOnce{ println("Turret tested") }
     )
@@ -101,4 +100,11 @@ fun spindexerAndShooterTest() = sequenceCommand(
     runOnce{ Spindexer.currentState = Spindexer.State.OFF },
     waitCommand(1.0),
     Shooter.shoot().withTimeout(4.0)
+)
+
+fun fullSystemTest() = sequenceCommand(
+    turretTest(),
+    intakeDeployTest(),
+    intakeRollerTest(),
+    spindexerAndShooterTest()
 )
