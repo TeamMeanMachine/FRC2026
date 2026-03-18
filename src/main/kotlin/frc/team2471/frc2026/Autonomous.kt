@@ -45,7 +45,8 @@ object Autonomous: Autonomi() {
             addOption("Turret Encoder Zero", zeroTurretEncoders())
             addOption("Full System Test", fullSystemTest())
             addOption("Turret Test", turretTest())
-            addOption("Spindexer and Shooter Test", spindexerAndShooterTest())
+            addOption("Spindexer Test", spindexerTest())
+            addOption("Shooter Test", shooterTest())
             addOption("Intake Deploy Test", intakeDeployTest())
             addOption("Intake Roller Test", intakeRollerTest())
         }

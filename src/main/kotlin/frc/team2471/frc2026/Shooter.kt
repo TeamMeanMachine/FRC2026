@@ -223,6 +223,7 @@ object Shooter: SubsystemBase("Shooter") {
 
 
     val shooterMotor = LoggedTalonFX(Falcons.SHOOTER_0, CANivores.TURRET_CAN)
+    val shooterMotorFollower = LoggedTalonFX(Falcons.SHOOTER_1, CANivores.TURRET_CAN)
     val hoodMotor = LoggedTalonFX(Falcons.SHOOTER_HOOD, CANivores.TURRET_CAN)
     val hoodEncoder = CANcoder(CANCoders.HOOD, CANivores.TURRET_CAN)
 
@@ -343,7 +344,7 @@ object Shooter: SubsystemBase("Shooter") {
 //            TorqueCurrent.PeakForwardTorqueCurrent = 40.0
 //            TorqueCurrent.PeakReverseTorqueCurrent = 0.0
         }
-        shooterMotor.addFollower(Falcons.SHOOTER_1, MotorAlignmentValue.Opposed)
+        shooterMotor.addFollower(shooterMotorFollower, MotorAlignmentValue.Opposed)
 
         hoodMotor.applyConfiguration {
             currentLimits(25.0, 30.0, 1.0)
