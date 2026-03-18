@@ -5,6 +5,7 @@ import com.ctre.phoenix6.SignalLogger
 import edu.wpi.first.hal.FRCNetComm.tInstances
 import edu.wpi.first.hal.FRCNetComm.tResourceType
 import edu.wpi.first.hal.HAL
+import edu.wpi.first.hal.simulation.RoboRioDataJNI
 import edu.wpi.first.wpilibj.RobotBase
 import edu.wpi.first.wpilibj.DriverStation
 import edu.wpi.first.wpilibj2.command.CommandScheduler
@@ -16,12 +17,14 @@ import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.littletonrobotics.junction.ConsoleSource
 import org.littletonrobotics.junction.LogFileUtil
 import org.littletonrobotics.junction.LoggedRobot
 import org.littletonrobotics.junction.Logger
 import org.littletonrobotics.junction.networktables.NT4Publisher
 import org.littletonrobotics.junction.wpilog.WPILOGReader
 import org.littletonrobotics.junction.wpilog.WPILOGWriter
+import org.team2471.frc.lib.util.PowerTracker
 import org.team2471.frc.lib.ctre.currentLimits
 import org.team2471.frc.lib.ctre.modifyConfiguration
 import org.team2471.frc.lib.util.RobotMode
@@ -67,6 +70,8 @@ object Robot : LoggedRobot() {
     override fun isAutonomous(): Boolean = isAutonomous
     override fun isDisabled(): Boolean = isDisabled
     override fun isAutonomousEnabled(): Boolean = isAutonomousEnabled
+
+    val powerTracker = PowerTracker()
 
 
     // Subsystems:
@@ -161,6 +166,8 @@ object Robot : LoggedRobot() {
         } catch (e: ConcurrentModificationException) {
             println("ConcurrentModificationException!!!! $e")
         }
+
+        powerTracker.update(RoboRioDataJNI.getVInVoltage())
 
         // Return to non-RT thread priority (do not modify the first argument)
 //         Threads.setCurrentThreadPriority(false, 10);

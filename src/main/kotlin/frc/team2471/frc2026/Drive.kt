@@ -22,6 +22,7 @@ import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.wpilibj.Timer
 import edu.wpi.first.wpilibj2.command.Command
 import frc.team2471.frc2026.OI.driverController
+import frc.team2471.frc2026.Robot.powerTracker
 import gg.questnav.questnav.QuestNav
 import org.littletonrobotics.junction.AutoLogOutput
 import org.littletonrobotics.junction.Logger
@@ -187,6 +188,10 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
         println("max acceleration ${TunerConstants.kMaxAcceleration.asMetersPerSecondPerSecond}")
 
         localizer.trackAllTags()
+
+        powerTracker.addMotors("Drive", {totalDriveCurrent})
+        powerTracker.addMotors("Steer", {totalSteerCurrent})
+
 
         finalInitialization()
     }
