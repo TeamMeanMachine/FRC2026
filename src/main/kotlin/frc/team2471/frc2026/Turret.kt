@@ -14,6 +14,7 @@ import edu.wpi.first.units.measure.AngularVelocity
 import edu.wpi.first.wpilibj.Alert
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.SubsystemBase
+import frc.team2471.frc2026.Robot.powerTracker
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.littletonrobotics.junction.AutoLogOutput
@@ -50,6 +51,8 @@ import kotlin.math.abs
 import org.team2471.frc.lib.coroutines.periodic
 import org.team2471.frc.lib.ctre.alternateFeedbackSensor
 import org.team2471.frc.lib.ctre.coastMode
+import org.team2471.frc.lib.math.round
+import org.team2471.frc.lib.units.asAmps
 import org.team2471.frc.lib.units.asFeet
 import org.team2471.frc.lib.units.rotationsPerSecond
 import kotlin.collections.toDoubleArray
@@ -282,6 +285,9 @@ object Turret: SubsystemBase("Turret") {
             ClosedLoopGeneral.ContinuousWrap = false
         }
         turretMotor.addFollower(Falcons.TURRET_1)
+
+        powerTracker.addMotors("Turret", {turretMotor.getSupplyCurrent(true).value.asAmps}, 2)
+
 
 //        turretMotor.setPosition(fusedEncoderAngle)
         setTurretOffset(Drive.heading.measure)
