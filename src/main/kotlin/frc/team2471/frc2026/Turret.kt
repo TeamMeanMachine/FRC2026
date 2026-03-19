@@ -20,7 +20,6 @@ import org.littletonrobotics.junction.AutoLogOutput
 import org.littletonrobotics.junction.Logger
 import org.team2471.frc.lib.control.LoopLogger
 import org.team2471.frc.lib.control.commands.onlyRunWhileFalse
-import org.team2471.frc.lib.control.commands.runCommand
 import org.team2471.frc.lib.ctre.PhoenixUtil
 import org.team2471.frc.lib.ctre.addFollower
 import org.team2471.frc.lib.ctre.applyConfiguration
@@ -338,10 +337,12 @@ object Turret: SubsystemBase("Turret") {
 
     override fun periodic() {
         LoopLogger.record("b4 turret periodic")
-        Logger.recordOutput("aim target", AimUtils.aimTarget.toPose2d())
+        val aimTarget = AimUtils.aimTarget
+        val turretTranslation = turretTranslation
+        Logger.recordOutput("aim target", aimTarget.toPose2d())
         Logger.recordOutput("Turret/turret setpoint pose", turretTranslation.toPose2d(fieldCentricSetpoint.asRotation2d))
         Logger.recordOutput("Turret/turret pose", turretTranslation.toPose2d(fieldCentricAngle.asRotation2d))
-        Logger.recordOutput("Turret/distToGoalFeet", AimUtils.aimTarget.getDistance(Drive.localizer.pose.translation).meters.asFeet)
+        Logger.recordOutput("Turret/distToGoalFeet", aimTarget.getDistance(Drive.localizer.pose.translation).meters.asFeet)
         LoopLogger.record("turret periodic")
     }
 

@@ -215,6 +215,7 @@ object Intake: SubsystemBase("Intake") {
                 velocitySetpoint = -INTAKE_POWER
             }
         }
+        LoopLogger.record("Intake default when")
         if (prevIntakeState == IntakeState.INTAKING && intakeState != IntakeState.INTAKING) {
             Spindexer.currentState = Spindexer.State.OFF
         }
@@ -223,6 +224,7 @@ object Intake: SubsystemBase("Intake") {
         if (goingToSetpoint && deployMotorError.absoluteValue < 1.0) {
             goingToSetpoint = false
         }
+        LoopLogger.record("Intake default b4 controlMode")
 
         if (!goingToSetpoint) {
             if (deployMotorError < -0.5 && deployMotor.controlMode.value != ControlModeValue.NeutralOut) {
