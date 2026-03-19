@@ -245,6 +245,13 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
         headingHistory.put(Timer.getFPGATimestamp(), heading.degrees)
         LoopLogger.record("Recorded HeadingHistory")
 
+        if (cameras.isNotEmpty()) {
+            cameras.forEach {
+                table.getEntry("Cameras/${it.cameraName} isConnected").setBoolean(it.isConnected)
+            }
+        }
+        LoopLogger.record("Cameras isConnected publish")
+
         // Log all the poses for debugging
         Logger.recordOutput("Drive/Quest/questPose", questPose)
         Logger.recordOutput("Swerve/Odometry", localizer.odometryPose)
