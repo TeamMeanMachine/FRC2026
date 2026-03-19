@@ -15,7 +15,6 @@ import org.team2471.frc.lib.control.commands.parallelCommand
 import org.team2471.frc.lib.control.commands.runCommand
 import org.team2471.frc.lib.control.commands.runOnceCommand
 import org.team2471.frc.lib.control.commands.toCommand
-import org.team2471.frc.lib.control.leftBumper
 import org.team2471.frc.lib.math.deadband
 import org.team2471.frc.lib.math.normalize
 import org.team2471.frc.lib.units.degrees
@@ -142,6 +141,7 @@ object OI: SubsystemBase("OI") {
         (driverController.povDown().and(driverController.leftBumper())).onTrue(runOnceCommand { Intake.deepStow() })
 
         driverController.povLeft().whileTrue(Turret.staticAimAtTarget())
+        driverController.povRight().whileTrue(FieldManager.disableAutoHoodRetractionCommand())
 
         driverController.povUp().onTrue(runOnceCommand { Turret.offset -= 2.0.degrees})
         driverController.povDown().and(driverController.y().negate()).and(driverController.leftBumper().negate()).onTrue(runOnceCommand { Turret.offset += 2.0.degrees})

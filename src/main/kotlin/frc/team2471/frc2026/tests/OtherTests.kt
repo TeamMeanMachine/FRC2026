@@ -1,5 +1,9 @@
 package frc.team2471.frc2026.tests
 
+import com.ctre.phoenix6.controls.DutyCycleOut
+import com.ctre.phoenix6.controls.Follower
+import com.ctre.phoenix6.controls.NeutralOut
+import com.ctre.phoenix6.signals.MotorAlignmentValue
 import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.wpilibj2.command.Command
 import frc.team2471.frc2026.AimUtils
@@ -9,13 +13,11 @@ import frc.team2471.frc2026.Turret
 import frc.team2471.frc2026.Intake
 import frc.team2471.frc2026.Shooter
 import frc.team2471.frc2026.Spindexer
-import org.team2471.frc.lib.control.commands.runOnce
-import org.team2471.frc.lib.control.commands.runOnceCommand
-import org.team2471.frc.lib.control.commands.sequenceCommand
-import org.team2471.frc.lib.control.commands.waitCommand
-import org.team2471.frc.lib.coroutines.delay
+import org.team2471.frc.lib.control.commands.*
+import org.team2471.frc.lib.ctre.addFollower
 import org.team2471.frc.lib.units.asDegrees
 import org.team2471.frc.lib.units.degrees
+import org.team2471.frc.lib.units.rotationsPerSecond
 import org.team2471.frc.lib.units.unWrap
 
 // Prints the hub curves using a gradle task. Needs a main function in a class so I put it here.
@@ -48,57 +50,139 @@ fun zeroTurretEncoders() = runOnceCommand(Turret) {
 }
 
 fun intakeDeployTest() = sequenceCommand(
-    runOnce{ Intake.stow() },
+    runOnce { Intake.stow() },
     waitCommand(2.0),
-    runOnce{ Intake.deploy() },
+    runOnce { Intake.deploy() },
     waitCommand(2.0),
-    runOnce{ Intake.stow() },
+    runOnce { Intake.stow() },
     waitCommand(2.0),
-    runOnce{ println("Intake deploy tested") },
-)
-
-fun intakeRollerTest() = sequenceCommand(
-    runOnce{ Intake.deploy() },
-    waitCommand(2.0),
-    runOnce{ Intake.velocitySetpoint = 10.0 },
-    waitCommand(2.0),
-    runOnce{ Intake.velocitySetpoint = 100.0 },
-    waitCommand(2.0),
-    runOnce{  Intake.velocitySetpoint = 0.0 },
-    waitCommand(2.0),
-    runOnce{ println("Intake roller tested") },
-)
-
-fun turretTest(): Command {
-    fun localToField(local: Angle) = ((local) - Drive.heading.measure).unWrap(Turret.fieldCentricAngle)
-
-    return sequenceCommand(
-        runOnce{ Turret.fieldCentricSetpoint = localToField(0.0.degrees) },
-        waitCommand(2.0),
-        runOnce{ Turret.fieldCentricSetpoint = localToField(90.0.degrees) },
-        waitCommand(2.0),
-        runOnce{ Turret.fieldCentricSetpoint = localToField(180.0.degrees) },
-        waitCommand(2.0),
-        runOnce{ Turret.fieldCentricSetpoint = localToField(Turret.TURRET_TOP_LIMIT) },
-        waitCommand(2.0),
-        runOnce{ Turret.fieldCentricSetpoint = localToField(-90.0.degrees) },
-        waitCommand(2.0),
-        runOnce{ Turret.fieldCentricSetpoint = localToField(-180.0.degrees) },
-        waitCommand(2.0),
-        runOnce{ Turret.fieldCentricSetpoint = localToField(Turret.TURRET_BOTTOM_LIMIT) },
-        waitCommand(2.0),
-        runOnce{ Turret.fieldCentricSetpoint = localToField(0.0.degrees) },
-        waitCommand(2.0),
-        runOnce{ println("Turret tested") }
-    )
+    printlnCommand("Intake deploy tested"),
+).apply {
+    addRequirements(Intake, Shooter)
 }
 
-fun spindexerAndShooterTest() = sequenceCommand(
-    runOnce{ Spindexer.currentState = Spindexer.State.ON },
+fun intakeRollerTest() = sequenceCommand(
+    runOnce { Intake.deploy() },
     waitCommand(2.0),
-    runOnce{ Spindexer.currentState = Spindexer.State.AGITATING },
+    runOnce { Intake.velocitySetpoint = 10.0 },
     waitCommand(2.0),
-    runOnce{ Spindexer.currentState = Spindexer.State.OFF },
-    waitCommand(1.0),
-    Shooter.shoot().withTimeout(4.0)
-)
+    runOnce { Intake.velocitySetpoint = 100.0 },
+    waitCommand(2.0),
+    runOnce { Intake.velocitySetpoint = 0.0 },
+    waitCommand(2.0),
+
+    runOnce { Intake.rollerMotorFollower.setControl(DutyCycleOut(0.8)) },
+    waitCommand(2.0),
+    runOnce { Intake.rollerMotorFollower.setControl(NeutralOut()) },
+    waitCommand(2.0),
+
+    runOnce { Intake.rollerMotor.setControl(DutyCycleOut(0.8)) },
+    waitCommand(2.0),
+    runOnce { Intake.rollerMotorFollower.setControl(NeutralOut()) },
+    waitCommand(2.0),
+
+    runOnce { Intake.rollerMotorFollower.setControl(Follower(Intake.rollerMotor.deviceID, MotorAlignmentValue.Aligned)) },
+
+    runOnce { Intake.stow() },
+
+    printlnCommand("Intake roller tested")
+).apply {
+    addRequirements(Intake, Shooter)
+}
+
+fun turretTest(): Command {
+    fun localToFieldCentric(local: Angle) = ((local) + Drive.heading.measure).unWrap(Turret.fieldCentricAngle)
+
+    return sequenceCommand(
+        runOnce { Turret.fieldCentricSetpoint = localToFieldCentric(0.0.degrees) },
+        waitCommand(2.0),
+        runOnce { Turret.fieldCentricSetpoint = localToFieldCentric(90.0.degrees) },
+        waitCommand(2.0),
+        runOnce { Turret.fieldCentricSetpoint = localToFieldCentric(180.0.degrees) },
+        waitCommand(2.0),
+        runOnce { Turret.fieldCentricSetpoint = localToFieldCentric(Turret.TURRET_TOP_LIMIT) },
+        waitCommand(2.0),
+        runOnce { Turret.fieldCentricSetpoint = localToFieldCentric(-90.0.degrees) },
+        waitCommand(2.0),
+        runOnce { Turret.fieldCentricSetpoint = localToFieldCentric(-180.0.degrees) },
+        waitCommand(2.0),
+        runOnce { Turret.fieldCentricSetpoint = localToFieldCentric(Turret.TURRET_BOTTOM_LIMIT) },
+        waitCommand(2.0),
+        runOnce { Turret.fieldCentricSetpoint = localToFieldCentric(0.0.degrees) },
+        waitCommand(2.0),
+        printlnCommand("Turret tested")
+    ).apply {
+        addRequirements(Turret, Shooter)
+    }
+}
+
+fun spindexerTest() = sequenceCommand(
+    runOnce { Spindexer.spinMotorVelocitySetpoint = 80.0 },
+    waitCommand(2.0),
+    runOnce { Spindexer.spinMotorVelocitySetpoint = 0.0 },
+    waitCommand(2.0),
+
+    runOnce { Spindexer.sidetakeMotorVelocitySetpoint = 115.0 },
+    waitCommand(2.0),
+    runOnce { Spindexer.sidetakeMotorVelocitySetpoint = 0.0 },
+    waitCommand(2.0),
+
+    runOnce { Spindexer.uptakeMotorVelocitySetpoint = 115.0 },
+    waitCommand(2.0),
+    runOnce { Spindexer.uptakeMotorVelocitySetpoint = 0.0 },
+    waitCommand(2.0),
+
+
+    runOnce { Spindexer.spinMotorFollower.setControl(DutyCycleOut(0.5)) },
+    waitCommand(2.0),
+    runOnce { Spindexer.spinMotorFollower.setControl(NeutralOut()) },
+    waitCommand(2.0),
+
+    runOnce { Spindexer.spinMotor.setControl(DutyCycleOut(0.5)) },
+    waitCommand(2.0),
+    runOnce { Spindexer.spinMotor.setControl(NeutralOut()) },
+    waitCommand(2.0),
+
+    runOnce { Spindexer.spinMotorFollower.setControl(Follower(Intake.rollerMotor.deviceID, MotorAlignmentValue.Aligned)) },
+
+    printlnCommand("Spindexer tested")
+).apply {
+    addRequirements(Spindexer, Shooter)
+}
+
+fun shooterTest() = sequenceCommand(
+    runOnceCommand(Shooter) { Shooter.shooterVelocitySetpoint = 50.0.rotationsPerSecond },
+    runOnceCommand(Shooter) { Shooter.hoodAngleSetpoint = 40.0.degrees },
+    waitCommand(2.0),
+    runOnceCommand(Shooter) { Shooter.hoodAngleSetpoint = 0.0.degrees },
+    runOnceCommand(Shooter) { Shooter.shooterVelocitySetpoint = 0.0.rotationsPerSecond },
+    waitCommand(2.0),
+
+
+    runOnce { Shooter.shooterMotorFollower.setControl(DutyCycleOut(-0.5)) },
+    waitCommand(2.0),
+    runOnce { Shooter.shooterMotorFollower.setControl(NeutralOut()) },
+    waitCommand(2.0),
+
+    runOnce { Shooter.shooterMotor.setControl(DutyCycleOut(0.5)) },
+    waitCommand(2.0),
+    runOnce { Shooter.shooterMotor.setControl(NeutralOut()) },
+    waitCommand(2.0),
+
+    runOnce { Shooter.shooterMotorFollower.setControl(Follower(Intake.rollerMotor.deviceID, MotorAlignmentValue.Opposed)) },
+
+    printlnCommand("Shooter tested")
+).apply {
+    addRequirements(Shooter)
+}
+
+fun fullSystemTest() = sequenceCommand(
+    turretTest(),
+    intakeDeployTest(),
+    intakeRollerTest(),
+    spindexerTest(),
+    shooterTest(),
+    printlnCommand("Tests complete")
+).apply {
+    addRequirements(Intake, Shooter, Spindexer, Turret)
+}

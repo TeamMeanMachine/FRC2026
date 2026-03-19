@@ -25,6 +25,7 @@ import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.SubsystemBase
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine
 import frc.team2471.frc2026.AimUtils.toExitVelocity
+import frc.team2471.frc2026.Robot.powerTracker
 import org.littletonrobotics.junction.AutoLogOutput
 import org.littletonrobotics.junction.Logger
 import org.team2471.frc.lib.control.Direction
@@ -50,6 +51,7 @@ import org.team2471.frc.lib.ctre.p
 import org.team2471.frc.lib.ctre.remoteCANCoder
 import org.team2471.frc.lib.ctre.s
 import org.team2471.frc.lib.units.absoluteValue
+import org.team2471.frc.lib.units.asAmps
 import org.team2471.frc.lib.units.asFeet
 import org.team2471.frc.lib.units.asMeters
 import org.team2471.frc.lib.units.asMetersPerSecond
@@ -223,6 +225,7 @@ object Shooter: SubsystemBase("Shooter") {
 
 
     val shooterMotor = LoggedTalonFX(Falcons.SHOOTER_0, CANivores.TURRET_CAN)
+    val shooterMotorFollower = LoggedTalonFX(Falcons.SHOOTER_1, CANivores.TURRET_CAN)
     val hoodMotor = LoggedTalonFX(Falcons.SHOOTER_HOOD, CANivores.TURRET_CAN)
     val hoodEncoder = CANcoder(CANCoders.HOOD, CANivores.TURRET_CAN)
 
@@ -343,7 +346,7 @@ object Shooter: SubsystemBase("Shooter") {
 //            TorqueCurrent.PeakForwardTorqueCurrent = 40.0
 //            TorqueCurrent.PeakReverseTorqueCurrent = 0.0
         }
-        shooterMotor.addFollower(Falcons.SHOOTER_1, MotorAlignmentValue.Opposed)
+        shooterMotor.addFollower(shooterMotorFollower, MotorAlignmentValue.Opposed)
 
         hoodMotor.applyConfiguration {
             currentLimits(25.0, 30.0, 1.0)
@@ -357,6 +360,12 @@ object Shooter: SubsystemBase("Shooter") {
 
             remoteCANCoder(hoodEncoder.deviceID, 9.64285714285714)
         }
+
+        if (!isSim) {
+            powerTracker.addMotors("Shooter Roller", { shooterMotor.getSupplyCurrent(true).value.asAmps }, 2)
+            powerTracker.addMotors("Hood", { hoodMotor.getSupplyCurrent(true).value.asAmps })
+        }
+
 
 //        GlobalScope.launch {
 //            periodic(0.01) {

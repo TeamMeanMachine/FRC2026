@@ -7,6 +7,7 @@ import edu.wpi.first.math.geometry.Translation2d
 import edu.wpi.first.networktables.NetworkTableInstance
 import edu.wpi.first.units.measure.Distance
 import edu.wpi.first.wpilibj.DriverStation
+import edu.wpi.first.wpilibj2.command.Command
 import frc.team2471.frc2026.FieldManager.reflectAcrossField
 import frc.team2471.frc2026.FieldManager.rotateAroundField
 import frc.team2471.frc2026.Robot.isAutonomous
@@ -15,6 +16,9 @@ import kotlinx.coroutines.launch
 import org.littletonrobotics.junction.AutoLogOutput
 import org.littletonrobotics.junction.Logger
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser
+import org.team2471.frc.lib.control.commands.runCommand
+import org.team2471.frc.lib.control.commands.runOnceCommand
+import org.team2471.frc.lib.control.commands.sequenceCommand
 import org.team2471.frc.lib.coroutines.periodic
 import org.team2471.frc.lib.units.*
 import org.team2471.frc.lib.util.isRedAlliance
@@ -165,7 +169,11 @@ object FieldManager {
     val activeHubEntry = table.getEntry("ActiveHub")
 
     val doShiftTiming get() = doShiftTimingEntry.getBoolean(true)
-    val autoHoodRetraction get() = autoHoodRetractionEntry.getBoolean(true)
+    var autoHoodRetraction
+        get() = autoHoodRetractionEntry.getBoolean(true)
+        set(value) {
+            autoHoodRetractionEntry.setBoolean(value)
+        }
 
     val shouldShootStartTimes = arrayOf(130.0, 105.0, 80.0, 55.0).map { it + AimUtils.MEASURED_SHOT_AIRTIME + HUB_PROCESSING_TIME }
     val shouldRampStartTimes = shouldShootStartTimes.map { it + RAMP_TIME}
@@ -241,6 +249,24 @@ object FieldManager {
                 )
             }
         }
+    }
+
+    fun disableAutoHoodRetractionCommand(): Command {
+        var oldValue = autoHoodRetraction
+        return sequenceCommand(
+            runOnceCommand {
+                oldValue = autoHoodRetraction
+                autoHoodRetraction = false
+                println("Disabling autoHoodRetraction. oldValue: $oldValue")
+            },
+            runCommand {
+                autoHoodRetraction = false
+            },
+            runOnceCommand {
+                autoHoodRetraction = oldValue
+                println("Finished disabling autoHoodRetraction. autoHoodRetraction: $autoHoodRetraction")
+            }
+        ).withName("AutoHoodRetractionDisableCommand")
     }
 
     /**

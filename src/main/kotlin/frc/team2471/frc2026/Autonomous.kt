@@ -2,12 +2,7 @@ package frc.team2471.frc2026
 
 import edu.wpi.first.math.geometry.Pose2d
 import edu.wpi.first.wpilibj2.command.Command
-import frc.team2471.frc2026.tests.joystickTest
-import frc.team2471.frc2026.tests.leftRightStaticFFTest
-import frc.team2471.frc2026.tests.questOffsetTest
-import frc.team2471.frc2026.tests.slipCurrentTest
-import frc.team2471.frc2026.tests.velocityVoltTest
-import frc.team2471.frc2026.tests.zeroTurretEncoders
+import frc.team2471.frc2026.tests.*
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser
 import org.team2471.frc.lib.control.Autonomi
 import org.team2471.frc.lib.control.commands.parallelCommand
@@ -48,6 +43,12 @@ object Autonomous: Autonomi() {
             addOption("Drive Velocity Volt Test", Drive.velocityVoltTest())
             addOption("Quest offset Test", Drive.questOffsetTest())
             addOption("Turret Encoder Zero", zeroTurretEncoders())
+            addOption("Full System Test", fullSystemTest())
+            addOption("Turret Test", turretTest())
+            addOption("Spindexer Test", spindexerTest())
+            addOption("Shooter Test", shooterTest())
+            addOption("Intake Deploy Test", intakeDeployTest())
+            addOption("Intake Roller Test", intakeRollerTest())
         }
 
     /** Autonomous commands */

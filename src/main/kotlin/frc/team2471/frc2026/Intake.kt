@@ -10,6 +10,7 @@ import edu.wpi.first.networktables.NetworkTableInstance
 import edu.wpi.first.wpilibj.DigitalInput
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.SubsystemBase
+import frc.team2471.frc2026.Robot.powerTracker
 import org.littletonrobotics.junction.AutoLogOutput
 import org.team2471.frc.lib.control.CurrentLimits
 import org.team2471.frc.lib.control.LoopLogger
@@ -27,6 +28,9 @@ import org.team2471.frc.lib.ctre.currentLimits
 import org.team2471.frc.lib.ctre.motionMagic
 import org.team2471.frc.lib.ctre.p
 import org.team2471.frc.lib.ctre.s
+import org.team2471.frc.lib.units.asAmps
+import org.team2471.frc.lib.units.asVolts
+import org.team2471.frc.lib.util.isSim
 import kotlin.math.absoluteValue
 
 object Intake: SubsystemBase("Intake") {
@@ -145,6 +149,11 @@ object Intake: SubsystemBase("Intake") {
         rollerMotor.addFollower(rollerMotorFollower)
 
         deployMotor.setPosition(0.0)
+
+        if (!isSim) {
+            powerTracker.addMotors("Intake Roller", { rollerMotor.getSupplyCurrent(true).value.asAmps }, 2, {rollerMotor.supplyVoltage.value.asVolts})
+            powerTracker.addMotors("Intake Deploy", { rollerMotor.getSupplyCurrent(true).value.asAmps })
+        }
 
         this.defaultCommand = default()
     }

@@ -22,6 +22,7 @@ import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.wpilibj.Timer
 import edu.wpi.first.wpilibj2.command.Command
 import frc.team2471.frc2026.OI.driverController
+import frc.team2471.frc2026.Robot.powerTracker
 import gg.questnav.questnav.QuestNav
 import org.littletonrobotics.junction.AutoLogOutput
 import org.littletonrobotics.junction.Logger
@@ -48,6 +49,7 @@ import org.team2471.frc.lib.units.unWrap
 import org.team2471.frc.lib.util.demoSpeed
 import org.team2471.frc.lib.util.isBlueAlliance
 import org.team2471.frc.lib.util.isReal
+import org.team2471.frc.lib.util.isSim
 import org.team2471.frc.lib.vision.Fiducial
 import org.team2471.frc.lib.vision.PipelineConfig
 import org.team2471.frc.lib.vision.QuixVisionCamera
@@ -188,6 +190,12 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
 
         localizer.trackAllTags()
 
+        if (!isSim) {
+            powerTracker.addMotors("Drive", { totalDriveCurrent })
+            powerTracker.addMotors("Steer", { totalSteerCurrent })
+        }
+
+
         finalInitialization()
     }
 
@@ -239,6 +247,13 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
 
         headingHistory.put(Timer.getFPGATimestamp(), heading.degrees)
         LoopLogger.record("Recorded HeadingHistory")
+
+        if (cameras.isNotEmpty()) {
+            cameras.forEach {
+                table.getEntry("Cameras/${it.cameraName} isConnected").setBoolean(it.isConnected)
+            }
+        }
+        LoopLogger.record("Cameras isConnected publish")
 
         // Log all the poses for debugging
         Logger.recordOutput("Drive/Quest/questPose", questPose)
