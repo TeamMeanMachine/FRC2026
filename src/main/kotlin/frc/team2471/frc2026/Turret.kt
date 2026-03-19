@@ -55,6 +55,7 @@ import org.team2471.frc.lib.math.round
 import org.team2471.frc.lib.units.asAmps
 import org.team2471.frc.lib.units.asFeet
 import org.team2471.frc.lib.units.rotationsPerSecond
+import org.team2471.frc.lib.util.isSim
 import kotlin.collections.toDoubleArray
 
 object Turret: SubsystemBase("Turret") {
@@ -286,7 +287,9 @@ object Turret: SubsystemBase("Turret") {
         }
         turretMotor.addFollower(Falcons.TURRET_1)
 
-        powerTracker.addMotors("Turret", {turretMotor.getSupplyCurrent(true).value.asAmps}, 2)
+        if (!isSim) {
+            powerTracker.addMotors("Turret", { turretMotor.getSupplyCurrent(true).value.asAmps }, 2)
+        }
 
 
 //        turretMotor.setPosition(fusedEncoderAngle)

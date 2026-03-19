@@ -23,6 +23,7 @@ import org.team2471.frc.lib.ctre.s
 import org.team2471.frc.lib.math.deadband
 import org.team2471.frc.lib.math.linearMap
 import org.team2471.frc.lib.units.asAmps
+import org.team2471.frc.lib.util.isSim
 import kotlin.math.cos
 
 object Spindexer: SubsystemBase("Spindexer") {
@@ -181,9 +182,11 @@ object Spindexer: SubsystemBase("Spindexer") {
             s(2.0, StaticFeedforwardSignValue.UseVelocitySign)
         }
 
-        powerTracker.addMotors("Dye Rotor Spin", {spinMotor.getSupplyCurrent(true).value.asAmps}, 2)
-        powerTracker.addMotors("Dye Rotor Uptake", {uptakeMotor.getSupplyCurrent(true).value.asAmps})
-        powerTracker.addMotors("Dye Rotor Sidetake", {sidetakeMotor.getSupplyCurrent(true).value.asAmps})
+        if (!isSim) {
+            powerTracker.addMotors("Dye Rotor Spin", { spinMotor.getSupplyCurrent(true).value.asAmps }, 2)
+            powerTracker.addMotors("Dye Rotor Uptake", { uptakeMotor.getSupplyCurrent(true).value.asAmps })
+            powerTracker.addMotors("Dye Rotor Sidetake", { sidetakeMotor.getSupplyCurrent(true).value.asAmps })
+        }
 
     }
 

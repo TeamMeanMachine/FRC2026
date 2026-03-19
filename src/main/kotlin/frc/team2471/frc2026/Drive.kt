@@ -49,6 +49,7 @@ import org.team2471.frc.lib.units.unWrap
 import org.team2471.frc.lib.util.demoSpeed
 import org.team2471.frc.lib.util.isBlueAlliance
 import org.team2471.frc.lib.util.isReal
+import org.team2471.frc.lib.util.isSim
 import org.team2471.frc.lib.vision.Fiducial
 import org.team2471.frc.lib.vision.PipelineConfig
 import org.team2471.frc.lib.vision.QuixVisionCamera
@@ -189,8 +190,10 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
 
         localizer.trackAllTags()
 
-        powerTracker.addMotors("Drive", {totalDriveCurrent})
-        powerTracker.addMotors("Steer", {totalSteerCurrent})
+        if (!isSim) {
+            powerTracker.addMotors("Drive", { totalDriveCurrent })
+            powerTracker.addMotors("Steer", { totalSteerCurrent })
+        }
 
 
         finalInitialization()

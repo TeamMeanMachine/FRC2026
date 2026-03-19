@@ -361,8 +361,10 @@ object Shooter: SubsystemBase("Shooter") {
             remoteCANCoder(hoodEncoder.deviceID, 9.64285714285714)
         }
 
-        powerTracker.addMotors("Shooter Roller", {shooterMotor.getSupplyCurrent(true).value.asAmps}, 2)
-        powerTracker.addMotors("Hood", {hoodMotor.getSupplyCurrent(true).value.asAmps})
+        if (!isSim) {
+            powerTracker.addMotors("Shooter Roller", { shooterMotor.getSupplyCurrent(true).value.asAmps }, 2)
+            powerTracker.addMotors("Hood", { hoodMotor.getSupplyCurrent(true).value.asAmps })
+        }
 
 
 //        GlobalScope.launch {

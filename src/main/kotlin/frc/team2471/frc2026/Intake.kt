@@ -29,6 +29,8 @@ import org.team2471.frc.lib.ctre.motionMagic
 import org.team2471.frc.lib.ctre.p
 import org.team2471.frc.lib.ctre.s
 import org.team2471.frc.lib.units.asAmps
+import org.team2471.frc.lib.units.asVolts
+import org.team2471.frc.lib.util.isSim
 import kotlin.math.absoluteValue
 
 object Intake: SubsystemBase("Intake") {
@@ -148,8 +150,10 @@ object Intake: SubsystemBase("Intake") {
 
         deployMotor.setPosition(0.0)
 
-        powerTracker.addMotors("Intake Roller", {rollerMotor.getSupplyCurrent(true).value.asAmps}, 2)
-        powerTracker.addMotors("Intake Deploy", {rollerMotor.getSupplyCurrent(true).value.asAmps})
+        if (!isSim) {
+            powerTracker.addMotors("Intake Roller", { rollerMotor.getSupplyCurrent(true).value.asAmps }, 2, {rollerMotor.supplyVoltage.value.asVolts})
+            powerTracker.addMotors("Intake Deploy", { rollerMotor.getSupplyCurrent(true).value.asAmps })
+        }
 
         this.defaultCommand = default()
     }
