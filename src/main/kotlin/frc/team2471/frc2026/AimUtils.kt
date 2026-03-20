@@ -2,10 +2,12 @@ package frc.team2471.frc2026
 
 import edu.wpi.first.math.geometry.Translation2d
 import edu.wpi.first.math.geometry.Translation3d
+import edu.wpi.first.math.interpolation.InterpolatingTreeMap
 import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.units.measure.AngularVelocity
 import edu.wpi.first.units.measure.Distance
 import edu.wpi.first.units.measure.LinearVelocity
+import edu.wpi.first.units.measure.Velocity
 import frc.team2471.frc2026.Shooter.SHOOTER_GEAR_RATIO
 import frc.team2471.frc2026.Shooter.floorSpeedCurve
 import frc.team2471.frc2026.Shooter.hubSpeedCurve
@@ -38,7 +40,7 @@ import kotlin.math.sqrt
 
 object AimUtils {
     // seconds
-    const val SIM_SHOT_AIRTIME = 1.25
+    const val TARGET_SHOT_AIRTIME = 1.25
     const val MEASURED_SHOT_AIRTIME = 1.0
     const val PASS_AIRTIME = 1.0
 
@@ -70,9 +72,9 @@ object AimUtils {
             }
 
             return if (isAimingAtGoal) {
-                FieldManager.goalPose - calculateAimTargetOffset(MEASURED_SHOT_AIRTIME)
+                FieldManager.goalPose - calculateAimTargetOffset(FieldManager.goalPose, Shooter.hubTimeCurve)
             } else {
-                FieldManager.passPose
+                FieldManager.passPose - calculateAimTargetOffset(FieldManager.passPose, Shooter.floorTimeCurve)
             }
         }
 
@@ -91,6 +93,7 @@ object AimUtils {
                 }
             }
 
+    // Calculates how fast the shooter should spin to make a shot.
     fun getShooterRPS(): AngularVelocity {
         return if (!Drive.useAprilTags) {
             hubSpeedCurve.get(staticShotPos.getDistance(aimTarget)).rotationsPerSecond
@@ -109,18 +112,18 @@ object AimUtils {
         return turretVelocity * airTime
     }
 
-// iterative tof lut method. backup if constant tof method doesn't work
-//    fun calculateAimTargetOffset() : Translation2d {
-//        val turretVelocity = Translation2d(Turret.turretOffsetFromCenter.x * Drive.gyroYawRate.asRadiansPerSecond, Turret.turretOffsetFromCenter.y * Drive.gyroYawRate.asRadiansPerSecond).rotateBy(Drive.heading) + Drive.velocity
-//        var offset : Translation2d = turretVelocity * Shooter.hubTimeCurve.get(Turret.turretTranslation.getDistance(
-//            FieldManager.goalPose).meters.asFeet)
-//
-//        for (i in 1..6) {
-//            offset = turretVelocity * Shooter.hubTimeCurve.get(Turret.turretTranslation.getDistance(FieldManager.goalPose - offset).meters.asFeet)
-//        }
-//
-//        return offset
-//    }
+// iterative tof lut method.
+    fun calculateAimTargetOffset(goalPos: Translation2d, timeCurve: InterpolatingTreeMap<Double, Double>) : Translation2d {
+        val turretVelocity = Translation2d(Turret.turretOffsetFromCenter.x * Drive.gyroYawRate.asRadiansPerSecond, Turret.turretOffsetFromCenter.y * Drive.gyroYawRate.asRadiansPerSecond).rotateBy(Drive.heading) + Drive.velocity
+        var offset : Translation2d = turretVelocity * timeCurve.get(Turret.turretTranslation.getDistance(
+            goalPos).meters.asFeet)
+
+        for (i in 1..6) {
+            offset = turretVelocity * timeCurve.get(Turret.turretTranslation.getDistance(goalPos - offset).meters.asFeet)
+        }
+
+        return offset
+    }
 
     val isAimingAtGoal get() = FieldManager.inScoringZone
 
@@ -131,7 +134,7 @@ object AimUtils {
      * Simulates a fuel shot with the given initial velocity, and calculates both the translational error and the time error
      * @return A pair of doubles, the first is the horizontal error from the target when the ball reaches a specific height, the second is the time error it took the ball to get there.
      */
-    fun calcFuelError(vx: Double, vy: Double, goalPos: Translation2d, airTimeTarget: Double, printPoints: Boolean = false): Pair<Double, Double> {
+    fun calcFuelErrors(vx: Double, vy: Double, goalPos: Translation2d, airTimeTarget: Double, printPoints: Boolean = false): Pair<Double, Double> {
         val fuel = FuelSim(Translation3d(), Translation3d(vx, 0.0, vy))
         var time = 0.0
 
@@ -164,7 +167,8 @@ object AimUtils {
             points[fuel.pos.x] = fuel.pos.z
         }
         if (printPoints) {
-            points.forEach { (x, y) -> print("($x,$y),") }
+            var i = 1
+            points.forEach { (x, y) -> print("(${x.round(4)},${y.round(4)})"); if (i <points.size) print(",");i++;}
             print("\n")
         }
 
@@ -195,7 +199,7 @@ object AimUtils {
 
         for (i in distRange) {
             val dist = i.toDouble()
-            val angleAndSpeed = getAngleAndSpeed(dist.feet, goalHeight, airTime)
+            val angleAndSpeed = calculateAngleAndSpeed(dist.feet, goalHeight, airTime)
             angles[dist] = angleAndSpeed.first
             speeds[dist] = angleAndSpeed.second.metersPerSecond.toWheelSpeed().asRotationsPerSecond
         }
@@ -211,7 +215,7 @@ object AimUtils {
     }
 
     // constant(ish) exit velocity method. (lut)
-    fun printShooterCurves(goalHeight: Distance, distRange: IntRange, speedRange: Pair<Double, Double>, printTimeCurve: Boolean = true) {
+    fun printShooterCurves(goalHeight: Distance, distRange: IntProgression, speedRange: Pair<Double, Double>, printTimeCurve: Boolean = true) {
 
         val angles = mutableMapOf<Double, Double>()
         val speeds = mutableMapOf<Double, Double>()
@@ -219,8 +223,8 @@ object AimUtils {
 
         for (i in distRange) {
             val dist = i.toDouble()
-            val speed = (((speedRange.second - speedRange.first)/(distRange.endInclusive.toDouble() - distRange.start.toDouble()))*(i.toDouble() - distRange.start.toDouble()) + speedRange.first).rotationsPerSecond.toExitVelocity().asMetersPerSecond
-            val angleAndTime = getAngleAndTime(dist.feet, goalHeight, speed)
+            val speed = (((speedRange.second - speedRange.first)/(distRange.last.toDouble() - distRange.first.toDouble()))*(i.toDouble() - distRange.first.toDouble()) + speedRange.first).rotationsPerSecond.toExitVelocity().asMetersPerSecond
+            val angleAndTime = calculateAngleAndTime(dist.feet, goalHeight, speed)
             angles[dist] = angleAndTime.first.asDegrees
             speeds[dist] = speed.metersPerSecond.toWheelSpeed().asRotationsPerSecond
             times[dist] = angleAndTime.second
@@ -243,9 +247,38 @@ object AimUtils {
 
     }
 
+    // constant hood angle.
+    fun printShooterCurves(goalHeight: Distance, distRange: IntProgression, shotAngle: Angle, printTimeCurve: Boolean = true) {
+        println("Angle: $shotAngle")
+        val speeds = mutableMapOf<Double, Double>()
+        val times = mutableMapOf<Double, Double>()
+
+        for (i in distRange) {
+            val dist = i.toDouble()
+
+            val speedAndTime = calculateSpeedAndTime(dist.feet, goalHeight, shotAngle)
+
+            speeds[dist] = speedAndTime.first.toWheelSpeed().asRadiansPerSecond
+            times[dist] = speedAndTime.second
+        }
+
+        println("Speed Curve:")
+        speeds.forEach { (dist, speed) ->
+            println("put(${dist.round(3)}, ${speed.round(3)})")
+        }
+
+        if (printTimeCurve) {
+            println("Time Curve:")
+            times.forEach { (dist, time) ->
+                println("put(${dist.round(3)}, ${time.round(3)})")
+            }
+        }
+
+    }
+
     // angle in degrees, speed in m/s
     // Performs newtons method in 2 dimensions to estimate the angle and exit velocity needed to make shot from the given distance with the given airtime
-    fun getAngleAndSpeed(distFromGoal: Distance, goalHeight: Distance, airTime: Double): Pair<Double, Double> {
+    fun calculateAngleAndSpeed(distFromGoal: Distance, goalHeight: Distance, airTime: Double): Pair<Double, Double> {
         val maxTError = 0.1
         val maxDError = 0.1
 
@@ -257,11 +290,11 @@ object AimUtils {
         var guessIncremented = Pair(guess.first + 0.1, guess.second + 0.1)
 
 
-        var errors = calcFuelError(guess.first, guess.second, toTarget, airTime)
+        var errors = calcFuelErrors(guess.first, guess.second, toTarget, airTime)
         var errorSum = errors.first.absoluteValue + errors.second.absoluteValue
 
 
-        var errorsIncremented = calcFuelError(guessIncremented.first, guessIncremented.second, toTarget, airTime)
+        var errorsIncremented = calcFuelErrors(guessIncremented.first, guessIncremented.second, toTarget, airTime)
         var errorSumIncremented = errorsIncremented.first.absoluteValue + errorsIncremented.second.absoluteValue
 
 
@@ -291,10 +324,10 @@ object AimUtils {
 
             guessIncremented = Pair(guess.first + 0.1, guess.second + 0.1)
 
-            errors = calcFuelError(guess.first, guess.second, toTarget, airTime)
+            errors = calcFuelErrors(guess.first, guess.second, toTarget, airTime)
             errorSum = errors.first.absoluteValue + errors.second.absoluteValue
 
-            errorsIncremented = calcFuelError(guessIncremented.first, guessIncremented.second, toTarget, airTime)
+            errorsIncremented = calcFuelErrors(guessIncremented.first, guessIncremented.second, toTarget, airTime)
             errorSumIncremented = errorsIncremented.first.absoluteValue + errorsIncremented.second.absoluteValue
 
             num++
@@ -304,21 +337,20 @@ object AimUtils {
     }
 
     // same as get angle and speed, except calculates angle for given exit velocity, and calculates time for tof lut
-    fun getAngleAndTime(distFromGoal: Distance, goalHeight: Distance, speed: Double): Pair<Angle, Double> {
+    fun calculateAngleAndTime(distFromGoal: Distance, goalHeight: Distance, speed: Double): Pair<Angle, Double> {
 
         val toTarget: Translation2d = Translation2d(distFromGoal, goalHeight)
 
-        println("(${toTarget.x},${toTarget.y})")
-        println("Speed: ${speed}")
+        println("x=${toTarget.x}\ny=${toTarget.y}")
 
         var guess = if (distFromGoal > 7.0.feet) 75.0 else 84.0
         var guessIncremented = guess + 0.1
 
         var error = calcFuelHeightError(speed * guess.degrees.cos(), speed * guess.degrees.sin(), toTarget, true)
-        var errorIncremented = calcFuelHeightError(speed * guessIncremented.degrees.cos(), speed * guessIncremented.degrees.sin(), toTarget, true)
+        var errorIncremented = calcFuelHeightError(speed * guessIncremented.degrees.cos(), speed * guessIncremented.degrees.sin(), toTarget, false)
 
         var num = 0
-        while ((error >= 0.1 || num < 10) && guess != 0.0) {
+        while (error.absoluteValue >= 0.1 && num < 10 && guess != 0.0) {
             var slope = (errorIncremented - error)/(guessIncremented - guess)
 
             guess = (-error/slope + guess).coerceIn(0.0, 85.0)
@@ -326,7 +358,7 @@ object AimUtils {
             guessIncremented = guess + 0.1
 
             error = calcFuelHeightError(speed * guess.degrees.cos(), speed * guess.degrees.sin(), toTarget, true)
-            errorIncremented = calcFuelHeightError(speed * guessIncremented.degrees.cos(), speed * guessIncremented.degrees.sin(), toTarget, true)
+            errorIncremented = calcFuelHeightError(speed * guessIncremented.degrees.cos(), speed * guessIncremented.degrees.sin(), toTarget, false)
 
             num++
         }
@@ -334,6 +366,34 @@ object AimUtils {
 
 
         return Pair(guess.degrees, calcFuelTime(speed * guess.degrees.cos(), speed * guess.degrees.sin(), toTarget))
+    }
+
+    fun calculateSpeedAndTime(distFromGoal: Distance, goalHeight: Distance, exitAngle: Angle): Pair<LinearVelocity, Double> {
+        println("x=${distFromGoal.asMeters}")
+
+        val toTarget: Translation2d = Translation2d(distFromGoal, goalHeight)
+
+        var guess = 5.0
+        var guessIncremented = guess + 0.1
+
+        var error = calcFuelHeightError(guess * exitAngle.cos(), guess * exitAngle.sin(), toTarget, true)
+        var errorIncremented = calcFuelHeightError(guessIncremented * exitAngle.cos(), guessIncremented * exitAngle.sin(), toTarget, false)
+
+        var num = 0
+        while (error.absoluteValue >= 0.05 && num < 10 && guess != 0.0) {
+            val slope = (errorIncremented - error)/(guessIncremented-guess)
+
+            guess = (-error/slope + guess)
+
+            guessIncremented = guess + 0.1
+
+            error = calcFuelHeightError(guess * exitAngle.cos(), guess * exitAngle.sin(), toTarget, true)
+            errorIncremented = calcFuelHeightError(guessIncremented * exitAngle.cos(), guessIncremented * exitAngle.sin(), toTarget, false)
+
+            num++
+        }
+
+        return Pair(guess.metersPerSecond, calcFuelTime(guess * exitAngle.cos(), guess * exitAngle.sin(), toTarget))
     }
 
     fun LinearVelocity.toWheelSpeed(): AngularVelocity {

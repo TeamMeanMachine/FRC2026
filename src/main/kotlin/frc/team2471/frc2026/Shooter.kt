@@ -80,141 +80,55 @@ object Shooter: SubsystemBase("Shooter") {
 
     // feet, rot/s (of the wheel not the motor) (in an ideal condition. need to divide by SHOOTER_EFFICIENCY)
     val hubSpeedCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
-        put(3.0, 42.6)
-        put(4.0, 43.31)
-        put(5.0, 44.02)
-        put(6.0, 45.085)
-        put(7.0, 46.15)
-        put(8.0, 47.606)
-        put(9.0, 48.178)
-        put(10.0, 48.798)
-        put(11.0, 49.464)
-        put(12.0, 50.176)
-        put(13.0, 50.931)
-        put(14.0, 53.605)
-        put(15.0, 55.812)
-        put(16.0, 59.0)
-        put(17.0, 61.0)
-        put(18.0, 62.0)
+        put(3.0, 40.0)
+        put(6.0, 43.0)
+        put(9.0, 46.0)
+        put(12.0, 49.0)
+        put(15.0, 52.0)
+        put(18.0, 55.0)
     }
     // feet, degrees
     val hubAngleCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
-        put(3.0, 86.142)
-        put(4.0, 84.743)
-        put(5.0, 81.536)
-        put(6.0, 79.592)
-        put(7.0, 76.685)
-        put(8.0, 73.818)
-        put(9.0, 71.993)
-        put(10.0, 70.213)
-        put(11.0, 68.478)
-        put(12.0, 66.791)
-        put(13.0, 65.151)
-        put(14.0, 64.56)
-        put(15.0, 64.018)
-        put(16.0, 63.026)
-        put(17.0, 62.081)
-        put(18.0, 61.621)
+        put(3.0, 81.476)
+        put(6.0, 75.118)
+        put(9.0, 69.575)
+        put(12.0, 64.851)
+        put(15.0, 61.085)
+        put(18.0, 56.206)
 
     }
 
     //feet, s
-//    val hubTimeCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
-//        put(3.0, 0.27)
-//        put(4.0, 0.3)
-//        put(5.0, 1.2)
-//        put(6.0, 1.22)
-//        put(7.0, 1.24)
-//        put(8.0, 1.25)
-//        put(9.0, 1.26)
-//        put(10.0, 1.28)
-//        put(11.0, 1.29)
-//        put(12.0, 1.3)
-//        put(13.0, 1.31)
-//        put(14.0, 1.31)
-//        put(15.0, 1.32)
-//        put(16.0, 1.32)
-//        put(17.0, 1.32)
-//        put(18.0, 1.32)
-//    }
+    val hubTimeCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
+        put(3.0, 1.01)
+        put(6.0, 1.09)
+        put(9.0, 1.14)
+        put(12.0, 1.18)
+        put(15.0, 1.23)
+        put(18.0, 1.23)
+    }
 
     // feet, rot/s (of the wheel not the motor) (in an ideal condition. need to divide by SHOOTER_EFFICIENCY)
     val floorSpeedCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
-        put(5.0, 29.79)
-        put(6.0, 30.456)
-        put(7.0, 31.224)
-        put(8.0, 32.089)
-        put(9.0, 33.635)
-        put(10.0, 35.328)
-        put(11.0, 36.215)
-        put(12.0, 37.457)
-        put(13.0, 38.811)
-        put(14.0, 40.222)
-        put(15.0, 41.683)
-        put(16.0, 43.191)
-        put(17.0, 44.741)
-        put(18.0, 46.464)
-        put(19.0, 48.289)
-        put(20.0, 49.657)
-        put(21.0, 51.403)
-        put(22.0, 53.098)
-        put(23.0, 54.815)
-        put(24.0, 56.554)
-        put(25.0, 58.311)
-        put(26.0, 60.719)
-        put(27.0, 62.17)
-        put(28.0, 63.681)
-        put(29.0, 65.499)
-        put(30.0, 67.33)
-        put(31.0, 69.172)
-        put(32.0, 71.502)
-        put(33.0, 73.465)
-        put(34.0, 75.305)
-        put(35.0, 77.357)
-        put(36.0, 79.649)
-        put(37.0, 80.843)
-        put(38.0, 83.108)
-        put(39.0, 84.092)
-        put(40.0, 86.862)
+        put(5.0, 50.0)
+        put(10.0, 50.0)
+        put(15.0, 50.0)
+        put(20.0, 50.0)
     }
     // feet, degrees
     val floorAngleCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
-        put(5.0, 71.303)
-        put(6.0, 67.898)
-        put(7.0, 64.649)
-        put(8.0, 61.566)
-        put(9.0, 58.406)
-        put(10.0, 55.517)
-        put(11.0, 53.092)
-        put(12.0, 50.741)
-        put(13.0, 48.54)
-        put(14.0, 46.49)
-        put(15.0, 44.582)
-        put(16.0, 42.804)
-        put(17.0, 41.149)
-        put(18.0, 39.621)
-        put(19.0, 38.214)
-        put(20.0, 36.83)
-        put(21.0, 35.587)
-        put(22.0, 34.411)
-        put(23.0, 33.308)
-        put(24.0, 32.274)
-        put(25.0, 31.301)
-        put(26.0, 30.542)
-        put(27.0, 29.6)
-        put(28.0, 28.712)
-        put(29.0, 27.944)
-        put(30.0, 27.219)
-        put(31.0, 26.532)
-        put(32.0, 26.014)
-        put(33.0, 25.426)
-        put(34.0, 24.832)
-        put(35.0, 24.324)
-        put(36.0, 23.907)
-        put(37.0, 23.206)
-        put(38.0, 22.827)
-        put(39.0, 22.105)
-        put(40.0, 21.909)
+        put(5.0, 82.654)
+        put(10.0, 74.728)
+        put(15.0, 65.192)
+        put(20.0, 48.405)
+
+    }
+
+    val floorTimeCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
+        put(5.0, 1.61)
+        put(10.0, 1.57)
+        put(15.0, 1.49)
+        put(20.0, 1.26)
     }
 
     val shooterShootingSpeedEntry = table.getEntry("Shooter Shooting Speed")
@@ -381,9 +295,9 @@ object Shooter: SubsystemBase("Shooter") {
         LoopLogger.record("b4 Shooter periodic")
         if (isSim) {
             if (isShooting) {
-                if (i > 1) {
+                if (i > 3) {
                     i = 0
-                    shootSimulatedFuelWithMotors()
+                    shootSimulatedFuel()
                 } else {
                     i++
                 }
@@ -417,7 +331,7 @@ object Shooter: SubsystemBase("Shooter") {
             }
         } else {
             hoodAngleSetpoint = HOOD_STOW_SETPOINT.degrees
-            shooterVelocitySetpoint = 80.0.rotationsPerSecond
+            shooterVelocitySetpoint = 50.0.rotationsPerSecond / SHOOTER_GEAR_RATIO / AimUtils.SHOOTER_EFFICIENCY
             isShooting = false
             if (Intake.intakeState != Intake.IntakeState.INTAKING) {
                 Spindexer.currentState = Spindexer.State.OFF
@@ -493,8 +407,8 @@ object Shooter: SubsystemBase("Shooter") {
     }
 
     fun shootSimulatedFuel() {
-        val exitVelocity = hubSpeedCurve.get(AimUtils.distanceToTarget.asFeet) / SHOOTER_GEAR_RATIO
-        val exitAngle = hubAngleCurve.get(AimUtils.distanceToTarget.asFeet).degrees
+        val exitVelocity = (AimUtils.getShooterRPS() * SHOOTER_GEAR_RATIO * AimUtils.SHOOTER_EFFICIENCY).toExitVelocity().asMetersPerSecond
+        val exitAngle = if (AimUtils.isAimingAtGoal) hubAngleCurve.get(AimUtils.distanceToTarget.asFeet).degrees else floorAngleCurve.get(AimUtils.distanceToTarget.asFeet).degrees
         val angleToTarget = Turret.turretTranslation.angleTo(AimUtils.aimTarget)
         val velocity2d = Translation2d(exitVelocity * exitAngle.cos(), 0.0).rotateBy(angleToTarget.asRotation2d)
         val turretVelocity = Translation2d(Turret.turretOffsetFromCenter.x * Drive.gyroYawRate.asRadiansPerSecond, Turret.turretOffsetFromCenter.y * Drive.gyroYawRate.asRadiansPerSecond).rotateBy(Drive.heading) + Drive.velocity
@@ -505,7 +419,7 @@ object Shooter: SubsystemBase("Shooter") {
     }
 
     fun shootSimulatedFuelWithMotors() {
-        val exitVelocity = shooterVelocity.toExitVelocity().asMetersPerSecond
+        val exitVelocity = (shooterVelocity * SHOOTER_GEAR_RATIO * AimUtils.SHOOTER_EFFICIENCY).toExitVelocity().asMetersPerSecond
         val exitAngle = hoodAngle
 //        val angleToTarget = AimUtils.aimTarget.angleTo(Turret.turretPose)
         val velocity2d = Translation2d(exitVelocity * exitAngle.cos(), 0.0).rotateBy(Turret.fieldCentricAngle.asRotation2d)
