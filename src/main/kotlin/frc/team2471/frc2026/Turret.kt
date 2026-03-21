@@ -11,7 +11,6 @@ import edu.wpi.first.math.system.plant.DCMotor
 import edu.wpi.first.networktables.NetworkTableInstance
 import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.units.measure.AngularVelocity
-import edu.wpi.first.wpilibj.Alert
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.SubsystemBase
 import frc.team2471.frc2026.Robot.powerTracker
@@ -50,7 +49,6 @@ import kotlin.math.abs
 import org.team2471.frc.lib.coroutines.periodic
 import org.team2471.frc.lib.ctre.alternateFeedbackSensor
 import org.team2471.frc.lib.ctre.coastMode
-import org.team2471.frc.lib.math.round
 import org.team2471.frc.lib.units.asAmps
 import org.team2471.frc.lib.units.asFeet
 import org.team2471.frc.lib.units.rotationsPerSecond
@@ -62,6 +60,7 @@ object Turret: SubsystemBase("Turret") {
     val encoder1Offset = table.getEntry("Turret Encoder 1 Offset")
     val encoder2Offset = table.getEntry("Turret Encoder 2 Offset")
     val disableTurretEntry = table.getEntry("Disable Turret")
+    val turretPigeonIsConnectedEntry = table.getEntry("Turret Pigeon IsConnected")
 
     val turretMotor = LoggedTalonFX(Falcons.TURRET_0, CANivores.TURRET_CAN)
     val turretEncoder1 = CANcoder(CANCoders.TURRET_1, CANivores.TURRET_CAN)
@@ -173,6 +172,8 @@ object Turret: SubsystemBase("Turret") {
     @get:AutoLogOutput(key = "Turret/isTurretWrapping")
     var isTurretWrapping = false
 
+    var useTurretGyro = true
+
     @get:AutoLogOutput(key = "Turret/fieldCentricSetpoint")
     var fieldCentricSetpoint: Angle = fieldCentricAngle
         set(value) {
@@ -194,12 +195,17 @@ object Turret: SubsystemBase("Turret") {
                     fieldCentricSetpoint
                 }
 
+
                 //Wrapping if pose error is more than half a rotation
                 isTurretWrapping = (field - turretMotorFieldCentricAngle).absoluteValue() > 180.0.degrees
 
                 if (disableTurret) {
                     turretMotor.setControl(NeutralOut())
-                } else {
+                } else if (useTurretGyro) { // Use field-centric gyro
+                    turretMotor.setControl(PositionVoltage(field.asRotations).withFeedForward(turretFeedforward))
+                } else { // Use robot-centric motor
+//                    val newRobotCentricSetpoint = turretMotorRotorAngle + (field - turretMotorFieldCentricAngle)
+//                    turretMotor.setControl(PositionVoltage(newRobotCentricSetpoint.asRotations).withFeedForward(turretFeedforward))
                     turretMotor.setControl(PositionVoltage(field.asRotations).withFeedForward(turretFeedforward))
                 }
             } else {
@@ -238,7 +244,7 @@ object Turret: SubsystemBase("Turret") {
 
     var tempHeadingResetAngle: Angle? = null
 
-    val turretPigeonDisconnectedAlert = Alert("Turret Pigeon Disconnected!", Alert.AlertType.kError)
+    val turretPigeonIsConnected get() = turretPigeon.isConnected && isReal
 
 
     init {
@@ -332,12 +338,6 @@ object Turret: SubsystemBase("Turret") {
                     }
                 }
                 Drive.headingAngleUnwrapped = Drive.heading.measure.unWrap(Drive.headingAngleUnwrapped)
-
-                val turretPigeonIsConnected = turretPigeon.isConnected && isReal
-                turretPigeonDisconnectedAlert.set(!turretPigeonIsConnected)
-                if (!turretPigeonIsConnected && isReal) {
-                    println("TURRET PIGEON DISCONNECTED!!!!")
-                }
             }
         }
 
@@ -348,10 +348,14 @@ object Turret: SubsystemBase("Turret") {
         LoopLogger.record("b4 turret periodic")
         val aimTarget = AimUtils.aimTarget
         val turretTranslation = turretTranslation
+        val turretPigeonConnected = turretPigeonIsConnected
         Logger.recordOutput("aim target", aimTarget.toPose2d())
         Logger.recordOutput("Turret/turret setpoint pose", turretTranslation.toPose2d(fieldCentricSetpoint.asRotation2d))
         Logger.recordOutput("Turret/turret pose", turretTranslation.toPose2d(fieldCentricAngle.asRotation2d))
         Logger.recordOutput("Turret/distToGoalFeet", aimTarget.getDistance(Drive.localizer.pose.translation).meters.asFeet)
+        Logger.recordOutput("Turret/turretPigeonIsConnected", turretPigeonConnected)
+        turretPigeonIsConnectedEntry.setBoolean(turretPigeonConnected)
+
         LoopLogger.record("turret periodic")
     }
 

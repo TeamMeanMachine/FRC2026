@@ -67,7 +67,7 @@ object Autonomous: Autonomi() {
             sequenceCommand(
                 parallelCommand(
                     sequenceCommand(
-                        Drive.driveAlongChoreoPath(path.getSplit(0).get(), resetOdometry = false, poseSupplier = Drive::pose),
+                        Drive.driveAlongChoreoPath(path.getSplit(0).get(), resetOdometry = false),
                         Drive.driveAlongChoreoPath(path.getSplit(1).get(), resetOdometry = false, poseSupplier = Drive.localizer::pose),
                         runOnceCommand {
                             Intake.intakeState = Intake.IntakeState.OFF
