@@ -15,6 +15,7 @@ import org.littletonrobotics.junction.AutoLogOutput
 import org.team2471.frc.lib.math.round
 import org.team2471.frc.lib.units.asDegrees
 import org.team2471.frc.lib.units.asFeet
+import org.team2471.frc.lib.units.asFeetPerSecond
 import org.team2471.frc.lib.units.asInches
 import org.team2471.frc.lib.units.asInchesPerSecond
 import org.team2471.frc.lib.units.asMeters
@@ -74,7 +75,7 @@ object AimUtils {
             return if (isAimingAtGoal) {
                 FieldManager.goalPose - calculateAimTargetOffset(FieldManager.goalPose, Shooter.hubTimeCurve)
             } else {
-                FieldManager.passPose //- calculateAimTargetOffset(FieldManager.passPose, Shooter.floorTimeCurve)
+                FieldManager.passPose - calculateAimTargetOffset(FieldManager.passPose, Shooter.floorTimeCurve)
             }
         }
 
@@ -258,7 +259,7 @@ object AimUtils {
 
             val speedAndTime = calculateSpeedAndTime(dist.feet, goalHeight, shotAngle)
 
-            speeds[dist] = speedAndTime.first.toWheelSpeed().asRadiansPerSecond
+            speeds[dist] = speedAndTime.first.toWheelSpeed().asRotationsPerSecond
             times[dist] = speedAndTime.second
         }
 
@@ -274,6 +275,16 @@ object AimUtils {
             }
         }
 
+    }
+
+    fun printPassTimes(distRange: IntProgression, shotSpeed: AngularVelocity) {
+        val angle = 45.0.degrees
+        val v0 = shotSpeed.toExitVelocity().asFeetPerSecond
+        for (i in distRange) {
+            val dist = i.toDouble()
+            val t = dist / (v0 * angle.cos())
+            println("put(${dist}, ${t.round(3)})")
+        }
     }
 
     // angle in degrees, speed in m/s

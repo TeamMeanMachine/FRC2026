@@ -126,10 +126,10 @@ object Shooter: SubsystemBase("Shooter") {
     }
 
     val floorTimeCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
-        put(5.0, 1.61)
-        put(10.0, 1.57)
-        put(15.0, 1.49)
-        put(20.0, 1.26)
+        put(5.0, 0.246)
+        put(10.0, 0.491)
+        put(15.0, 0.737)
+        put(20.0, 0.982)
     }
 
     val shooterShootingSpeedEntry = table.getEntry("Shooter Shooting Speed")

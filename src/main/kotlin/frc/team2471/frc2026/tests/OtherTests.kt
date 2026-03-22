@@ -7,6 +7,7 @@ import com.ctre.phoenix6.signals.MotorAlignmentValue
 import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.wpilibj2.command.Command
 import frc.team2471.frc2026.AimUtils
+import frc.team2471.frc2026.AimUtils.printPassTimes
 import frc.team2471.frc2026.AimUtils.printShooterCurves
 import frc.team2471.frc2026.Drive
 import frc.team2471.frc2026.Turret
@@ -37,7 +38,8 @@ object PrintPassCurves {
     @JvmStatic
     fun main(args: Array<String>) {
 //        printShooterCurves( -Turret.turretHeight, 5..40 step 5, 45.0.degrees)
-        printShooterCurves(-Turret.turretHeight, 5..20 step 5, Pair(50.0, 50.0))
+//        printShooterCurves(-Turret.turretHeight, 5..20 step 5, Pair(50.0, 50.0))
+        printPassTimes(5..20 step 5, 55.0.rotationsPerSecond)
     }
 }
 
