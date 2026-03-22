@@ -54,6 +54,8 @@ import org.team2471.frc.lib.units.asFeet
 import org.team2471.frc.lib.units.rotationsPerSecond
 import org.team2471.frc.lib.util.isSim
 import kotlin.collections.toDoubleArray
+import kotlin.math.IEEErem
+import kotlin.math.absoluteValue
 
 object Turret: SubsystemBase("Turret") {
     private val table = NetworkTableInstance.getDefault().getTable("Turret")
@@ -172,7 +174,8 @@ object Turret: SubsystemBase("Turret") {
     @get:AutoLogOutput(key = "Turret/isTurretWrapping")
     var isTurretWrapping = false
 
-    var useTurretGyro = true
+    val useTurretGyro
+        get() = (turretPigeonIsConnected && turretMotor.fault_RemoteSensorDataInvalid.value) || true
 
     @get:AutoLogOutput(key = "Turret/fieldCentricSetpoint")
     var fieldCentricSetpoint: Angle = fieldCentricAngle
@@ -204,9 +207,10 @@ object Turret: SubsystemBase("Turret") {
                 } else if (useTurretGyro) { // Use field-centric gyro
                     turretMotor.setControl(PositionVoltage(field.asRotations).withFeedForward(turretFeedforward))
                 } else { // Use robot-centric motor
-//                    val newRobotCentricSetpoint = turretMotorRotorAngle + (field - turretMotorFieldCentricAngle)
-//                    turretMotor.setControl(PositionVoltage(newRobotCentricSetpoint.asRotations).withFeedForward(turretFeedforward))
-                    turretMotor.setControl(PositionVoltage(field.asRotations).withFeedForward(turretFeedforward))
+                    val robotCentricNoGyroSetpoint = (turretMotorRotorAngle + (value - fieldCentricTurretMotorRotorAngle.unWrap(value)))
+                    val robotCentricNoGyroSetpointWrapped = robotCentricNoGyroSetpoint.asDegrees.IEEErem(TURRET_TOP_LIMIT.asDegrees.absoluteValue + TURRET_BOTTOM_LIMIT.asDegrees.absoluteValue).degrees
+                    println("Turret Gyro Disconnect ${robotCentricNoGyroSetpointWrapped.asDegrees}")
+                    turretMotor.setControl(PositionVoltage(robotCentricNoGyroSetpointWrapped.asRotations).withFeedForward(turretFeedforward))
                 }
             } else {
                 field = value.unWrap(fieldCentricAngle)
