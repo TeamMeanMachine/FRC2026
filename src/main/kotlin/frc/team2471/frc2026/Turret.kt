@@ -276,8 +276,8 @@ object Turret: SubsystemBase("Turret") {
 //            brakeMode()
             coastMode()
             if (isReal) {
-                s(0.3, StaticFeedforwardSignValue.UseClosedLoopSign)
-                p(60.0)
+                s(0.2, StaticFeedforwardSignValue.UseClosedLoopSign)
+                p(40.0)
                 d(0.0)
             } else {
                 s(0.13, StaticFeedforwardSignValue.UseClosedLoopSign)

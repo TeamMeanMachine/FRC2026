@@ -78,7 +78,7 @@ object Intake: SubsystemBase("Intake") {
     var deploySetpoint: Double = 0.0
         set(value) {
             field = value
-            deployMotor.setControl(MotionMagicVoltage(field))
+//            deployMotor.setControl(MotionMagicVoltage(field))
         }
 
     @get:AutoLogOutput(key = "Intake/Roller Velocity")
@@ -179,13 +179,13 @@ object Intake: SubsystemBase("Intake") {
     fun home(): Command = sequenceCommand(
         runCommand(this) {
             println("going in?")
-            deployMotor.setControl(DutyCycleOut(HOMING_POWER))
+//            deployMotor.setControl(DutyCycleOut(HOMING_POWER))
         }.onlyRunWhileTrue { hitHardStop },
         runCommand(this) {
             println("going out?")
-            deployMotor.setControl(DutyCycleOut(-HOMING_POWER))
+//            deployMotor.setControl(DutyCycleOut(-HOMING_POWER))
         }.onlyRunWhileFalse { hitHardStop }.withTimeout(6.0).finallyRun {
-            deployMotor.setControl(DutyCycleOut(0.0))
+//            deployMotor.setControl(DutyCycleOut(0.0))
             println("Deploy Pos: ${deployMotor.position}")
             deployMotor.setPosition(0.13)
             finishedHoming = true
@@ -237,9 +237,9 @@ object Intake: SubsystemBase("Intake") {
 
         if (!goingToSetpoint) {
             if (deployMotorError < -0.5 && deployMotor.controlMode.value != ControlModeValue.NeutralOut) {
-                deployMotor.setControl(DutyCycleOut(0.05))
+//                deployMotor.setControl(DutyCycleOut(0.05))
             } else {
-                deployMotor.setControl(NeutralOut())
+//                deployMotor.setControl(NeutralOut())
             }
         }
         LoopLogger.record("Intake default")

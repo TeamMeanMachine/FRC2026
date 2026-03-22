@@ -37,6 +37,7 @@ import org.team2471.frc.lib.control.commands.parallelCommand
 import org.team2471.frc.lib.control.commands.runCommand
 import org.team2471.frc.lib.control.commands.runOnceCommand
 import org.team2471.frc.lib.control.dPad
+import org.team2471.frc.lib.control.rightStickButton
 import org.team2471.frc.lib.ctre.addFollower
 import org.team2471.frc.lib.ctre.applyConfiguration
 import org.team2471.frc.lib.ctre.brakeMode
@@ -110,17 +111,17 @@ object Shooter: SubsystemBase("Shooter") {
 
     // feet, rot/s (of the wheel not the motor) (in an ideal condition. need to divide by SHOOTER_EFFICIENCY)
     val floorSpeedCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
-        put(5.0, 50.0)
-        put(10.0, 50.0)
-        put(15.0, 50.0)
-        put(20.0, 50.0)
+        put(5.0, 55.0)
+        put(10.0, 55.0)
+        put(15.0, 55.0)
+        put(20.0, 55.0)
     }
     // feet, degrees
     val floorAngleCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
-        put(5.0, 82.654)
-        put(10.0, 74.728)
-        put(15.0, 65.192)
-        put(20.0, 48.405)
+        put(5.0, 45.0)
+        put(10.0, 45.0)
+        put(15.0, 45.0)
+        put(20.0, 45.0)
 
     }
 
@@ -248,7 +249,7 @@ object Shooter: SubsystemBase("Shooter") {
 
             inverted(InvertedValue.Clockwise_Positive)
 
-            p(if (isReal) 0.35 else 4000.0)
+            p(if (isReal) 0.3  else 4000.0)
             i(if (isReal) 0.3 else 0.0)
 //            d(0.0)
 //            s(0.0, StaticFeedforwardSignValue.UseVelocitySign)
@@ -317,7 +318,7 @@ object Shooter: SubsystemBase("Shooter") {
 
     fun default(): Command = runCommand(this) {
         if ((doAutoShoot && !Drive.cameraDisconnected) && Drive.useAprilTags && AimUtils.isAimingAtGoal) {
-            if (FieldManager.inScoringZone && !FieldManager.inTrenchArea && AimUtils.distanceToTarget < 13.0.feet && FieldManager.shouldShoot) {
+            if (FieldManager.inScoringZone && !FieldManager.inTrenchArea /*&& AimUtils.distanceToTarget < 13.0.feet*/ && FieldManager.shouldShoot) {
                 shootLoop()
             } else {
                 isShooting = false
@@ -347,12 +348,12 @@ object Shooter: SubsystemBase("Shooter") {
             },
             runCommand {
                 shootLoop()
-            }.onlyRunWhileTrue { OI.driverController.rightTriggerAxis >= 0.1 || OI.driverController.dPad == Direction.RIGHT }.repeatedly(),
+            }.onlyRunWhileTrue { OI.driverController.rightTriggerAxis >= 0.1 || OI.driverController.rightStickButton }.repeatedly(),
             runCommand {
                 isShooting = false
                 Spindexer.currentState = Spindexer.State.OFF
                 hoodAngleSetpoint = HOOD_STOW_SETPOINT.degrees
-            }.onlyRunWhileFalse { OI.driverController.rightTriggerAxis >= 0.1 || OI.driverController.dPad == Direction.RIGHT }.repeatedly()
+            }.onlyRunWhileFalse { OI.driverController.rightTriggerAxis >= 0.1 || OI.driverController.rightStickButton }.repeatedly()
         ).finallyRun {
             isShooting = false
             Spindexer.currentState = Spindexer.State.OFF

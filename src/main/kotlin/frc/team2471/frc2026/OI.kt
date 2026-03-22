@@ -115,7 +115,7 @@ object OI: SubsystemBase("OI") {
 
         driverController.rightTrigger(0.1)
             .or(driverController.rightBumper())
-//            .or(driverController.povRight())
+            .or(driverController.rightStick())
             .whileTrue(
             parallelCommand(
                 Shooter.shootOrRamp(),

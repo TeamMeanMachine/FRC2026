@@ -62,7 +62,7 @@ object AimUtils {
     val HUB_HEIGHT = 65.0.inches
 
     // Percent of surface speed of shooter that gets transferred into the ball
-    val SHOOTER_EFFICIENCY = 0.71
+    val SHOOTER_EFFICIENCY = 0.68
 
     @get:AutoLogOutput(key = "aim target")
     val aimTarget: Translation2d
@@ -74,7 +74,7 @@ object AimUtils {
             return if (isAimingAtGoal) {
                 FieldManager.goalPose - calculateAimTargetOffset(FieldManager.goalPose, Shooter.hubTimeCurve)
             } else {
-                FieldManager.passPose - calculateAimTargetOffset(FieldManager.passPose, Shooter.floorTimeCurve)
+                FieldManager.passPose //- calculateAimTargetOffset(FieldManager.passPose, Shooter.floorTimeCurve)
             }
         }
 

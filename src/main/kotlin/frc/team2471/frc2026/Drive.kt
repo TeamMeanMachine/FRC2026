@@ -273,7 +273,7 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
     override fun getJoystickPercentageSpeeds(): ChassisSpeeds {
         val rawJoystick = OI.rawDriveTranslation
         // Square drive input and apply demoSpeed
-        val power = rawJoystick.norm.square() * demoSpeed * if (Shooter.isShooting) 0.3 else if (inSnakeMode) 0.8 else 1.0
+        val power = rawJoystick.norm.square() * demoSpeed * if (Shooter.isShooting && FieldManager.inScoringZone) 0.3 else if (inSnakeMode) 0.8 else 1.0
         // Apply modified power to joystick vector and flip depending on alliance
         val joystickTranslation = rawJoystick * power * if (isBlueAlliance) -1.0 else 1.0
 
