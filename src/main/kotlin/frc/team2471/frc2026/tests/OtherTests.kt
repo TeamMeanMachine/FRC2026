@@ -15,7 +15,6 @@ import frc.team2471.frc2026.Intake
 import frc.team2471.frc2026.Shooter
 import frc.team2471.frc2026.Spindexer
 import org.team2471.frc.lib.control.commands.*
-import org.team2471.frc.lib.ctre.addFollower
 import org.team2471.frc.lib.units.asDegrees
 import org.team2471.frc.lib.units.degrees
 import org.team2471.frc.lib.units.rotationsPerSecond
@@ -44,8 +43,8 @@ object PrintPassCurves {
 }
 
 fun zeroTurretEncoders() = runOnceCommand(Turret) {
-    Turret.encoder1Offset.setDouble(Turret.rawEncoder1AbsolutePosition.asDegrees)
-    Turret.encoder2Offset.setDouble(Turret.rawEncoder2AbsolutePosition.asDegrees)
+    Turret.encoder1OffsetEntry.setDouble(Turret.rawEncoder1AbsolutePosition.asDegrees)
+    Turret.encoder2OffsetEntry.setDouble(Turret.rawEncoder2AbsolutePosition.asDegrees)
     Turret.setTurretOffset(Drive.heading.measure)
     Turret.zeroTurretMotor()
 

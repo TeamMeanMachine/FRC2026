@@ -6,6 +6,9 @@ import com.ctre.phoenix6.hardware.CANcoder
 import com.ctre.phoenix6.hardware.Pigeon2
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue
+import edu.wpi.first.epilogue.Epilogue
+import edu.wpi.first.epilogue.EpilogueConfiguration
+import edu.wpi.first.epilogue.Logged
 import edu.wpi.first.math.geometry.Translation2d
 import edu.wpi.first.math.system.plant.DCMotor
 import edu.wpi.first.networktables.NetworkTableInstance
@@ -59,8 +62,8 @@ import kotlin.math.absoluteValue
 
 object Turret: SubsystemBase("Turret") {
     private val table = NetworkTableInstance.getDefault().getTable("Turret")
-    val encoder1Offset = table.getEntry("Turret Encoder 1 Offset")
-    val encoder2Offset = table.getEntry("Turret Encoder 2 Offset")
+    val encoder1OffsetEntry = table.getEntry("Encoder 1 Offset")
+    val encoder2OffsetEntry = table.getEntry("Encoder 2 Offset")
     val disableTurretEntry = table.getEntry("Disable Turret")
     val turretPigeonIsConnectedEntry = table.getEntry("Turret Pigeon IsConnected")
 
@@ -102,17 +105,22 @@ object Turret: SubsystemBase("Turret") {
     @get:AutoLogOutput(key = "Turret/turretMotorVoltage")
     val turretMotorVoltage: Double get() = turretMotor.motorVoltage.valueAsDouble
 
+    @get:Logged
     @get:AutoLogOutput(key = "Turret/rawEncoder1AbsolutePosition")
     val rawEncoder1AbsolutePosition: Angle get() = turretEncoder1.absolutePosition.value
+    @get:Logged
     @get:AutoLogOutput(key = "Turret/rawEncoder2AbsolutePosition")
     val rawEncoder2AbsolutePosition: Angle get() = turretEncoder2.absolutePosition.value
 
+    @get:Logged
     @get:AutoLogOutput(key = "Turret/encoder1AbsolutePosition")
-    val encoder1AbsolutePosition: Angle get() = (rawEncoder1AbsolutePosition - encoder1Offset.getDouble(ENCODER_1_DEFAULT_OFFSET).degrees).wrap()
+    val encoder1AbsolutePosition: Angle get() = (rawEncoder1AbsolutePosition - encoder1OffsetEntry.getDouble(ENCODER_1_DEFAULT_OFFSET).degrees).wrap()
+    @get:Logged
     @get:AutoLogOutput(key = "Turret/encoder2AbsolutePosition")
-    val encoder2AbsolutePosition: Angle get() = (rawEncoder2AbsolutePosition - encoder2Offset.getDouble(ENCODER_2_DEFAULT_OFFSET).degrees).wrap()
+    val encoder2AbsolutePosition: Angle get() = (rawEncoder2AbsolutePosition - encoder2OffsetEntry.getDouble(ENCODER_2_DEFAULT_OFFSET).degrees).wrap()
 
     // unwraps encoder 1 angle using encoder 2 angle
+    @get:Logged
     @get:AutoLogOutput(key = "Turret/fusedEncoderAngle")
     val fusedEncoderAngle: Angle
         get() {
@@ -253,11 +261,8 @@ object Turret: SubsystemBase("Turret") {
 
     init {
         println("Turret init")
-        if (!encoder1Offset.exists()) encoder1Offset.setDouble(ENCODER_1_DEFAULT_OFFSET); encoder1Offset.setPersistent()
-        if (!encoder2Offset.exists()) encoder2Offset.setDouble(ENCODER_2_DEFAULT_OFFSET); encoder2Offset.setPersistent()
-        disableTurretEntry.setBoolean(false)
-
-
+        if (!encoder1OffsetEntry.exists()) encoder1OffsetEntry.setDouble(ENCODER_1_DEFAULT_OFFSET); encoder1OffsetEntry.setPersistent()
+        if (!encoder2OffsetEntry.exists()) encoder2OffsetEntry.setDouble(ENCODER_2_DEFAULT_OFFSET); encoder2OffsetEntry.setPersistent()
 
         turretEncoder1.applyConfiguration {
             inverted(false)
@@ -359,6 +364,10 @@ object Turret: SubsystemBase("Turret") {
         Logger.recordOutput("Turret/distToGoalFeet", aimTarget.getDistance(Drive.localizer.pose.translation).meters.asFeet)
         Logger.recordOutput("Turret/turretPigeonIsConnected", turretPigeonConnected)
         turretPigeonIsConnectedEntry.setBoolean(turretPigeonConnected)
+        LoopLogger.record("turret logging")
+
+        Epilogue.turretLogger.update(Epilogue.getConfig().backend, this)
+        LoopLogger.record("turret epilogue")
 
         LoopLogger.record("turret periodic")
     }

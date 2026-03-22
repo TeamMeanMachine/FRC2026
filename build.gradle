@@ -115,6 +115,7 @@ dependencies {
 
     def akitJson = new JsonSlurper().parseText(new File(projectDir.getAbsolutePath() + "/vendordeps/AdvantageKit.json").text)
     kapt "org.littletonrobotics.akit:akit-autolog:$akitJson.version"
+    kapt "edu.wpi.first.epilogue:epilogue-processor-java:2026.2.2"
 }
 
 test {

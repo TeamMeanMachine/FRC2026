@@ -158,6 +158,8 @@ object FieldManager {
     val weWonAuto: Boolean
         get () = redWonAuto == isRedAlliance
 
+    val weWonAutoEntry = table.getEntry("We Won Auto")
+
     @get:AutoLogOutput(key = "FieldManager/matchTime")
     val matchTime: Double
         get() = DriverStation.getMatchTime()
@@ -237,6 +239,7 @@ object FieldManager {
 
         GlobalScope.launch {
             periodic {
+                weWonAutoEntry.setBoolean(weWonAuto)
                 hubCountdownEntry.setDouble(if (matchTime > 130.0) matchTime - 130.0 else if (matchTime < 30.0) matchTime else (matchTime - 5) % 25.0)
                 activeHubEntry.setString(
                     if (isAutonomous || matchTime > 130.0 || matchTime < 30.0) {
