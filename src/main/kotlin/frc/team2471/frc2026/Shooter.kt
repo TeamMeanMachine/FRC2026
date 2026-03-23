@@ -24,8 +24,10 @@ import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.SubsystemBase
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine
+import frc.team2471.frc2026.AimUtils.SHOOTER_EFFICIENCY
 import frc.team2471.frc2026.AimUtils.toExitVelocity
 import frc.team2471.frc2026.Robot.powerTracker
+import frc.team2471.frc2026.Shooter.SHOOTER_GEAR_RATIO
 import org.littletonrobotics.junction.AutoLogOutput
 import org.littletonrobotics.junction.Logger
 import org.team2471.frc.lib.control.Direction
@@ -81,12 +83,12 @@ object Shooter: SubsystemBase("Shooter") {
 
     // feet, rot/s (of the wheel not the motor) (in an ideal condition. need to divide by SHOOTER_EFFICIENCY)
     val hubSpeedCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
-        put(3.0, 40.0)
-        put(6.0, 43.0)
+        put(3.0, 37.0)
+        put(6.0, 40.0)
         put(9.0, 46.0)
         put(12.0, 49.0)
         put(15.0, 52.0)
-        put(18.0, 55.0)
+        put(18.0, 60.0)
     }
     // feet, degrees
     val hubAngleCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
@@ -95,18 +97,18 @@ object Shooter: SubsystemBase("Shooter") {
         put(9.0, 69.575)
         put(12.0, 64.851)
         put(15.0, 61.085)
-        put(18.0, 56.206)
+        put(18.0, 60.206)
 
     }
 
     //feet, s
     val hubTimeCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
-        put(3.0, 1.01)
-        put(6.0, 1.09)
-        put(9.0, 1.14)
-        put(12.0, 1.18)
-        put(15.0, 1.23)
-        put(18.0, 1.23)
+        put(3.0, 1.03)
+        put(6.0, 1.08)
+        put(9.0, 1.08)
+        put(12.0, 1.1)
+        put(15.0, 1.2)
+        put(18.0, 1.28)
     }
 
     // feet, rot/s (of the wheel not the motor) (in an ideal condition. need to divide by SHOOTER_EFFICIENCY)
@@ -161,6 +163,10 @@ object Shooter: SubsystemBase("Shooter") {
                 shooterMotor.setControl(MotionMagicVoltage(0.0))
             }
         }
+
+    @get:AutoLogOutput(key = "Shooter/ShooterCurve Angular Velocity Setpoint")
+    val shooterCurveVelocitySetpoint: AngularVelocity
+        get() = shooterVelocitySetpoint * SHOOTER_GEAR_RATIO * SHOOTER_EFFICIENCY
 
     @get:AutoLogOutput(key = "Shooter/Hood Feedforward")
     val hoodFeedforward: Double get() = 0.2//hoodAngle.cos() * 0.2

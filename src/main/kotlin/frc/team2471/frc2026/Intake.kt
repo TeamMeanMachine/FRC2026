@@ -3,6 +3,7 @@ package frc.team2471.frc2026
 import com.ctre.phoenix6.controls.DutyCycleOut
 import com.ctre.phoenix6.controls.MotionMagicVoltage
 import com.ctre.phoenix6.controls.NeutralOut
+import com.ctre.phoenix6.controls.TorqueCurrentFOC
 import com.ctre.phoenix6.hardware.TalonFX
 import com.ctre.phoenix6.signals.ControlModeValue
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue
@@ -11,6 +12,8 @@ import edu.wpi.first.wpilibj.DigitalInput
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.SubsystemBase
 import frc.team2471.frc2026.Robot.powerTracker
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import org.littletonrobotics.junction.AutoLogOutput
 import org.team2471.frc.lib.control.CurrentLimits
 import org.team2471.frc.lib.control.LoopLogger
@@ -46,7 +49,7 @@ object Intake: SubsystemBase("Intake") {
     val DEEP_STOW_POSE get() = deepStowPoseEntry.getDouble(0.0)
 
     val INTAKE_POWER get() = intakePowerEntry.getDouble(75.0)
-    const val HOMING_POWER = 0.1
+    const val HOMING_POWER = 0.15
 
     val rollerMotor = TalonFX(Falcons.INTAKE_ROLLER_0)
     val rollerMotorFollower = TalonFX(Falcons.INTAKE_ROLLER_1)
@@ -74,11 +77,33 @@ object Intake: SubsystemBase("Intake") {
             }
         }
 
+    var lastReachedSetpoint = 0.0
+
     @get:AutoLogOutput(key = "Intake/Deploy Setpoint")
     var deploySetpoint: Double = 0.0
         set(value) {
             field = value
-//            deployMotor.setControl(MotionMagicVoltage(field))
+            if (finishedHoming) {
+                if (lastReachedSetpoint != value) {
+                    reachedSetpoint = false
+                    lastReachedSetpoint = value
+                }
+
+                if (deployMotorError.absoluteValue < 0.5) {
+                    reachedSetpoint = true
+                }
+
+                if (reachedSetpoint) {
+                    if (deployMotorError < -0.7) {
+//                        deployMotor.setControl(DutyCycleOut(0.15))
+                        deployMotor.setControl(TorqueCurrentFOC(19.0))
+                    } else {
+                        deployMotor.setControl(NeutralOut())
+                    }
+                } else {
+                    deployMotor.setControl(MotionMagicVoltage(field))
+                }
+            }
         }
 
     @get:AutoLogOutput(key = "Intake/Roller Velocity")
@@ -108,7 +133,13 @@ object Intake: SubsystemBase("Intake") {
     var finishedHoming: Boolean = false
     var isDeployed: Boolean = false
 
+    @get:AutoLogOutput(key = "Intake/goingToSetpoint")
     var goingToSetpoint: Boolean = false
+
+    @get:AutoLogOutput(key = "Intake/reachedSetpoint")
+    var reachedSetpoint: Boolean = false
+
+    val flexThreshold = 3.0
 
     val autoCurrentLimits = CurrentLimits(30.0, 40.0, 1.0)
     val teleopCurrentLimits = CurrentLimits(15.0, 40.0, 0.2)
@@ -156,10 +187,19 @@ object Intake: SubsystemBase("Intake") {
         }
 
         this.defaultCommand = default()
+
+
+        GlobalScope.launch {
+            org.team2471.frc.lib.coroutines.periodic {
+                deploySetpoint = deploySetpoint
+            }
+        }
     }
 
     fun deploy() {
-        goingToSetpoint = true
+        if (deployMotorError.absoluteValue > flexThreshold) {
+            goingToSetpoint = true
+        }
         deploySetpoint = DEPLOY_POSE
         isDeployed = true
     }
@@ -177,15 +217,18 @@ object Intake: SubsystemBase("Intake") {
     }
 
     fun home(): Command = sequenceCommand(
+        runOnceCommand {
+            finishedHoming = false
+        },
         runCommand(this) {
             println("going in?")
-//            deployMotor.setControl(DutyCycleOut(HOMING_POWER))
+            deployMotor.setControl(DutyCycleOut(HOMING_POWER))
         }.onlyRunWhileTrue { hitHardStop },
         runCommand(this) {
             println("going out?")
-//            deployMotor.setControl(DutyCycleOut(-HOMING_POWER))
+            deployMotor.setControl(DutyCycleOut(-HOMING_POWER))
         }.onlyRunWhileFalse { hitHardStop }.withTimeout(6.0).finallyRun {
-//            deployMotor.setControl(DutyCycleOut(0.0))
+            deployMotor.setControl(DutyCycleOut(0.0))
             println("Deploy Pos: ${deployMotor.position}")
             deployMotor.setPosition(0.13)
             finishedHoming = true
@@ -230,18 +273,12 @@ object Intake: SubsystemBase("Intake") {
         }
         prevIntakeState = intakeState
 
-        if (goingToSetpoint && deployMotorError.absoluteValue < 1.0) {
+        if (goingToSetpoint && deployMotorError.absoluteValue < flexThreshold) {
             goingToSetpoint = false
         }
         LoopLogger.record("Intake default b4 controlMode")
 
-        if (!goingToSetpoint) {
-            if (deployMotorError < -0.5 && deployMotor.controlMode.value != ControlModeValue.NeutralOut) {
-//                deployMotor.setControl(DutyCycleOut(0.05))
-            } else {
-//                deployMotor.setControl(NeutralOut())
-            }
-        }
+
         LoopLogger.record("Intake default")
     }
 

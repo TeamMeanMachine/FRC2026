@@ -90,6 +90,14 @@ object FieldManager {
             return false
         }
 
+    val redTowerPose = (allAprilTags[14].pose.toPose2d().translation + Translation2d(-1.75, 0.0))
+    val blueTowerPose = (allAprilTags[30].pose.toPose2d().translation + Translation2d(1.75, 0.0))
+
+    val towerPose = Translation2d(11.0.feet.asMeters, 14.0.feet.asMeters)
+
+    //1 3/4 3ft wide
+
+
     val redGoalPose = (allAprilTags[3].pose.toPose2d().translation + allAprilTags[9].pose.toPose2d().translation)/2.0
     val blueGoalPose = (allAprilTags[19].pose.toPose2d().translation + allAprilTags[25].pose.toPose2d().translation)/2.0
 
@@ -232,10 +240,13 @@ object FieldManager {
         autoHoodRetractionEntry.setBoolean(true)
 
         val apriltagPositions = allAprilTags.map { it.pose }
-        Logger.recordOutput("All apriltags", *apriltagPositions.toTypedArray())
+        Logger.recordOutput("FieldManager/All apriltags", *apriltagPositions.toTypedArray())
         println("FieldManager init. Field dimensions: $fieldDimensions. ${allAprilTags.size} tags.")
 
-        Logger.recordOutput("Trench Poses", *trenchPositions)
+        Logger.recordOutput("FieldManager/Trench Poses", *trenchPositions)
+
+        Logger.recordOutput("FieldManager/TowerPoseRed", redTowerPose)
+        Logger.recordOutput("FieldManager/TowerPoseBlue", blueTowerPose)
 
         GlobalScope.launch {
             periodic {

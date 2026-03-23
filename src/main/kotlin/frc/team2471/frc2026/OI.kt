@@ -129,13 +129,21 @@ object OI: SubsystemBase("OI") {
                 Intake.intakeState = Intake.IntakeState.INTAKING
 //            }
         }.finallyRun {
-            Intake.stow()
+//            Intake.stow()
             Intake.intakeState = Intake.IntakeState.OFF
         })
 
-        driverController.leftTrigger(0.1).onTrue(runCommand {
-            Intake.stow()
+        driverController.leftStick().onTrue(runOnceCommand {
+            if (Intake.isDeployed) {
+                Intake.stow()
+            } else {
+                Intake.deploy()
+            }
         })
+
+        driverController.a().whileTrue(
+            Drive.snakeMode()
+        )
 
         (driverController.povDown().and(driverController.y())).onTrue(Intake.homeDeploy())
         (driverController.povDown().and(driverController.leftBumper())).onTrue(runOnceCommand { Intake.deepStow() })
