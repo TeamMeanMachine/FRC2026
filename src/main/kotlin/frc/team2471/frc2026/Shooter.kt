@@ -324,7 +324,7 @@ object Shooter: SubsystemBase("Shooter") {
 
     fun default(): Command = runCommand(this) {
         if ((doAutoShoot && !Drive.cameraDisconnected) && Drive.useAprilTags && AimUtils.isAimingAtGoal) {
-            if (FieldManager.inScoringZone && !FieldManager.inTrenchArea /*&& AimUtils.distanceToTarget < 13.0.feet*/ && FieldManager.shouldShoot) {
+            if (FieldManager.inScoringZone && !FieldManager.inNoShootArea /*&& AimUtils.distanceToTarget < 13.0.feet*/ && FieldManager.shouldShoot) {
                 shootLoop()
             } else {
                 isShooting = false
@@ -383,7 +383,7 @@ object Shooter: SubsystemBase("Shooter") {
 
     fun shootLoop(ignoreRampUp: Boolean = false) {
 //        println("Shoot Loop!!!")
-        if (!FieldManager.inTrenchArea && (!Turret.isTurretWrapping || Turret.disableTurret) && (((rampedUp || ignoreRampUp) && AimUtils.isAimingAtGoal) || (rampedUpPassing && !AimUtils.isAimingAtGoal)) && (FieldManager.shouldShoot || !AimUtils.isAimingAtGoal)) {
+        if (!FieldManager.inNoShootArea && (!Turret.isTurretWrapping || Turret.disableTurret) && (((rampedUp || ignoreRampUp) && AimUtils.isAimingAtGoal) || (rampedUpPassing && !AimUtils.isAimingAtGoal)) && (FieldManager.shouldShoot || !AimUtils.isAimingAtGoal)) {
             isShooting = true
             Spindexer.currentState = Spindexer.State.ON
         } else {
@@ -391,7 +391,7 @@ object Shooter: SubsystemBase("Shooter") {
             Spindexer.currentState = Spindexer.State.OFF
         }
 
-        if (!FieldManager.inTrenchArea) {
+        if (!FieldManager.inNoShootArea) {
             hoodAngleSetpoint = (
                 if (AimUtils.isAimingAtGoal)
                     BALL_ANGLE_AT_HOOD_ZERO - hubAngleCurve.get(AimUtils.distanceToTarget.asFeet)

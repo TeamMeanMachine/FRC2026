@@ -32,7 +32,9 @@ object FieldManager {
     val aprilTagFieldLayout: AprilTagFieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded) //AprilTagFieldLayout(Filesystem.getDeployDirectory().path + "/2026Field.json")
     val allAprilTags = aprilTagFieldLayout.tags
 
+    // x
     val fieldWidth = aprilTagFieldLayout.fieldWidth.meters
+    // y
     val fieldLength = aprilTagFieldLayout.fieldLength.meters
 
     val fieldDimensions = UTranslation2d(fieldLength, fieldWidth)
@@ -53,8 +55,16 @@ object FieldManager {
             addOption("Blue", "B")
         }
 
-    val trenchAreaWidth = 27.0.inches
-    val trenchAreaLength = 50.0.inches
+    val trenchAreaWidth = 50.0.inches
+    val trenchAreaLength = 27.0.inches
+
+    val towerAreaWidth = 41.8.inches
+    val towerAreaLength = 47.0.inches
+
+    val xRelativeToCenter: Distance
+        get () = (Drive.localizer.pose.x.meters - fieldCenter.x.asMeters.meters)
+
+
 
     val lowerBlueTrenchPosition = ((allAprilTags[21].pose.toPose2d().translation + allAprilTags[22].pose.toPose2d().translation)/2.0)
     val upperBlueTrenchPosition = ((allAprilTags[16].pose.toPose2d().translation + allAprilTags[27].pose.toPose2d().translation)/2.0)
@@ -71,24 +81,36 @@ object FieldManager {
     @get:AutoLogOutput(key = "FieldManager/In Trench Area")
     val inTrenchArea: Boolean
         get () {
-            if (!autoHoodRetraction || !Drive.useAprilTags) {
-                return false
-            }
-
             for (pose in trenchPositions) {
                 val relativePose = pose - Drive.localizer.pose.translation
-                if (relativePose.y.absoluteValue.meters < (trenchAreaLength/2.0) && relativePose.x.absoluteValue.meters < (trenchAreaWidth/2.0)) {
-                    return true
-                }
-                val predictedPose = Drive.localizer.pose.translation + Drive.velocity * Shooter.HOOD_DOWN_TIME
-                Logger.recordOutput("Drive/predictedPose", predictedPose)
-                val predictedRelativePose = pose - predictedPose
-                if (predictedRelativePose.x.sign != relativePose.x.sign) {
-                    return true
+                if (relativePose.y.absoluteValue.meters < (trenchAreaWidth/2.0)) {
+                    val predictedPose = Drive.localizer.pose.translation + Drive.velocity * Shooter.HOOD_DOWN_TIME
+                    Logger.recordOutput("Drive/predictedPose", predictedPose)
+                    val predictedRelativePose = pose - predictedPose
+                    if ((predictedRelativePose.x.sign != relativePose.x.sign) || (relativePose.x.absoluteValue.meters < (trenchAreaLength/2.0))) {
+                        return true
+                    }
                 }
             }
             return false
         }
+
+    @get:AutoLogOutput(key = "FieldManager/In Tower Area")
+    val inTowerArea: Boolean
+        get() {
+            val yRelativeToTower: Distance = (Drive.localizer.pose.y.meters - (fieldCenter.y.asMeters.meters + 11.46.inches * xRelativeToCenter.asInches.sign))
+
+            if (xRelativeToCenter.absoluteValue() > (fieldHalfLength - towerAreaLength) && yRelativeToTower.absoluteValue() < towerAreaWidth / 2.0) {
+                return true
+            }
+
+            return false
+        }
+
+    @get:AutoLogOutput(key = "FieldManager/In No Shoot Area")
+    val inNoShootArea: Boolean
+        get() = (autoHoodRetraction && Drive.useAprilTags) && (inTowerArea || inTrenchArea)
+
 
     val redTowerPose = (allAprilTags[14].pose.toPose2d().translation + Translation2d(-1.75, 0.0))
     val blueTowerPose = (allAprilTags[30].pose.toPose2d().translation + Translation2d(1.75, 0.0))
@@ -126,12 +148,8 @@ object FieldManager {
 //            } - AimUtils.calculateAimTargetOffset(AimUtils.PASS_AIRTIME)
         }
 
-    @get:AutoLogOutput(key = "FieldManager/Distance From Middle to Score")
     val distanceFromMiddleToScore = fieldCenter.x.asFeet.feet - lowerRedTrenchPosition.x.feet - 5.0.feet
 
-    @get:AutoLogOutput(key = "FieldManager/Distance From Center")
-    val xRelativeToCenter: Distance
-        get () = (Drive.localizer.pose.x.meters - fieldCenter.x.asMeters.meters)
 
     @get:AutoLogOutput(key = "FieldManager/In Scoring Zone")
     val inScoringZone: Boolean
