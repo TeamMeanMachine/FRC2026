@@ -248,7 +248,7 @@ object Shooter: SubsystemBase("Shooter") {
         doAutoShootEntry.setBoolean(true)
 
         shooterMotor.applyConfiguration {
-            currentLimits(39.0, 50.0, 1.0)
+            currentLimits(15.0, 50.0, 1.0)
             coastMode()
 
             Feedback.withSensorToMechanismRatio(1.0/1.5)

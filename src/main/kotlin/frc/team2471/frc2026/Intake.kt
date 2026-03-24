@@ -142,7 +142,7 @@ object Intake: SubsystemBase("Intake") {
     val flexThreshold = 3.0
 
     val autoCurrentLimits = CurrentLimits(30.0, 40.0, 1.0)
-    val teleopCurrentLimits = CurrentLimits(15.0, 40.0, 0.2)
+    val teleopCurrentLimits = CurrentLimits(13.0, 40.0, 0.2)
 
 
     init {
