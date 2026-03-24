@@ -172,11 +172,6 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
     init {
         println("inside Drive init")
 
-        frontLeftConnectedEntry.setBoolean(cameras[0].isConnected)
-        frontRightConnectedEntry.setBoolean(cameras[1].isConnected)
-        backLeftConnectedEntry.setBoolean(cameras[2].isConnected)
-        backRightConnectedEntry.setBoolean(cameras[3].isConnected)
-
         useAprilTagsEntry.setBoolean(true)
 
         // MUST start inside the field on bootup for accurate heading measurements due to a PoseLocalizer bug.
@@ -233,6 +228,15 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
             it.updateInputs()
         }
         LoopLogger.record("Drive camera updateInputs")
+
+
+        frontLeftConnectedEntry.setBoolean(cameras[0].isConnected)
+        frontRightConnectedEntry.setBoolean(cameras[1].isConnected)
+        backLeftConnectedEntry.setBoolean(cameras[2].isConnected)
+        backRightConnectedEntry.setBoolean(cameras[3].isConnected)
+
+        LoopLogger.record("Camera Connected Publisher")
+
         // Update poses with processed particle filter estimates.
         localizer.updateWithLatestPoseEstimate()
         LoopLogger.record("Drive updateWithLatestPose")

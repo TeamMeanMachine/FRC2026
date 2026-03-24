@@ -96,7 +96,7 @@ object Intake: SubsystemBase("Intake") {
                 if (reachedSetpoint) {
                     if (deployMotorError < -0.7) {
 //                        deployMotor.setControl(DutyCycleOut(0.15))
-                        deployMotor.setControl(TorqueCurrentFOC(19.0))
+                        deployMotor.setControl(TorqueCurrentFOC(21.0))
                     } else {
                         deployMotor.setControl(NeutralOut())
                     }
