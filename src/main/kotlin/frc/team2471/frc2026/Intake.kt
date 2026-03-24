@@ -183,7 +183,7 @@ object Intake: SubsystemBase("Intake") {
 
         if (!isSim) {
             powerTracker.addMotors("Intake Roller", { rollerMotor.getSupplyCurrent(true).value.asAmps }, 2, {rollerMotor.supplyVoltage.value.asVolts})
-            powerTracker.addMotors("Intake Deploy", { rollerMotor.getSupplyCurrent(true).value.asAmps })
+            powerTracker.addMotors("Intake Deploy", { deployMotor.getSupplyCurrent(true).value.asAmps })
         }
 
         this.defaultCommand = default()
