@@ -23,7 +23,7 @@ object OI: SubsystemBase("OI") {
     private val table = NetworkTableInstance.getDefault().getTable("OI")
 
     val rotationMultiplierEntry = table.getEntry("Rotation Multiplier")
-    val rotationMultiplier = rotationMultiplierEntry.getDouble(1.0)
+    val rotationMultiplier = rotationMultiplierEntry.getDouble(0.8)
 
     val driverController = MeanCommandXboxController(0, false)
     val operatorController = MeanCommandXboxController(1)

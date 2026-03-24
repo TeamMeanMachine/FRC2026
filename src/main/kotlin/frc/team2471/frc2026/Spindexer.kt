@@ -235,10 +235,10 @@ object Spindexer: SubsystemBase("Spindexer") {
                 }
 
                 State.AGITATING -> {
-//                    spinMotorVelocitySetpoint = -AGITATE_VELOCITY
-//                    sidetakeMotorVelocitySetpoint = 0.0
-//                    uptakeMotorVelocitySetpoint = 0.0
-//                    stateOnTimer.stop()
+                    spinMotorVelocitySetpoint = -AGITATE_VELOCITY
+                    sidetakeMotorVelocitySetpoint = 0.0
+                    uptakeMotorVelocitySetpoint = 0.0
+                    stateOnTimer.stop()
                 }
             }
         }

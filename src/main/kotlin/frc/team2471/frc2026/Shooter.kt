@@ -83,12 +83,12 @@ object Shooter: SubsystemBase("Shooter") {
 
     // feet, rot/s (of the wheel not the motor) (in an ideal condition. need to divide by SHOOTER_EFFICIENCY)
     val hubSpeedCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
-        put(3.0, 37.0)
+        put(3.0, 38.5)
         put(6.0, 40.0)
         put(9.0, 46.0)
         put(12.0, 49.0)
         put(15.0, 52.0)
-        put(18.0, 60.0)
+        put(18.0, 58.0)
     }
     // feet, degrees
     val hubAngleCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
@@ -324,7 +324,7 @@ object Shooter: SubsystemBase("Shooter") {
 
     fun default(): Command = runCommand(this) {
         if ((doAutoShoot && !Drive.cameraDisconnected) && Drive.useAprilTags && AimUtils.isAimingAtGoal) {
-            if (FieldManager.inScoringZone && !FieldManager.inTrenchArea /*&& AimUtils.distanceToTarget < 13.0.feet*/ && FieldManager.shouldShoot) {
+            if (FieldManager.inScoringZone && !FieldManager.inNoShootArea /*&& AimUtils.distanceToTarget < 13.0.feet*/ && FieldManager.shouldShoot) {
                 shootLoop()
             } else {
                 isShooting = false
@@ -383,7 +383,7 @@ object Shooter: SubsystemBase("Shooter") {
 
     fun shootLoop(ignoreRampUp: Boolean = false) {
 //        println("Shoot Loop!!!")
-        if (!FieldManager.inTrenchArea && (!Turret.isTurretWrapping || Turret.disableTurret) && (((rampedUp || ignoreRampUp) && AimUtils.isAimingAtGoal) || (rampedUpPassing && !AimUtils.isAimingAtGoal)) && (FieldManager.shouldShoot || !AimUtils.isAimingAtGoal)) {
+        if (!FieldManager.inNoShootArea && (!Turret.isTurretWrapping || Turret.disableTurret) && (((rampedUp || ignoreRampUp) && AimUtils.isAimingAtGoal) || (rampedUpPassing && !AimUtils.isAimingAtGoal)) && (FieldManager.shouldShoot || !AimUtils.isAimingAtGoal)) {
             isShooting = true
             Spindexer.currentState = Spindexer.State.ON
         } else {
@@ -391,7 +391,7 @@ object Shooter: SubsystemBase("Shooter") {
             Spindexer.currentState = Spindexer.State.OFF
         }
 
-        if (!FieldManager.inTrenchArea) {
+        if (!FieldManager.inNoShootArea) {
             hoodAngleSetpoint = (
                 if (AimUtils.isAimingAtGoal)
                     BALL_ANGLE_AT_HOOD_ZERO - hubAngleCurve.get(AimUtils.distanceToTarget.asFeet)

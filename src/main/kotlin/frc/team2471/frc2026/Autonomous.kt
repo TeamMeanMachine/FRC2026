@@ -5,6 +5,7 @@ import edu.wpi.first.wpilibj2.command.Command
 import frc.team2471.frc2026.tests.*
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser
 import org.team2471.frc.lib.control.Autonomi
+import org.team2471.frc.lib.control.commands.beforeWait
 import org.team2471.frc.lib.control.commands.parallelCommand
 import org.team2471.frc.lib.control.commands.runCommand
 import org.team2471.frc.lib.control.commands.runOnceCommand
@@ -27,6 +28,7 @@ object Autonomous: Autonomi() {
             addOption("6x6 Square", AutoCommand(squarePathTest()))
             addOption("Double Swipe Left", AutoCommand(doubleSwipe(false), { paths["LeftSideDoubleSwipe"]!!.sideToSideFlip(false).getInitialPose(Drive.flipChoreoPaths).get() }))
             addOption("Double Swipe Right", AutoCommand(doubleSwipe(true), { paths["LeftSideDoubleSwipe"]!!.sideToSideFlip(true).getInitialPose(Drive.flipChoreoPaths).get() }))
+            addOption("Just Shoot", AutoCommand(justShoot()))
         }
 
     /** Chooser for test commands */
@@ -108,5 +110,15 @@ object Autonomous: Autonomi() {
                 Shooter.rampUpLoop()
             }.withName("Shooter ramp up loop")
         ).withName("Double swipe auto")
+    }
+
+
+    private fun justShoot(): Command {
+        return parallelCommand(
+            Shooter.shoot().beforeWait(5.0),
+            runOnceCommand {
+                Intake.stow()
+            }
+        )
     }
 }
