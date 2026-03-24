@@ -2,10 +2,6 @@
 package frc.team2471.frc2026
 
 import com.ctre.phoenix6.SignalLogger
-import edu.wpi.first.epilogue.Epilogue
-import edu.wpi.first.epilogue.EpilogueConfiguration
-import edu.wpi.first.epilogue.Logged
-import edu.wpi.first.epilogue.logging.EpilogueBackend
 import edu.wpi.first.hal.FRCNetComm.tInstances
 import edu.wpi.first.hal.FRCNetComm.tResourceType
 import edu.wpi.first.hal.HAL
@@ -21,7 +17,6 @@ import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import org.littletonrobotics.junction.ConsoleSource
 import org.littletonrobotics.junction.LogFileUtil
 import org.littletonrobotics.junction.LoggedRobot
 import org.littletonrobotics.junction.Logger
@@ -43,7 +38,6 @@ import kotlin.collections.iterator
  * the package after creating this project, you must also update the build.gradle file in the
  * project.
  */
-@Logged
 @OptIn(DelicateCoroutinesApi::class)
 object Robot : LoggedRobot() {
     val isCompBot = getCompBotBoolean()
@@ -175,9 +169,6 @@ object Robot : LoggedRobot() {
 
         powerTracker.update(RoboRioDataJNI.getVInVoltage())
         LoopLogger.record("after powerTracker update")
-
-        Epilogue.robotLogger.update(Epilogue.getConfig().backend, this)
-        LoopLogger.record("after Robot Epilogue")
 
         // Return to non-RT thread priority (do not modify the first argument)
 //         Threads.setCurrentThreadPriority(false, 10);

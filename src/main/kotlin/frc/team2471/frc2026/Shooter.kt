@@ -27,10 +27,10 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine
 import frc.team2471.frc2026.AimUtils.SHOOTER_EFFICIENCY
 import frc.team2471.frc2026.AimUtils.toExitVelocity
 import frc.team2471.frc2026.Robot.powerTracker
-import frc.team2471.frc2026.Shooter.SHOOTER_GEAR_RATIO
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import org.littletonrobotics.junction.AutoLogOutput
 import org.littletonrobotics.junction.Logger
-import org.team2471.frc.lib.control.Direction
 import org.team2471.frc.lib.control.LoopLogger
 import org.team2471.frc.lib.control.commands.finallyRun
 import org.team2471.frc.lib.control.commands.onlyRunWhileFalse
@@ -38,7 +38,6 @@ import org.team2471.frc.lib.control.commands.onlyRunWhileTrue
 import org.team2471.frc.lib.control.commands.parallelCommand
 import org.team2471.frc.lib.control.commands.runCommand
 import org.team2471.frc.lib.control.commands.runOnceCommand
-import org.team2471.frc.lib.control.dPad
 import org.team2471.frc.lib.control.rightStickButton
 import org.team2471.frc.lib.ctre.addFollower
 import org.team2471.frc.lib.ctre.applyConfiguration
@@ -60,10 +59,10 @@ import org.team2471.frc.lib.units.asMeters
 import org.team2471.frc.lib.units.asMetersPerSecond
 import org.team2471.frc.lib.units.asRadiansPerSecond
 import org.team2471.frc.lib.units.asRotation2d
+import org.team2471.frc.lib.units.asRotationsPerSecond
 import org.team2471.frc.lib.units.asVolts
 import org.team2471.frc.lib.units.cos
 import org.team2471.frc.lib.units.degrees
-import org.team2471.frc.lib.units.feet
 import org.team2471.frc.lib.units.inches
 import org.team2471.frc.lib.units.radians
 import org.team2471.frc.lib.units.rotations
@@ -153,12 +152,15 @@ object Shooter: SubsystemBase("Shooter") {
     // seconds
     const val HOOD_DOWN_TIME = 0.75
 
+    var SHOOTER_CUSTOM_I = 0.0
+    val shooterI = 0.0
+
     @get:AutoLogOutput(key = "Shooter/Shooter Angular Velocity Setpoint")
     var shooterVelocitySetpoint: AngularVelocity = 0.0.rotationsPerSecond
         set(value) {
             field = value.coerceAtLeast(0.0.rotationsPerSecond)// / SHOOTER_GEAR_RATIO
             if (field > 0.0.rotationsPerSecond) {
-                shooterMotor.setControl(VelocityVoltage(field))
+                shooterMotor.setControl(VelocityVoltage(field).withFeedForward(SHOOTER_CUSTOM_I))
             } else {
                 shooterMotor.setControl(MotionMagicVoltage(0.0))
             }
@@ -192,6 +194,9 @@ object Shooter: SubsystemBase("Shooter") {
     @get:AutoLogOutput(key = "Shooter/Shooter Angular Velocity")
     val shooterVelocity: AngularVelocity
         get() = shooterMotor.velocity.valueAsDouble.rotationsPerSecond// * SHOOTER_GEAR_RATIO
+
+    val shooterVelocityError: AngularVelocity
+        get() = shooterVelocitySetpoint - shooterVelocity
 
     @get:AutoLogOutput(key = "Shooter/Shooter Current")
     val shooterCurrent: Double get() = shooterMotor.supplyCurrent.valueAsDouble
@@ -288,12 +293,11 @@ object Shooter: SubsystemBase("Shooter") {
         }
 
 
-//        GlobalScope.launch {
-//            periodic(0.01) {
-//                requestedVoltage = shooterController.updateVoltage(shooterVelocitySetpoint.asRotationsPerSecond, shooterVelocity.asRotationsPerSecond).coerceIn(0.0, 13.0)
-////                shooterMotor.setControl(VoltageOut(requestedVoltage))
-//            }
-//        }
+        GlobalScope.launch {
+            org.team2471.frc.lib.coroutines.periodic {
+                SHOOTER_CUSTOM_I += shooterVelocityError.asRotationsPerSecond * 0.02 * shooterI
+            }
+        }
     }
 
 
