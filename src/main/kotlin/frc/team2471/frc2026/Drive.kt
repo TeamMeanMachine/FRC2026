@@ -21,6 +21,7 @@ import edu.wpi.first.networktables.NetworkTableInstance
 import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.wpilibj.Timer
 import edu.wpi.first.wpilibj2.command.Command
+import edu.wpi.first.wpilibj2.command.CommandScheduler
 import frc.team2471.frc2026.OI.driverController
 import frc.team2471.frc2026.Robot.powerTracker
 import gg.questnav.questnav.QuestNav
@@ -29,6 +30,7 @@ import org.littletonrobotics.junction.Logger
 import org.team2471.frc.lib.control.LoopLogger
 import org.team2471.frc.lib.control.commands.finallyRun
 import org.team2471.frc.lib.control.commands.runCommand
+import org.team2471.frc.lib.control.rightStickButton
 import org.team2471.frc.lib.ctre.PhoenixUtil
 import org.team2471.frc.lib.localization.PoseLocalizer
 import org.team2471.frc.lib.math.cube
@@ -192,6 +194,8 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
 
 
         finalInitialization()
+
+        CommandScheduler.getInstance().schedule(Autonomous.warmupDriveAlongPath())
     }
 
     override fun periodic() {
@@ -277,7 +281,7 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
     override fun getJoystickPercentageSpeeds(): ChassisSpeeds {
         val rawJoystick = OI.rawDriveTranslation
         // Square drive input and apply demoSpeed
-        val power = rawJoystick.norm.square() * demoSpeed * if (Shooter.isShooting && FieldManager.inScoringZone) 0.3 else if (inSnakeMode) 0.8 else 1.0
+        val power = rawJoystick.norm.square() * demoSpeed * if ((Shooter.isShooting || OI.driverController.rightStickButton) && FieldManager.inScoringZone) 0.3 else if (inSnakeMode) 0.8 else 1.0
         // Apply modified power to joystick vector and flip depending on alliance
         val joystickTranslation = rawJoystick * power * if (isBlueAlliance) -1.0 else 1.0
 

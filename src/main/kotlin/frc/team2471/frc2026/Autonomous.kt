@@ -121,4 +121,9 @@ object Autonomous: Autonomi() {
             }
         )
     }
+
+    fun warmupDriveAlongPath(): Command {
+        val warmupPath = paths["LeftSideDoubleSwipe"]!!.sideToSideFlip(true)
+        return Drive.driveAlongChoreoPath(warmupPath.getSplit(0).get(), exitSupplier = { it >= 1.0 || Robot.isEnabled}).ignoringDisable(true)
+    }
 }
