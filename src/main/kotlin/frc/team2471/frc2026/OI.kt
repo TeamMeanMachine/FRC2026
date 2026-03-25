@@ -119,7 +119,7 @@ object OI: SubsystemBase("OI") {
             .whileTrue(
             parallelCommand(
                 Shooter.shootOrRamp(),
-                Intake.pulse().onlyRunWhileTrue { driverController.rightTriggerAxis > 0.75 }.repeatedly()
+//                Intake.pulse().onlyRunWhileTrue { driverController.rightTriggerAxis > 0.75 }.repeatedly()
             ).ignoringDisable(true)
         )
 

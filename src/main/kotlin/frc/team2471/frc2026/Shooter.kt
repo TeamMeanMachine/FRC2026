@@ -85,8 +85,8 @@ object Shooter: SubsystemBase("Shooter") {
         put(3.0, 38.5)
         put(6.0, 40.0)
         put(9.0, 46.0)
-        put(12.0, 49.0)
-        put(15.0, 52.0)
+        put(12.0, 48.0)
+        put(15.0, 51.5)
         put(18.0, 58.0)
     }
     // feet, degrees
