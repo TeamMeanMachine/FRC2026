@@ -14,14 +14,20 @@ import frc.team2471.frc2026.Robot.isAutonomous
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.littletonrobotics.junction.AutoLogOutput
+import org.littletonrobotics.junction.LogFileUtil
 import org.littletonrobotics.junction.Logger
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser
+import org.littletonrobotics.junction.networktables.NT4Publisher
+import org.littletonrobotics.junction.wpilog.WPILOGReader
+import org.littletonrobotics.junction.wpilog.WPILOGWriter
 import org.team2471.frc.lib.control.commands.runCommand
 import org.team2471.frc.lib.control.commands.runOnceCommand
 import org.team2471.frc.lib.control.commands.sequenceCommand
 import org.team2471.frc.lib.coroutines.periodic
 import org.team2471.frc.lib.units.*
+import org.team2471.frc.lib.util.RobotMode
 import org.team2471.frc.lib.util.isRedAlliance
+import org.team2471.frc.lib.util.robotMode
 import kotlin.math.absoluteValue
 import kotlin.math.floor
 import kotlin.math.sign
@@ -58,7 +64,7 @@ object FieldManager {
     val trenchAreaWidth = 50.0.inches
     val trenchAreaLength = 27.0.inches
 
-    val towerAreaWidth = 41.8.inches
+    val towerAreaWidth = 62.0.inches
     val towerAreaLength = 47.0.inches
 
     val xRelativeToCenter: Distance
@@ -254,6 +260,26 @@ object FieldManager {
         }
 
     init {
+
+        when (robotMode) {
+            RobotMode.REAL -> { // Running on a real robot, log to a USB stick ("/U/logs")
+                Logger.addDataReceiver(WPILOGWriter())
+                Logger.addDataReceiver(NT4Publisher())
+            }
+            RobotMode.SIM -> {
+                Logger.addDataReceiver(NT4Publisher())
+                Logger.addDataReceiver(WPILOGWriter())
+            } // Running a physics simulator, log to NT
+            RobotMode.REPLAY -> { // Replaying a log, set up replay source
+                Robot.setUseTiming(true) // false - simulate as fast as possible, true - simulate in real time (particle filter needs true)
+                val logPath = LogFileUtil.findReplayLog()
+                Logger.setReplaySource(WPILOGReader(logPath))
+                Logger.addDataReceiver(WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim")))
+            }
+        }
+
+        Logger.start()
+
         doShiftTimingEntry.setBoolean(true)
         autoHoodRetractionEntry.setBoolean(true)
 
