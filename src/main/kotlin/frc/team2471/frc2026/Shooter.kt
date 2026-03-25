@@ -1,6 +1,7 @@
 package frc.team2471.frc2026
 
 import com.ctre.phoenix6.SignalLogger
+import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage
 import com.ctre.phoenix6.controls.MotionMagicVoltage
 import com.ctre.phoenix6.controls.PositionVoltage
 import com.ctre.phoenix6.controls.VelocityVoltage
@@ -160,11 +161,15 @@ object Shooter: SubsystemBase("Shooter") {
         set(value) {
             field = value.coerceAtLeast(0.0.rotationsPerSecond)// / SHOOTER_GEAR_RATIO
             if (field > 0.0.rotationsPerSecond) {
-                shooterMotor.setControl(VelocityVoltage(field).withFeedForward(SHOOTER_CUSTOM_I))
+                shooterMotor.setControl(MotionMagicVelocityVoltage(field).withFeedForward(SHOOTER_CUSTOM_I))
             } else {
                 shooterMotor.setControl(MotionMagicVoltage(0.0))
             }
         }
+
+    @get:AutoLogOutput(key = "Shoter/Shooter Motor closedLoopReference")
+    val shooterMotorReference
+        get() = shooterMotor.closedLoopReference.valueAsDouble
 
     @get:AutoLogOutput(key = "Shooter/ShooterCurve Angular Velocity Setpoint")
     val shooterCurveVelocitySetpoint: AngularVelocity
@@ -265,7 +270,7 @@ object Shooter: SubsystemBase("Shooter") {
 //            d(0.0)
 //            s(0.0, StaticFeedforwardSignValue.UseVelocitySign)
 
-            MotionMagic.MotionMagicAcceleration = 30.0
+            MotionMagic.MotionMagicAcceleration = 25.0
 
             //Bang bang torque
 //            p(99999999.9)

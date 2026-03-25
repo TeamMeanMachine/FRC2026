@@ -150,6 +150,21 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
     // TODO: Check heading accuracy
     val localizer = PoseLocalizer(Fiducial.constructFiducialList(FieldManager.allAprilTags), cameras)
 
+    @get:AutoLogOutput(key = "Drive/Drive Velocity Vector")
+    val velocityVector: Translation2d
+        get() = localizer.pose.translation + velocity
+
+    var prevLocalizerTranslation = localizer.pose.translation
+
+    @get:AutoLogOutput(key = "Drive/Localizer Velocity Vector")
+    var localizerVelocityVector: Translation2d = localizer.pose.translation
+
+    @get:AutoLogOutput(key = "Drive/Gyro Velocity Vector")
+    val gyroVelocityVector: Translation2d
+        get() = gyroVelocity +  localizer.pose.translation
+
+    var gyroVelocity: Translation2d = localizer.pose.translation
+
     private val translationRateTimer = Timer()
     private var prevTranslation = Translation2d()
 
@@ -250,7 +265,12 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
         localizer.update(poseMeasurement, cameras.map { it.latestMeasurement }, speeds)
         LoopLogger.record("Drive localizer")
 
-        quest.commandPeriodic()
+        localizerVelocityVector = localizer.pose.translation + (localizer.pose.translation - prevLocalizerTranslation) * 50.0
+        prevLocalizerTranslation = localizer.pose.translation
+
+        gyroVelocity += Translation2d(gyroAccelerationX.asMetersPerSecondPerSecond, gyroAccelerationY.asMetersPerSecondPerSecond) * 0.2
+
+//        quest.commandPeriodic()
         LoopLogger.record("Drive quest periodic")
 
         headingHistory.put(Timer.getFPGATimestamp(), heading.degrees)
