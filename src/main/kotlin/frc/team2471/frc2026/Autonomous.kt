@@ -2,6 +2,7 @@ package frc.team2471.frc2026
 
 import edu.wpi.first.math.geometry.Pose2d
 import edu.wpi.first.wpilibj2.command.Command
+import edu.wpi.first.wpilibj2.command.CommandScheduler
 import frc.team2471.frc2026.tests.*
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser
 import org.team2471.frc.lib.control.Autonomi
@@ -21,6 +22,13 @@ object Autonomous: Autonomi() {
 
     /** Supplier that sets the robot's pose. Used inside [setDrivePositionToAutoStartPose] */
     override val drivePoseSetter: (Pose2d) -> Unit = { Drive.pose = it }
+
+    /** Warmup function for speeding up auto loop times. Runs when selected auto changes. */
+    override val warmupFunction: () -> Unit = {
+        println("scheduling auto warmup")
+        CommandScheduler.getInstance().schedule(warmupDriveAlongPath())
+        println("finished scheduling auto warmup")
+    }
 
     /** Chooser for selecting autonomous commands */
     override val autoChooser: LoggedDashboardChooser<AutoCommand?> =

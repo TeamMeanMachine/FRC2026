@@ -21,7 +21,6 @@ import edu.wpi.first.networktables.NetworkTableInstance
 import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.wpilibj.Timer
 import edu.wpi.first.wpilibj2.command.Command
-import edu.wpi.first.wpilibj2.command.CommandScheduler
 import frc.team2471.frc2026.OI.driverController
 import frc.team2471.frc2026.Robot.powerTracker
 import gg.questnav.questnav.QuestNav
@@ -209,8 +208,6 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
 
 
         finalInitialization()
-
-        CommandScheduler.getInstance().schedule(Autonomous.warmupDriveAlongPath())
     }
 
     override fun periodic() {
