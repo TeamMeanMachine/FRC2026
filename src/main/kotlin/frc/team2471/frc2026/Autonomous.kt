@@ -6,6 +6,7 @@ import frc.team2471.frc2026.tests.*
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser
 import org.team2471.frc.lib.control.Autonomi
 import org.team2471.frc.lib.control.commands.beforeWait
+import org.team2471.frc.lib.control.commands.finallyRun
 import org.team2471.frc.lib.control.commands.parallelCommand
 import org.team2471.frc.lib.control.commands.runCommand
 import org.team2471.frc.lib.control.commands.runOnceCommand
@@ -108,7 +109,9 @@ object Autonomous: Autonomi() {
             ).withName("Double Swipe auto sequence"),
             runCommand {
                 Shooter.rampUpLoop()
-            }.withName("Shooter ramp up loop")
+            }.withName("Shooter ramp up loop").finallyRun {
+                Intake.deploy()
+            }
         ).withName("Double swipe auto")
     }
 

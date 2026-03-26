@@ -68,6 +68,7 @@ object Turret: SubsystemBase("Turret") {
     val encoder1AbsolutePositionEntry = table.getEntry("Encoder 1 Absolute Position")
     val encoder2AbsolutePositionEntry = table.getEntry("Encoder 2 Absolute Position")
     val fusedEncoderAngleEntry = table.getEntry("Fused Encoder Angle")
+    val turetFeedforwardFactorEntry = table.getEntry("Feedforward Factor")
 
     val turretMotor = LoggedTalonFX(Falcons.TURRET_0, CANivores.TURRET_CAN)
     val turretEncoder1 = CANcoder(CANCoders.TURRET_1, CANivores.TURRET_CAN)
@@ -172,6 +173,9 @@ object Turret: SubsystemBase("Turret") {
     @get:AutoLogOutput(key = "Turret/fieldCentricAngleWrapped")
     val fieldCentricAngleWrapped: Angle get() = fieldCentricAngle.wrap()
 
+    val turretFeedforwardFactor: Double
+        get() = turetFeedforwardFactorEntry.getDouble(3.0)
+
     @get:AutoLogOutput(key = "Turret/turretFeedforward")
     val turretFeedforward: Double
         get() = -Drive.speeds.omegaRadiansPerSecond.radians.asRotations * 3.0
@@ -260,6 +264,7 @@ object Turret: SubsystemBase("Turret") {
         println("Turret init")
         if (!encoder1OffsetEntry.exists()) encoder1OffsetEntry.setDouble(ENCODER_1_DEFAULT_OFFSET); encoder1OffsetEntry.setPersistent()
         if (!encoder2OffsetEntry.exists()) encoder2OffsetEntry.setDouble(ENCODER_2_DEFAULT_OFFSET); encoder2OffsetEntry.setPersistent()
+        if (!turetFeedforwardFactorEntry.exists()) turetFeedforwardFactorEntry.setDouble(turretFeedforwardFactor); turetFeedforwardFactorEntry.setPersistent()
 
         turretEncoder1.applyConfiguration {
             inverted(false)
@@ -283,7 +288,7 @@ object Turret: SubsystemBase("Turret") {
             coastMode()
             if (isReal) {
                 s(0.2, StaticFeedforwardSignValue.UseClosedLoopSign)
-                p(40.0)
+                p(50.0)
                 d(0.0)
             } else {
                 s(0.13, StaticFeedforwardSignValue.UseClosedLoopSign)
