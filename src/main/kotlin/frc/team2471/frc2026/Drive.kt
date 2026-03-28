@@ -276,6 +276,7 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
         if (cameras.isNotEmpty()) {
             cameras.forEach {
                 table.getEntry("Cameras/${it.cameraName} isConnected").setBoolean(it.isConnected)
+                Logger.recordOutput("Drive/Cameras/${it.cameraName} isConnected", it.isConnected)
             }
         }
         LoopLogger.record("Cameras isConnected publish")

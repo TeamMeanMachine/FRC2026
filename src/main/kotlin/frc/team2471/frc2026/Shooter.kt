@@ -136,9 +136,11 @@ object Shooter: SubsystemBase("Shooter") {
 
     val shooterShootingSpeedEntry = table.getEntry("Shooter Shooting Speed")
     val doAutoShootEntry = table.getEntry("Do Auto Shoot")
+    val doAutoRampEntry = table.getEntry("Do Auto Ramp Up")
 
     val shooterShootingSpeed: Double get() = shooterShootingSpeedEntry.getDouble(40.0)
     val doAutoShoot: Boolean get() = doAutoShootEntry.getBoolean(true)
+    val doAutoRamp: Boolean get() = doAutoRampEntry.getBoolean(true)
 
 
     val shooterMotor = LoggedTalonFX(Falcons.SHOOTER_0, CANivores.TURRET_CAN)
@@ -256,6 +258,7 @@ object Shooter: SubsystemBase("Shooter") {
         shooterShootingSpeedEntry.setPersistent()
 
         doAutoShootEntry.setBoolean(true)
+        doAutoRampEntry.setBoolean(true)
 
         shooterMotor.applyConfiguration {
             currentLimits(15.0, 50.0, 1.0)
@@ -347,7 +350,7 @@ object Shooter: SubsystemBase("Shooter") {
             }
         } else {
             hoodAngleSetpoint = HOOD_STOW_SETPOINT.degrees
-            shooterVelocitySetpoint = 50.0.rotationsPerSecond / SHOOTER_GEAR_RATIO / AimUtils.SHOOTER_EFFICIENCY
+            shooterVelocitySetpoint = if (doAutoRamp) 50.0.rotationsPerSecond / SHOOTER_GEAR_RATIO / AimUtils.SHOOTER_EFFICIENCY else 0.0.rotationsPerSecond
             isShooting = false
             if (Intake.intakeState != Intake.IntakeState.INTAKING) {
                 Spindexer.currentState = Spindexer.State.OFF

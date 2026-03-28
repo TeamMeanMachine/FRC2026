@@ -86,7 +86,7 @@ object TunerConstants {
     }
 
     val driveAutoCurrentLimits = CurrentLimits(30.0, 40.0, 1.0)
-    val driveTeleCurrentLimits = CurrentLimits(25.0, 40.0, 1.0)
+    val driveTeleCurrentLimits = CurrentLimits(30.0, 40.0, 1.0)
 
     private val constantCreator: SwerveModuleConstantsFactory<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration> =
         SwerveModuleConstantsFactory<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>().apply {

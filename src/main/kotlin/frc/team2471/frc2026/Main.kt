@@ -27,6 +27,7 @@ import org.team2471.frc.lib.util.PowerTracker
 import org.team2471.frc.lib.ctre.currentLimits
 import org.team2471.frc.lib.ctre.modifyConfiguration
 import org.team2471.frc.lib.util.RobotMode
+import org.team2471.frc.lib.util.isRedAlliance
 import org.team2471.frc.lib.util.robotMode
 import java.net.NetworkInterface
 import java.util.ConcurrentModificationException
@@ -182,9 +183,17 @@ object Robot : LoggedRobot() {
         if (beforeFirstEnableAsync) {
             if (!isAutonomous) {
                 commandScheduler.schedule(Intake.home())
+
+                Drive.localizer.trackAllTags()
             } else {
                 Intake.deployMotor.setPosition(0.0)
                 Intake.finishedHoming = true
+
+                if (isRedAlliance) {
+                    Drive.localizer.unTrackTags(*FieldManager.blueHubTags.map { it.ID }.toTypedArray().toIntArray())
+                } else {
+                    Drive.localizer.unTrackTags(*FieldManager.redHubTags.map { it.ID }.toTypedArray().toIntArray())
+                }
             }
         }
     }
