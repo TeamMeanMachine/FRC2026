@@ -13,7 +13,10 @@ import org.team2471.frc.lib.control.commands.runCommand
 import org.team2471.frc.lib.control.commands.runOnceCommand
 import org.team2471.frc.lib.control.commands.sequenceCommand
 import org.team2471.frc.lib.control.commands.waitUntilCommand
+import org.team2471.frc.lib.math.normalize
 import org.team2471.frc.lib.swerve.sideToSideFlip
+import org.team2471.frc.lib.units.feet
+import org.team2471.frc.lib.units.meters
 
 
 object Autonomous: Autonomi() {
@@ -102,7 +105,7 @@ object Autonomous: Autonomi() {
                         Intake.deploy()
                         Intake.intakeState = Intake.IntakeState.INTAKING
                                    },
-                    Drive.driveAlongChoreoPath(path.getSplit(2).get(), resetOdometry = false, poseSupplier = Drive.localizer::pose),
+                    Drive.driveAlongChoreoPath(path.getSplit(2).get(), resetOdometry = false, poseSupplier = Drive.localizer::pose, exitSupplier = { percent, error -> percent >= 1.0 && error.translation.norm.meters < 0.5.feet  }),
                     ),
                 parallelCommand(
                     Shooter.shoot(true),
@@ -135,6 +138,6 @@ object Autonomous: Autonomi() {
 
     fun warmupDriveAlongPath(): Command {
         val warmupPath = paths["LeftSideDoubleSwipe"]!!.sideToSideFlip(true)
-        return Drive.driveAlongChoreoPath(warmupPath.getSplit(0).get(), exitSupplier = { it >= 1.0 || Robot.isEnabled}).ignoringDisable(true)
+        return Drive.driveAlongChoreoPath(warmupPath.getSplit(0).get(), exitSupplier = { percent, error -> percent >= 1.0 || Robot.isEnabled}).ignoringDisable(true)
     }
 }
