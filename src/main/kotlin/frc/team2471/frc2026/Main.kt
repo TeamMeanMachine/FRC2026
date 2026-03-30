@@ -312,7 +312,7 @@ object Robot : LoggedRobot() {
                     }
                     println("FORMATTED---->$macString<-----")
 
-                    compBot = (macString == "0-128475710531")
+                    compBot = (macString != "0-128475710531")
                 }
             }
         } else { println("Not real so I am compbot") }
