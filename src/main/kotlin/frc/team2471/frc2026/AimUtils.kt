@@ -63,7 +63,7 @@ object AimUtils {
     val HUB_HEIGHT = 65.0.inches
 
     // Percent of surface speed of shooter that gets transferred into the ball
-    val SHOOTER_EFFICIENCY = 0.68
+    val SHOOTER_EFFICIENCY = 0.69
 
     @get:AutoLogOutput(key = "aim target")
     val aimTarget: Translation2d

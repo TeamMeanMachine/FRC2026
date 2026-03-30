@@ -169,7 +169,7 @@ object Shooter: SubsystemBase("Shooter") {
             }
         }
 
-    @get:AutoLogOutput(key = "Shoter/Shooter Motor closedLoopReference")
+    @get:AutoLogOutput(key = "Shooter/Shooter Motor closedLoopReference")
     val shooterMotorReference
         get() = shooterMotor.closedLoopReference.valueAsDouble
 

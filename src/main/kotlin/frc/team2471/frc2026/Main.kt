@@ -185,16 +185,16 @@ object Robot : LoggedRobot() {
             if (!isAutonomous) {
                 commandScheduler.schedule(Intake.home())
 
-                Drive.localizer.trackAllTags()
+//                Drive.localizer.trackAllTags()
             } else {
                 Intake.deployMotor.setPosition(0.0)
                 Intake.finishedHoming = true
 
-                if (isRedAlliance) {
-                    Drive.localizer.unTrackTags(*FieldManager.blueHubTags.map { it.ID }.toTypedArray().toIntArray())
-                } else {
-                    Drive.localizer.unTrackTags(*FieldManager.redHubTags.map { it.ID }.toTypedArray().toIntArray())
-                }
+//                if (isRedAlliance) {
+//                    Drive.localizer.unTrackTags(*FieldManager.blueHubTags.map { it.ID }.toTypedArray().toIntArray())
+//                } else {
+//                    Drive.localizer.unTrackTags(*FieldManager.redHubTags.map { it.ID }.toTypedArray().toIntArray())
+//                }
             }
         }
     }
