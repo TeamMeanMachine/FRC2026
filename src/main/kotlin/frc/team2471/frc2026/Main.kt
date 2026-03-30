@@ -26,6 +26,7 @@ import org.littletonrobotics.junction.wpilog.WPILOGWriter
 import org.team2471.frc.lib.util.PowerTracker
 import org.team2471.frc.lib.ctre.currentLimits
 import org.team2471.frc.lib.ctre.modifyConfiguration
+import org.team2471.frc.lib.logging.NT4NonFMSPublisher
 import org.team2471.frc.lib.util.RobotMode
 import org.team2471.frc.lib.util.isRedAlliance
 import org.team2471.frc.lib.util.robotMode
@@ -94,7 +95,7 @@ object Robot : LoggedRobot() {
         when (robotMode) {
             RobotMode.REAL -> { // Running on a real robot, log to a USB stick ("/U/logs")
                 Logger.addDataReceiver(WPILOGWriter())
-                Logger.addDataReceiver(NT4Publisher())
+                Logger.addDataReceiver(NT4NonFMSPublisher()) // Only log to NT if FMS is not connected
             }
             RobotMode.SIM -> {
                 Logger.addDataReceiver(NT4Publisher())
