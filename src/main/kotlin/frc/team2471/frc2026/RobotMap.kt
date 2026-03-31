@@ -29,7 +29,8 @@ object Falcons {
 
 
 
-    const val INTAKE_DEPLOY = 21
+    const val INTAKE_DEPLOY_0 = 21
+    const val INTAKE_DEPLOY_1 = 63
     const val INTAKE_ROLLER_0 = 14
     const val INTAKE_ROLLER_1 = 13
 

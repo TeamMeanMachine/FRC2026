@@ -5,7 +5,6 @@ import com.ctre.phoenix6.controls.MotionMagicVoltage
 import com.ctre.phoenix6.controls.NeutralOut
 import com.ctre.phoenix6.controls.TorqueCurrentFOC
 import com.ctre.phoenix6.hardware.TalonFX
-import com.ctre.phoenix6.signals.ControlModeValue
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue
 import edu.wpi.first.networktables.NetworkTableInstance
 import edu.wpi.first.wpilibj.DigitalInput
@@ -31,7 +30,6 @@ import org.team2471.frc.lib.ctre.currentLimits
 import org.team2471.frc.lib.ctre.motionMagic
 import org.team2471.frc.lib.ctre.p
 import org.team2471.frc.lib.ctre.s
-import org.team2471.frc.lib.units.asAmps
 import org.team2471.frc.lib.units.asVolts
 import org.team2471.frc.lib.util.isSim
 import kotlin.math.absoluteValue
@@ -53,7 +51,7 @@ object Intake: SubsystemBase("Intake") {
 
     val rollerMotor = TalonFX(Falcons.INTAKE_ROLLER_0)
     val rollerMotorFollower = TalonFX(Falcons.INTAKE_ROLLER_1)
-    val deployMotor = TalonFX(Falcons.INTAKE_DEPLOY)
+    val deployMotor = TalonFX(Falcons.INTAKE_DEPLOY_0)
     val stopSensor = DigitalInput(DigitalSensors.INTAKE_STOP_SENSOR)
 
     @get:AutoLogOutput(key = "Intake/Intake state")
@@ -170,6 +168,10 @@ object Intake: SubsystemBase("Intake") {
 
             motionMagic(750.0, 1500.0)
         }
+        if (Robot.isCompBot) {
+            deployMotor.addFollower(Falcons.INTAKE_DEPLOY_1)
+        }
+
         rollerMotor.applyConfiguration {
             currentLimits(autoCurrentLimits.peakLimit, autoCurrentLimits.continuousLimit, autoCurrentLimits.peakDuration)
 //            currentLimits(15.0, 40.0, 0.2)
@@ -182,8 +184,8 @@ object Intake: SubsystemBase("Intake") {
         deployMotor.setPosition(0.0)
 
         if (!isSim) {
-            powerTracker.addMotors("Intake Roller", { rollerMotor.getSupplyCurrent(true).value.asAmps }, 2, {rollerMotor.supplyVoltage.value.asVolts})
-            powerTracker.addMotors("Intake Deploy", { deployMotor.getSupplyCurrent(true).value.asAmps })
+            powerTracker.addMotors("Intake Roller", { rollerMotor.supplyCurrent.valueAsDouble }, 2, {rollerMotor.supplyVoltage.value.asVolts})
+            powerTracker.addMotors("Intake Deploy", { deployMotor.supplyCurrent.valueAsDouble })
         }
 
         this.defaultCommand = default()

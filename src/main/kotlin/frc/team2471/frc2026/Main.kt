@@ -135,7 +135,7 @@ object Robot : LoggedRobot() {
         } catch (_: Exception) {
             DriverStation.reportWarning("Failed to disable loop overrun warnings.", false)
         }
-        CommandScheduler.getInstance().setPeriod(0.2)
+        commandScheduler.setPeriod(loopOverrunWarningTimeout)
 
         GlobalScope.launch {
             // Attempt to clear out small occasional loop overruns when periodically calling DriverStation.isEnabled()
@@ -184,7 +184,7 @@ object Robot : LoggedRobot() {
         }
         LoopLogger.record("after CommandScheduler")
 
-        powerTracker.update(RoboRioDataJNI.getVInVoltage())
+        powerTracker.update(/*RoboRioDataJNI.getVInVoltage()*/)
         LoopLogger.record("after powerTracker update")
 
         // Return to non-RT thread priority (do not modify the first argument)
