@@ -6,13 +6,12 @@ import edu.wpi.first.hal.FRCNetComm.tInstances
 import edu.wpi.first.hal.FRCNetComm.tResourceType
 import edu.wpi.first.hal.HAL
 import edu.wpi.first.hal.simulation.RoboRioDataJNI
-import edu.wpi.first.wpilibj.RobotBase
 import edu.wpi.first.wpilibj.DriverStation
+import edu.wpi.first.wpilibj.IterativeRobotBase
+import edu.wpi.first.wpilibj.RobotBase
+import edu.wpi.first.wpilibj.Watchdog
 import edu.wpi.first.wpilibj2.command.CommandScheduler
 import edu.wpi.first.wpilibj2.command.Commands
-import org.team2471.frc.lib.control.LoopLogger
-import org.team2471.frc.lib.ctre.loggedTalonFX.MasterMotor
-import org.team2471.frc.lib.units.asFeet
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
@@ -23,16 +22,18 @@ import org.littletonrobotics.junction.Logger
 import org.littletonrobotics.junction.networktables.NT4Publisher
 import org.littletonrobotics.junction.wpilog.WPILOGReader
 import org.littletonrobotics.junction.wpilog.WPILOGWriter
-import org.team2471.frc.lib.util.PowerTracker
+import org.team2471.frc.lib.control.LoopLogger
 import org.team2471.frc.lib.ctre.currentLimits
+import org.team2471.frc.lib.ctre.loggedTalonFX.MasterMotor
 import org.team2471.frc.lib.ctre.modifyConfiguration
+import org.team2471.frc.lib.units.asFeet
+import org.team2471.frc.lib.util.PowerTracker
 import org.team2471.frc.lib.logging.NT4NonFMSPublisher
 import org.team2471.frc.lib.util.RobotMode
-import org.team2471.frc.lib.util.isRedAlliance
 import org.team2471.frc.lib.util.robotMode
 import java.net.NetworkInterface
-import java.util.ConcurrentModificationException
-import kotlin.collections.iterator
+import kotlin.time.Duration.Companion.milliseconds
+
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
@@ -122,6 +123,20 @@ object Robot : LoggedRobot() {
         println("FieldManager thinks the field is ${FieldManager.fieldDimensions.asFeet} feet big")
         println("We see ${Autonomous.paths.size} paths and they are made on the ${if (Drive.choreoPathsStartOnRed) "red" else "blue"} side.")
 
+        // Code stolen from Mechanical Advantage:
+        // https://github.com/Mechanical-Advantage/RobotCode2025Public/blob/3ea1eb036b2dc06e4ecb14d98bba7f602a1cd62a/src/main/java/org/littletonrobotics/frc2025/Robot.java#L145
+        // Changes loop overrun warning to be 0.2 instead of 0.02
+        val loopOverrunWarningTimeout = 0.2
+        try {
+            val watchdogField = IterativeRobotBase::class.java.getDeclaredField("m_watchdog")
+            watchdogField.setAccessible(true)
+            val watchdog = watchdogField.get(this) as Watchdog
+            watchdog.setTimeout(loopOverrunWarningTimeout)
+        } catch (_: Exception) {
+            DriverStation.reportWarning("Failed to disable loop overrun warnings.", false)
+        }
+        CommandScheduler.getInstance().setPeriod(0.2)
+
         GlobalScope.launch {
             // Attempt to clear out small occasional loop overruns when periodically calling DriverStation.isEnabled()
             while (true) {
@@ -136,7 +151,7 @@ object Robot : LoggedRobot() {
                     beforeFirstEnableAsync = false
                 }
 
-                delay(10.toLong())
+                delay(10.milliseconds)
             }
         }
     }
