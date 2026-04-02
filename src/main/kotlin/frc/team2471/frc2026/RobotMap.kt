@@ -11,7 +11,8 @@ object AnalogSensors {
 }
 
 object DigitalSensors {
-    const val INTAKE_STOP_SENSOR = 9
+    const val INTAKE_STOP_SENSOR_0 = 9
+    const val INTAKE_STOP_SENSOR_1 = 1
 }
 
 object Falcons {
