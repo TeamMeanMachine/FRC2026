@@ -9,6 +9,8 @@ import edu.wpi.first.wpilibj2.command.Command
 import frc.team2471.frc2026.AimUtils
 import frc.team2471.frc2026.AimUtils.printPassTimes
 import frc.team2471.frc2026.AimUtils.printShooterCurves
+import frc.team2471.frc2026.AimUtils.toExitVelocity
+import frc.team2471.frc2026.AimUtils.toWheelSpeed
 import frc.team2471.frc2026.Drive
 import frc.team2471.frc2026.Turret
 import frc.team2471.frc2026.Intake
@@ -16,6 +18,9 @@ import frc.team2471.frc2026.Shooter
 import frc.team2471.frc2026.Spindexer
 import org.team2471.frc.lib.control.commands.*
 import org.team2471.frc.lib.units.asDegrees
+import org.team2471.frc.lib.units.asMetersPerSecond
+import org.team2471.frc.lib.units.asRadiansPerSecond
+import org.team2471.frc.lib.units.asRotationsPerSecond
 import org.team2471.frc.lib.units.degrees
 import org.team2471.frc.lib.units.rotationsPerSecond
 import org.team2471.frc.lib.units.unWrap
@@ -28,7 +33,8 @@ object PrintHubCurves {
 //        printShooterCurves(AimUtils.HUB_HEIGHT - Turret.turretHeight, 3..18 step 3, AimUtils.MEASURED_SHOT_AIRTIME)
 
 //         constant(ish) exit velocity
-        printShooterCurves(AimUtils.HUB_HEIGHT - Turret.turretHeight, 3..18 step 3, Pair(40.0, 55.0))
+        //                                                                                                                        20, 55 for not comp bot
+        printShooterCurves(AimUtils.HUB_HEIGHT - Turret.turretHeight, 3..18 step 3, Pair(20.0, 27.5))
     }
 }
 
@@ -36,9 +42,9 @@ object PrintHubCurves {
 object PrintPassCurves {
     @JvmStatic
     fun main(args: Array<String>) {
-//        printShooterCurves( -Turret.turretHeight, 5..40 step 5, 45.0.degrees)
-//        printShooterCurves(-Turret.turretHeight, 5..20 step 5, Pair(50.0, 50.0))
-        printPassTimes(5..20 step 5, 55.0.rotationsPerSecond)
+        printShooterCurves( -Turret.turretHeight, 5..55 step 10, 45.0.degrees)
+//        printShooterCurves(-Turret.turretHeight, 5..60 step 10, Pair(10.0, 50.0))
+//        printPassTimes(5..20 step 5, 55.0.rotationsPerSecond)
     }
 }
 

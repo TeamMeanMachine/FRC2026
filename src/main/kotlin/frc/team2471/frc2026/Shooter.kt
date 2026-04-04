@@ -27,6 +27,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine
 import frc.team2471.frc2026.AimUtils.SHOOTER_EFFICIENCY
 import frc.team2471.frc2026.AimUtils.toExitVelocity
+import frc.team2471.frc2026.Robot.isCompBot
 import frc.team2471.frc2026.Robot.powerTracker
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -75,6 +76,7 @@ import org.team2471.frc.lib.units.voltsPerSecond
 import org.team2471.frc.lib.util.angleTo
 import org.team2471.frc.lib.util.isReal
 import org.team2471.frc.lib.util.isSim
+import kotlin.io.path.Path
 import kotlin.math.abs
 import kotlin.math.cos
 
@@ -83,55 +85,108 @@ object Shooter: SubsystemBase("Shooter") {
 
     // feet, rot/s (of the wheel not the motor) (in an ideal condition. need to divide by SHOOTER_EFFICIENCY)
     val hubSpeedCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
-        put(3.0, 38.5)
-        put(6.0, 40.0)
-        put(9.0, 46.0)
-        put(12.0, 48.0)
-        put(15.0, 51.5)
-        put(18.0, 58.0)
+        if (isCompBot) {
+            put(3.0, 20.0)
+            put(6.0, 21.5)
+            put(9.0, 23.0)
+            put(12.0, 24.5)
+            put(15.0, 26.0)
+            put(18.0, 27.5)
+        } else {
+            put(3.0, 38.5)
+            put(6.0, 40.0)
+            put(9.0, 46.0)
+            put(12.0, 48.0)
+            put(15.0, 51.5)
+            put(18.0, 58.0)
+        }
     }
     // feet, degrees
     val hubAngleCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
-        put(3.0, 81.476)
-        put(6.0, 75.118)
-        put(9.0, 69.575)
-        put(12.0, 64.851)
-        put(15.0, 61.085)
-        put(18.0, 60.206)
-
+        if (isCompBot) {
+            put(3.0, 81.476)
+            put(6.0, 75.118)
+            put(9.0, 69.575)
+            put(12.0, 64.851)
+            put(15.0, 61.085)
+            put(18.0, 60.206)
+        } else {
+            put(3.0, 81.476)
+            put(6.0, 75.118)
+            put(9.0, 69.575)
+            put(12.0, 64.851)
+            put(15.0, 61.085)
+            put(18.0, 60.206)
+        }
     }
 
     //feet, s
     val hubTimeCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
-        put(3.0, 1.03)
-        put(6.0, 1.08)
-        put(9.0, 1.08)
-        put(12.0, 1.1)
-        put(15.0, 1.2)
-        put(18.0, 1.28)
+        if (isCompBot) {
+            put(3.0, 1.03)
+            put(6.0, 1.08)
+            put(9.0, 1.08)
+            put(12.0, 1.1)
+            put(15.0, 1.2)
+            put(18.0, 1.28)
+        } else {
+            put(3.0, 1.03)
+            put(6.0, 1.08)
+            put(9.0, 1.08)
+            put(12.0, 1.1)
+            put(15.0, 1.2)
+            put(18.0, 1.28)
+        }
     }
 
     // feet, rot/s (of the wheel not the motor) (in an ideal condition. need to divide by SHOOTER_EFFICIENCY)
     val floorSpeedCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
-        put(5.0, 55.0)
-        put(10.0, 55.0)
-        put(15.0, 55.0)
-        put(20.0, 55.0)
+        if (isCompBot) {
+            put(5.0, 10.931)
+            put(15.0, 20.988)
+            put(25.0, 28.362)
+            put(35.0, 34.839)
+            put(45.0, 40.88)
+            put(55.0, 46.885)
+        } else {
+            put(5.0, 55.0)
+            put(10.0, 55.0)
+            put(15.0, 55.0)
+            put(20.0, 55.0)
+        }
     }
     // feet, degrees
     val floorAngleCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
-        put(5.0, 45.0)
-        put(10.0, 45.0)
-        put(15.0, 45.0)
-        put(20.0, 45.0)
+        if (isCompBot) {
+            put(5.0, 45.0)
+            put(15.0, 45.0)
+            put(25.0, 45.0)
+            put(35.0, 45.0)
+            put(45.0, 45.0)
+            put(55.0, 45.0)
+        } else {
+            put(5.0, 45.0)
+            put(10.0, 45.0)
+            put(15.0, 45.0)
+            put(20.0, 45.0)
+        }
 
     }
 
     val floorTimeCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
-        put(5.0, 0.246)
-        put(10.0, 0.491)
-        put(15.0, 0.737)
-        put(20.0, 0.982)
+        if (isCompBot) {
+            put(5.0, 0.64)
+            put(15.0, 1.03)
+            put(25.0, 1.32)
+            put(35.0, 1.57)
+            put(45.0, 1.8)
+            put(55.0, 2.01)
+        } else {
+            put(5.0, 0.246)
+            put(10.0, 0.491)
+            put(15.0, 0.737)
+            put(20.0, 0.982)
+        }
     }
 
     val shooterShootingSpeedEntry = table.getEntry("Shooter Shooting Speed")
@@ -150,7 +205,7 @@ object Shooter: SubsystemBase("Shooter") {
 
     val WHEEL_DIAMETER = 4.0.inches
 
-    const val SHOOTER_GEAR_RATIO = 18.0/22.0
+    val SHOOTER_GEAR_RATIO = if (isCompBot) 1.0 else 18.0/22.0
 
     // seconds
     const val HOOD_DOWN_TIME = 0.75

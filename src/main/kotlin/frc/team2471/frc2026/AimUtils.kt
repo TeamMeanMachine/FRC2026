@@ -8,6 +8,7 @@ import edu.wpi.first.units.measure.AngularVelocity
 import edu.wpi.first.units.measure.Distance
 import edu.wpi.first.units.measure.LinearVelocity
 import edu.wpi.first.units.measure.Velocity
+import frc.team2471.frc2026.Robot.isCompBot
 import frc.team2471.frc2026.Shooter.SHOOTER_GEAR_RATIO
 import frc.team2471.frc2026.Shooter.floorSpeedCurve
 import frc.team2471.frc2026.Shooter.hubSpeedCurve
@@ -63,7 +64,7 @@ object AimUtils {
     val HUB_HEIGHT = 65.0.inches
 
     // Percent of surface speed of shooter that gets transferred into the ball
-    val SHOOTER_EFFICIENCY = 0.69
+    val SHOOTER_EFFICIENCY = if (isCompBot) 0.69 else 0.69
 
     @get:AutoLogOutput(key = "aim target")
     val aimTarget: Translation2d
@@ -119,7 +120,7 @@ object AimUtils {
         var offset : Translation2d = turretVelocity * timeCurve.get(Turret.turretTranslation.getDistance(
             goalPos).meters.asFeet)
 
-        for (i in 1..6) {
+        for (i in 1..11) {
             offset = turretVelocity * timeCurve.get(Turret.turretTranslation.getDistance(goalPos - offset).meters.asFeet)
         }
 
@@ -194,7 +195,7 @@ object AimUtils {
     }
 
     // constant time method
-    fun printShooterCurves(goalHeight: Distance, distRange: IntRange, airTime: Double) {
+    fun printShooterCurves(goalHeight: Distance, distRange: IntRange, airTime: Double, forCompBot: Boolean = true) {
         val angles = mutableMapOf<Double, Double>()
         val speeds = mutableMapOf<Double, Double>()
 
@@ -202,7 +203,7 @@ object AimUtils {
             val dist = i.toDouble()
             val angleAndSpeed = calculateAngleAndSpeed(dist.feet, goalHeight, airTime)
             angles[dist] = angleAndSpeed.first
-            speeds[dist] = angleAndSpeed.second.metersPerSecond.toWheelSpeed().asRotationsPerSecond
+            speeds[dist] = angleAndSpeed.second.metersPerSecond.toWheelSpeed(forCompBot).asRotationsPerSecond
         }
 
         println("Angle Curve:")
@@ -216,18 +217,21 @@ object AimUtils {
     }
 
     // constant(ish) exit velocity method. (lut)
-    fun printShooterCurves(goalHeight: Distance, distRange: IntProgression, speedRange: Pair<Double, Double>, printTimeCurve: Boolean = true) {
+    fun printShooterCurves(goalHeight: Distance, distRange: IntProgression, speedRange: Pair<Double, Double>, printTimeCurve: Boolean = true, forCompBot: Boolean = true) {
 
         val angles = mutableMapOf<Double, Double>()
         val speeds = mutableMapOf<Double, Double>()
         val times = mutableMapOf<Double, Double>()
 
+
         for (i in distRange) {
+
             val dist = i.toDouble()
-            val speed = (((speedRange.second - speedRange.first)/(distRange.last.toDouble() - distRange.first.toDouble()))*(i.toDouble() - distRange.first.toDouble()) + speedRange.first).rotationsPerSecond.toExitVelocity().asMetersPerSecond
+            val speed = (((speedRange.second - speedRange.first)/(distRange.last.toDouble() - distRange.first.toDouble()))*(i.toDouble() - distRange.first.toDouble()) + speedRange.first).rotationsPerSecond.toExitVelocity(forCompBot).asMetersPerSecond
             val angleAndTime = calculateAngleAndTime(dist.feet, goalHeight, speed)
+
             angles[dist] = angleAndTime.first.asDegrees
-            speeds[dist] = speed.metersPerSecond.toWheelSpeed().asRotationsPerSecond
+            speeds[dist] = speed.metersPerSecond.toWheelSpeed(forCompBot).asRotationsPerSecond
             times[dist] = angleAndTime.second
         }
         println("Angle Curve:")
@@ -249,7 +253,7 @@ object AimUtils {
     }
 
     // constant hood angle.
-    fun printShooterCurves(goalHeight: Distance, distRange: IntProgression, shotAngle: Angle, printTimeCurve: Boolean = true) {
+    fun printShooterCurves(goalHeight: Distance, distRange: IntProgression, shotAngle: Angle, printTimeCurve: Boolean = true, forCompBot: Boolean = true) {
         println("Angle: $shotAngle")
         val speeds = mutableMapOf<Double, Double>()
         val times = mutableMapOf<Double, Double>()
@@ -259,7 +263,7 @@ object AimUtils {
 
             val speedAndTime = calculateSpeedAndTime(dist.feet, goalHeight, shotAngle)
 
-            speeds[dist] = speedAndTime.first.toWheelSpeed().asRotationsPerSecond
+            speeds[dist] = speedAndTime.first.toWheelSpeed(forCompBot).asRotationsPerSecond
             times[dist] = speedAndTime.second
         }
 
@@ -277,9 +281,9 @@ object AimUtils {
 
     }
 
-    fun printPassTimes(distRange: IntProgression, shotSpeed: AngularVelocity) {
+    fun printPassTimes(distRange: IntProgression, shotSpeed: AngularVelocity, forCompBot: Boolean = true) {
         val angle = 45.0.degrees
-        val v0 = shotSpeed.toExitVelocity().asFeetPerSecond
+        val v0 = shotSpeed.toExitVelocity(forCompBot).asFeetPerSecond
         for (i in distRange) {
             val dist = i.toDouble()
             val t = dist / (v0 * angle.cos())
@@ -384,7 +388,7 @@ object AimUtils {
 
         val toTarget: Translation2d = Translation2d(distFromGoal, goalHeight)
 
-        var guess = 5.0
+        var guess = if (distFromGoal.asFeet < 40.0) 5.0 else 15.0
         var guessIncremented = guess + 0.1
 
         var error = calcFuelHeightError(guess * exitAngle.cos(), guess * exitAngle.sin(), toTarget, true)
@@ -407,11 +411,11 @@ object AimUtils {
         return Pair(guess.metersPerSecond, calcFuelTime(guess * exitAngle.cos(), guess * exitAngle.sin(), toTarget))
     }
 
-    fun LinearVelocity.toWheelSpeed(): AngularVelocity {
-        return ((2.0 * this.asInchesPerSecond/(Shooter.WHEEL_DIAMETER.asInches * Math.PI)).rotationsPerSecond)
+    fun LinearVelocity.toWheelSpeed(forCompBot: Boolean = true): AngularVelocity {
+        return (((if (forCompBot) 1.0 else 2.0) * this.asInchesPerSecond/(Shooter.WHEEL_DIAMETER.asInches * Math.PI)).rotationsPerSecond)
     }
 
-    fun AngularVelocity.toExitVelocity(): LinearVelocity {
-        return (this.asRotationsPerSecond * (Shooter.WHEEL_DIAMETER.asInches * Math.PI) / 2.0).inchesPerSecond
+    fun AngularVelocity.toExitVelocity(forCompBot: Boolean = true): LinearVelocity {
+        return (this.asRotationsPerSecond * (Shooter.WHEEL_DIAMETER.asInches * Math.PI) / (if (forCompBot) 1.0 else 2.0)).inchesPerSecond
     }
 }
