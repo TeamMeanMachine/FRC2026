@@ -71,8 +71,8 @@ object Turret: SubsystemBase("Turret") {
     val turetFeedforwardFactorEntry = table.getEntry("Feedforward Factor")
 
     val turretMotor = LoggedTalonFX(Falcons.TURRET_0, CANivores.TURRET_CAN)
-    val turretEncoder1 = CANcoder(CANCoders.TURRET_1, CANivores.TURRET_CAN)
-    val turretEncoder2 = CANcoder(CANCoders.TURRET_2, CANivores.TURRET_CAN)
+    val turretEncoder1 = CANcoder(CANCoders.TURRET_0, CANivores.TURRET_CAN)
+    val turretEncoder2 = CANcoder(CANCoders.TURRET_1, CANivores.TURRET_CAN)
     val turretPigeon = Pigeon2(CANSensors.TURRET_PIGEON, CANivores.TURRET_CAN)
 
     val TURRET_TOP_LIMIT = if (Robot.isCompBot) 190.0.degrees else 270.0.degrees

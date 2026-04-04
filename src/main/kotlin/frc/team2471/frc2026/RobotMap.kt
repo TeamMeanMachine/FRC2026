@@ -31,7 +31,7 @@ object Falcons {
 
 
     const val INTAKE_DEPLOY_0 = 21
-    const val INTAKE_DEPLOY_1 = 63
+    const val INTAKE_DEPLOY_1 = 20
     const val INTAKE_ROLLER_0 = 14
     const val INTAKE_ROLLER_1 = 13
 
@@ -59,8 +59,8 @@ object CANCoders {
     const val BACK_RIGHT = 32
     const val BACK_LEFT = 33
 
-    const val TURRET_1 = 35
-    const val TURRET_2 = 36
+    const val TURRET_0 = 35
+    const val TURRET_1 = 36
 
     const val HOOD = 37
 }
