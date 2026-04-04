@@ -1,13 +1,16 @@
 package frc.team2471.frc2026
 
+import com.ctre.phoenix6.configs.TalonFXConfiguration
 import com.ctre.phoenix6.controls.DutyCycleOut
 import com.ctre.phoenix6.controls.MotionMagicVoltage
 import com.ctre.phoenix6.controls.NeutralOut
 import com.ctre.phoenix6.controls.TorqueCurrentFOC
 import com.ctre.phoenix6.hardware.TalonFX
+import com.ctre.phoenix6.signals.MotorAlignmentValue
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue
 import edu.wpi.first.networktables.NetworkTableInstance
 import edu.wpi.first.wpilibj.DigitalInput
+import edu.wpi.first.wpilibj.Timer
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.SubsystemBase
 import frc.team2471.frc2026.Robot.powerTracker
@@ -43,12 +46,12 @@ object Intake: SubsystemBase("Intake") {
     val deepStowPoseEntry = table.getEntry("deepStowPose")
     val intakePowerEntry = table.getEntry("intakePower")
 
-    val DEPLOY_POSE get() = deployPoseEntry.getDouble(25.75)
-    val STOW_POSE get() = stowPoseEntry.getDouble(2.0)
+    val DEPLOY_POSE get() = deployPoseEntry.getDouble(if (Robot.isCompBot) 25.75 else 25.75)
+    val STOW_POSE get() = stowPoseEntry.getDouble(if (Robot.isCompBot) 2.0 else 2.0)
     val DEEP_STOW_POSE get() = deepStowPoseEntry.getDouble(0.0)
 
-    val INTAKE_POWER get() = intakePowerEntry.getDouble(75.0)
-    const val HOMING_POWER = 0.15
+    val INTAKE_POWER get() = intakePowerEntry.getDouble(if (Robot.isCompBot) 75.0 else 75.0)
+    val HOMING_POWER = if (Robot.isCompBot) 0.15 else 0.15
 
     val rollerMotor = TalonFX(Falcons.INTAKE_ROLLER_0)
     val rollerMotorFollower = TalonFX(Falcons.INTAKE_ROLLER_1)
@@ -146,9 +149,21 @@ object Intake: SubsystemBase("Intake") {
     val rollerCurrent: Double
         get() = rollerMotor.supplyCurrent.valueAsDouble
 
-//    @get:AutoLogOutput(key = "Intake/Deploy Current")
-//    val deployCurrent: Double
-//        get() = deployMotor0.supplyCurrent.valueAsDouble
+    @get:AutoLogOutput(key = "Intake/Deploy0 Current")
+    val deployCurrent0: Double
+        get() = deployMotor0.supplyCurrent.valueAsDouble
+
+    @get:AutoLogOutput(key = "Intake/Deploy1 Current")
+    val deployCurrent1: Double
+        get() = deployMotor1.supplyCurrent.valueAsDouble
+
+    @get:AutoLogOutput(key = "Intake/Deploy0 Velocity")
+    val deployVelocity0: Double
+        get() = deployMotor0.velocity.valueAsDouble
+
+    @get:AutoLogOutput(key = "Intake/Deploy1 Velocity")
+    val deployVelocity1: Double
+        get() = deployMotor1.velocity.valueAsDouble
 
     @get:AutoLogOutput(key = "Intake/Deploy Motor Position")
     val deployMotor0Position: Double
@@ -199,32 +214,26 @@ object Intake: SubsystemBase("Intake") {
         intakePowerEntry.setPersistent()
 
 
-
-        deployMotor0.applyConfiguration {
+        // Create Intake deploy motor configuration
+        val deployConfig = TalonFXConfiguration().apply {
             currentLimits(5.0, 25.0, 0.25)
             coastMode()
-            p(1.5)
-            s(0.25, StaticFeedforwardSignValue.UseClosedLoopSign)
-
-            p(0.05, 1)
-            s(0.25, StaticFeedforwardSignValue.UseClosedLoopSign, 1)
-
+            if (Robot.isCompBot) {
+                p(1.5)
+                s(0.25, StaticFeedforwardSignValue.UseClosedLoopSign)
+            } else {
+                p(1.5)
+                s(0.25, StaticFeedforwardSignValue.UseClosedLoopSign)
+            }
             motionMagic(750.0, 1500.0)
         }
+
+        // Apply config to motors
+        deployMotor0.applyConfiguration(deployConfig)
         deployMotor0.setPosition(0.0)
 
         if (Robot.isCompBot) {
-            deployMotor1.applyConfiguration {
-                currentLimits(5.0, 25.0, 0.25)
-                coastMode()
-                p(1.5)
-                s(0.25, StaticFeedforwardSignValue.UseClosedLoopSign)
-
-                p(0.05, 1)
-                s(0.25, StaticFeedforwardSignValue.UseClosedLoopSign, 1)
-
-                motionMagic(750.0, 1500.0)
-            }
+            deployMotor1.applyConfiguration(deployConfig)
             deployMotor1.setPosition(0.0)
         }
 
@@ -234,17 +243,21 @@ object Intake: SubsystemBase("Intake") {
             s(10.0, StaticFeedforwardSignValue.UseVelocitySign)
             coastMode()
         }
-        rollerMotor.addFollower(rollerMotorFollower)
+        if (Robot.isCompBot) {
+            rollerMotor.addFollower(rollerMotorFollower, MotorAlignmentValue.Opposed)
+        } else {
+            rollerMotor.addFollower(rollerMotorFollower)
+        }
 
         if (!isSim) {
-            powerTracker.addMotors("Intake Roller", { rollerMotor.supplyCurrent.valueAsDouble }, 2, {rollerMotor.supplyVoltage.value.asVolts})
-            powerTracker.addMotors("Intake Deploy 0", { deployMotor0.supplyCurrent.valueAsDouble })
+            powerTracker.addMotors("Intake Roller", { rollerCurrent }, 2, {rollerMotor.supplyVoltage.value.asVolts})
+            powerTracker.addMotors("Intake Deploy 0", { deployCurrent0 })
             if (Robot.isCompBot) {
-                powerTracker.addMotors("Intake Deploy 1", { deployMotor1.supplyCurrent.valueAsDouble })
+                powerTracker.addMotors("Intake Deploy 1", { deployCurrent1 })
             }
         }
 
-        this.defaultCommand = default()
+        this.defaultCommand = default().ignoringDisable(true)
 
 
         GlobalScope.launch {
@@ -285,8 +298,8 @@ object Intake: SubsystemBase("Intake") {
             runOnceCommand {
                 finishedHoming = false
             },
-            homeMotor(deployMotor0, { hitHardStop0 }),
-            homeMotor(deployMotor1, { hitHardStop1 })
+            homeMotorOut(deployMotor0, { deployMotor0.supplyCurrent.valueAsDouble > 10.0 && deployVelocity0.absoluteValue < 1.0 }),
+            homeMotorOut(deployMotor1, { deployMotor1.supplyCurrent.valueAsDouble > 10.0 && deployVelocity1.absoluteValue < 1.0 })
         ).finallyRun {
             finishedHoming = true
             stow()
@@ -322,6 +335,24 @@ object Intake: SubsystemBase("Intake") {
             }
         )
     }
+
+    private fun homeMotorOut(motor: TalonFX, hitHardStopSupplier: () -> Boolean): Command {
+        val timer = Timer()
+        return sequenceCommand(
+            runOnceCommand {
+                timer.restart()
+            },
+            runCommand {
+                println("going out?")
+                motor.setControl(DutyCycleOut(-HOMING_POWER))
+            }.onlyRunWhileFalse { hitHardStopSupplier.invoke() && timer.get() > 0.5 }.withTimeout(6.0).finallyRun {
+                motor.setControl(DutyCycleOut(0.0))
+                println("Deploy Pos: ${motor.position}")
+                motor.setPosition(DEPLOY_POSE)
+            }
+        )
+    }
+
 
     fun pulse(): Command = sequenceCommand(
         runOnceCommand { stow() },
@@ -367,10 +398,8 @@ object Intake: SubsystemBase("Intake") {
             goingToSetpoint0 = false
         }
 
-        if (Robot.isCompBot) {
-            if (goingToSetpoint1 && deployMotor1Error.absoluteValue < FLEX_THRESHOLD) {
-                goingToSetpoint1 = false
-            }
+        if (Robot.isCompBot && goingToSetpoint1 && deployMotor1Error.absoluteValue < FLEX_THRESHOLD) {
+            goingToSetpoint1 = false
         }
 
 

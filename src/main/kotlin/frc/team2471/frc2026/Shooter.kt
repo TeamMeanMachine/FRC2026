@@ -319,12 +319,23 @@ object Shooter: SubsystemBase("Shooter") {
             currentLimits(15.0, 50.0, 1.0)
             coastMode()
 
-            Feedback.withSensorToMechanismRatio(1.0/1.5)
+            Feedback.withSensorToMechanismRatio(1.0/1.5) // Note: I don't think this line configures anything
 
             inverted(InvertedValue.Clockwise_Positive)
 
-            p(if (isReal) 0.3  else 4000.0)
-            i(if (isReal) 0.3 else 0.0)
+            if (isReal) {
+                if (Robot.isCompBot) {
+                    p(0.0)
+                    i(0.0)
+                } else {
+                    p(0.3)
+                    i(0.3)
+                }
+            } else {
+                p(4000.0)
+                i(0.0)
+            }
+
 //            d(0.0)
 //            s(0.0, StaticFeedforwardSignValue.UseVelocitySign)
 
@@ -341,13 +352,26 @@ object Shooter: SubsystemBase("Shooter") {
             currentLimits(25.0, 30.0, 1.0)
             inverted(true)
             brakeMode()
-            s(0.05, StaticFeedforwardSignValue.UseClosedLoopSign)
-            p(if (isReal) 60.0 else 60.0)
-            d(if (isReal) 0.0 else 4.0)
+
+            if (isReal) {
+                if (Robot.isCompBot) {
+                    s(0.05, StaticFeedforwardSignValue.UseClosedLoopSign)
+                    p(60.0)
+                    d(0.0)
+                } else {
+                    s(0.05, StaticFeedforwardSignValue.UseClosedLoopSign)
+                    p(60.0)
+                    d(0.0)
+                }
+            } else {
+                s(0.05, StaticFeedforwardSignValue.UseClosedLoopSign)
+                p(60.0)
+                d(4.0)
+            }
 
             motionMagic(0.75, 5.0)
 
-            remoteCANCoder(hoodEncoder.deviceID, 9.64285714285714)
+            remoteCANCoder(hoodEncoder.deviceID, if (Robot.isCompBot) 85.5 else 9.64285714285714)
         }
 
         if (!isSim) {

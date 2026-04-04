@@ -41,8 +41,8 @@ object TunerConstants {
     val driveMotor = DCMotor.getKrakenX60Foc(1)!!
     val steerMotor = DCMotor.getKrakenX44(1)!!
 
-    private const val driveGearRatio = 6.746031746031747
-    private const val steerGearRatio = 21.428571428571427
+    private val driveGearRatio = if (Robot.isCompBot) 7.125 else 6.746031746031747
+    private val steerGearRatio = if (Robot.isCompBot) 18.75 else 21.428571428571427
     private const val wheelRadiusInches = 2.0 * 0.950495049505 * (9.33 / 8.0) * (0.9479) * (106.0 / 96.0) * (91.0 / 96.0) * (94.5/96.0)
 
     // The steer motor uses any SwerveModule.SteerRequestType control request with the
@@ -60,12 +60,22 @@ object TunerConstants {
     // When using closed-loop control, the drive motor uses the control
     // output type specified by SwerveModuleConstants.DriveMotorClosedLoopOutput
     private val driveGains: Slot0Configs = Slot0Configs().apply {
-        kP = 0.135
-        kI = 0.0
-        kD = 0.0
-        kS = 0.15
-        kV = 0.087
-        kA = 0.00892
+        if (Robot.isCompBot) {
+            kP = 0.135
+            kI = 0.0
+            kD = 0.0
+            kS = 0.15
+            kV = 0.087
+            kA = 0.00892
+        } else {
+            kP = 0.135
+            kI = 0.0
+            kD = 0.0
+            kS = 0.15
+            kV = 0.087
+            kA = 0.00892
+        }
+
     }
 
     // CAN bus that the devices are located on;
@@ -124,7 +134,7 @@ object TunerConstants {
              * Found by wedging an object inside the drive wheel (preventing the wheel from spinning) then
              * measuring the change of the drive motor position when the steer turret is rotated 1 rotation.
              **/
-            CouplingGearRatio = 3.5714285714285716
+            CouplingGearRatio = if (Robot.isCompBot) 3.125 else 3.5714285714285716
 
             /**
              * Type of closed loop output: Torque or Voltage

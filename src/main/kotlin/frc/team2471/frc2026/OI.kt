@@ -98,7 +98,7 @@ object OI: SubsystemBase("OI") {
 
         Turret.defaultCommand = Turret.aimAtTarget()
 
-        Shooter.defaultCommand = Shooter.default()
+        Shooter.defaultCommand = Shooter.default().ignoringDisable(true)
 
         // Zero Gyro
         driverController.back().onTrue({

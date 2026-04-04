@@ -75,18 +75,18 @@ object Turret: SubsystemBase("Turret") {
     val turretEncoder2 = CANcoder(CANCoders.TURRET_2, CANivores.TURRET_CAN)
     val turretPigeon = Pigeon2(CANSensors.TURRET_PIGEON, CANivores.TURRET_CAN)
 
-    val TURRET_TOP_LIMIT = 270.0.degrees
-    val TURRET_BOTTOM_LIMIT = -270.0.degrees
+    val TURRET_TOP_LIMIT = if (Robot.isCompBot) 190.0.degrees else 270.0.degrees
+    val TURRET_BOTTOM_LIMIT = if (Robot.isCompBot) 190.0.degrees else -270.0.degrees
     val TURRET_RANGE = TURRET_TOP_LIMIT - TURRET_BOTTOM_LIMIT
     val TURRET_ENCODER_LIMIT = 720.0.degrees
 
-    const val ENCODER_1_DEFAULT_OFFSET = 43.0664
-    const val ENCODER_2_DEFAULT_OFFSET = 76.2
+    val ENCODER_1_DEFAULT_OFFSET = if (Robot.isCompBot) 0.0 else 43.0664
+    val ENCODER_2_DEFAULT_OFFSET = if (Robot.isCompBot) 0.0 else 76.2
 
-    const val encoder1GearRatio = 30.0/200.0
-    const val encoder2GearRatio = encoder1GearRatio * 83.0/32.0
+    val encoder1GearRatio = if (Robot.isCompBot) 30.0/230.0 else 30.0/200.0
+    val encoder2GearRatio = encoder1GearRatio * 83.0/32.0
 
-    const val motorGearRatio = 30.0/200.0 * 11.0/46.0
+    val motorGearRatio = if (Robot.isCompBot) 30.0/230.0 * 11.0/46.0 else 30.0/200.0 * 11.0/46.0
 
     @AutoLogOutput(key = "Turret/offset")
     var offset: Angle = 0.0.degrees
@@ -290,9 +290,15 @@ object Turret: SubsystemBase("Turret") {
 //            brakeMode()
             coastMode()
             if (isReal) {
-                s(0.2, StaticFeedforwardSignValue.UseClosedLoopSign)
-                p(50.0)
-                d(0.0)
+                if (Robot.isCompBot) {
+                    s(0.0, StaticFeedforwardSignValue.UseClosedLoopSign)
+                    p(0.0)
+                    d(0.0)
+                } else {
+                    s(0.2, StaticFeedforwardSignValue.UseClosedLoopSign)
+                    p(50.0)
+                    d(0.0)
+                }
             } else {
                 s(0.13, StaticFeedforwardSignValue.UseClosedLoopSign)
                 p(500.0)
