@@ -214,6 +214,9 @@ object Robot : LoggedRobot() {
 //                Drive.localizer.trackAllTags()
             } else {
                 Intake.deployMotor0.setPosition(0.0)
+                if (isCompBot) {
+                    Intake.deployMotor1.setPosition(0.0)
+                }
                 Intake.finishedHoming = true
 
 //                if (isRedAlliance) {

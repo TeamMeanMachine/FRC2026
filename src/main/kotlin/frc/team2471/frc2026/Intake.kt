@@ -20,6 +20,7 @@ import org.team2471.frc.lib.control.commands.finallyRun
 import org.team2471.frc.lib.control.commands.onlyRunWhileFalse
 import org.team2471.frc.lib.control.commands.onlyRunWhileTrue
 import org.team2471.frc.lib.control.commands.parallelCommand
+import org.team2471.frc.lib.control.commands.runCommand
 import org.team2471.frc.lib.control.commands.runOnceCommand
 import org.team2471.frc.lib.control.commands.sequenceCommand
 import org.team2471.frc.lib.control.commands.waitCommand
@@ -92,11 +93,19 @@ object Intake: SubsystemBase("Intake") {
                     lastReachedSetpoint = value
                 }
 
-                if (deployMotor0Error.absoluteValue < 0.5 && deployMotor1Error.absoluteValue < 0.5) {
-                    reachedSetpoint = true
+                if (Robot.isCompBot) {
+                    if (deployMotor0Error.absoluteValue < 0.5 && deployMotor1Error.absoluteValue < 0.5) {
+                        reachedSetpoint = true
+                    }
+                } else {
+                    if (deployMotor0Error.absoluteValue < 0.5) {
+                        reachedSetpoint = true
+                    }
                 }
 
+
                 if (reachedSetpoint) {
+                    // Relies on the optimization thing where it won't evaluate the statements after the or if the first statement returns true, to prevent accessing deployMotor1 stuff when it doesn't exist
                     if (!Robot.isCompBot || (deployMotor0Position - deployMotor1Position).absoluteValue < FLEX_THRESHOLD) {
                         if (deployMotor0Error < -0.7) {
                             deployMotor0.setControl(TorqueCurrentFOC(21.0))
@@ -122,7 +131,9 @@ object Intake: SubsystemBase("Intake") {
                     }
                 } else {
                     deployMotor0.setControl(MotionMagicVoltage(field))
-                    deployMotor1.setControl(MotionMagicVoltage(field))
+                    if (Robot.isCompBot) {
+                        deployMotor1.setControl(MotionMagicVoltage(field))
+                    }
                 }
             }
         }
@@ -266,7 +277,8 @@ object Intake: SubsystemBase("Intake") {
         isDeployed = false
     }
 
-    fun home(): Command = if (Robot.isCompBot) {
+
+    fun home(): Command  = if (Robot.isCompBot) {
         parallelCommand(
             runOnceCommand {
                 finishedHoming = false
@@ -288,15 +300,17 @@ object Intake: SubsystemBase("Intake") {
                 stow()
             }
         )
+    }.apply {
+        addRequirements(Intake, Shooter)
     }
 
     private fun homeMotor(motor: TalonFX, hitHardStopSupplier: () -> Boolean): Command {
         return sequenceCommand(
-            run {
+            runCommand {
                 println("going in?")
                 motor.setControl(DutyCycleOut(HOMING_POWER))
             }.onlyRunWhileTrue { hitHardStopSupplier.invoke() },
-            run {
+            runCommand {
                 println("going out?")
                 motor.setControl(DutyCycleOut(-HOMING_POWER))
             }.onlyRunWhileFalse { hitHardStopSupplier.invoke() }.withTimeout(6.0).finallyRun {
