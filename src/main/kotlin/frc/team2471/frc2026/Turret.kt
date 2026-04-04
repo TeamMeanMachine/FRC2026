@@ -184,7 +184,7 @@ object Turret: SubsystemBase("Turret") {
     var isTurretWrapping = false
 
     val useTurretGyro
-        get() = (turretPigeonIsConnected && turretMotor.fault_RemoteSensorDataInvalid.value) || true
+        get() = true//(turretPigeonIsConnected && turretMotor.fault_RemoteSensorDataInvalid.value) || true
 
     @get:AutoLogOutput(key = "Turret/fieldCentricSetpoint")
     var fieldCentricSetpoint: Angle = fieldCentricAngle
@@ -216,9 +216,12 @@ object Turret: SubsystemBase("Turret") {
                 } else if (useTurretGyro) { // Use field-centric gyro
                     turretMotor.setControl(PositionVoltage(field.asRotations).withFeedForward(turretFeedforward))
                 } else { // Use robot-centric motor
-                    val robotCentricNoGyroSetpoint = (turretMotorRotorAngle + (value - fieldCentricTurretMotorRotorAngle.unWrap(value)))
+                    val fieldCentricTurretRotorAngle = fieldCentricTurretMotorRotorAngle
+                    val noGyroError = (value.unWrap(fieldCentricTurretRotorAngle) - fieldCentricTurretRotorAngle)
+                    val robotCentricNoGyroSetpoint = (turretMotorRotorAngle + noGyroError)
                     val robotCentricNoGyroSetpointWrapped = robotCentricNoGyroSetpoint.asDegrees.IEEErem(TURRET_TOP_LIMIT.asDegrees.absoluteValue + TURRET_BOTTOM_LIMIT.asDegrees.absoluteValue).degrees
                     println("Turret Gyro Disconnect ${robotCentricNoGyroSetpointWrapped.asDegrees}")
+                    Logger.recordOutput("Turret/testMotorCentricSetpoint", robotCentricNoGyroSetpointWrapped)
                     turretMotor.setControl(PositionVoltage(robotCentricNoGyroSetpointWrapped.asRotations).withFeedForward(turretFeedforward))
                 }
             } else {
@@ -297,7 +300,9 @@ object Turret: SubsystemBase("Turret") {
             }
 
 //            motionMagic(0.2, 12.2)
-            alternateFeedbackSensor(turretPigeon.deviceID, FeedbackSensorSourceValue.RemotePigeon2Yaw, motorGearRatio)
+            if (useTurretGyro) {
+                alternateFeedbackSensor(turretPigeon.deviceID, FeedbackSensorSourceValue.RemotePigeon2Yaw, motorGearRatio)
+            }
 
             ClosedLoopGeneral.ContinuousWrap = false
         }
@@ -315,7 +320,7 @@ object Turret: SubsystemBase("Turret") {
         GlobalScope.launch {
             periodic {
                 if (Robot.isDisabled) {
-                    fieldCentricSetpoint = fieldCentricAngle
+                    fieldCentricSetpoint = if (useTurretGyro) fieldCentricAngle else fieldCentricTurretMotorRotorAngle
                 } else {
                     if (turretMotor.controlMode.value in PhoenixUtil.positionControlModes) {
                         fieldCentricSetpoint = fieldCentricSetpoint

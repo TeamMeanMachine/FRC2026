@@ -156,7 +156,7 @@ object Intake: SubsystemBase("Intake") {
 
     @get:AutoLogOutput(key = "Intake/Deploy Motor Follower Position")
     val deployMotor1Position: Double
-        get() = deployMotor1.position.valueAsDouble
+        get() = if (Robot.isCompBot) deployMotor1.position.valueAsDouble else 0.0
 
 
     @get:AutoLogOutput(key = "Intake/Deploy Motor Error")
@@ -239,7 +239,9 @@ object Intake: SubsystemBase("Intake") {
         if (!isSim) {
             powerTracker.addMotors("Intake Roller", { rollerMotor.supplyCurrent.valueAsDouble }, 2, {rollerMotor.supplyVoltage.value.asVolts})
             powerTracker.addMotors("Intake Deploy 0", { deployMotor0.supplyCurrent.valueAsDouble })
-            powerTracker.addMotors("Intake Deploy 1", { deployMotor1.supplyCurrent.valueAsDouble })
+            if (Robot.isCompBot) {
+                powerTracker.addMotors("Intake Deploy 1", { deployMotor1.supplyCurrent.valueAsDouble })
+            }
         }
 
         this.defaultCommand = default()

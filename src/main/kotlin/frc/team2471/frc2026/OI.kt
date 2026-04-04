@@ -144,6 +144,9 @@ object OI: SubsystemBase("OI") {
         driverController.a().whileTrue(
             Drive.snakeMode()
         )
+        driverController.x().whileTrue(runCommand(Drive) {
+            Drive.xPose()
+        })
 
         (driverController.povDown().and(driverController.y())).onTrue(Intake.homeDeploy())
         (driverController.povDown().and(driverController.leftBumper())).onTrue(runOnceCommand { Intake.deepStow() })
