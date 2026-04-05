@@ -3,6 +3,7 @@ package frc.team2471.frc2026
 import com.ctre.phoenix6.SignalLogger
 import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage
 import com.ctre.phoenix6.controls.MotionMagicVoltage
+import com.ctre.phoenix6.controls.NeutralOut
 import com.ctre.phoenix6.controls.PositionVoltage
 import com.ctre.phoenix6.controls.VelocityVoltage
 import com.ctre.phoenix6.controls.VoltageOut
@@ -219,9 +220,13 @@ object Shooter: SubsystemBase("Shooter") {
         set(value) {
             field = value.coerceAtLeast(0.0.rotationsPerSecond)// / SHOOTER_GEAR_RATIO
             if (field > 0.0.rotationsPerSecond) {
-//                shooterMotor.setControl(MotionMagicVelocityVoltage(field).withFeedForward(SHOOTER_CUSTOM_I))
+                shooterMotor.setControl(MotionMagicVelocityVoltage(field).withFeedForward(SHOOTER_CUSTOM_I))
             } else {
-//                shooterMotor.setControl(MotionMagicVoltage(0.0))
+                if (Robot.isCompBot) {
+                    shooterMotor.setControl(NeutralOut())
+                } else {
+                    shooterMotor.setControl(MotionMagicVoltage(0.0))
+                }
             }
         }
 
@@ -242,9 +247,9 @@ object Shooter: SubsystemBase("Shooter") {
         set(value) {
             field = if (isCompBot) value.coerceIn(15.0.degrees, 45.0.degrees) else value.coerceIn(0.0.degrees, 44.0.degrees)
             if (field == 0.0.degrees && hoodAngle > 5.0.degrees) {
-//                hoodMotor.setControl(PositionVoltage(field).withFeedForward(hoodFeedforward))
+                hoodMotor.setControl(PositionVoltage(field).withFeedForward(hoodFeedforward))
             } else {
-//                hoodMotor.setControl(MotionMagicVoltage(field).withFeedForward(hoodFeedforward))
+                hoodMotor.setControl(MotionMagicVoltage(field).withFeedForward(hoodFeedforward))
             }
         }
 
@@ -326,8 +331,8 @@ object Shooter: SubsystemBase("Shooter") {
 
             if (isReal) {
                 if (isCompBot) {
-                    p(0.0)
-                    i(0.0)
+                    p(0.4)
+                    i(0.4)
                 } else {
                     p(0.3)
                     i(0.3)
@@ -365,8 +370,8 @@ object Shooter: SubsystemBase("Shooter") {
 
             if (isReal) {
                 if (isCompBot) {
-                    s(0.0, StaticFeedforwardSignValue.UseClosedLoopSign)
-                    p(0.0)
+                    s(0.2, StaticFeedforwardSignValue.UseClosedLoopSign)
+                    p(200.0)
                     d(0.0)
                 } else {
                     s(0.05, StaticFeedforwardSignValue.UseClosedLoopSign)

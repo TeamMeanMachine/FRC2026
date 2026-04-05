@@ -48,12 +48,14 @@ object Intake: SubsystemBase("Intake") {
     val deepStowPoseEntry = table.getEntry("deepStowPose")
     val intakePowerEntry = table.getEntry("intakePower")
 
-    val DEPLOY_POSE get() = deployPoseEntry.getDouble(if (Robot.isCompBot) 25.75 else 25.75)
+    val DEPLOY_POSE get() = deployPoseEntry.getDouble(if (Robot.isCompBot) 29.0 else 25.75)
     val STOW_POSE get() = stowPoseEntry.getDouble(if (Robot.isCompBot) 2.0 else 2.0)
     val DEEP_STOW_POSE get() = deepStowPoseEntry.getDouble(0.0)
 
     val INTAKE_POWER get() = intakePowerEntry.getDouble(if (Robot.isCompBot) 75.0 else 75.0)
-    val HOMING_POWER = if (Robot.isCompBot) 0.15 else 0.15
+    val HOMING_POWER = if (Robot.isCompBot) 0.1 else 0.15
+
+    const val HOME_VELOCITY_THRESHOLD = 0.25
 
     val rollerMotor = TalonFX(Falcons.INTAKE_ROLLER_0, if (Robot.isCompBot) CANivores.INTAKE_CAN else CANBus("rio"))
     val rollerMotorFollower = TalonFX(Falcons.INTAKE_ROLLER_1, if (Robot.isCompBot) CANivores.INTAKE_CAN else CANBus("rio"))
@@ -82,11 +84,13 @@ object Intake: SubsystemBase("Intake") {
             if (field == 0.0) {
                 rollerMotor.setControl(NeutralOut())
             } else {
-//                rollerMotor.setControl(DutyCycleOut(field / 100.0).withEnableFOC(true))
+                rollerMotor.setControl(DutyCycleOut(field / 100.0).withEnableFOC(true))
             }
         }
 
     var lastReachedSetpoint = 0.0
+
+    const val REACHED_SETPOINT_THRESHOLD = 0.05
 
     @get:AutoLogOutput(key = "Intake/Deploy Setpoint")
     var deploySetpoint: Double = 0.0
@@ -94,52 +98,67 @@ object Intake: SubsystemBase("Intake") {
             field = value
             if (finishedHoming) {
                 if (lastReachedSetpoint != value) {
-                    reachedSetpoint = false
+                    reachedSetpoint0 = false
+                    reachedSetpoint1 = false
                     lastReachedSetpoint = value
                 }
 
                 if (Robot.isCompBot) {
-                    if (deployMotor0Error.absoluteValue < 0.5 && deployMotor1Error.absoluteValue < 0.5) {
-                        reachedSetpoint = true
+                    if (deployMotor0Error.absoluteValue < REACHED_SETPOINT_THRESHOLD && deployVelocity0.absoluteValue < 0.2) {
+                        reachedSetpoint0 = true
+                    }
+                    if (deployMotor1Error.absoluteValue < REACHED_SETPOINT_THRESHOLD && deployVelocity1.absoluteValue < 0.2) {
+                        reachedSetpoint1 = true
                     }
                 } else {
                     if (deployMotor0Error.absoluteValue < 0.5) {
-                        reachedSetpoint = true
+                        reachedSetpoint0 = true
+                        reachedSetpoint1 = true
                     }
                 }
 
 
-//                if (reachedSetpoint) {
-//                    // Relies on the optimization thing where it won't evaluate the statements after the or if the first statement returns true, to prevent accessing deployMotor1 stuff when it doesn't exist
-//                    if (!Robot.isCompBot || (deployMotor0Position - deployMotor1Position).absoluteValue < FLEX_THRESHOLD) {
-//                        if (deployMotor0Error < -0.7) {
-//                            deployMotor0.setControl(TorqueCurrentFOC(21.0))
-//                        } else {
-//                            deployMotor0.setControl(NeutralOut())
-//                        }
-//
-//                        if (Robot.isCompBot) {
-//                            if (deployMotor1Error < -0.7) {
-//                                deployMotor1.setControl(TorqueCurrentFOC(21.0))
+                if (reachedSetpoint0 && reachedSetpoint1) {
+                    // Relies on the optimization thing where it won't evaluate the statements after the or if the first statement returns true, to prevent accessing deployMotor1 stuff when it doesn't exist
+                    if (!Robot.isCompBot || (deployMotor0Position - deployMotor1Position).absoluteValue < FLEX_THRESHOLD) {
+                        if (deployMotor0Error < -0.7) {
+                            deployMotor0.setControl(TorqueCurrentFOC(21.0))
+                        } else {
+                            deployMotor1.setControl(NeutralOut())
+//                            if (deployMotor0Error.absoluteValue < 0.3) {
+//                                deployMotor0.setControl(NeutralOut())
 //                            } else {
-//                                deployMotor1.setControl(NeutralOut())
+//                                deployMotor0.setControl(MotionMagicVoltage(field))
 //                            }
-//                        }
-//                    } else {
-//                        if (deployMotor0Position > deployMotor1Position) {
-//                            deployMotor0.setControl(MotionMagicVoltage(deployMotor1Position))
-//                            deployMotor1.setControl(TorqueCurrentFOC(21.0))
-//                        } else {
-//                            deployMotor1.setControl(MotionMagicVoltage(deployMotor0Position))
-//                            deployMotor0.setControl(TorqueCurrentFOC(21.0))
-//                        }
-//                    }
-//                } else {
-//                    deployMotor0.setControl(MotionMagicVoltage(field))
-//                    if (Robot.isCompBot) {
-//                        deployMotor1.setControl(MotionMagicVoltage(field))
-//                    }
-//                }
+                        }
+
+                        if (Robot.isCompBot) {
+                            if (deployMotor1Error < -0.7) {
+                                deployMotor1.setControl(TorqueCurrentFOC(21.0))
+                            } else {
+                                deployMotor1.setControl(NeutralOut())
+//                                if (deployMotor1Error.absoluteValue < 0.3) {
+//                                    deployMotor1.setControl(NeutralOut())
+//                                } else {
+//                                    deployMotor1.setControl(MotionMagicVoltage(field))
+//                                }
+                            }
+                        }
+                    } else {
+                        if (deployMotor0Position > deployMotor1Position) {
+                            deployMotor0.setControl(MotionMagicVoltage(deployMotor1Position))
+                            deployMotor1.setControl(TorqueCurrentFOC(21.0))
+                        } else {
+                            deployMotor1.setControl(MotionMagicVoltage(deployMotor0Position))
+                            deployMotor0.setControl(TorqueCurrentFOC(21.0))
+                        }
+                    }
+                } else {
+                    deployMotor0.setControl(MotionMagicVoltage(field))
+                    if (Robot.isCompBot) {
+                        deployMotor1.setControl(MotionMagicVoltage(field))
+                    }
+                }
             }
         }
 
@@ -195,7 +214,9 @@ object Intake: SubsystemBase("Intake") {
     var goingToSetpoint1: Boolean = false
 
     @get:AutoLogOutput(key = "Intake/reachedSetpoint0")
-    var reachedSetpoint: Boolean = false
+    var reachedSetpoint0: Boolean = false
+    @get:AutoLogOutput(key = "Intake/reachedSetpoint1")
+    var reachedSetpoint1: Boolean = false
 
 
     const val FLEX_THRESHOLD = 3.0
@@ -227,15 +248,16 @@ object Intake: SubsystemBase("Intake") {
                 p(1.5)
                 s(0.25, StaticFeedforwardSignValue.UseClosedLoopSign)
             }
-            motionMagic(750.0, 1500.0)
+
+            if (Robot.isCompBot) motionMagic(200.0, 500.0) else motionMagic(750.0, 1500.0)
         }
 
         // Apply config to motors
-        deployMotor0.applyConfiguration(deployConfig)
+        deployMotor0.applyConfiguration(deployConfig.apply { inverted(true) })
         deployMotor0.setPosition(0.0)
 
         if (Robot.isCompBot) {
-            deployMotor1.applyConfiguration(deployConfig.apply { inverted(true) })
+            deployMotor1.applyConfiguration(deployConfig.apply { inverted(false) })
             deployMotor1.setPosition(0.0)
         }
 
@@ -300,11 +322,11 @@ object Intake: SubsystemBase("Intake") {
             runOnceCommand {
                 finishedHoming = false
             },
-            homeMotorOut(deployMotor0, { deployMotor0.supplyCurrent.valueAsDouble > 10.0 && deployVelocity0.absoluteValue < 1.0 }),
-            homeMotorOut(deployMotor1, { deployMotor1.supplyCurrent.valueAsDouble > 10.0 && deployVelocity1.absoluteValue < 1.0 })
+            homeMotorOut(deployMotor0, { deployVelocity0.absoluteValue < HOME_VELOCITY_THRESHOLD && deployVelocity1.absoluteValue < HOME_VELOCITY_THRESHOLD }),
+            homeMotorOut(deployMotor1, { deployVelocity1.absoluteValue < HOME_VELOCITY_THRESHOLD && deployVelocity0.absoluteValue < HOME_VELOCITY_THRESHOLD })
         ).finallyRun {
             finishedHoming = true
-            stow()
+            deploySetpoint = DEPLOY_POSE
         }
     } else {
         sequenceCommand(
@@ -333,7 +355,7 @@ object Intake: SubsystemBase("Intake") {
             }.onlyRunWhileFalse { hitHardStopSupplier.invoke() }.withTimeout(6.0).finallyRun {
                 motor.setControl(DutyCycleOut(0.0))
                 println("Deploy Pos: ${motor.position}")
-                motor.setPosition(0.13)
+                motor.setPosition(if (Robot.isCompBot) 0.11 else 0.13)
             }
         )
     }
@@ -346,11 +368,11 @@ object Intake: SubsystemBase("Intake") {
             },
             runCommand {
                 println("going out?")
-                motor.setControl(DutyCycleOut(-HOMING_POWER))
+                motor.setControl(DutyCycleOut(HOMING_POWER))
             }.onlyRunWhileFalse { hitHardStopSupplier.invoke() && timer.get() > 0.5 }.withTimeout(6.0).finallyRun {
                 motor.setControl(DutyCycleOut(0.0))
                 println("Deploy Pos: ${motor.position}")
-                motor.setPosition(DEPLOY_POSE)
+                motor.setPosition(DEPLOY_POSE + 0.5)
             }
         )
     }

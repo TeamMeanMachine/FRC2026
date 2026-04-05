@@ -92,9 +92,9 @@ object Spindexer: SubsystemBase("Spindexer") {
     @get:AutoLogOutput(key = "Spindexer/spinMotorVelocitySetpoint")
     var spinMotorVelocitySetpoint: Double = 0.0
         set(value) {
-//            spinMotor.setControl(
-//                if (value == 0.0) NeutralOut() else MotionMagicVelocityTorqueCurrentFOC(value)
-//            )
+            spinMotor.setControl(
+                if (value == 0.0) NeutralOut() else MotionMagicVelocityTorqueCurrentFOC(value)
+            )
             field = value
         }
 
@@ -235,7 +235,7 @@ object Spindexer: SubsystemBase("Spindexer") {
                 }
 
                 State.AGITATING -> {
-                    spinMotorVelocitySetpoint = -AGITATE_VELOCITY
+                    spinMotorVelocitySetpoint = 0.0//-AGITATE_VELOCITY
                     sidetakeMotorVelocitySetpoint = 0.0
                     uptakeMotorVelocitySetpoint = 0.0
                     stateOnTimer.stop()

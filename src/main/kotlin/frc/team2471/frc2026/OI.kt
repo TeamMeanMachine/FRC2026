@@ -96,9 +96,9 @@ object OI: SubsystemBase("OI") {
         // Default command, normal field-relative drive
         Drive.defaultCommand = Drive.joystickDrive()
 
-//        Turret.defaultCommand = Turret.aimAtTarget()
+        Turret.defaultCommand = Turret.aimAtTarget()
 
-//        Shooter.defaultCommand = Shooter.default().ignoringDisable(true)
+        Shooter.defaultCommand = Shooter.default().ignoringDisable(true)
 
         // Zero Gyro
         driverController.back().onTrue({
@@ -148,15 +148,15 @@ object OI: SubsystemBase("OI") {
 //            Drive.xPose()
 //        })
 
-        driverController.a().onTrue(runOnceCommand {
-            Turret.fieldCentricSetpoint = 0.0.degrees
-        })
-        driverController.x().onTrue(runOnceCommand {
-            Turret.fieldCentricSetpoint = 90.0.degrees
-        })
-        driverController.b().onTrue(runOnceCommand {
-            Turret.fieldCentricSetpoint = -90.0.degrees
-        })
+//        driverController.a().onTrue(runOnceCommand {
+//            Intake.deploySetpoint = Intake.DEEP_STOW_POSE
+//        })
+//        driverController.x().onTrue(runOnceCommand {
+//            Intake.deploySetpoint = Intake.STOW_POSE
+//        })
+//        driverController.b().onTrue(runOnceCommand {
+//            Intake.deploySetpoint = Intake.DEPLOY_POSE
+//        })
 
         (driverController.povDown().and(driverController.y())).onTrue(Intake.homeDeploy())
         (driverController.povDown().and(driverController.leftBumper())).onTrue(runOnceCommand { Intake.deepStow() })

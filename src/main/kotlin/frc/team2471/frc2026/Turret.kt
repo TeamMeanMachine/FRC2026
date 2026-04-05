@@ -76,9 +76,9 @@ object Turret: SubsystemBase("Turret") {
     val turretPigeon = Pigeon2(CANSensors.TURRET_PIGEON, CANivores.TURRET_CAN)
 
     val TURRET_TOP_LIMIT = if (Robot.isCompBot) 190.0.degrees else 270.0.degrees
-    val TURRET_BOTTOM_LIMIT = if (Robot.isCompBot) 190.0.degrees else -270.0.degrees
+    val TURRET_BOTTOM_LIMIT = if (Robot.isCompBot) -190.0.degrees else -270.0.degrees
     val TURRET_RANGE = TURRET_TOP_LIMIT - TURRET_BOTTOM_LIMIT
-    val TURRET_ENCODER_LIMIT = 720.0.degrees
+    val TURRET_ENCODER_LIMIT = if (Robot.isCompBot) 500.0.degrees else 720.0.degrees
 
     val ENCODER_1_DEFAULT_OFFSET = if (Robot.isCompBot) 42.0 else 43.0664
     val ENCODER_2_DEFAULT_OFFSET = if (Robot.isCompBot) 103.79 else 76.2
@@ -216,7 +216,7 @@ object Turret: SubsystemBase("Turret") {
                 if (disableTurret) {
                     turretMotor.setControl(NeutralOut())
                 } else if (useTurretGyro) { // Use field-centric gyro
-//                    turretMotor.setControl(PositionVoltage(field.asRotations).withFeedForward(turretFeedforward))
+                    turretMotor.setControl(PositionVoltage(field.asRotations).withFeedForward(turretFeedforward))
                 } else { // Use robot-centric motor
                     val fieldCentricTurretRotorAngle = fieldCentricTurretMotorRotorAngle
                     val noGyroError = (value.unWrap(fieldCentricTurretRotorAngle) - fieldCentricTurretRotorAngle)
@@ -224,11 +224,11 @@ object Turret: SubsystemBase("Turret") {
                     val robotCentricNoGyroSetpointWrapped = robotCentricNoGyroSetpoint.asDegrees.IEEErem(TURRET_TOP_LIMIT.asDegrees.absoluteValue + TURRET_BOTTOM_LIMIT.asDegrees.absoluteValue).degrees
                     println("Turret Gyro Disconnect ${robotCentricNoGyroSetpointWrapped.asDegrees}")
                     Logger.recordOutput("Turret/testMotorCentricSetpoint", robotCentricNoGyroSetpointWrapped)
-//                    turretMotor.setControl(PositionVoltage(robotCentricNoGyroSetpointWrapped.asRotations).withFeedForward(turretFeedforward))
+                    turretMotor.setControl(PositionVoltage(robotCentricNoGyroSetpointWrapped.asRotations).withFeedForward(turretFeedforward))
                 }
             } else {
                 field = value.unWrap(fieldCentricAngle)
-//                turretMotor.setControl(PositionVoltage(field - Drive.heading.measure))
+                turretMotor.setControl(PositionVoltage(field - Drive.heading.measure))
             }
         }
 
@@ -272,7 +272,11 @@ object Turret: SubsystemBase("Turret") {
         if (!turetFeedforwardFactorEntry.exists()) turetFeedforwardFactorEntry.setDouble(turretFeedforwardFactor); turetFeedforwardFactorEntry.setPersistent()
 
         turretEncoder1.applyConfiguration {
-            inverted(false)
+            if (Robot.isCompBot) {
+                inverted(false)
+            } else {
+                inverted(false)
+            }
         }
         turretEncoder2.applyConfiguration {
             if (Robot.isCompBot) {
@@ -298,7 +302,7 @@ object Turret: SubsystemBase("Turret") {
             if (isReal) {
                 if (Robot.isCompBot) {
                     s(0.1, StaticFeedforwardSignValue.UseClosedLoopSign)
-                    p(1.0)
+                    p(55.0)
                     d(0.0)
                 } else {
                     s(0.2, StaticFeedforwardSignValue.UseClosedLoopSign)
@@ -332,7 +336,7 @@ object Turret: SubsystemBase("Turret") {
         GlobalScope.launch {
             periodic {
                 if (Robot.isDisabled) {
-                    fieldCentricSetpoint = if (useTurretGyro) fieldCentricAngle else fieldCentricTurretMotorRotorAngle
+                    fieldCentricSetpoint = fieldCentricAngle
                 } else {
                     if (turretMotor.controlMode.value in PhoenixUtil.positionControlModes) {
                         fieldCentricSetpoint = fieldCentricSetpoint

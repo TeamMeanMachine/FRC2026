@@ -95,8 +95,8 @@ object TunerConstants {
         Pigeon2Configs = null //Leave this null to skip applying Pigeon 2 configs
     }
 
-    val driveAutoCurrentLimits = CurrentLimits(30.0, 40.0, 1.0)
-    val driveTeleCurrentLimits = CurrentLimits(25.0, 40.0, 1.0)
+    val driveAutoCurrentLimits = CurrentLimits(40.0, 50.0, 0.5)
+    val driveTeleCurrentLimits = CurrentLimits(40.0, 50.0, 0.5)
 
     private val constantCreator: SwerveModuleConstantsFactory<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration> =
         SwerveModuleConstantsFactory<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>().apply {
