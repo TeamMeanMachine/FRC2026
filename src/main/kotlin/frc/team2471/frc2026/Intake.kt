@@ -1,5 +1,6 @@
 package frc.team2471.frc2026
 
+import com.ctre.phoenix6.CANBus
 import com.ctre.phoenix6.configs.TalonFXConfiguration
 import com.ctre.phoenix6.controls.DutyCycleOut
 import com.ctre.phoenix6.controls.MotionMagicVoltage
@@ -31,6 +32,7 @@ import org.team2471.frc.lib.ctre.addFollower
 import org.team2471.frc.lib.ctre.applyConfiguration
 import org.team2471.frc.lib.ctre.coastMode
 import org.team2471.frc.lib.ctre.currentLimits
+import org.team2471.frc.lib.ctre.inverted
 import org.team2471.frc.lib.ctre.motionMagic
 import org.team2471.frc.lib.ctre.p
 import org.team2471.frc.lib.ctre.s
@@ -53,8 +55,8 @@ object Intake: SubsystemBase("Intake") {
     val INTAKE_POWER get() = intakePowerEntry.getDouble(if (Robot.isCompBot) 75.0 else 75.0)
     val HOMING_POWER = if (Robot.isCompBot) 0.15 else 0.15
 
-    val rollerMotor = TalonFX(Falcons.INTAKE_ROLLER_0)
-    val rollerMotorFollower = TalonFX(Falcons.INTAKE_ROLLER_1)
+    val rollerMotor = TalonFX(Falcons.INTAKE_ROLLER_0, if (Robot.isCompBot) CANivores.INTAKE_CAN else CANBus("rio"))
+    val rollerMotorFollower = TalonFX(Falcons.INTAKE_ROLLER_1, if (Robot.isCompBot) CANivores.INTAKE_CAN else CANBus("rio"))
     val deployMotor0 = TalonFX(Falcons.INTAKE_DEPLOY_0)
     val deployMotor1 = TalonFX(Falcons.INTAKE_DEPLOY_1)
     val stopSensor0 = DigitalInput(DigitalSensors.INTAKE_STOP_SENSOR_0)
@@ -80,7 +82,7 @@ object Intake: SubsystemBase("Intake") {
             if (field == 0.0) {
                 rollerMotor.setControl(NeutralOut())
             } else {
-                rollerMotor.setControl(DutyCycleOut(field / 100.0).withEnableFOC(true))
+//                rollerMotor.setControl(DutyCycleOut(field / 100.0).withEnableFOC(true))
             }
         }
 
@@ -107,37 +109,37 @@ object Intake: SubsystemBase("Intake") {
                 }
 
 
-                if (reachedSetpoint) {
-                    // Relies on the optimization thing where it won't evaluate the statements after the or if the first statement returns true, to prevent accessing deployMotor1 stuff when it doesn't exist
-                    if (!Robot.isCompBot || (deployMotor0Position - deployMotor1Position).absoluteValue < FLEX_THRESHOLD) {
-                        if (deployMotor0Error < -0.7) {
-                            deployMotor0.setControl(TorqueCurrentFOC(21.0))
-                        } else {
-                            deployMotor0.setControl(NeutralOut())
-                        }
-
-                        if (Robot.isCompBot) {
-                            if (deployMotor1Error < -0.7) {
-                                deployMotor1.setControl(TorqueCurrentFOC(21.0))
-                            } else {
-                                deployMotor1.setControl(NeutralOut())
-                            }
-                        }
-                    } else {
-                        if (deployMotor0Position > deployMotor1Position) {
-                            deployMotor0.setControl(MotionMagicVoltage(deployMotor1Position))
-                            deployMotor1.setControl(TorqueCurrentFOC(21.0))
-                        } else {
-                            deployMotor1.setControl(MotionMagicVoltage(deployMotor0Position))
-                            deployMotor0.setControl(TorqueCurrentFOC(21.0))
-                        }
-                    }
-                } else {
-                    deployMotor0.setControl(MotionMagicVoltage(field))
-                    if (Robot.isCompBot) {
-                        deployMotor1.setControl(MotionMagicVoltage(field))
-                    }
-                }
+//                if (reachedSetpoint) {
+//                    // Relies on the optimization thing where it won't evaluate the statements after the or if the first statement returns true, to prevent accessing deployMotor1 stuff when it doesn't exist
+//                    if (!Robot.isCompBot || (deployMotor0Position - deployMotor1Position).absoluteValue < FLEX_THRESHOLD) {
+//                        if (deployMotor0Error < -0.7) {
+//                            deployMotor0.setControl(TorqueCurrentFOC(21.0))
+//                        } else {
+//                            deployMotor0.setControl(NeutralOut())
+//                        }
+//
+//                        if (Robot.isCompBot) {
+//                            if (deployMotor1Error < -0.7) {
+//                                deployMotor1.setControl(TorqueCurrentFOC(21.0))
+//                            } else {
+//                                deployMotor1.setControl(NeutralOut())
+//                            }
+//                        }
+//                    } else {
+//                        if (deployMotor0Position > deployMotor1Position) {
+//                            deployMotor0.setControl(MotionMagicVoltage(deployMotor1Position))
+//                            deployMotor1.setControl(TorqueCurrentFOC(21.0))
+//                        } else {
+//                            deployMotor1.setControl(MotionMagicVoltage(deployMotor0Position))
+//                            deployMotor0.setControl(TorqueCurrentFOC(21.0))
+//                        }
+//                    }
+//                } else {
+//                    deployMotor0.setControl(MotionMagicVoltage(field))
+//                    if (Robot.isCompBot) {
+//                        deployMotor1.setControl(MotionMagicVoltage(field))
+//                    }
+//                }
             }
         }
 
@@ -233,7 +235,7 @@ object Intake: SubsystemBase("Intake") {
         deployMotor0.setPosition(0.0)
 
         if (Robot.isCompBot) {
-            deployMotor1.applyConfiguration(deployConfig)
+            deployMotor1.applyConfiguration(deployConfig.apply { inverted(true) })
             deployMotor1.setPosition(0.0)
         }
 

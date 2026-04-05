@@ -80,11 +80,13 @@ object Turret: SubsystemBase("Turret") {
     val TURRET_RANGE = TURRET_TOP_LIMIT - TURRET_BOTTOM_LIMIT
     val TURRET_ENCODER_LIMIT = 720.0.degrees
 
-    val ENCODER_1_DEFAULT_OFFSET = if (Robot.isCompBot) 0.0 else 43.0664
-    val ENCODER_2_DEFAULT_OFFSET = if (Robot.isCompBot) 0.0 else 76.2
+    val ENCODER_1_DEFAULT_OFFSET = if (Robot.isCompBot) 42.0 else 43.0664
+    val ENCODER_2_DEFAULT_OFFSET = if (Robot.isCompBot) 103.79 else 76.2
 
     val encoder1GearRatio = if (Robot.isCompBot) 30.0/230.0 else 30.0/200.0
     val encoder2GearRatio = encoder1GearRatio * 83.0/32.0
+
+    val turretZeroPositionOnRobot = if (Robot.isCompBot) 0.0.degrees else 90.0.degrees
 
     val motorGearRatio = if (Robot.isCompBot) 30.0/230.0 * 11.0/46.0 else 30.0/200.0 * 11.0/46.0
 
@@ -103,7 +105,7 @@ object Turret: SubsystemBase("Turret") {
 
     @get:AutoLogOutput(key = "Turret/fieldCentricTurretMotorRotorAngle")
     val fieldCentricTurretMotorRotorAngle: Angle
-        get() = ((turretMotorRotorAngle + 90.0.degrees) + Drive.headingAngleUnwrapped)
+        get() = ((turretMotorRotorAngle + turretZeroPositionOnRobot) + Drive.headingAngleUnwrapped)
 
     @get:AutoLogOutput(key = "Turret/turretMotorVoltage")
     val turretMotorVoltage: Double get() = turretMotor.motorVoltage.valueAsDouble
@@ -160,7 +162,7 @@ object Turret: SubsystemBase("Turret") {
         }
     @get:AutoLogOutput(key = "Turret/FieldCentricFusedEncoderAngle")
     val fieldCentricFusedEncoderAngle: Angle
-        get() = ((fusedEncoderAngle + 90.0.degrees) + Drive.heading.measure).wrap()
+        get() = ((fusedEncoderAngle + turretZeroPositionOnRobot) + Drive.heading.measure).wrap()
 
     @get:AutoLogOutput(key = "Turret/fieldCentricAngle")
     val fieldCentricAngle: Angle
@@ -214,7 +216,7 @@ object Turret: SubsystemBase("Turret") {
                 if (disableTurret) {
                     turretMotor.setControl(NeutralOut())
                 } else if (useTurretGyro) { // Use field-centric gyro
-                    turretMotor.setControl(PositionVoltage(field.asRotations).withFeedForward(turretFeedforward))
+//                    turretMotor.setControl(PositionVoltage(field.asRotations).withFeedForward(turretFeedforward))
                 } else { // Use robot-centric motor
                     val fieldCentricTurretRotorAngle = fieldCentricTurretMotorRotorAngle
                     val noGyroError = (value.unWrap(fieldCentricTurretRotorAngle) - fieldCentricTurretRotorAngle)
@@ -222,11 +224,11 @@ object Turret: SubsystemBase("Turret") {
                     val robotCentricNoGyroSetpointWrapped = robotCentricNoGyroSetpoint.asDegrees.IEEErem(TURRET_TOP_LIMIT.asDegrees.absoluteValue + TURRET_BOTTOM_LIMIT.asDegrees.absoluteValue).degrees
                     println("Turret Gyro Disconnect ${robotCentricNoGyroSetpointWrapped.asDegrees}")
                     Logger.recordOutput("Turret/testMotorCentricSetpoint", robotCentricNoGyroSetpointWrapped)
-                    turretMotor.setControl(PositionVoltage(robotCentricNoGyroSetpointWrapped.asRotations).withFeedForward(turretFeedforward))
+//                    turretMotor.setControl(PositionVoltage(robotCentricNoGyroSetpointWrapped.asRotations).withFeedForward(turretFeedforward))
                 }
             } else {
                 field = value.unWrap(fieldCentricAngle)
-                turretMotor.setControl(PositionVoltage(field - Drive.heading.measure))
+//                turretMotor.setControl(PositionVoltage(field - Drive.heading.measure))
             }
         }
 
@@ -273,13 +275,17 @@ object Turret: SubsystemBase("Turret") {
             inverted(false)
         }
         turretEncoder2.applyConfiguration {
-            inverted(false)
+            if (Robot.isCompBot) {
+                inverted(true)
+            } else {
+                inverted(false)
+            }
         }
 
         turretPigeon.applyConfiguration {
             MountPose.MountPoseYaw = 0.0
             MountPose.MountPosePitch = 0.0
-            MountPose.MountPoseRoll = -90.0
+            MountPose.MountPoseRoll = if (Robot.isCompBot) 0.0 else -90.0
         }
 
         turretMotor.configSim(DCMotor.getKrakenX60(1), 0.01)
@@ -291,8 +297,8 @@ object Turret: SubsystemBase("Turret") {
             coastMode()
             if (isReal) {
                 if (Robot.isCompBot) {
-                    s(0.0, StaticFeedforwardSignValue.UseClosedLoopSign)
-                    p(0.0)
+                    s(0.1, StaticFeedforwardSignValue.UseClosedLoopSign)
+                    p(1.0)
                     d(0.0)
                 } else {
                     s(0.2, StaticFeedforwardSignValue.UseClosedLoopSign)

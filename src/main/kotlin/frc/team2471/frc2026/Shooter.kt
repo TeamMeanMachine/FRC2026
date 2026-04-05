@@ -50,6 +50,7 @@ import org.team2471.frc.lib.ctre.d
 import org.team2471.frc.lib.ctre.i
 import org.team2471.frc.lib.ctre.inverted
 import org.team2471.frc.lib.ctre.loggedTalonFX.LoggedTalonFX
+import org.team2471.frc.lib.ctre.magnetSensorOffset
 import org.team2471.frc.lib.ctre.motionMagic
 import org.team2471.frc.lib.ctre.p
 import org.team2471.frc.lib.ctre.remoteCANCoder
@@ -218,9 +219,9 @@ object Shooter: SubsystemBase("Shooter") {
         set(value) {
             field = value.coerceAtLeast(0.0.rotationsPerSecond)// / SHOOTER_GEAR_RATIO
             if (field > 0.0.rotationsPerSecond) {
-                shooterMotor.setControl(MotionMagicVelocityVoltage(field).withFeedForward(SHOOTER_CUSTOM_I))
+//                shooterMotor.setControl(MotionMagicVelocityVoltage(field).withFeedForward(SHOOTER_CUSTOM_I))
             } else {
-                shooterMotor.setControl(MotionMagicVoltage(0.0))
+//                shooterMotor.setControl(MotionMagicVoltage(0.0))
             }
         }
 
@@ -239,11 +240,11 @@ object Shooter: SubsystemBase("Shooter") {
     @get:AutoLogOutput(key = "Shooter/Hood Angle Setpoint")
     var hoodAngleSetpoint: Angle = hoodAngle
         set(value) {
-            field = value.coerceIn(0.0.degrees, 44.0.degrees)
+            field = if (isCompBot) value.coerceIn(15.0.degrees, 45.0.degrees) else value.coerceIn(0.0.degrees, 44.0.degrees)
             if (field == 0.0.degrees && hoodAngle > 5.0.degrees) {
-                hoodMotor.setControl(PositionVoltage(field).withFeedForward(hoodFeedforward))
+//                hoodMotor.setControl(PositionVoltage(field).withFeedForward(hoodFeedforward))
             } else {
-                hoodMotor.setControl(MotionMagicVoltage(field).withFeedForward(hoodFeedforward))
+//                hoodMotor.setControl(MotionMagicVoltage(field).withFeedForward(hoodFeedforward))
             }
         }
 
@@ -324,7 +325,7 @@ object Shooter: SubsystemBase("Shooter") {
             inverted(InvertedValue.Clockwise_Positive)
 
             if (isReal) {
-                if (Robot.isCompBot) {
+                if (isCompBot) {
                     p(0.0)
                     i(0.0)
                 } else {
@@ -339,8 +340,10 @@ object Shooter: SubsystemBase("Shooter") {
 //            d(0.0)
 //            s(0.0, StaticFeedforwardSignValue.UseVelocitySign)
 
-            MotionMagic.MotionMagicAcceleration = 25.0
 
+            if (!isCompBot) {
+                MotionMagic.MotionMagicAcceleration = 25.0
+            }
             //Bang bang torque
 //            p(99999999.9)
 //            TorqueCurrent.PeakForwardTorqueCurrent = 40.0
@@ -348,15 +351,22 @@ object Shooter: SubsystemBase("Shooter") {
         }
         shooterMotor.addFollower(shooterMotorFollower, MotorAlignmentValue.Opposed)
 
+        if (Robot.isCompBot) {
+            hoodEncoder.applyConfiguration {
+                inverted(true)
+                magnetSensorOffset(0.20866)
+            }
+        }
+
         hoodMotor.applyConfiguration {
             currentLimits(25.0, 30.0, 1.0)
             inverted(true)
             brakeMode()
 
             if (isReal) {
-                if (Robot.isCompBot) {
-                    s(0.05, StaticFeedforwardSignValue.UseClosedLoopSign)
-                    p(60.0)
+                if (isCompBot) {
+                    s(0.0, StaticFeedforwardSignValue.UseClosedLoopSign)
+                    p(0.0)
                     d(0.0)
                 } else {
                     s(0.05, StaticFeedforwardSignValue.UseClosedLoopSign)
@@ -369,7 +379,9 @@ object Shooter: SubsystemBase("Shooter") {
                 d(4.0)
             }
 
-            motionMagic(0.75, 5.0)
+            if (!Robot.isCompBot) {
+                motionMagic(0.75, 5.0)
+            }
 
             remoteCANCoder(hoodEncoder.deviceID, if (Robot.isCompBot) 85.5 else 9.64285714285714)
         }

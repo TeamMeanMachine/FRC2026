@@ -72,7 +72,8 @@ object ServoPort {
 }
 
 object CANivores {
-    val TURRET_CAN = CANBus("kenivore")
+    val TURRET_CAN = CANBus(if (Robot.isCompBot) "Ken A Vore" else "kenivore")
+    val INTAKE_CAN = CANBus("Intake A Vore")
 }
 
 object CANSensors {

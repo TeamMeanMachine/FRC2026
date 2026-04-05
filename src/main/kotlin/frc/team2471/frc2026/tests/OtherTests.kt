@@ -17,6 +17,7 @@ import frc.team2471.frc2026.Intake
 import frc.team2471.frc2026.Shooter
 import frc.team2471.frc2026.Spindexer
 import org.team2471.frc.lib.control.commands.*
+import org.team2471.frc.lib.ctre.setCANCoderAngle
 import org.team2471.frc.lib.units.asDegrees
 import org.team2471.frc.lib.units.asMetersPerSecond
 import org.team2471.frc.lib.units.asRadiansPerSecond
@@ -193,4 +194,9 @@ fun fullSystemTest() = sequenceCommand(
     printlnCommand("Tests complete")
 ).apply {
     addRequirements(Intake, Shooter, Spindexer, Turret)
+}
+
+
+fun zeroHood() = runOnceCommand(Shooter) {
+    Shooter.hoodEncoder.setCANCoderAngle(15.0.degrees)
 }

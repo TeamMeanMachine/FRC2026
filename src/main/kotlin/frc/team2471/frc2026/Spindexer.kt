@@ -92,9 +92,9 @@ object Spindexer: SubsystemBase("Spindexer") {
     @get:AutoLogOutput(key = "Spindexer/spinMotorVelocitySetpoint")
     var spinMotorVelocitySetpoint: Double = 0.0
         set(value) {
-            spinMotor.setControl(
-                if (value == 0.0) NeutralOut() else MotionMagicVelocityTorqueCurrentFOC(value)
-            )
+//            spinMotor.setControl(
+//                if (value == 0.0) NeutralOut() else MotionMagicVelocityTorqueCurrentFOC(value)
+//            )
             field = value
         }
 

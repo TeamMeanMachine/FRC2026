@@ -96,9 +96,9 @@ object OI: SubsystemBase("OI") {
         // Default command, normal field-relative drive
         Drive.defaultCommand = Drive.joystickDrive()
 
-        Turret.defaultCommand = Turret.aimAtTarget()
+//        Turret.defaultCommand = Turret.aimAtTarget()
 
-        Shooter.defaultCommand = Shooter.default().ignoringDisable(true)
+//        Shooter.defaultCommand = Shooter.default().ignoringDisable(true)
 
         // Zero Gyro
         driverController.back().onTrue({
@@ -141,11 +141,21 @@ object OI: SubsystemBase("OI") {
             }
         })
 
-        driverController.a().whileTrue(
-            Drive.snakeMode()
-        )
-        driverController.x().whileTrue(runCommand(Drive) {
-            Drive.xPose()
+//        driverController.a().whileTrue(
+//            Drive.snakeMode()
+//        )
+//        driverController.x().whileTrue(runCommand(Drive) {
+//            Drive.xPose()
+//        })
+
+        driverController.a().onTrue(runOnceCommand {
+            Turret.fieldCentricSetpoint = 0.0.degrees
+        })
+        driverController.x().onTrue(runOnceCommand {
+            Turret.fieldCentricSetpoint = 90.0.degrees
+        })
+        driverController.b().onTrue(runOnceCommand {
+            Turret.fieldCentricSetpoint = -90.0.degrees
         })
 
         (driverController.povDown().and(driverController.y())).onTrue(Intake.homeDeploy())
