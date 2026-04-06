@@ -43,7 +43,7 @@ object TunerConstants {
 
     private val driveGearRatio = if (Robot.isCompBot) 7.125 else 6.746031746031747
     private val steerGearRatio = if (Robot.isCompBot) 18.75 else 21.428571428571427
-    private val wheelRadiusInches = 2.0 * if (Robot.isCompBot) 1.0 else (0.950495049505 * (9.33 / 8.0) * (0.9479) * (106.0 / 96.0) * (91.0 / 96.0) * (94.5/96.0))
+    private val wheelRadiusInches = 2.0 * if (Robot.isCompBot) (89.5 / 96.0) else (0.950495049505 * (9.33 / 8.0) * (0.9479) * (106.0 / 96.0) * (91.0 / 96.0) * (94.5/96.0))
 
     // The steer motor uses any SwerveModule.SteerRequestType control request with the
     // output type specified by SwerveModuleConstants.SteerMotorClosedLoopOutput

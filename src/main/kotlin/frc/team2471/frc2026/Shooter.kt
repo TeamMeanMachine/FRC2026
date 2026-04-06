@@ -88,12 +88,12 @@ object Shooter: SubsystemBase("Shooter") {
     val hubSpeedCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
         if (isCompBot) {
             put(5.0, 20.0)
-            put(7.0, 21.5)
+            put(7.0, 22.0)
             put(9.0, 22.5)
-            put(12.0, 24.5)
+            put(12.0, 24.7)
             put(15.0, 26.5)
-            put(18.0, 28.5)
-            put(21.0, 29.5)
+            put(18.0, 27.5)
+            put(21.0, 29.0)
         } else {
             put(3.0, 38.5)
             put(6.0, 40.0)
