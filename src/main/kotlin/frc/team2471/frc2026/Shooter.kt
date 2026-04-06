@@ -26,7 +26,7 @@ import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.SubsystemBase
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine
-import frc.team2471.frc2026.AimUtils.SHOOTER_EFFICIENCY
+import frc.team2471.frc2026.AimUtils.shooterEfficiency
 import frc.team2471.frc2026.AimUtils.toExitVelocity
 import frc.team2471.frc2026.Robot.isCompBot
 import frc.team2471.frc2026.Robot.powerTracker
@@ -35,6 +35,7 @@ import kotlinx.coroutines.launch
 import org.littletonrobotics.junction.AutoLogOutput
 import org.littletonrobotics.junction.Logger
 import org.team2471.frc.lib.control.LoopLogger
+import org.team2471.frc.lib.control.PDVelocityController
 import org.team2471.frc.lib.control.commands.finallyRun
 import org.team2471.frc.lib.control.commands.onlyRunWhileFalse
 import org.team2471.frc.lib.control.commands.onlyRunWhileTrue
@@ -63,7 +64,6 @@ import org.team2471.frc.lib.units.asMeters
 import org.team2471.frc.lib.units.asMetersPerSecond
 import org.team2471.frc.lib.units.asRadiansPerSecond
 import org.team2471.frc.lib.units.asRotation2d
-import org.team2471.frc.lib.units.asRotationsPerSecond
 import org.team2471.frc.lib.units.asVolts
 import org.team2471.frc.lib.units.cos
 import org.team2471.frc.lib.units.degrees
@@ -78,7 +78,6 @@ import org.team2471.frc.lib.units.voltsPerSecond
 import org.team2471.frc.lib.util.angleTo
 import org.team2471.frc.lib.util.isReal
 import org.team2471.frc.lib.util.isSim
-import kotlin.io.path.Path
 import kotlin.math.abs
 import kotlin.math.cos
 
@@ -88,12 +87,13 @@ object Shooter: SubsystemBase("Shooter") {
     // feet, rot/s (of the wheel not the motor) (in an ideal condition. need to divide by SHOOTER_EFFICIENCY)
     val hubSpeedCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
         if (isCompBot) {
-            put(3.0, 20.0)
-            put(6.0, 21.5)
-            put(9.0, 23.0)
+            put(5.0, 20.0)
+            put(7.0, 21.5)
+            put(9.0, 22.5)
             put(12.0, 24.5)
-            put(15.0, 26.0)
-            put(18.0, 27.5)
+            put(15.0, 26.5)
+            put(18.0, 28.5)
+            put(21.0, 29.5)
         } else {
             put(3.0, 38.5)
             put(6.0, 40.0)
@@ -106,12 +106,13 @@ object Shooter: SubsystemBase("Shooter") {
     // feet, degrees
     val hubAngleCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
         if (isCompBot) {
-            put(3.0, 81.476)
-            put(6.0, 75.118)
-            put(9.0, 69.575)
+            put(5.0, 75.0)
+            put(7.0, 75.0)
+            put(9.0, 72.0)
             put(12.0, 64.851)
             put(15.0, 61.085)
-            put(18.0, 60.206)
+            put(18.0, 59.0)
+            put(21.0, 57.0)
         } else {
             put(3.0, 81.476)
             put(6.0, 75.118)
@@ -142,23 +143,22 @@ object Shooter: SubsystemBase("Shooter") {
     }
 
     // feet, rot/s (of the wheel not the motor) (in an ideal condition. need to divide by SHOOTER_EFFICIENCY)
-    val floorSpeedCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
+    val floorSpeedCurve = hubSpeedCurve/*InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
         if (isCompBot) {
             put(5.0, 10.931)
             put(15.0, 20.988)
-            put(25.0, 28.362)
-            put(35.0, 34.839)
-            put(45.0, 40.88)
-            put(55.0, 46.885)
+            put(25.0, 40.362)
+            put(35.0, 70.839)
+            put(45.0, 80.88)
         } else {
             put(5.0, 55.0)
             put(10.0, 55.0)
             put(15.0, 55.0)
             put(20.0, 55.0)
         }
-    }
+    }*/
     // feet, degrees
-    val floorAngleCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
+    val floorAngleCurve = hubAngleCurve/*InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
         if (isCompBot) {
             put(5.0, 45.0)
             put(15.0, 45.0)
@@ -174,7 +174,7 @@ object Shooter: SubsystemBase("Shooter") {
         }
 
     }
-
+*/
     val floorTimeCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
         if (isCompBot) {
             put(5.0, 0.64)
@@ -191,11 +191,13 @@ object Shooter: SubsystemBase("Shooter") {
         }
     }
 
-    val shooterShootingSpeedEntry = table.getEntry("Shooter Shooting Speed")
+    val shootingTestSpeedEntry = table.getEntry("Shooter Shooting Speed")
+    val shootingTestAngleEntry = table.getEntry("Shooter Shooting Angle")
     val doAutoShootEntry = table.getEntry("Do Auto Shoot")
     val doAutoRampEntry = table.getEntry("Do Auto Ramp Up")
 
-    val shooterShootingSpeed: Double get() = shooterShootingSpeedEntry.getDouble(40.0)
+    val shootingTestSpeed: Double get() = shootingTestSpeedEntry.getDouble(40.0)
+    val shootingTestAngle: Double get() = shootingTestAngleEntry.getDouble(40.0)
     val doAutoShoot: Boolean get() = doAutoShootEntry.getBoolean(true)
     val doAutoRamp: Boolean get() = doAutoRampEntry.getBoolean(true)
 
@@ -220,7 +222,11 @@ object Shooter: SubsystemBase("Shooter") {
         set(value) {
             field = value.coerceAtLeast(0.0.rotationsPerSecond)// / SHOOTER_GEAR_RATIO
             if (field > 0.0.rotationsPerSecond) {
-                shooterMotor.setControl(MotionMagicVelocityVoltage(field).withFeedForward(SHOOTER_CUSTOM_I))
+                if (Robot.isCompBot) {
+                    shooterMotor.setControl(VelocityVoltage(field).withFeedForward(SHOOTER_CUSTOM_I))
+                } else {
+                    shooterMotor.setControl(MotionMagicVelocityVoltage(field).withFeedForward(SHOOTER_CUSTOM_I))
+                }
             } else {
                 if (Robot.isCompBot) {
                     shooterMotor.setControl(NeutralOut())
@@ -236,7 +242,7 @@ object Shooter: SubsystemBase("Shooter") {
 
     @get:AutoLogOutput(key = "Shooter/ShooterCurve Angular Velocity Setpoint")
     val shooterCurveVelocitySetpoint: AngularVelocity
-        get() = shooterVelocitySetpoint * SHOOTER_GEAR_RATIO * SHOOTER_EFFICIENCY
+        get() = shooterVelocitySetpoint * SHOOTER_GEAR_RATIO * shooterEfficiency
 
     @get:AutoLogOutput(key = "Shooter/Hood Feedforward")
     val hoodFeedforward: Double get() = 0.2//hoodAngle.cos() * 0.2
@@ -245,12 +251,18 @@ object Shooter: SubsystemBase("Shooter") {
     @get:AutoLogOutput(key = "Shooter/Hood Angle Setpoint")
     var hoodAngleSetpoint: Angle = hoodAngle
         set(value) {
-            field = if (isCompBot) value.coerceIn(15.0.degrees, 45.0.degrees) else value.coerceIn(0.0.degrees, 44.0.degrees)
-            if (field == 0.0.degrees && hoodAngle > 5.0.degrees) {
-                hoodMotor.setControl(PositionVoltage(field).withFeedForward(hoodFeedforward))
+            if (isCompBot) {
+                field = value.coerceIn(15.0.degrees, 45.0.degrees)
+                hoodMotor.setControl(PositionVoltage(field).withFeedForward(0.0))
             } else {
-                hoodMotor.setControl(MotionMagicVoltage(field).withFeedForward(hoodFeedforward))
+                field = value.coerceIn(0.0.degrees, 44.0.degrees)
+                if (field == 0.0.degrees && hoodAngle > 5.0.degrees) {
+                    hoodMotor.setControl(PositionVoltage(field).withFeedForward(hoodFeedforward))
+                } else {
+                    hoodMotor.setControl(MotionMagicVoltage(field).withFeedForward(hoodFeedforward))
+                }
             }
+
         }
 
     @get:AutoLogOutput(key = "Shooter/Hood Angle")
@@ -290,14 +302,14 @@ object Shooter: SubsystemBase("Shooter") {
 //    @get:AutoLogOutput(key = "Shooter/Requested voltage")
 //    var requestedVoltage = 0.0
 
-//    val shooterController = PDVelocityController(0.1, 0.0, 0.1 * 6.0/7.0, true)
+    val shooterController = PDVelocityController(0.001, 0.0, 0.1, true)
 
     var fuel: MutableList<FuelSim> = mutableListOf()
     var fuel2: MutableList<FuelSim> = mutableListOf()
 
 
     @get:AutoLogOutput(key = "Shooter/raw ramped up")
-    val rawRampedUp: Boolean get() = (shooterVelocity - shooterVelocitySetpoint).absoluteValue() < 5.0.rotationsPerSecond
+    val rawRampedUp: Boolean get() = (shooterVelocity - shooterVelocitySetpoint).absoluteValue() < 2.5.rotationsPerSecond
 
     var rampedUpDebouncer = Debouncer(0.1, Debouncer.DebounceType.kFalling)
 
@@ -315,14 +327,17 @@ object Shooter: SubsystemBase("Shooter") {
         shooterMotor.configSim(DCMotor.getKrakenX60(2), 0.1)
         hoodMotor.configSim(DCMotor.getKrakenX60(1), 0.005)
 
-        if (!shooterShootingSpeedEntry.exists()) shooterShootingSpeedEntry.setDouble(shooterShootingSpeed)
-        shooterShootingSpeedEntry.setPersistent()
+        if (!shootingTestSpeedEntry.exists()) shootingTestSpeedEntry.setDouble(shootingTestSpeed)
+        shootingTestSpeedEntry.setPersistent()
+
+        if (!shootingTestAngleEntry.exists()) shootingTestAngleEntry.setDouble(shootingTestAngle)
+        shootingTestAngleEntry.setPersistent()
 
         doAutoShootEntry.setBoolean(true)
         doAutoRampEntry.setBoolean(true)
 
         shooterMotor.applyConfiguration {
-            currentLimits(15.0, 50.0, 1.0)
+            currentLimits(40.0, 50.0, 1.0)
             coastMode()
 
             Feedback.withSensorToMechanismRatio(1.0/1.5) // Note: I don't think this line configures anything
@@ -388,7 +403,11 @@ object Shooter: SubsystemBase("Shooter") {
                 motionMagic(0.75, 5.0)
             }
 
-            remoteCANCoder(hoodEncoder.deviceID, if (Robot.isCompBot) 85.5 else 9.64285714285714)
+//            if (Robot.isCompBot) {
+//                Feedback.SensorToMechanismRatio = 85.5
+//            } else {
+                remoteCANCoder(hoodEncoder.deviceID, if (Robot.isCompBot) 85.5 else 9.64285714285714)
+//            }
         }
 
         if (!isSim) {
@@ -398,8 +417,10 @@ object Shooter: SubsystemBase("Shooter") {
 
 
         GlobalScope.launch {
-            org.team2471.frc.lib.coroutines.periodic {
-                SHOOTER_CUSTOM_I += shooterVelocityError.asRotationsPerSecond * 0.02 * shooterI
+            org.team2471.frc.lib.coroutines.periodic(0.01) {
+//                SHOOTER_CUSTOM_I += shooterVelocityError.asRotationsPerSecond * 0.02 * shooterI
+//                val requestedVoltage = shooterController.updateVoltage(shooterVelocitySetpoint.asRotationsPerSecond, shooterVelocity.asRotationsPerSecond).coerceIn(0.0, 13.0)
+//                shooterMotor.setControl(VoltageOut(requestedVoltage))
             }
         }
     }
@@ -446,7 +467,7 @@ object Shooter: SubsystemBase("Shooter") {
             }
         } else {
             hoodAngleSetpoint = HOOD_STOW_SETPOINT.degrees
-            shooterVelocitySetpoint = if (doAutoRamp) 50.0.rotationsPerSecond / SHOOTER_GEAR_RATIO / AimUtils.SHOOTER_EFFICIENCY else 0.0.rotationsPerSecond
+            shooterVelocitySetpoint = 0.0.rotationsPerSecond//if (doAutoRamp) 50.0.rotationsPerSecond / SHOOTER_GEAR_RATIO / AimUtils.shooterEfficiency else 0.0.rotationsPerSecond
             isShooting = false
             if (Intake.intakeState != Intake.IntakeState.INTAKING) {
                 Spindexer.currentState = Spindexer.State.OFF
@@ -501,10 +522,13 @@ object Shooter: SubsystemBase("Shooter") {
 
         if (!FieldManager.inNoShootArea) {
             hoodAngleSetpoint = (
-                if (AimUtils.isAimingAtGoal)
-                    BALL_ANGLE_AT_HOOD_ZERO - hubAngleCurve.get(AimUtils.distanceToTarget.asFeet)
+                if (Turret.isTurretWrapping)
+                    HOOD_STOW_SETPOINT
                 else
-                    BALL_ANGLE_AT_HOOD_ZERO - floorAngleCurve.get(AimUtils.distanceToTarget.asFeet)
+                    if (AimUtils.isAimingAtGoal)
+                        BALL_ANGLE_AT_HOOD_ZERO - hubAngleCurve.get(AimUtils.distanceToTarget.asFeet)
+                    else
+                        BALL_ANGLE_AT_HOOD_ZERO - floorAngleCurve.get(AimUtils.distanceToTarget.asFeet)
             ).degrees
         } else {
             hoodAngleSetpoint = HOOD_STOW_SETPOINT.degrees
@@ -522,7 +546,7 @@ object Shooter: SubsystemBase("Shooter") {
     }
 
     fun shootSimulatedFuel() {
-        val exitVelocity = (AimUtils.getShooterRPS() * SHOOTER_GEAR_RATIO * AimUtils.SHOOTER_EFFICIENCY).toExitVelocity().asMetersPerSecond
+        val exitVelocity = (AimUtils.getShooterRPS() * SHOOTER_GEAR_RATIO * AimUtils.shooterEfficiency).toExitVelocity().asMetersPerSecond
         val exitAngle = if (AimUtils.isAimingAtGoal) hubAngleCurve.get(AimUtils.distanceToTarget.asFeet).degrees else floorAngleCurve.get(AimUtils.distanceToTarget.asFeet).degrees
         val angleToTarget = Turret.turretTranslation.angleTo(AimUtils.aimTarget)
         val velocity2d = Translation2d(exitVelocity * exitAngle.cos(), 0.0).rotateBy(angleToTarget.asRotation2d)
@@ -534,7 +558,7 @@ object Shooter: SubsystemBase("Shooter") {
     }
 
     fun shootSimulatedFuelWithMotors() {
-        val exitVelocity = (shooterVelocity * SHOOTER_GEAR_RATIO * AimUtils.SHOOTER_EFFICIENCY).toExitVelocity().asMetersPerSecond
+        val exitVelocity = (shooterVelocity * SHOOTER_GEAR_RATIO * AimUtils.shooterEfficiency).toExitVelocity().asMetersPerSecond
         val exitAngle = hoodAngle
 //        val angleToTarget = AimUtils.aimTarget.angleTo(Turret.turretPose)
         val velocity2d = Translation2d(exitVelocity * exitAngle.cos(), 0.0).rotateBy(Turret.fieldCentricAngle.asRotation2d)

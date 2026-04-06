@@ -233,8 +233,8 @@ object FieldManager {
     @get:AutoLogOutput(key = "FieldManager/shouldRamp")
     val shouldRamp: Boolean
         get () {
-            if (!doShiftTiming) {
-                return true
+            if (!doShiftTiming || matchTime < 0.0) {
+                return if (Drive.useAprilTags) AimUtils.isAimingAtGoal else false
             }
             if (matchTime > 130.0 || matchTime < 30.0 + AimUtils.MEASURED_SHOT_AIRTIME + HUB_PROCESSING_TIME + RAMP_TIME || isAutonomous) {
                 return true

@@ -5,6 +5,7 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration
 import com.ctre.phoenix6.controls.DutyCycleOut
 import com.ctre.phoenix6.controls.MotionMagicVoltage
 import com.ctre.phoenix6.controls.NeutralOut
+import com.ctre.phoenix6.controls.PositionTorqueCurrentFOC
 import com.ctre.phoenix6.controls.TorqueCurrentFOC
 import com.ctre.phoenix6.hardware.TalonFX
 import com.ctre.phoenix6.signals.MotorAlignmentValue
@@ -32,6 +33,7 @@ import org.team2471.frc.lib.ctre.addFollower
 import org.team2471.frc.lib.ctre.applyConfiguration
 import org.team2471.frc.lib.ctre.coastMode
 import org.team2471.frc.lib.ctre.currentLimits
+import org.team2471.frc.lib.ctre.d
 import org.team2471.frc.lib.ctre.inverted
 import org.team2471.frc.lib.ctre.motionMagic
 import org.team2471.frc.lib.ctre.p
@@ -97,68 +99,72 @@ object Intake: SubsystemBase("Intake") {
         set(value) {
             field = value
             if (finishedHoming) {
-                if (lastReachedSetpoint != value) {
-                    reachedSetpoint0 = false
-                    reachedSetpoint1 = false
-                    lastReachedSetpoint = value
-                }
-
+                deployMotor0.setControl(PositionTorqueCurrentFOC(field))
                 if (Robot.isCompBot) {
-                    if (deployMotor0Error.absoluteValue < REACHED_SETPOINT_THRESHOLD && deployVelocity0.absoluteValue < 0.2) {
-                        reachedSetpoint0 = true
-                    }
-                    if (deployMotor1Error.absoluteValue < REACHED_SETPOINT_THRESHOLD && deployVelocity1.absoluteValue < 0.2) {
-                        reachedSetpoint1 = true
-                    }
-                } else {
-                    if (deployMotor0Error.absoluteValue < 0.5) {
-                        reachedSetpoint0 = true
-                        reachedSetpoint1 = true
-                    }
+                    deployMotor1.setControl(PositionTorqueCurrentFOC(field))
                 }
-
-
-                if (reachedSetpoint0 && reachedSetpoint1) {
-                    // Relies on the optimization thing where it won't evaluate the statements after the or if the first statement returns true, to prevent accessing deployMotor1 stuff when it doesn't exist
-                    if (!Robot.isCompBot || (deployMotor0Position - deployMotor1Position).absoluteValue < FLEX_THRESHOLD) {
-                        if (deployMotor0Error < -0.7) {
-                            deployMotor0.setControl(TorqueCurrentFOC(21.0))
-                        } else {
-                            deployMotor1.setControl(NeutralOut())
-//                            if (deployMotor0Error.absoluteValue < 0.3) {
-//                                deployMotor0.setControl(NeutralOut())
+//                if (lastReachedSetpoint != value) {
+//                    reachedSetpoint0 = false
+//                    reachedSetpoint1 = false
+//                    lastReachedSetpoint = value
+//                }
+//
+//                if (Robot.isCompBot) {
+//                    if (deployMotor0Error.absoluteValue < REACHED_SETPOINT_THRESHOLD && deployVelocity0.absoluteValue < 0.2) {
+//                        reachedSetpoint0 = true
+//                    }
+//                    if (deployMotor1Error.absoluteValue < REACHED_SETPOINT_THRESHOLD && deployVelocity1.absoluteValue < 0.2) {
+//                        reachedSetpoint1 = true
+//                    }
+//                } else {
+//                    if (deployMotor0Error.absoluteValue < 0.5) {
+//                        reachedSetpoint0 = true
+//                        reachedSetpoint1 = true
+//                    }
+//                }
+//
+//
+//                if (reachedSetpoint0 && reachedSetpoint1) {
+//                    // Relies on the optimization thing where it won't evaluate the statements after the or if the first statement returns true, to prevent accessing deployMotor1 stuff when it doesn't exist
+//                    if (!Robot.isCompBot || (deployMotor0Position - deployMotor1Position).absoluteValue < FLEX_THRESHOLD) {
+//                        if (deployMotor0Error < -0.7) {
+//                            deployMotor0.setControl(TorqueCurrentFOC(21.0))
+//                        } else {
+//                            deployMotor1.setControl(NeutralOut())
+////                            if (deployMotor0Error.absoluteValue < 0.3) {
+////                                deployMotor0.setControl(NeutralOut())
+////                            } else {
+////                                deployMotor0.setControl(MotionMagicVoltage(field))
+////                            }
+//                        }
+//
+//                        if (Robot.isCompBot) {
+//                            if (deployMotor1Error < -0.7) {
+//                                deployMotor1.setControl(TorqueCurrentFOC(21.0))
 //                            } else {
-//                                deployMotor0.setControl(MotionMagicVoltage(field))
+//                                deployMotor1.setControl(NeutralOut())
+////                                if (deployMotor1Error.absoluteValue < 0.3) {
+////                                    deployMotor1.setControl(NeutralOut())
+////                                } else {
+////                                    deployMotor1.setControl(MotionMagicVoltage(field))
+////                                }
 //                            }
-                        }
-
-                        if (Robot.isCompBot) {
-                            if (deployMotor1Error < -0.7) {
-                                deployMotor1.setControl(TorqueCurrentFOC(21.0))
-                            } else {
-                                deployMotor1.setControl(NeutralOut())
-//                                if (deployMotor1Error.absoluteValue < 0.3) {
-//                                    deployMotor1.setControl(NeutralOut())
-//                                } else {
-//                                    deployMotor1.setControl(MotionMagicVoltage(field))
-//                                }
-                            }
-                        }
-                    } else {
-                        if (deployMotor0Position > deployMotor1Position) {
-                            deployMotor0.setControl(MotionMagicVoltage(deployMotor1Position))
-                            deployMotor1.setControl(TorqueCurrentFOC(21.0))
-                        } else {
-                            deployMotor1.setControl(MotionMagicVoltage(deployMotor0Position))
-                            deployMotor0.setControl(TorqueCurrentFOC(21.0))
-                        }
-                    }
-                } else {
-                    deployMotor0.setControl(MotionMagicVoltage(field))
-                    if (Robot.isCompBot) {
-                        deployMotor1.setControl(MotionMagicVoltage(field))
-                    }
-                }
+//                        }
+//                    } else {
+//                        if (deployMotor0Position > deployMotor1Position) {
+//                            deployMotor0.setControl(MotionMagicVoltage(deployMotor1Position))
+//                            deployMotor1.setControl(TorqueCurrentFOC(21.0))
+//                        } else {
+//                            deployMotor1.setControl(MotionMagicVoltage(deployMotor0Position))
+//                            deployMotor0.setControl(TorqueCurrentFOC(21.0))
+//                        }
+//                    }
+//                } else {
+//                    deployMotor0.setControl(MotionMagicVoltage(field))
+//                    if (Robot.isCompBot) {
+//                        deployMotor1.setControl(MotionMagicVoltage(field))
+//                    }
+//                }
             }
         }
 
@@ -222,7 +228,7 @@ object Intake: SubsystemBase("Intake") {
     const val FLEX_THRESHOLD = 3.0
 
     val autoCurrentLimits = CurrentLimits(30.0, 40.0, 1.0)
-    val teleopCurrentLimits = CurrentLimits(13.0, 40.0, 0.2)
+    val teleopCurrentLimits = CurrentLimits(30.0, 40.0, 1.0)
 
 
     init {
@@ -241,13 +247,18 @@ object Intake: SubsystemBase("Intake") {
         val deployConfig = TalonFXConfiguration().apply {
             currentLimits(5.0, 25.0, 0.25)
             coastMode()
-            if (Robot.isCompBot) {
-                p(1.5)
-                s(0.25, StaticFeedforwardSignValue.UseClosedLoopSign)
-            } else {
-                p(1.5)
-                s(0.25, StaticFeedforwardSignValue.UseClosedLoopSign)
-            }
+//            if (Robot.isCompBot) {
+//                p(1.5)
+//                s(0.25, StaticFeedforwardSignValue.UseClosedLoopSign)
+//
+//            } else {
+//                p(1.5)
+//                s(0.25, StaticFeedforwardSignValue.UseClosedLoopSign)
+//            }
+            p(50.0)
+            d(3.0)
+
+            TorqueCurrent.PeakForwardTorqueCurrent = 18.0
 
             if (Robot.isCompBot) motionMagic(200.0, 500.0) else motionMagic(750.0, 1500.0)
         }
@@ -263,8 +274,8 @@ object Intake: SubsystemBase("Intake") {
 
         rollerMotor.applyConfiguration {
             currentLimits(autoCurrentLimits.peakLimit, autoCurrentLimits.continuousLimit, autoCurrentLimits.peakDuration)
-            p(7.0)
-            s(10.0, StaticFeedforwardSignValue.UseVelocitySign)
+//            p(7.0)
+//            s(10.0, StaticFeedforwardSignValue.UseVelocitySign)
             coastMode()
         }
         if (Robot.isCompBot) {

@@ -80,8 +80,8 @@ object Turret: SubsystemBase("Turret") {
     val TURRET_RANGE = TURRET_TOP_LIMIT - TURRET_BOTTOM_LIMIT
     val TURRET_ENCODER_LIMIT = if (Robot.isCompBot) 500.0.degrees else 720.0.degrees
 
-    val ENCODER_1_DEFAULT_OFFSET = if (Robot.isCompBot) 42.0 else 43.0664
-    val ENCODER_2_DEFAULT_OFFSET = if (Robot.isCompBot) 103.79 else 76.2
+    val ENCODER_1_DEFAULT_OFFSET = if (Robot.isCompBot) 86.2207 else 43.0664
+    val ENCODER_2_DEFAULT_OFFSET = if (Robot.isCompBot) 87.1875 else 76.2
 
     val encoder1GearRatio = if (Robot.isCompBot) 30.0/230.0 else 30.0/200.0
     val encoder2GearRatio = encoder1GearRatio * 83.0/32.0
@@ -270,6 +270,7 @@ object Turret: SubsystemBase("Turret") {
         if (!encoder1OffsetEntry.exists()) encoder1OffsetEntry.setDouble(ENCODER_1_DEFAULT_OFFSET); encoder1OffsetEntry.setPersistent()
         if (!encoder2OffsetEntry.exists()) encoder2OffsetEntry.setDouble(ENCODER_2_DEFAULT_OFFSET); encoder2OffsetEntry.setPersistent()
         if (!turetFeedforwardFactorEntry.exists()) turetFeedforwardFactorEntry.setDouble(turretFeedforwardFactor); turetFeedforwardFactorEntry.setPersistent()
+        if (!disableTurretEntry.exists()) disableTurretEntry.setBoolean(disableTurret); disableTurretEntry.setPersistent()
 
         turretEncoder1.applyConfiguration {
             if (Robot.isCompBot) {
@@ -303,6 +304,7 @@ object Turret: SubsystemBase("Turret") {
                 if (Robot.isCompBot) {
                     s(0.1, StaticFeedforwardSignValue.UseClosedLoopSign)
                     p(55.0)
+//                    p(25.0)
                     d(0.0)
                 } else {
                     s(0.2, StaticFeedforwardSignValue.UseClosedLoopSign)
@@ -381,7 +383,7 @@ object Turret: SubsystemBase("Turret") {
         val aimTarget = AimUtils.aimTarget
         val turretTranslation = turretTranslation
         val turretPigeonConnected = turretPigeonIsConnected
-        Logger.recordOutput("aim target", aimTarget.toPose2d())
+//        Logger.recordOutput("aim target", aimTarget.toPose2d())
         Logger.recordOutput("Turret/turret setpoint pose", turretTranslation.toPose2d(fieldCentricSetpoint.asRotation2d))
         Logger.recordOutput("Turret/turret pose", turretTranslation.toPose2d(fieldCentricAngle.asRotation2d))
         Logger.recordOutput("Turret/distToGoalFeet", aimTarget.getDistance(Drive.localizer.pose.translation).meters.asFeet)

@@ -88,6 +88,7 @@ object Robot : LoggedRobot() {
     val turret = Turret
     val spindexer = Spindexer
     val fieldManager = FieldManager
+    val aimUtils = AimUtils
 
     var allSubsystems = arrayOf(drive, intake, shooter, turret, spindexer, oi)
 

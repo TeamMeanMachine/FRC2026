@@ -58,6 +58,17 @@ fun zeroTurretEncoders() = runOnceCommand(Turret) {
     println("Zeroed turret encoders")
 }
 
+
+fun shooterCurveTuning() = runCommand {
+    Shooter.hubSpeedCurve.clear()
+    Shooter.hubAngleCurve.clear()
+    Shooter.hubSpeedCurve.put(2.0, Shooter.shootingTestSpeed / Shooter.SHOOTER_GEAR_RATIO / AimUtils.shooterEfficiency)
+    Shooter.hubSpeedCurve.put(3.0, Shooter.shootingTestSpeed / Shooter.SHOOTER_GEAR_RATIO / AimUtils.shooterEfficiency)
+    Shooter.hubAngleCurve.put(2.0, Shooter.BALL_ANGLE_AT_HOOD_ZERO - Shooter.shootingTestAngle)
+    Shooter.hubAngleCurve.put(3.0, Shooter.BALL_ANGLE_AT_HOOD_ZERO - Shooter.shootingTestAngle)
+}
+
+
 fun intakeDeployTest() = sequenceCommand(
     runOnce { Intake.stow() },
     waitCommand(2.0),

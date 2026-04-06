@@ -57,6 +57,7 @@ object Autonomous: Autonomi() {
             addOption("Drive Velocity Volt Test", Drive.velocityVoltTest())
             addOption("Quest offset Test", Drive.questOffsetTest())
             addOption("Turret Encoder Zero", zeroTurretEncoders())
+            addOption("Shooter Curve Tuning", shooterCurveTuning())
             addOption("Full System Test", fullSystemTest())
             addOption("Turret Test", turretTest())
             addOption("Spindexer Test", spindexerTest())

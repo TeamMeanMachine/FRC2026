@@ -3,12 +3,11 @@ package frc.team2471.frc2026
 import edu.wpi.first.math.geometry.Translation2d
 import edu.wpi.first.math.geometry.Translation3d
 import edu.wpi.first.math.interpolation.InterpolatingTreeMap
+import edu.wpi.first.networktables.NetworkTableInstance
 import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.units.measure.AngularVelocity
 import edu.wpi.first.units.measure.Distance
 import edu.wpi.first.units.measure.LinearVelocity
-import edu.wpi.first.units.measure.Velocity
-import frc.team2471.frc2026.Robot.isCompBot
 import frc.team2471.frc2026.Shooter.SHOOTER_GEAR_RATIO
 import frc.team2471.frc2026.Shooter.floorSpeedCurve
 import frc.team2471.frc2026.Shooter.hubSpeedCurve
@@ -41,6 +40,10 @@ import kotlin.math.pow
 import kotlin.math.sqrt
 
 object AimUtils {
+    private val table = NetworkTableInstance.getDefault().getTable("AimUtils")
+
+    val shooterEfficiencyEntry = table.getEntry("shooterEfficiency")
+
     // seconds
     const val TARGET_SHOT_AIRTIME = 1.25
     const val MEASURED_SHOT_AIRTIME = 1.0
@@ -64,7 +67,13 @@ object AimUtils {
     val HUB_HEIGHT = 65.0.inches
 
     // Percent of surface speed of shooter that gets transferred into the ball
-    val SHOOTER_EFFICIENCY = if (isCompBot) 0.69 else 0.69
+    val shooterEfficiency = shooterEfficiencyEntry.getDouble(0.65)//if (isCompBot) 0.65 else 0.69
+
+    init {
+        if (!shooterEfficiencyEntry.exists()) shooterEfficiencyEntry.setDouble(shooterEfficiency)
+        shooterEfficiencyEntry.setPersistent()
+    }
+
 
     @get:AutoLogOutput(key = "aim target")
     val aimTarget: Translation2d
@@ -103,7 +112,7 @@ object AimUtils {
             (if (isAimingAtGoal) hubSpeedCurve.get(distanceToTarget.asFeet) else hubSpeedCurve.get(11.0)).rotationsPerSecond
         } else {
             (if (isAimingAtGoal || FieldManager.shouldRamp) hubSpeedCurve.get(distanceToTarget.asFeet) else floorSpeedCurve.get(distanceToTarget.asFeet)).rotationsPerSecond
-        } / SHOOTER_GEAR_RATIO / SHOOTER_EFFICIENCY
+        } / SHOOTER_GEAR_RATIO / shooterEfficiency
     }
 
 
@@ -127,7 +136,7 @@ object AimUtils {
         return offset
     }
 
-    val isAimingAtGoal get() = FieldManager.inScoringZone
+    val isAimingAtGoal get() = true//FieldManager.inScoringZone
 
     val distanceToTarget get() = Turret.turretTranslation.getDistance(aimTarget).absoluteValue.meters
 
