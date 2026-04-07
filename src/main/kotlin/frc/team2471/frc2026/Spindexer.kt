@@ -153,7 +153,7 @@ object Spindexer: SubsystemBase("Spindexer") {
 
 
         spinMotor.applyConfiguration {
-            currentLimits(30.0, 30.0, 1.0)
+            currentLimits(40.0, 40.0, 1.0)
             inverted(false)
             coastMode()
             s(2.0, StaticFeedforwardSignValue.UseVelocitySign)

@@ -68,7 +68,9 @@ object FieldManager {
     val towerAreaLength = 47.0.inches
 
     val xRelativeToCenter: Distance
-        get () = (Drive.localizer.pose.x.meters - fieldCenter.x.asMeters.meters)
+        get () = (Drive.localizer.pose.x.meters - fieldCenter.x)
+    val yRelativeToCenter: Distance
+        get() = Drive.localizer.pose.y.meters - fieldCenter.y
 
 
 
@@ -113,9 +115,18 @@ object FieldManager {
             return false
         }
 
+    @get:AutoLogOutput(key = "FieldManager/In Opposing Alliance Zone")
+    val inOpposingAllianceZone: Boolean
+        get () = xRelativeToCenter.absoluteValue() > distanceFromMiddleToScore
+                && if (isRedAlliance) xRelativeToCenter < 0.0.meters else xRelativeToCenter > 0.0.meters
+
+    @get:AutoLogOutput(key = "FieldManager/In No Pass Area")
+    val inOpposingNoPassArea: Boolean
+        get() = if (!Drive.useAprilTags) false else inOpposingAllianceZone && yRelativeToCenter.absoluteValue() < 3.0.feet
+
     @get:AutoLogOutput(key = "FieldManager/In No Shoot Area")
     val inNoShootArea: Boolean
-        get() = (autoHoodRetraction && Drive.useAprilTags) && (inTowerArea || inTrenchArea)
+        get() = ((autoHoodRetraction && Drive.useAprilTags) && (inTowerArea || inTrenchArea)) || inOpposingNoPassArea
 
 
     val redTowerPose = (allAprilTags[14].pose.toPose2d().translation + Translation2d(-1.75, 0.0))
@@ -135,7 +146,7 @@ object FieldManager {
 
     val passPose: Translation2d
         get() {
-            var pose = Translation2d(4.0, 2.0)
+            var pose = if (Robot.isTeleop) Translation2d(4.0, 2.0) else Translation2d(2.0, 1.25)
 
             if (isRedAlliance) {
                 pose = Translation2d(fieldLength.asMeters - pose.x, pose.y)

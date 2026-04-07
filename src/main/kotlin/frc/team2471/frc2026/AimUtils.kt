@@ -108,8 +108,8 @@ object AimUtils {
     fun getShooterRPS(): AngularVelocity {
         return if (!Drive.useAprilTags) {
             hubSpeedCurve.get(staticShotPos.getDistance(aimTarget)).rotationsPerSecond
-        } else if (Robot.isAutonomous) {
-            (if (isAimingAtGoal) hubSpeedCurve.get(distanceToTarget.asFeet) else hubSpeedCurve.get(11.0)).rotationsPerSecond
+//        } else if (Robot.isAutonomous) {
+//            (if (isAimingAtGoal) hubSpeedCurve.get(distanceToTarget.asFeet) else hubSpeedCurve.get(11.0)).rotationsPerSecond
         } else {
             (if (isAimingAtGoal || FieldManager.shouldRamp) hubSpeedCurve.get(distanceToTarget.asFeet) else floorSpeedCurve.get(distanceToTarget.asFeet)).rotationsPerSecond
         } / SHOOTER_GEAR_RATIO / shooterEfficiency
@@ -136,7 +136,7 @@ object AimUtils {
         return offset
     }
 
-    val isAimingAtGoal get() = true//FieldManager.inScoringZone
+    val isAimingAtGoal get() = FieldManager.inScoringZone
 
     val distanceToTarget get() = Turret.turretTranslation.getDistance(aimTarget).absoluteValue.meters
 

@@ -61,11 +61,11 @@ object TunerConstants {
     // output type specified by SwerveModuleConstants.DriveMotorClosedLoopOutput
     private val driveGains: Slot0Configs = Slot0Configs().apply {
         if (Robot.isCompBot) {
-            kP = 0.135
+            kP = 0.1875
             kI = 0.0
             kD = 0.0
             kS = 0.15
-            kV = 0.087
+            kV = 0.1265
             kA = 0.00892
         } else {
             kP = 0.135

@@ -80,8 +80,8 @@ object Turret: SubsystemBase("Turret") {
     val TURRET_RANGE = TURRET_TOP_LIMIT - TURRET_BOTTOM_LIMIT
     val TURRET_ENCODER_LIMIT = if (Robot.isCompBot) 500.0.degrees else 720.0.degrees
 
-    val ENCODER_1_DEFAULT_OFFSET = if (Robot.isCompBot) 86.2207 else 43.0664
-    val ENCODER_2_DEFAULT_OFFSET = if (Robot.isCompBot) 87.1875 else 76.2
+    val ENCODER_1_DEFAULT_OFFSET = if (Robot.isCompBot) -158.4668 else 43.0664
+    val ENCODER_2_DEFAULT_OFFSET = if (Robot.isCompBot) 100.8984 else 76.2
 
     val encoder1GearRatio = if (Robot.isCompBot) 30.0/230.0 else 30.0/200.0
     val encoder2GearRatio = encoder1GearRatio * 83.0/32.0

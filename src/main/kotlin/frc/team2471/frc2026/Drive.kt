@@ -174,7 +174,7 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
 
     override val pathXController = PIDController(7.0, 0.0, 0.0)
     override val pathYController = PIDController(7.0, 0.0, 0.0)
-    override val pathThetaController = PIDController(7.0, 0.0, 0.0)
+    override val pathThetaController = PIDController(8.0, 0.0, 0.0)
 
     override val autoDriveToPointController = PIDController(3.0, 0.0, 0.1)
     override val teleopDriveToPointController = PIDController(3.0, 0.0, 0.1)
