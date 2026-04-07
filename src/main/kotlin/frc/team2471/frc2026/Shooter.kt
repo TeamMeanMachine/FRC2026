@@ -126,15 +126,16 @@ object Shooter: SubsystemBase("Shooter") {
     //feet, s
     val hubTimeCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
         if (isCompBot) {
+            put(5.0, 0.785)
+            put(7.0, 0.992)
+            put(9.0, 1.027)
+            put(12.0, 1.098)
+            put(15.0, 1.153)
+            put(18.0, 1.288)
+            put(21.0, 1.308)
+        } else {
             put(3.0, 1.03)
             put(6.0, 1.08)
-            put(9.0, 1.08)
-            put(12.0, 1.1)
-            put(15.0, 1.2)
-            put(18.0, 1.28)
-        } else {
-            put(5.0, 0.785)
-            put(7.0, 1.08)
             put(9.0, 1.08)
             put(12.0, 1.1)
             put(15.0, 1.2)
