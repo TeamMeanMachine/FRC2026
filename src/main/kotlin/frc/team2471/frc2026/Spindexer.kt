@@ -123,6 +123,8 @@ object Spindexer: SubsystemBase("Spindexer") {
     @get:AutoLogOutput(key = "Spindexer/stateOnTime")
     val stateOnTime: Double get() = stateOnTimer.get()
 
+    var disableReversingAuto = false
+
     init {
         if (!spinVelocityEntry.exists()) spinVelocityEntry.setDouble(SPIN_VELOCITY)
         if (!spinLowerVelocityEntry.exists()) spinLowerVelocityEntry.setDouble(SPIN_LOWER_VELOCITY)
@@ -237,7 +239,11 @@ object Spindexer: SubsystemBase("Spindexer") {
             }
 
             State.AGITATING -> {
-                spinMotorVelocitySetpoint = -AGITATE_VELOCITY
+                if (Robot.isAutonomous && disableReversingAuto) {
+                    spinMotorVelocitySetpoint = 0.0
+                } else {
+                    spinMotorVelocitySetpoint = -AGITATE_VELOCITY
+                }
                 sidetakeMotorVelocitySetpoint = 0.0
                 uptakeMotorVelocitySetpoint = 0.0
 //                stateOnTimer.stop()

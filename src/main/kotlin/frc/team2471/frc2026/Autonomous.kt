@@ -90,12 +90,17 @@ object Autonomous: Autonomi() {
                 parallelCommand(
                     Drive.driveAlongChoreoPath(path.getSplit(1).get(), resetOdometry = false, poseSupplier = Drive.localizer::pose, exitSupplier = { percent, error -> pathPercentage = percent; Turret.lookForwardOverride = percent < 0.75; percent >= 1.0 }),
                     sequenceCommand(
+                        waitUntilCommand { pathPercentage > 0.8 },
+                        runOnceCommand {
+                            Spindexer.disableReversingAuto = true
+                        },
                         waitUntilCommand { pathPercentage > 0.9 },
                         parallelCommand(
                             Shooter.shoot(true),
                             sequenceCommand(
                                 runOnceCommand {
                                     Intake.intakeState = Intake.IntakeState.OFF
+                                    Spindexer.disableReversingAuto = false
                                 },
                                 Intake.pulse().withTimeout(3.5).finallyRun {
                                     Intake.deploy()
@@ -111,12 +116,17 @@ object Autonomous: Autonomi() {
                     },
                     Drive.driveAlongChoreoPath(path.getSplit(2).get(), resetOdometry = false, poseSupplier = Drive.localizer::pose, exitSupplier = { percent, error -> pathPercentage = percent; Turret.lookForwardOverride = percent > 0.1 && percent < 0.75; percent >= 1.0 && error.translation.norm.meters < 0.5.feet  }),
                     sequenceCommand(
+                        waitUntilCommand { pathPercentage > 0.85 },
+                        runOnceCommand {
+                            Spindexer.disableReversingAuto = true
+                        },
                         waitUntilCommand { pathPercentage > 0.95 },
                         parallelCommand(
                             Shooter.shoot(true),
                             sequenceCommand(
                                 runOnceCommand {
                                     Intake.intakeState = Intake.IntakeState.OFF
+                                    Spindexer.disableReversingAuto = false
                                 },
                                 Intake.pulse()
                             )
