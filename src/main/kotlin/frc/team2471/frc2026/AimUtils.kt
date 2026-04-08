@@ -8,6 +8,7 @@ import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.units.measure.AngularVelocity
 import edu.wpi.first.units.measure.Distance
 import edu.wpi.first.units.measure.LinearVelocity
+import edu.wpi.first.wpilibj.DriverStation
 import frc.team2471.frc2026.Shooter.SHOOTER_GEAR_RATIO
 import frc.team2471.frc2026.Shooter.floorSpeedCurve
 import frc.team2471.frc2026.Shooter.hubSpeedCurve
@@ -136,7 +137,7 @@ object AimUtils {
         return offset
     }
 
-    val isAimingAtGoal get() = FieldManager.inScoringZone
+    val isAimingAtGoal get() = DriverStation.isAutonomous() || FieldManager.inScoringZone
 
     val distanceToTarget get() = Turret.turretTranslation.getDistance(aimTarget).absoluteValue.meters
 

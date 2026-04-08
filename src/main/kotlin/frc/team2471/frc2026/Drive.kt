@@ -1,6 +1,5 @@
 package frc.team2471.frc2026
 
-import com.ctre.phoenix6.Utils
 import com.ctre.phoenix6.swerve.utility.PhoenixPIDController
 import edu.wpi.first.math.Matrix
 import edu.wpi.first.math.VecBuilder
@@ -200,9 +199,20 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
         println("max acceleration ${TunerConstants.kMaxAcceleration.asMetersPerSecondPerSecond}")
 
         localizer.trackAllTags()
+        localizer.disableSingleTagCalculation() // for loop times and we dont use it in 2026
 
         if (!isSim) {
-            powerTracker.addMotors("Drive", { totalDriveCurrent })
+            powerTracker.addMotors("Drive", {
+                var tempTotalDriveCurrent = 0.0
+                var tempTotalSteerCurrent = 0.0
+                modules.forEach {
+                    tempTotalDriveCurrent += it.driveMotor.supplyCurrent.valueAsDouble
+                    tempTotalSteerCurrent += it.steerMotor.supplyCurrent.valueAsDouble
+                }
+                totalSteerCurrent = tempTotalSteerCurrent
+                totalDriveCurrent = tempTotalDriveCurrent
+                tempTotalDriveCurrent
+            })
             powerTracker.addMotors("Steer", { totalSteerCurrent })
         }
 
@@ -214,26 +224,26 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
         LoopLogger.record("Inside Drive periodic")
 
         // Apply quest measurements
-        if (questConnected && questTracking && tempQuestPose == null) {
-            if (isReal) {
-                quest.allUnreadPoseFrames.forEach {
-                    questTrackingMaybe = it.isTracking
-                    if (resetPoseTime < it.dataTimestamp && it.isTracking) {
-                        val pose = it.questPose3d.transformBy(robotToQuestTransformMeters.inverse())
-                        val ctreTimestamp = Utils.fpgaToCurrentTime(it.dataTimestamp)
-
-                        Logger.recordOutput("Drive/Quest/DataTimestamp", it.dataTimestamp)
-                        Logger.recordOutput("Drive/Quest/CtreTimestamp", ctreTimestamp)
-                        addVisionMeasurement(pose.toPose2d(), ctreTimestamp, QUEST_STD_DEVS)
-                        questPose = pose
-                    }
-                }
-            } else {
-                // Simulate quest data
-                addVisionMeasurement(pose, stateTimestamp, QUEST_STD_DEVS)
-                questPose = Pose3d(pose.x, pose.y, robotToQuestTransformMeters.z, robotToQuestTransformMeters.rotation)
-            }
-        }
+//        if (questConnected && questTracking && tempQuestPose == null) {
+//            if (isReal) {
+//                quest.allUnreadPoseFrames.forEach {
+//                    questTrackingMaybe = it.isTracking
+//                    if (resetPoseTime < it.dataTimestamp && it.isTracking) {
+//                        val pose = it.questPose3d.transformBy(robotToQuestTransformMeters.inverse())
+//                        val ctreTimestamp = Utils.fpgaToCurrentTime(it.dataTimestamp)
+//
+//                        Logger.recordOutput("Drive/Quest/DataTimestamp", it.dataTimestamp)
+//                        Logger.recordOutput("Drive/Quest/CtreTimestamp", ctreTimestamp)
+//                        addVisionMeasurement(pose.toPose2d(), ctreTimestamp, QUEST_STD_DEVS)
+//                        questPose = pose
+//                    }
+//                }
+//            } else {
+//                // Simulate quest data
+//                addVisionMeasurement(pose, stateTimestamp, QUEST_STD_DEVS)
+//                questPose = Pose3d(pose.x, pose.y, robotToQuestTransformMeters.z, robotToQuestTransformMeters.rotation)
+//            }
+//        }
 
         LoopLogger.record("b4 Drive piodc")
         super.periodic() // Must call this
@@ -262,13 +272,13 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
         localizer.update(poseMeasurement, cameras.map { it.latestMeasurement }, speeds)
         LoopLogger.record("Drive localizer")
 
-        localizerVelocityVector = localizer.pose.translation + (localizer.pose.translation - prevLocalizerTranslation) * 50.0
-        prevLocalizerTranslation = localizer.pose.translation
-
-        gyroVelocity += Translation2d(gyroAccelerationX.asMetersPerSecondPerSecond, gyroAccelerationY.asMetersPerSecondPerSecond) * 0.2
-
-//        quest.commandPeriodic()
-        LoopLogger.record("Drive quest periodic")
+//        localizerVelocityVector = localizer.pose.translation + (localizer.pose.translation - prevLocalizerTranslation) * 50.0
+//        prevLocalizerTranslation = localizer.pose.translation
+//
+//        gyroVelocity += Translation2d(gyroAccelerationX.asMetersPerSecondPerSecond, gyroAccelerationY.asMetersPerSecondPerSecond) * 0.2
+//
+////        quest.commandPeriodic()
+//        LoopLogger.record("Drive quest periodic")
 
         headingHistory.put(Timer.getFPGATimestamp(), heading.degrees)
         LoopLogger.record("Recorded HeadingHistory")

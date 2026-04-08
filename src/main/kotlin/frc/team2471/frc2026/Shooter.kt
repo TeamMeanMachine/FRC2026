@@ -5,7 +5,6 @@ import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage
 import com.ctre.phoenix6.controls.MotionMagicVoltage
 import com.ctre.phoenix6.controls.NeutralOut
 import com.ctre.phoenix6.controls.PositionVoltage
-import com.ctre.phoenix6.controls.VelocityVoltage
 import com.ctre.phoenix6.controls.VoltageOut
 import com.ctre.phoenix6.hardware.CANcoder
 import com.ctre.phoenix6.signals.InvertedValue
@@ -35,7 +34,6 @@ import kotlinx.coroutines.launch
 import org.littletonrobotics.junction.AutoLogOutput
 import org.littletonrobotics.junction.Logger
 import org.team2471.frc.lib.control.LoopLogger
-import org.team2471.frc.lib.control.PDVelocityController
 import org.team2471.frc.lib.control.commands.finallyRun
 import org.team2471.frc.lib.control.commands.onlyRunWhileFalse
 import org.team2471.frc.lib.control.commands.onlyRunWhileTrue
@@ -57,6 +55,7 @@ import org.team2471.frc.lib.ctre.motionMagic
 import org.team2471.frc.lib.ctre.p
 import org.team2471.frc.lib.ctre.remoteCANCoder
 import org.team2471.frc.lib.ctre.s
+import org.team2471.frc.lib.ctre.setCANCoderAngle
 import org.team2471.frc.lib.units.absoluteValue
 import org.team2471.frc.lib.units.asAmps
 import org.team2471.frc.lib.units.asFeet
@@ -197,6 +196,8 @@ object Shooter: SubsystemBase("Shooter") {
     val doAutoShootEntry = table.getEntry("Do Auto Shoot")
     val doAutoRampEntry = table.getEntry("Do Auto Ramp Up")
 
+    val zeroHoodButtonEntry = table.getEntry("Zero Hood")
+
     val shootingTestSpeed: Double get() = shootingTestSpeedEntry.getDouble(40.0)
     val shootingTestAngle: Double get() = shootingTestAngleEntry.getDouble(40.0)
     val doAutoShoot: Boolean get() = doAutoShootEntry.getBoolean(true)
@@ -249,7 +250,7 @@ object Shooter: SubsystemBase("Shooter") {
     var hoodAngleSetpoint: Angle = hoodAngle
         set(value) {
             if (isCompBot) {
-                field = value.coerceIn(15.0.degrees, 45.0.degrees)
+                field = value.coerceIn(HOOD_ZERO.degrees, 45.0.degrees)
                 hoodMotor.setControl(PositionVoltage(field).withFeedForward(0.0))
             } else {
                 field = value.coerceIn(0.0.degrees, 44.0.degrees)
@@ -286,7 +287,7 @@ object Shooter: SubsystemBase("Shooter") {
     val hoodCurrent: Double get() = hoodMotor.supplyCurrent.valueAsDouble
 
     // degrees
-    const val HOOD_STOW_SETPOINT = 0.0
+    const val HOOD_ZERO = 15.0
     val HOOD_UNDER_TRENCH_MAX_ANGLE = if (Robot.isCompBot) 32.0.degrees else 0.0.degrees
 
     const val BALL_ANGLE_AT_HOOD_ZERO = 90.0
@@ -334,8 +335,10 @@ object Shooter: SubsystemBase("Shooter") {
         doAutoShootEntry.setBoolean(true)
         doAutoRampEntry.setBoolean(true)
 
+        zeroHoodButtonEntry.setBoolean(false)
+
         shooterMotor.applyConfiguration {
-            currentLimits(40.0, 50.0, 1.0)
+            currentLimits(10.0, 30.0, 0.3)
             coastMode()
 
             Feedback.withSensorToMechanismRatio(1.0/1.5) // Note: I don't think this line configures anything
@@ -360,7 +363,7 @@ object Shooter: SubsystemBase("Shooter") {
 
 
             if (isCompBot) {
-                MotionMagic.MotionMagicAcceleration = 150.0
+                MotionMagic.MotionMagicAcceleration = 120.0
             } else {
                 MotionMagic.MotionMagicAcceleration = 25.0
             }
@@ -374,7 +377,7 @@ object Shooter: SubsystemBase("Shooter") {
         if (Robot.isCompBot) {
             hoodEncoder.applyConfiguration {
                 inverted(true)
-                magnetSensorOffset(0.20866)
+                magnetSensorOffset(0.04166)
             }
         }
 
@@ -447,6 +450,12 @@ object Shooter: SubsystemBase("Shooter") {
             fuel2.removeFuel()
         }
 
+        if (zeroHoodButtonEntry.getBoolean(false)) {
+            hoodEncoder.setCANCoderAngle(HOOD_ZERO.degrees)
+            zeroHoodButtonEntry.setBoolean(false)
+            println("Zeroed hood")
+        }
+
 //        shooterMotor.setControl(VoltageOut(shooterController.updateVoltage(shooterAngularVelocitySetpoint.asRotationsPerSecond, shooterAngularVelocity.asRotationsPerSecond)))
         LoopLogger.record("Shooter periodic")
     }
@@ -503,7 +512,7 @@ object Shooter: SubsystemBase("Shooter") {
     }.finallyRun {
         isShooting = false
         Spindexer.currentState = Spindexer.State.OFF
-        hoodAngleSetpoint = HOOD_STOW_SETPOINT.degrees
+        hoodAngleSetpoint = HOOD_ZERO.degrees
     }
 
     fun rampUpLoop() {
@@ -512,7 +521,7 @@ object Shooter: SubsystemBase("Shooter") {
 
     fun shootLoop(ignoreRampUp: Boolean = false) {
 //        println("Shoot Loop!!!")
-        if (!FieldManager.inNoShootArea && (!Turret.isTurretWrapping || Turret.disableTurret) && (((rampedUp || ignoreRampUp) && AimUtils.isAimingAtGoal) || (rampedUpPassing && !AimUtils.isAimingAtGoal)) && (FieldManager.shouldShoot || !AimUtils.isAimingAtGoal)) {
+        if ((!FieldManager.inNoShootArea || ignoreRampUp) && (!Turret.isTurretWrapping || Turret.disableTurret) && (((rampedUp || ignoreRampUp) && AimUtils.isAimingAtGoal) || (rampedUpPassing && !AimUtils.isAimingAtGoal)) && (FieldManager.shouldShoot || !AimUtils.isAimingAtGoal)) {
             isShooting = true
             Spindexer.currentState = Spindexer.State.ON
         } else {
@@ -522,7 +531,7 @@ object Shooter: SubsystemBase("Shooter") {
 
         val wantedHoodSetpoint = (
             if (Turret.isTurretWrapping)
-                HOOD_STOW_SETPOINT
+                HOOD_ZERO
             else
                 if (AimUtils.isAimingAtGoal)
                     BALL_ANGLE_AT_HOOD_ZERO - hubAngleCurve.get(AimUtils.distanceToTarget.asFeet)

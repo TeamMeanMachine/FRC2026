@@ -6,7 +6,6 @@ import com.ctre.phoenix6.controls.DutyCycleOut
 import com.ctre.phoenix6.controls.MotionMagicVoltage
 import com.ctre.phoenix6.controls.NeutralOut
 import com.ctre.phoenix6.controls.PositionTorqueCurrentFOC
-import com.ctre.phoenix6.controls.TorqueCurrentFOC
 import com.ctre.phoenix6.hardware.TalonFX
 import com.ctre.phoenix6.signals.MotorAlignmentValue
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue
@@ -99,10 +98,19 @@ object Intake: SubsystemBase("Intake") {
         set(value) {
             field = value
             if (finishedHoming) {
-                deployMotor0.setControl(PositionTorqueCurrentFOC(field))
-                if (Robot.isCompBot) {
-                    deployMotor1.setControl(PositionTorqueCurrentFOC(field))
+                if (disableSpringProtection) {
+                    deployMotor0.setControl(MotionMagicVoltage(field).withSlot(1))
+                    if (Robot.isCompBot) {
+                        deployMotor1.setControl(MotionMagicVoltage(field).withSlot(1))
+                    }
+                } else {
+                    deployMotor0.setControl(PositionTorqueCurrentFOC(field))
+                    if (Robot.isCompBot) {
+                        deployMotor1.setControl(PositionTorqueCurrentFOC(field))
+                    }
                 }
+
+
 //                if (lastReachedSetpoint != value) {
 //                    reachedSetpoint0 = false
 //                    reachedSetpoint1 = false
@@ -212,6 +220,7 @@ object Intake: SubsystemBase("Intake") {
 
     var finishedHoming: Boolean = false
     var isDeployed: Boolean = false
+    var disableSpringProtection = false
 
     @get:AutoLogOutput(key = "Intake/goingToSetpoint0")
     var goingToSetpoint0: Boolean = false
@@ -227,8 +236,8 @@ object Intake: SubsystemBase("Intake") {
 
     const val FLEX_THRESHOLD = 3.0
 
-    val autoCurrentLimits = CurrentLimits(30.0, 40.0, 1.0)
-    val teleopCurrentLimits = CurrentLimits(30.0, 40.0, 1.0)
+    val autoCurrentLimits = CurrentLimits(20.0, 30.0, 1.0)
+//    val teleopCurrentLimits = CurrentLimits(30.0, 40.0, 1.0)
 
 
     init {
@@ -248,8 +257,8 @@ object Intake: SubsystemBase("Intake") {
             currentLimits(5.0, 25.0, 0.25)
             coastMode()
 //            if (Robot.isCompBot) {
-//                p(1.5)
-//                s(0.25, StaticFeedforwardSignValue.UseClosedLoopSign)
+                p(1.5, 1)
+                s(0.25, StaticFeedforwardSignValue.UseClosedLoopSign, 1)
 //
 //            } else {
 //                p(1.5)
@@ -303,26 +312,26 @@ object Intake: SubsystemBase("Intake") {
     }
 
     fun deploy() {
-        if (deployMotor0Error.absoluteValue > FLEX_THRESHOLD) {
-            goingToSetpoint0 = true
-        }
-        if (Robot.isCompBot && deployMotor1Error.absoluteValue > FLEX_THRESHOLD) {
-            goingToSetpoint1 = true
-        }
+//        if (deployMotor0Error.absoluteValue > FLEX_THRESHOLD) {
+//            goingToSetpoint0 = true
+//        }
+//        if (Robot.isCompBot && deployMotor1Error.absoluteValue > FLEX_THRESHOLD) {
+//            goingToSetpoint1 = true
+//        }
         deploySetpoint = DEPLOY_POSE
         isDeployed = true
     }
 
     fun stow() {
-        goingToSetpoint0 = true
-        if (Robot.isCompBot) goingToSetpoint1 = true
+//        goingToSetpoint0 = true
+//        if (Robot.isCompBot) goingToSetpoint1 = true
         deploySetpoint = STOW_POSE
         isDeployed = false
     }
 
     fun deepStow() {
-        goingToSetpoint0 = true
-        if (Robot.isCompBot) goingToSetpoint1 = true
+//        goingToSetpoint0 = true
+//        if (Robot.isCompBot) goingToSetpoint1 = true
         deploySetpoint = DEEP_STOW_POSE
         isDeployed = false
     }
@@ -429,16 +438,16 @@ object Intake: SubsystemBase("Intake") {
         }
         prevIntakeState = intakeState
 
-        if (goingToSetpoint0 && deployMotor0Error.absoluteValue < FLEX_THRESHOLD) {
-            goingToSetpoint0 = false
-        }
+//        if (goingToSetpoint0 && deployMotor0Error.absoluteValue < FLEX_THRESHOLD) {
+//            goingToSetpoint0 = false
+//        }
 
-        if (Robot.isCompBot && goingToSetpoint1 && deployMotor1Error.absoluteValue < FLEX_THRESHOLD) {
-            goingToSetpoint1 = false
-        }
+//        if (Robot.isCompBot && goingToSetpoint1 && deployMotor1Error.absoluteValue < FLEX_THRESHOLD) {
+//            goingToSetpoint1 = false
+//        }
 
 
-        LoopLogger.record("Intake default b4 controlMode")
+//        LoopLogger.record("Intake default b4 controlMode")
 
 
         LoopLogger.record("Intake default")

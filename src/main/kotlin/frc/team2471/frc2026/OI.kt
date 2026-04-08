@@ -10,7 +10,6 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase
 import org.team2471.frc.lib.control.LoopLogger
 import org.team2471.frc.lib.control.MeanCommandXboxController
 import org.team2471.frc.lib.control.commands.finallyRun
-import org.team2471.frc.lib.control.commands.onlyRunWhileTrue
 import org.team2471.frc.lib.control.commands.parallelCommand
 import org.team2471.frc.lib.control.commands.runCommand
 import org.team2471.frc.lib.control.commands.runOnceCommand
@@ -96,7 +95,7 @@ object OI: SubsystemBase("OI") {
         // Default command, normal field-relative drive
         Drive.defaultCommand = Drive.joystickDrive()
 
-        Turret.defaultCommand = Turret.aimAtTarget()
+        Turret.defaultCommand = Turret.aimAtTarget().ignoringDisable(true)
 
         Shooter.defaultCommand = Shooter.default().ignoringDisable(true)
 

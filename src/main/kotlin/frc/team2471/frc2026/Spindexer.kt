@@ -24,7 +24,6 @@ import org.team2471.frc.lib.math.deadband
 import org.team2471.frc.lib.math.linearMap
 import org.team2471.frc.lib.units.asAmps
 import org.team2471.frc.lib.util.isSim
-import kotlin.math.cos
 
 object Spindexer: SubsystemBase("Spindexer") {
     val table = NetworkTableInstance.getDefault().getTable("Spindexer")
@@ -88,12 +87,16 @@ object Spindexer: SubsystemBase("Spindexer") {
     @get:AutoLogOutput(key = "Spindexer/Sidetake TorqueCurrent")
     val sidetakeTorqueCurrent: Current get() = sidetakeMotor.torqueCurrent.value
 
+    private val spinMotorControl = MotionMagicVelocityTorqueCurrentFOC(0.0)
+    private val sidetakeMotorControl = VelocityTorqueCurrentFOC(0.0)
+    private val uptakeMotorControl = VelocityTorqueCurrentFOC(0.0)
+
 
     @get:AutoLogOutput(key = "Spindexer/spinMotorVelocitySetpoint")
     var spinMotorVelocitySetpoint: Double = 0.0
         set(value) {
             spinMotor.setControl(
-                if (value == 0.0) NeutralOut() else MotionMagicVelocityTorqueCurrentFOC(value)
+                if (value == 0.0) NeutralOut() else spinMotorControl.withVelocity(value)//MotionMagicVelocityTorqueCurrentFOC(value)
             )
             field = value
         }
@@ -102,7 +105,7 @@ object Spindexer: SubsystemBase("Spindexer") {
     var sidetakeMotorVelocitySetpoint: Double = 0.0
         set(value) {
             sidetakeMotor.setControl(
-                if (value == 0.0) NeutralOut() else VelocityTorqueCurrentFOC(value)
+                if (value == 0.0) NeutralOut() else sidetakeMotorControl.withVelocity(value)//VelocityTorqueCurrentFOC(value)
             )
             field = value
         }
@@ -111,7 +114,7 @@ object Spindexer: SubsystemBase("Spindexer") {
     var uptakeMotorVelocitySetpoint: Double = 0.0
         set(value) {
             uptakeMotor.setControl(
-                if (value == 0.0) NeutralOut() else VelocityTorqueCurrentFOC(value)
+                if (value == 0.0) NeutralOut() else uptakeMotorControl.withVelocity(value)//VelocityTorqueCurrentFOC(value)
             )
             field = value
         }
@@ -153,7 +156,7 @@ object Spindexer: SubsystemBase("Spindexer") {
 
 
         spinMotor.applyConfiguration {
-            currentLimits(40.0, 40.0, 1.0)
+            currentLimits(10.0, 20.0, 0.5)
             inverted(false)
             coastMode()
             s(2.0, StaticFeedforwardSignValue.UseVelocitySign)
@@ -193,53 +196,51 @@ object Spindexer: SubsystemBase("Spindexer") {
 
     override fun periodic() {
         LoopLogger.record("b4 spindexer periodic")
-        if (!Robot.isTest) {
-            when (currentState) {
-                State.OFF -> {
-                    spinMotorVelocitySetpoint = 0.0
-                    sidetakeMotorVelocitySetpoint = 0.0
-                    uptakeMotorVelocitySetpoint = 0.0
-                    stateOnTimer.stop()
-                }
+        when (currentState) {
+            State.OFF -> {
+                spinMotorVelocitySetpoint = 0.0
+                sidetakeMotorVelocitySetpoint = 0.0
+                uptakeMotorVelocitySetpoint = 0.0
+//                stateOnTimer.stop()
+            }
 
-                State.ON -> {
-                    if (doSpinSlowdown && stateOnTime > spinSlowdownDelayTime) {
-                        if (doSineSpinSlowdown) {
-                            // Sine periodic slowdown
-                            spinMotorVelocitySetpoint =
-                                (cos(2.0 * Math.PI * (stateOnTime - spinSlowdownDelayTime) / spinSlowdownTime) + 1) * 0.5 * (SPIN_VELOCITY - SPIN_LOWER_VELOCITY) + SPIN_LOWER_VELOCITY
-                        } else {
-                            // Linear slowdown
-                            spinMotorVelocitySetpoint =
-                                ((SPIN_VELOCITY - SPIN_LOWER_VELOCITY) * (stateOnTime - spinSlowdownDelayTime) / spinSlowdownTime) + SPIN_LOWER_VELOCITY
-                        }
+            State.ON -> {
+//                if (doSpinSlowdown && stateOnTime > spinSlowdownDelayTime) {
+//                    if (doSineSpinSlowdown) {
+//                        // Sine periodic slowdown
+//                        spinMotorVelocitySetpoint =
+//                            (cos(2.0 * Math.PI * (stateOnTime - spinSlowdownDelayTime) / spinSlowdownTime) + 1) * 0.5 * (SPIN_VELOCITY - SPIN_LOWER_VELOCITY) + SPIN_LOWER_VELOCITY
+//                    } else {
+//                        // Linear slowdown
+//                        spinMotorVelocitySetpoint =
+//                            ((SPIN_VELOCITY - SPIN_LOWER_VELOCITY) * (stateOnTime - spinSlowdownDelayTime) / spinSlowdownTime) + SPIN_LOWER_VELOCITY
+//                    }
+//                } else {
+                    if (Robot.isAutonomous) {
+                        spinMotorVelocitySetpoint = SPIN_VELOCITY
                     } else {
-                        if (Robot.isAutonomous) {
-                            spinMotorVelocitySetpoint = SPIN_VELOCITY
-                        } else {
-                            spinMotorVelocitySetpoint =
-                                SPIN_VELOCITY * linearMap(0.0, 1.0, 0.40, 1.0, OI.driveRightTrigger.deadband(0.1))
-                        }
+                        spinMotorVelocitySetpoint =
+                            SPIN_VELOCITY * linearMap(0.0, 1.0, 0.40, 1.0, OI.driveRightTrigger.deadband(0.1))
                     }
-                    sidetakeMotorVelocitySetpoint = SIDETAKE_VELOCITY
-                    uptakeMotorVelocitySetpoint = UPTAKE_VELOCITY
+//                }
+                sidetakeMotorVelocitySetpoint = SIDETAKE_VELOCITY
+                uptakeMotorVelocitySetpoint = UPTAKE_VELOCITY
 
-                    if (!stateOnTimer.isRunning) stateOnTimer.restart()
-                }
+//                if (!stateOnTimer.isRunning) stateOnTimer.restart()
+            }
 
-                State.SPITTING -> {
-                    spinMotorVelocitySetpoint = 0.0//SPIN_SPIT_VELOCITY
-                    sidetakeMotorVelocitySetpoint = SIDETAKE_SPIT_VELOCITY
-                    uptakeMotorVelocitySetpoint = UPTAKE_SPIT_VELOCITY
-                    stateOnTimer.stop()
-                }
+            State.SPITTING -> {
+                spinMotorVelocitySetpoint = 0.0//SPIN_SPIT_VELOCITY
+                sidetakeMotorVelocitySetpoint = SIDETAKE_SPIT_VELOCITY
+                uptakeMotorVelocitySetpoint = UPTAKE_SPIT_VELOCITY
+//                stateOnTimer.stop()
+            }
 
-                State.AGITATING -> {
-                    spinMotorVelocitySetpoint = -AGITATE_VELOCITY
-                    sidetakeMotorVelocitySetpoint = 0.0
-                    uptakeMotorVelocitySetpoint = 0.0
-                    stateOnTimer.stop()
-                }
+            State.AGITATING -> {
+                spinMotorVelocitySetpoint = -AGITATE_VELOCITY
+                sidetakeMotorVelocitySetpoint = 0.0
+                uptakeMotorVelocitySetpoint = 0.0
+//                stateOnTimer.stop()
             }
         }
         LoopLogger.record("spindexer periodic")

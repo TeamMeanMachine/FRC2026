@@ -78,10 +78,10 @@ object Turret: SubsystemBase("Turret") {
     val TURRET_TOP_LIMIT = if (Robot.isCompBot) 190.0.degrees else 270.0.degrees
     val TURRET_BOTTOM_LIMIT = if (Robot.isCompBot) -190.0.degrees else -270.0.degrees
     val TURRET_RANGE = TURRET_TOP_LIMIT - TURRET_BOTTOM_LIMIT
-    val TURRET_ENCODER_LIMIT = if (Robot.isCompBot) 500.0.degrees else 720.0.degrees
+    val TURRET_ENCODER_LIMIT = if (Robot.isCompBot) 600.0.degrees else 720.0.degrees
 
-    val ENCODER_1_DEFAULT_OFFSET = if (Robot.isCompBot) -158.4668 else 43.0664
-    val ENCODER_2_DEFAULT_OFFSET = if (Robot.isCompBot) 100.8984 else 76.2
+    val ENCODER_1_DEFAULT_OFFSET = if (Robot.isCompBot) -95.1 else 43.0664
+    val ENCODER_2_DEFAULT_OFFSET = if (Robot.isCompBot) 150.25 else 76.2
 
     val encoder1GearRatio = if (Robot.isCompBot) 30.0/230.0 else 30.0/200.0
     val encoder2GearRatio = encoder1GearRatio * 83.0/32.0
@@ -264,6 +264,9 @@ object Turret: SubsystemBase("Turret") {
 
     val turretPigeonIsConnected get() = turretPigeon.isConnected && isReal
 
+    @get:AutoLogOutput(key = "Turret/Look Forward Override")
+    var lookForwardOverride = false
+
 
     init {
         println("Turret init")
@@ -402,7 +405,16 @@ object Turret: SubsystemBase("Turret") {
     }
 
     fun aimAtTarget(): Command = run {
-        fieldCentricSetpoint = turretTranslation.angleTo(AimUtils.aimTarget)
+        if (lookForwardOverride) {
+            if (Robot.isEnabled) {
+                fieldCentricSetpoint = Drive.heading.measure
+            }
+        } else {
+            val aimingAngle = turretTranslation.angleTo(AimUtils.aimTarget)
+            if (Robot.isEnabled) {
+                fieldCentricSetpoint = aimingAngle
+            }
+        }
     }.onlyRunWhileFalse { Robot.isTestEnabled && Drive.useAprilTags }
 
     fun staticAimAtTarget(): Command = run {

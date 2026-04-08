@@ -33,8 +33,6 @@ import org.team2471.frc.lib.logging.NT4NonFMSPublisher
 import org.team2471.frc.lib.util.RobotMode
 import org.team2471.frc.lib.util.robotMode
 import java.net.NetworkInterface
-import java.sql.Time
-import kotlin.system.measureTimeMillis
 import kotlin.time.Duration.Companion.milliseconds
 
 
@@ -249,13 +247,13 @@ object Robot : LoggedRobot() {
                     }
                 }
             }
-            Intake.rollerMotor.modifyConfiguration {
-                currentLimits(
-                    Intake.teleopCurrentLimits.continuousLimit,
-                    Intake.teleopCurrentLimits.peakLimit,
-                    Intake.teleopCurrentLimits.peakDuration
-                )
-            }
+//            Intake.rollerMotor.modifyConfiguration {
+//                currentLimits(
+//                    Intake.teleopCurrentLimits.continuousLimit,
+//                    Intake.teleopCurrentLimits.peakLimit,
+//                    Intake.teleopCurrentLimits.peakDuration
+//                )
+//            }
         }
         if (wasTeleop) {
             wasTeleop = false

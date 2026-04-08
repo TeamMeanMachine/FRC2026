@@ -13,10 +13,10 @@ import org.team2471.frc.lib.control.commands.runCommand
 import org.team2471.frc.lib.control.commands.runOnceCommand
 import org.team2471.frc.lib.control.commands.sequenceCommand
 import org.team2471.frc.lib.control.commands.waitUntilCommand
-import org.team2471.frc.lib.math.normalize
 import org.team2471.frc.lib.swerve.sideToSideFlip
 import org.team2471.frc.lib.units.feet
 import org.team2471.frc.lib.units.meters
+import kotlin.math.absoluteValue
 
 
 object Autonomous: Autonomi() {
@@ -77,6 +77,87 @@ object Autonomous: Autonomi() {
     }
 
     private fun doubleSwipe(doSideToSideFlip: Boolean): Command {
+        val path = paths["LeftSideDoubleSwipe"]!!.sideToSideFlip(doSideToSideFlip)
+        var pathPercentage = 0.0
+        return parallelCommand(
+            sequenceCommand(
+                parallelCommand(
+                    Drive.driveAlongChoreoPath(path.getSplit(0).get(), resetOdometry = false),
+                    runOnceCommand {
+                        Turret.lookForwardOverride = true
+                    }
+                ),
+                parallelCommand(
+                    Drive.driveAlongChoreoPath(path.getSplit(1).get(), resetOdometry = false, poseSupplier = Drive.localizer::pose, exitSupplier = { percent, error -> pathPercentage = percent; Turret.lookForwardOverride = percent < 0.75; percent >= 1.0 }),
+                    sequenceCommand(
+                        waitUntilCommand { pathPercentage > 0.9 },
+                        parallelCommand(
+                            Shooter.shoot(true),
+                            sequenceCommand(
+                                runOnceCommand {
+                                    Intake.intakeState = Intake.IntakeState.OFF
+                                },
+                                Intake.pulse().withTimeout(3.5).finallyRun {
+                                    Intake.deploy()
+                                }
+                            )
+                        ).withTimeout(4.25).finallyRun { pathPercentage = 0.0 }
+                    )
+                ),
+                parallelCommand(
+                    runOnceCommand {
+                        Intake.deploy()
+                        Intake.intakeState = Intake.IntakeState.INTAKING
+                    },
+                    Drive.driveAlongChoreoPath(path.getSplit(2).get(), resetOdometry = false, poseSupplier = Drive.localizer::pose, exitSupplier = { percent, error -> pathPercentage = percent; Turret.lookForwardOverride = percent > 0.1 && percent < 0.75; percent >= 1.0 && error.translation.norm.meters < 0.5.feet  }),
+                    sequenceCommand(
+                        waitUntilCommand { pathPercentage > 0.95 },
+                        parallelCommand(
+                            Shooter.shoot(true),
+                            sequenceCommand(
+                                runOnceCommand {
+                                    Intake.intakeState = Intake.IntakeState.OFF
+                                },
+                                Intake.pulse()
+                            )
+                        ).withTimeout(4.5)
+                    )
+                ),
+                parallelCommand(
+                    Drive.driveAlongChoreoPath(path.getSplit(3).get(), resetOdometry = false, poseSupplier = Drive.localizer::pose),
+                    runOnceCommand {
+                        Turret.lookForwardOverride = false
+                        Intake.deploy()
+                        pathPercentage = 0.0
+                        Intake.disableSpringProtection = false
+                    }
+                )
+            ),
+            sequenceCommand(
+                waitUntilCommand { Intake.finishedHoming }.finallyRun {
+                    Intake.disableSpringProtection = true
+                    Intake.deploy()
+                    Intake.intakeState = Intake.IntakeState.INTAKING
+                    println("Intake finished homing. Running Intake")
+                }.withName("Intake homing"),
+                parallelCommand(
+                    waitUntilCommand { Intake.deployMotor0Error.absoluteValue < Intake.FLEX_THRESHOLD && Intake.deployMotor1Error.absoluteValue < Intake.FLEX_THRESHOLD }.finallyRun {
+                        Intake.disableSpringProtection = false
+                    },
+                    runCommand {
+                        Shooter.rampUpLoop()
+                    }.withName("Shooter ramp up loop").finallyRun {
+                        Turret.lookForwardOverride = false
+                        Intake.deploy()
+                        pathPercentage = 0.0
+                    }
+                )
+
+            )
+        )
+    }
+
+    private fun doubleSwipeOG(doSideToSideFlip: Boolean): Command {
         val path = paths["LeftSideDoubleSwipe"]!!.sideToSideFlip(doSideToSideFlip)
         return parallelCommand(
             sequenceCommand(
