@@ -48,6 +48,7 @@ import org.team2471.frc.lib.util.isReal
 import kotlin.math.abs
 import org.team2471.frc.lib.coroutines.periodic
 import org.team2471.frc.lib.ctre.alternateFeedbackSensor
+import org.team2471.frc.lib.ctre.brakeMode
 import org.team2471.frc.lib.ctre.coastMode
 import org.team2471.frc.lib.units.asAmps
 import org.team2471.frc.lib.units.asFeet
@@ -301,8 +302,7 @@ object Turret: SubsystemBase("Turret") {
         turretMotor.applyConfiguration {
             currentLimits(20.0, 20.0, 1.0)
             inverted(false)
-//            brakeMode()
-            coastMode()
+            brakeMode()
             if (isReal) {
                 if (Robot.isCompBot) {
                     s(0.1, StaticFeedforwardSignValue.UseClosedLoopSign)

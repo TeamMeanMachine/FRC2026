@@ -102,7 +102,7 @@ object Autonomous: Autonomi() {
                                     Intake.intakeState = Intake.IntakeState.OFF
                                     Spindexer.disableReversingAuto = false
                                 },
-                                Intake.pulse().withTimeout(3.5).finallyRun {
+                                Intake.pulse().withTimeout(1.0).finallyRun {
                                     Intake.deploy()
                                 }
                             )

@@ -68,7 +68,7 @@ object AimUtils {
     val HUB_HEIGHT = 65.0.inches
 
     // Percent of surface speed of shooter that gets transferred into the ball
-    val shooterEfficiency = shooterEfficiencyEntry.getDouble(0.65)//if (isCompBot) 0.65 else 0.69
+    val shooterEfficiency get() = shooterEfficiencyEntry.getDouble(0.67)//if (isCompBot) 0.65 else 0.69
 
     init {
         if (!shooterEfficiencyEntry.exists()) shooterEfficiencyEntry.setDouble(shooterEfficiency)

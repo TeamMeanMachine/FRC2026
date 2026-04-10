@@ -267,7 +267,7 @@ object Intake: SubsystemBase("Intake") {
             p(50.0)
             d(3.0)
 
-            TorqueCurrent.PeakForwardTorqueCurrent = 18.0
+            TorqueCurrent.PeakForwardTorqueCurrent = 30.0
 
             if (Robot.isCompBot) motionMagic(200.0, 500.0) else motionMagic(750.0, 1500.0)
         }

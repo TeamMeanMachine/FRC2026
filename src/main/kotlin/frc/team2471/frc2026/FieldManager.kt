@@ -306,7 +306,7 @@ object FieldManager {
         GlobalScope.launch {
             periodic {
                 weWonAutoEntry.setBoolean(weWonAuto)
-                hubCountdownEntry.setDouble(if (matchTime > 130.0) matchTime - 130.0 else if (matchTime < 30.0) matchTime else (matchTime - 5) % 25.0)
+                hubCountdownEntry.setDouble(if (matchTime > 130.0) matchTime - 130.0 else if (matchTime < 30.0 || (matchTime < 55.0 && weWonAuto)) matchTime else (matchTime - 5) % 25.0)
                 activeHubEntry.setString(
                     if (isAutonomous || matchTime > 130.0 || matchTime < 30.0) {
                         "Both"

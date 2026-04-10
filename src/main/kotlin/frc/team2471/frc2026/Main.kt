@@ -97,7 +97,7 @@ object Robot : LoggedRobot() {
         // Set up data receivers & replay source
         when (robotMode) {
             RobotMode.REAL -> { // Running on a real robot, log to a USB stick ("/U/logs")
-                Logger.addDataReceiver(WPILOGWriter())
+//                Logger.addDataReceiver(WPILOGWriter())
                 Logger.addDataReceiver(NT4NonFMSPublisher()) // Only log to NT if FMS is not connected
             }
             RobotMode.SIM -> {
