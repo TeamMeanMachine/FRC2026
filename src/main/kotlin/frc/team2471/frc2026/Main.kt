@@ -236,17 +236,7 @@ object Robot : LoggedRobot() {
         if (wasAutonomous) {
             wasAutonomous = false
             println("Was autonomous")
-            Drive.modules.forEach {
-                GlobalScope.launch {
-                    it.driveMotor.modifyConfiguration {
-                        currentLimits(
-                            TunerConstants.driveTeleCurrentLimits.continuousLimit,
-                            TunerConstants.driveTeleCurrentLimits.peakLimit,
-                            TunerConstants.driveTeleCurrentLimits.peakDuration
-                            )
-                    }
-                }
-            }
+            Drive.setDriveCurrentLimits(TunerConstants.driveTeleCurrentLimits)
 //            Intake.rollerMotor.modifyConfiguration {
 //                currentLimits(
 //                    Intake.teleopCurrentLimits.continuousLimit,
@@ -340,7 +330,7 @@ object Robot : LoggedRobot() {
                     }
                     println("FORMATTED---->$macString<-----")
 
-                    compBot = (macString != "0-128475710531")
+                    compBot = (macString == "0-128475710531")
                 }
             }
         } else { println("Not real so I am compbot") }

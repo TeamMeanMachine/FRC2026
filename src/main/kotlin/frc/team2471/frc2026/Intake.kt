@@ -34,6 +34,7 @@ import org.team2471.frc.lib.ctre.coastMode
 import org.team2471.frc.lib.ctre.currentLimits
 import org.team2471.frc.lib.ctre.d
 import org.team2471.frc.lib.ctre.inverted
+import org.team2471.frc.lib.ctre.modifyConfiguration
 import org.team2471.frc.lib.ctre.motionMagic
 import org.team2471.frc.lib.ctre.p
 import org.team2471.frc.lib.ctre.s
@@ -48,6 +49,10 @@ object Intake: SubsystemBase("Intake") {
     val stowPoseEntry = table.getEntry("stowPose")
     val deepStowPoseEntry = table.getEntry("deepStowPose")
     val intakePowerEntry = table.getEntry("intakePower")
+
+    val maxForwardTorqueEntry = table.getEntry("maxForwardTorque")
+    val maxForwardTorque get() = maxForwardTorqueEntry.getDouble(18.0)
+    var prevMaxForwardTorque = maxForwardTorque
 
     val DEPLOY_POSE get() = deployPoseEntry.getDouble(if (Robot.isCompBot) 29.0 else 25.75)
     val STOW_POSE get() = stowPoseEntry.getDouble(if (Robot.isCompBot) 2.0 else 2.0)
@@ -245,11 +250,13 @@ object Intake: SubsystemBase("Intake") {
         if (!stowPoseEntry.exists()) stowPoseEntry.setDouble(STOW_POSE)
         if (!deepStowPoseEntry.exists()) deepStowPoseEntry.setDouble(DEEP_STOW_POSE)
         if (!intakePowerEntry.exists()) intakePowerEntry.setDouble(INTAKE_POWER)
+        if (!maxForwardTorqueEntry.exists()) maxForwardTorqueEntry.setDouble(maxForwardTorque)
 
         deployPoseEntry.setPersistent()
         stowPoseEntry.setPersistent()
         deepStowPoseEntry.setPersistent()
         intakePowerEntry.setPersistent()
+        maxForwardTorqueEntry.setPersistent()
 
 
         // Create Intake deploy motor configuration
@@ -267,7 +274,7 @@ object Intake: SubsystemBase("Intake") {
             p(50.0)
             d(3.0)
 
-            TorqueCurrent.PeakForwardTorqueCurrent = 30.0
+            TorqueCurrent.PeakForwardTorqueCurrent = maxForwardTorque
 
             if (Robot.isCompBot) motionMagic(200.0, 500.0) else motionMagic(750.0, 1500.0)
         }
@@ -308,6 +315,20 @@ object Intake: SubsystemBase("Intake") {
             org.team2471.frc.lib.coroutines.periodic {
                 deploySetpoint = deploySetpoint
             }
+        }
+    }
+
+    override fun periodic() {
+        if (maxForwardTorque != prevMaxForwardTorque) {
+            GlobalScope.launch {
+                deployMotor0.modifyConfiguration {
+                    TorqueCurrent.PeakForwardTorqueCurrent = maxForwardTorque
+                }
+                deployMotor1.modifyConfiguration {
+                    TorqueCurrent.PeakForwardTorqueCurrent = maxForwardTorque
+                }
+            }
+            prevMaxForwardTorque = maxForwardTorque
         }
     }
 

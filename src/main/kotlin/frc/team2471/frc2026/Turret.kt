@@ -81,8 +81,8 @@ object Turret: SubsystemBase("Turret") {
     val TURRET_RANGE = TURRET_TOP_LIMIT - TURRET_BOTTOM_LIMIT
     val TURRET_ENCODER_LIMIT = if (Robot.isCompBot) 600.0.degrees else 720.0.degrees
 
-    val ENCODER_1_DEFAULT_OFFSET = if (Robot.isCompBot) -95.1 else 43.0664
-    val ENCODER_2_DEFAULT_OFFSET = if (Robot.isCompBot) 150.25 else 76.2
+    val ENCODER_1_DEFAULT_OFFSET = if (Robot.isCompBot) 164.004 else 43.0664
+    val ENCODER_2_DEFAULT_OFFSET = if (Robot.isCompBot) 144.229 else 76.2
 
     val encoder1GearRatio = if (Robot.isCompBot) 30.0/230.0 else 30.0/200.0
     val encoder2GearRatio = encoder1GearRatio * 83.0/32.0
@@ -268,6 +268,8 @@ object Turret: SubsystemBase("Turret") {
     @get:AutoLogOutput(key = "Turret/Look Forward Override")
     var lookForwardOverride = false
 
+    @get:AutoLogOutput(key = "Turret/Resetting Gyro")
+    var resettingGyro = false
 
     init {
         println("Turret init")
@@ -355,12 +357,16 @@ object Turret: SubsystemBase("Turret") {
             periodic {
 
                 if ((fieldCentricAngle - fieldCentricTurretMotorRotorAngle.unWrap(fieldCentricAngle)).absoluteValue() > 1.0.degrees && turretVelocity.absoluteValue() < 3.0.rotationsPerSecond) {
-                    GlobalScope.launch {
-//                        println("setting turret pigeon yaw to motor angle")
+                    if (!resettingGyro) {
+                        resettingGyro = true
+                        GlobalScope.launch {
+//                            println("setting turret pigeon yaw to motor angle")
 //                        println("Detected Error. Trying to change gyro angle from ${fieldCentricAngle.asDegrees.round(3)} to ${fieldCentricTurretMotorRotorAngle.unWrap(fieldCentricAngle).asDegrees.round(3)}")
 
-                        turretPigeon.setYaw(fieldCentricTurretMotorRotorAngle.unWrap(fieldCentricAngle))
-//                        println("finished setting turret pigeon yaw")
+//                            val status = turretPigeon.setYaw(fieldCentricTurretMotorRotorAngle.unWrap(fieldCentricAngle))
+//                            println("finished setting turret pigeon yaw, status ok: ${status.isOK}")
+                            resettingGyro = false
+                        }
                     }
                 }
 
@@ -398,8 +404,9 @@ object Turret: SubsystemBase("Turret") {
         rawEncoder2AbsolutePositionEntry.setDouble(rawEncoder2AbsolutePosition.asDegrees)
         encoder1AbsolutePositionEntry.setDouble(encoder1AbsolutePosition.asDegrees)
         encoder2AbsolutePositionEntry.setDouble(encoder2AbsolutePosition.asDegrees)
-        fusedEncoderAngleEntry.setDouble(fusedEncoderAngle.asDegrees)
-
+        if (!Robot.isEnabled) {
+            fusedEncoderAngleEntry.setDouble(fusedEncoderAngle.asDegrees)
+        }
 
         LoopLogger.record("turret periodic")
     }

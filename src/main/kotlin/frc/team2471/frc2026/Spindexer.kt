@@ -171,7 +171,7 @@ object Spindexer: SubsystemBase("Spindexer") {
         spinMotor.addFollower(spinMotorFollower)
 
         uptakeMotor.applyConfiguration {
-            currentLimits(30.0, 30.0, 1.0)
+            currentLimits(28.0, 40.0, 0.2)
             coastMode()
             inverted(true)
 

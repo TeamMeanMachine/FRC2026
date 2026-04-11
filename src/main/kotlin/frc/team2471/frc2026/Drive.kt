@@ -23,13 +23,18 @@ import edu.wpi.first.wpilibj2.command.Command
 import frc.team2471.frc2026.OI.driverController
 import frc.team2471.frc2026.Robot.powerTracker
 import gg.questnav.questnav.QuestNav
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import org.littletonrobotics.junction.AutoLogOutput
 import org.littletonrobotics.junction.Logger
+import org.team2471.frc.lib.control.CurrentLimits
 import org.team2471.frc.lib.control.LoopLogger
 import org.team2471.frc.lib.control.commands.finallyRun
 import org.team2471.frc.lib.control.commands.runCommand
 import org.team2471.frc.lib.control.rightStickButton
 import org.team2471.frc.lib.ctre.PhoenixUtil
+import org.team2471.frc.lib.ctre.currentLimits
+import org.team2471.frc.lib.ctre.modifyConfiguration
 import org.team2471.frc.lib.localization.PoseLocalizer
 import org.team2471.frc.lib.math.cube
 import org.team2471.frc.lib.math.square
@@ -64,6 +69,10 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
     private val frontRightConnectedEntry = table.getEntry("FrontRightConnected")
     private val backLeftConnectedEntry = table.getEntry("BackLeftConnected")
     private val backRightConnectedEntry = table.getEntry("BackRightConnected")
+
+    val increaseDriveCurrentEntry = table.getEntry("IncreaseDriveCurrent")
+    val increaseDriveCurrent get() = increaseDriveCurrentEntry.getBoolean(false)
+    var prevIncreaseDriveCurrent = increaseDriveCurrent
 
     val useAprilTagsEntry = table.getEntry("UseAprilTags")
     val useAprilTags: Boolean get() = useAprilTagsEntry.getBoolean(true)
@@ -188,6 +197,7 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
         println("inside Drive init")
 
         useAprilTagsEntry.setBoolean(true)
+        increaseDriveCurrentEntry.setBoolean(false)
 
         // MUST start inside the field on bootup for accurate heading measurements due to a PoseLocalizer bug.
         pose = Pose2d(3.0, 3.0, heading)
@@ -223,6 +233,17 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
     override fun periodic() {
         LoopLogger.record("Inside Drive periodic")
 
+        if (Robot.isTeleopEnabled) {
+            if (increaseDriveCurrent != prevIncreaseDriveCurrent) {
+                if (increaseDriveCurrent) {
+                    setDriveCurrentLimits(TunerConstants.driveMaxCurrentLimits)
+                } else {
+                    setDriveCurrentLimits(TunerConstants.driveTeleCurrentLimits)
+                }
+
+                prevIncreaseDriveCurrent = increaseDriveCurrent
+            }
+        }
         // Apply quest measurements
 //        if (questConnected && questTracking && tempQuestPose == null) {
 //            if (isReal) {
@@ -301,6 +322,23 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
         Logger.recordOutput("Swerve/SingleTagPose", localizer.singleTagPose)
 
         LoopLogger.record("Drive pirdc")
+    }
+
+    /**
+     * Sets all drive motor current limits to be the passed in [currentLimits].
+     */
+    fun setDriveCurrentLimits(currentLimits: CurrentLimits) {
+        GlobalScope.launch {
+            Drive.modules.forEach {
+                it.driveMotor.modifyConfiguration {
+                    currentLimits(
+                        currentLimits.continuousLimit,
+                        currentLimits.peakLimit,
+                        currentLimits.peakDuration
+                    )
+                }
+            }
+        }
     }
 
     /**

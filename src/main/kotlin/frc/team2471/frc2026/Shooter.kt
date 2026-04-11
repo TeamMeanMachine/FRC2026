@@ -377,7 +377,7 @@ object Shooter: SubsystemBase("Shooter") {
         if (Robot.isCompBot) {
             hoodEncoder.applyConfiguration {
                 inverted(true)
-                magnetSensorOffset(0.04166)
+                magnetSensorOffset(0.046630859)
             }
         }
 
