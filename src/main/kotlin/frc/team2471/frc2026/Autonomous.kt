@@ -106,7 +106,7 @@ object Autonomous: Autonomi() {
                                     Intake.deploy()
                                 }
                             )
-                        ).withTimeout(4.25).finallyRun { pathPercentage = 0.0 }
+                        ).withTimeout(3.25).finallyRun { pathPercentage = 0.0 }
                     )
                 ),
                 parallelCommand(
@@ -130,7 +130,7 @@ object Autonomous: Autonomi() {
                                 },
                                 Intake.pulse()
                             )
-                        ).withTimeout(4.5)
+                        ).withTimeout(5.5)
                     )
                 ),
                 parallelCommand(

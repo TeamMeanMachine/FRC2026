@@ -264,12 +264,13 @@ object Turret: SubsystemBase("Turret") {
     var tempHeadingResetAngle: Angle? = null
 
     val turretPigeonIsConnected get() = turretPigeon.isConnected && isReal
+    val turretPigeonLatency get() = turretPigeon.yaw.timestamp.latency
 
     @get:AutoLogOutput(key = "Turret/Look Forward Override")
     var lookForwardOverride = false
 
-    @get:AutoLogOutput(key = "Turret/Resetting Gyro")
-    var resettingGyro = false
+//    @get:AutoLogOutput(key = "Turret/Resetting Gyro")
+//    var resettingGyro = false
 
     init {
         println("Turret init")
@@ -357,17 +358,17 @@ object Turret: SubsystemBase("Turret") {
             periodic {
 
                 if ((fieldCentricAngle - fieldCentricTurretMotorRotorAngle.unWrap(fieldCentricAngle)).absoluteValue() > 1.0.degrees && turretVelocity.absoluteValue() < 3.0.rotationsPerSecond) {
-                    if (!resettingGyro) {
-                        resettingGyro = true
+//                    if (!resettingGyro) {
+//                        resettingGyro = true
                         GlobalScope.launch {
 //                            println("setting turret pigeon yaw to motor angle")
 //                        println("Detected Error. Trying to change gyro angle from ${fieldCentricAngle.asDegrees.round(3)} to ${fieldCentricTurretMotorRotorAngle.unWrap(fieldCentricAngle).asDegrees.round(3)}")
 
-//                            val status = turretPigeon.setYaw(fieldCentricTurretMotorRotorAngle.unWrap(fieldCentricAngle))
+                            turretPigeon.setYaw(fieldCentricTurretMotorRotorAngle.unWrap(fieldCentricAngle))
 //                            println("finished setting turret pigeon yaw, status ok: ${status.isOK}")
-                            resettingGyro = false
+//                            resettingGyro = false
                         }
-                    }
+//                    }
                 }
 
                 val tempResetAngle = tempHeadingResetAngle
@@ -396,6 +397,7 @@ object Turret: SubsystemBase("Turret") {
         Logger.recordOutput("Turret/turret setpoint pose", turretTranslation.toPose2d(fieldCentricSetpoint.asRotation2d))
         Logger.recordOutput("Turret/turret pose", turretTranslation.toPose2d(fieldCentricAngle.asRotation2d))
         Logger.recordOutput("Turret/distToGoalFeet", aimTarget.getDistance(Drive.localizer.pose.translation).meters.asFeet)
+        Logger.recordOutput("Turret/turretPigeonLatency", turretPigeonLatency)
         Logger.recordOutput("Turret/turretPigeonIsConnected", turretPigeonConnected)
         turretPigeonIsConnectedEntry.setBoolean(turretPigeonConnected)
         LoopLogger.record("turret logging")
