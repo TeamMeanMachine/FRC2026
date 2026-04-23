@@ -23,10 +23,8 @@ import org.littletonrobotics.junction.networktables.NT4Publisher
 import org.littletonrobotics.junction.wpilog.WPILOGReader
 import org.littletonrobotics.junction.wpilog.WPILOGWriter
 import org.team2471.frc.lib.control.LoopLogger
-import org.team2471.frc.lib.coroutines.periodic
-import org.team2471.frc.lib.ctre.currentLimits
+import org.team2471.frc.lib.coroutines.periodiccc
 import org.team2471.frc.lib.ctre.loggedTalonFX.MasterMotor
-import org.team2471.frc.lib.ctre.modifyConfiguration
 import org.team2471.frc.lib.units.asFeet
 import org.team2471.frc.lib.util.PowerTracker
 import org.team2471.frc.lib.logging.NT4NonFMSPublisher
@@ -159,7 +157,7 @@ object Robot : LoggedRobot() {
 
         GlobalScope.launch {
             val t = Timer()
-            periodic {
+            periodiccc {
                 powerTracker.update(t.get())
                 t.restart()
             }

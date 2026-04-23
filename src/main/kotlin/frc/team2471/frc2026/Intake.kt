@@ -312,7 +312,7 @@ object Intake: SubsystemBase("Intake") {
 
 
         GlobalScope.launch {
-            org.team2471.frc.lib.coroutines.periodic {
+            org.team2471.frc.lib.coroutines.periodiccc {
                 deploySetpoint = deploySetpoint
             }
         }

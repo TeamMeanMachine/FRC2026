@@ -46,10 +46,9 @@ import org.team2471.frc.lib.units.wrap
 import org.team2471.frc.lib.util.angleTo
 import org.team2471.frc.lib.util.isReal
 import kotlin.math.abs
-import org.team2471.frc.lib.coroutines.periodic
+import org.team2471.frc.lib.coroutines.periodiccc
 import org.team2471.frc.lib.ctre.alternateFeedbackSensor
 import org.team2471.frc.lib.ctre.brakeMode
-import org.team2471.frc.lib.ctre.coastMode
 import org.team2471.frc.lib.units.asAmps
 import org.team2471.frc.lib.units.asFeet
 import org.team2471.frc.lib.units.rotationsPerSecond
@@ -342,7 +341,7 @@ object Turret: SubsystemBase("Turret") {
 
         //Loop that updates setpoint for constantly updating wrap limits and feedforward
         GlobalScope.launch {
-            periodic {
+            periodiccc {
                 if (Robot.isDisabled) {
                     fieldCentricSetpoint = fieldCentricAngle
                 } else {
@@ -355,7 +354,7 @@ object Turret: SubsystemBase("Turret") {
 
         //Loop that updates the unwrapped robot heading also sets the turret pigeon offset.
         GlobalScope.launch {
-            periodic {
+            periodiccc {
 
                 if ((fieldCentricAngle - fieldCentricTurretMotorRotorAngle.unWrap(fieldCentricAngle)).absoluteValue() > 1.0.degrees && turretVelocity.absoluteValue() < 3.0.rotationsPerSecond) {
 //                    if (!resettingGyro) {

@@ -420,7 +420,7 @@ object Shooter: SubsystemBase("Shooter") {
 
 
         GlobalScope.launch {
-            org.team2471.frc.lib.coroutines.periodic(0.01) {
+            org.team2471.frc.lib.coroutines.periodiccc(0.01) {
 //                SHOOTER_CUSTOM_I += shooterVelocityError.asRotationsPerSecond * 0.02 * shooterI
 //                val requestedVoltage = shooterController.updateVoltage(shooterVelocitySetpoint.asRotationsPerSecond, shooterVelocity.asRotationsPerSecond).coerceIn(0.0, 13.0)
 //                shooterMotor.setControl(VoltageOut(requestedVoltage))

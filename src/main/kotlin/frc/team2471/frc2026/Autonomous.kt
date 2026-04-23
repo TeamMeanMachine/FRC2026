@@ -1,21 +1,13 @@
 package frc.team2471.frc2026
 
 import edu.wpi.first.math.geometry.Pose2d
-import edu.wpi.first.wpilibj2.command.Command
-import edu.wpi.first.wpilibj2.command.CommandScheduler
 import frc.team2471.frc2026.tests.*
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser
 import org.team2471.frc.lib.control.Autonomi
-import org.team2471.frc.lib.control.commands.beforeWait
-import org.team2471.frc.lib.control.commands.finallyRun
-import org.team2471.frc.lib.control.commands.parallelCommand
-import org.team2471.frc.lib.control.commands.runCommand
-import org.team2471.frc.lib.control.commands.runOnceCommand
-import org.team2471.frc.lib.control.commands.sequenceCommand
-import org.team2471.frc.lib.control.commands.waitUntilCommand
 import org.team2471.frc.lib.swerve.sideToSideFlip
 import org.team2471.frc.lib.units.feet
 import org.team2471.frc.lib.units.meters
+import org.wpilib.commands3.Command
 import kotlin.math.absoluteValue
 
 
@@ -29,7 +21,7 @@ object Autonomous: Autonomi() {
     /** Warmup function for speeding up auto loop times. Runs when selected auto changes. */
     override val warmupFunction: () -> Unit = {
         println("scheduling auto warmup")
-        CommandScheduler.getInstance().schedule(warmupDriveAlongPath())
+        Robot.commandScheduler.schedule(warmupDriveAlongPath())
         println("finished scheduling auto warmup")
     }
 

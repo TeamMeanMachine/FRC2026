@@ -23,7 +23,7 @@ import org.littletonrobotics.junction.wpilog.WPILOGWriter
 import org.team2471.frc.lib.control.commands.runCommand
 import org.team2471.frc.lib.control.commands.runOnceCommand
 import org.team2471.frc.lib.control.commands.sequenceCommand
-import org.team2471.frc.lib.coroutines.periodic
+import org.team2471.frc.lib.coroutines.periodiccc
 import org.team2471.frc.lib.units.*
 import org.team2471.frc.lib.util.RobotMode
 import org.team2471.frc.lib.util.isRedAlliance
@@ -304,7 +304,7 @@ object FieldManager {
         Logger.recordOutput("FieldManager/TowerPoseBlue", blueTowerPose)
 
         GlobalScope.launch {
-            periodic {
+            periodiccc {
                 weWonAutoEntry.setBoolean(weWonAuto)
                 hubCountdownEntry.setDouble(if (matchTime > 130.0) matchTime - 130.0 else if (matchTime < 30.0 || (matchTime < 55.0 && weWonAuto)) matchTime else (matchTime - 5) % 25.0)
                 activeHubEntry.setString(
