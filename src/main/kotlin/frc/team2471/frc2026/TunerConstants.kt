@@ -29,6 +29,7 @@ import org.team2471.frc.lib.units.inches
 import org.team2471.frc.lib.units.meters
 import org.team2471.frc.lib.math.round
 import org.team2471.frc.lib.units.asKilograms
+import org.team2471.frc.lib.units.asRotations
 import org.team2471.frc.lib.units.metersPerSecondPerSecond
 import org.team2471.frc.lib.units.pounds
 import org.team2471.frc.lib.units.volts
@@ -39,7 +40,7 @@ import kotlin.math.roundToInt
 // https://v6.docs.ctr-electronics.com/en/stable/docs/tuner/tuner-swerve/index.html
 object TunerConstants {
     val driveMotor = DCMotor.getKrakenX60Foc(1)!!
-    val steerMotor = DCMotor.getKrakenX44(1)!!
+//    val steerMotor = DCMotor.getKrakenX44(1)!!
 
     private val driveGearRatio = if (Robot.isCompBot) 7.125 else 6.746031746031747
     private val steerGearRatio = if (Robot.isCompBot) 18.75 else 21.428571428571427
@@ -84,10 +85,10 @@ object TunerConstants {
 
     // Theoretical free speed at 12 V applied output;
     // This needs to be tuned to your individual robot
-    val kSpeedAt12Volts: LinearVelocity = (driveMotor.freeSpeedRadPerSec / driveGearRatio * wheelRadiusInches.inches.asFeet).feetPerSecond * 0.9  //3.91.metersPerSecond (12.8 fps) -2025
+    val kSpeedAt12Volts: LinearVelocity = (driveMotor.freeSpeed / driveGearRatio * wheelRadiusInches.inches.asFeet).feetPerSecond * 0.9  //3.91.metersPerSecond (12.8 fps) -2025
     val robotWeight = 150.0.pounds
     // Max linear acceleration (m/s²) = force per amp * (60 amp stator current limit - free current) * gear ratio * 85% drivetrain efficiency / wheel radius / robot mass
-    val kMaxAcceleration: LinearAcceleration = (driveMotor.KtNMPerAmp * (60.0 - driveMotor.freeCurrentAmps) * driveGearRatio * 0.85 / wheelRadiusInches.inches.asMeters / robotWeight.asKilograms).metersPerSecondPerSecond
+    val kMaxAcceleration: LinearAcceleration = (driveMotor.Kt * (60.0 - driveMotor.freeCurrent) * driveGearRatio * 0.85 / wheelRadiusInches.inches.asMeters / robotWeight.asKilograms).metersPerSecondPerSecond
 
     val drivetrainConstants: SwerveDrivetrainConstants = SwerveDrivetrainConstants().apply {
         CANBusName = driveCANBus.name
@@ -193,7 +194,7 @@ object TunerConstants {
         driveMotorInverted = false,
         steerMotorInverted = true,
         encoderInverted = false,
-        moduleTranslationMeters = Translation2d(moduleTrackWidth, moduleTrackWidth),
+        moduleTranslationMeters = Translation2d(moduleTrackWidth.asMeters, moduleTrackWidth.asMeters),
         id = 0,
         wheelRadiusOverride = null,
         driveMotorGainsOverride = null
@@ -206,7 +207,7 @@ object TunerConstants {
         driveMotorInverted = false,
         steerMotorInverted = true,
         encoderInverted = false,
-        moduleTranslationMeters = Translation2d(moduleTrackWidth, -moduleTrackWidth),
+        moduleTranslationMeters = Translation2d(moduleTrackWidth.asMeters, -moduleTrackWidth.asMeters),
         id = 1,
         wheelRadiusOverride = null,
         driveMotorGainsOverride = null
@@ -219,7 +220,7 @@ object TunerConstants {
         driveMotorInverted = false,
         steerMotorInverted = true,
         encoderInverted = false,
-        moduleTranslationMeters = Translation2d(-moduleTrackWidth, moduleTrackWidth),
+        moduleTranslationMeters = Translation2d(-moduleTrackWidth.asMeters, moduleTrackWidth.asMeters),
         id = 2,
         wheelRadiusOverride = null,
         driveMotorGainsOverride = null
@@ -232,7 +233,7 @@ object TunerConstants {
         driveMotorInverted = false,
         steerMotorInverted = true,
         encoderInverted = false,
-        moduleTranslationMeters = Translation2d(-moduleTrackWidth, -moduleTrackWidth),
+        moduleTranslationMeters = Translation2d(-moduleTrackWidth.asMeters, -moduleTrackWidth.asMeters),
         id = 3,
         wheelRadiusOverride = null,
         driveMotorGainsOverride = null
@@ -286,9 +287,9 @@ object TunerConstants {
                 steerMotorID,
                 driveMotorID,
                 canCoderID,
-                magnetSensorOffset,
-                moduleTranslationMeters.x.meters,
-                moduleTranslationMeters.y.meters,
+                magnetSensorOffset.asRotations,
+                moduleTranslationMeters.x.meters.asMeters,
+                moduleTranslationMeters.y.meters.asMeters,
                 driveMotorInverted,
                 steerMotorInverted,
                 encoderInverted

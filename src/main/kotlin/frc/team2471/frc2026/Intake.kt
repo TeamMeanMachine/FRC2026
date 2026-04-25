@@ -7,27 +7,27 @@ import com.ctre.phoenix6.controls.MotionMagicVoltage
 import com.ctre.phoenix6.controls.NeutralOut
 import com.ctre.phoenix6.controls.PositionTorqueCurrentFOC
 import com.ctre.phoenix6.hardware.TalonFX
-import com.ctre.phoenix6.signals.MotorAlignmentValue
+//import com.ctre.phoenix6.signals.MotorAlignmentValue
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue
 import edu.wpi.first.networktables.NetworkTableInstance
 import edu.wpi.first.wpilibj.DigitalInput
 import edu.wpi.first.wpilibj.Timer
-import edu.wpi.first.wpilibj2.command.Command
-import edu.wpi.first.wpilibj2.command.SubsystemBase
+//import edu.wpi.first.wpilibj2.command.Command
+//import edu.wpi.first.wpilibj2.command.SubsystemBase
 import frc.team2471.frc2026.Robot.powerTracker
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.littletonrobotics.junction.AutoLogOutput
 import org.team2471.frc.lib.control.CurrentLimits
 import org.team2471.frc.lib.control.LoopLogger
-import org.team2471.frc.lib.control.commands.finallyRun
-import org.team2471.frc.lib.control.commands.onlyRunWhileFalse
-import org.team2471.frc.lib.control.commands.onlyRunWhileTrue
-import org.team2471.frc.lib.control.commands.parallelCommand
-import org.team2471.frc.lib.control.commands.runCommand
-import org.team2471.frc.lib.control.commands.runOnceCommand
-import org.team2471.frc.lib.control.commands.sequenceCommand
-import org.team2471.frc.lib.control.commands.waitCommand
+//import org.team2471.frc.lib.control.commands.finallyRun
+//import org.team2471.frc.lib.control.commands.onlyRunWhileFalse
+//import org.team2471.frc.lib.control.commands.onlyRunWhileTrue
+//import org.team2471.frc.lib.control.commands.parallelCommand
+//import org.team2471.frc.lib.control.commands.runCommand
+//import org.team2471.frc.lib.control.commands.runOnceCommand
+//import org.team2471.frc.lib.control.commands.sequenceCommand
+//import org.team2471.frc.lib.control.commands.waitCommand
 import org.team2471.frc.lib.ctre.addFollower
 import org.team2471.frc.lib.ctre.applyConfiguration
 import org.team2471.frc.lib.ctre.coastMode
@@ -40,9 +40,11 @@ import org.team2471.frc.lib.ctre.p
 import org.team2471.frc.lib.ctre.s
 import org.team2471.frc.lib.units.asVolts
 import org.team2471.frc.lib.util.isSim
+import org.wpilib.commands3.Command
+import org.wpilib.commands3.Mechanism
 import kotlin.math.absoluteValue
 
-object Intake: SubsystemBase("Intake") {
+object Intake: Mechanism("Intake") {
     private val table = NetworkTableInstance.getDefault().getTable("Intake")
 
     val deployPoseEntry = table.getEntry("deployPose")
@@ -295,7 +297,7 @@ object Intake: SubsystemBase("Intake") {
             coastMode()
         }
         if (Robot.isCompBot) {
-            rollerMotor.addFollower(rollerMotorFollower, MotorAlignmentValue.Opposed)
+            rollerMotor.addFollower(rollerMotorFollower, false)
         } else {
             rollerMotor.addFollower(rollerMotorFollower)
         }
@@ -308,7 +310,7 @@ object Intake: SubsystemBase("Intake") {
             }
         }
 
-        this.defaultCommand = default().ignoringDisable(true)
+        this.defaultCommand = default()//.ignoringDisable(true)
 
 
         GlobalScope.launch {
@@ -318,7 +320,7 @@ object Intake: SubsystemBase("Intake") {
         }
     }
 
-    override fun periodic() {
+    fun periodic() {
         if (maxForwardTorque != prevMaxForwardTorque) {
             GlobalScope.launch {
                 deployMotor0.modifyConfiguration {
@@ -358,81 +360,81 @@ object Intake: SubsystemBase("Intake") {
     }
 
 
-    fun home(): Command  = if (Robot.isCompBot) {
-        parallelCommand(
-            runOnceCommand {
-                finishedHoming = false
-            },
-            homeMotorOut(deployMotor0, { deployVelocity0.absoluteValue < HOME_VELOCITY_THRESHOLD && deployVelocity1.absoluteValue < HOME_VELOCITY_THRESHOLD }),
-            homeMotorOut(deployMotor1, { deployVelocity1.absoluteValue < HOME_VELOCITY_THRESHOLD && deployVelocity0.absoluteValue < HOME_VELOCITY_THRESHOLD })
-        ).finallyRun {
-            finishedHoming = true
-            deploySetpoint = DEPLOY_POSE
-        }
-    } else {
-        sequenceCommand(
-            runOnceCommand {
-                finishedHoming = false
-            },
-            homeMotor(deployMotor0, { hitHardStop0 }),
-            runOnceCommand {
-                finishedHoming = true
-                stow()
-            }
-        )
-    }.apply {
-        addRequirements(Intake, Shooter)
-    }
+//    fun home(): Command  = if (Robot.isCompBot) {
+//        parallelCommand(
+//            runOnceCommand {
+//                finishedHoming = false
+//            },
+//            homeMotorOut(deployMotor0, { deployVelocity0.absoluteValue < HOME_VELOCITY_THRESHOLD && deployVelocity1.absoluteValue < HOME_VELOCITY_THRESHOLD }),
+//            homeMotorOut(deployMotor1, { deployVelocity1.absoluteValue < HOME_VELOCITY_THRESHOLD && deployVelocity0.absoluteValue < HOME_VELOCITY_THRESHOLD })
+//        ).finallyRun {
+//            finishedHoming = true
+//            deploySetpoint = DEPLOY_POSE
+//        }
+//    } else {
+//        sequenceCommand(
+//            runOnceCommand {
+//                finishedHoming = false
+//            },
+//            homeMotor(deployMotor0, { hitHardStop0 }),
+//            runOnceCommand {
+//                finishedHoming = true
+//                stow()
+//            }
+//        )
+//    }.apply {
+//        addRequirements(Intake, Shooter)
+//    }
 
-    private fun homeMotor(motor: TalonFX, hitHardStopSupplier: () -> Boolean): Command {
-        return sequenceCommand(
-            runCommand {
-                println("going in?")
-                motor.setControl(DutyCycleOut(HOMING_POWER))
-            }.onlyRunWhileTrue { hitHardStopSupplier.invoke() },
-            runCommand {
-                println("going out?")
-                motor.setControl(DutyCycleOut(-HOMING_POWER))
-            }.onlyRunWhileFalse { hitHardStopSupplier.invoke() }.withTimeout(6.0).finallyRun {
-                motor.setControl(DutyCycleOut(0.0))
-                println("Deploy Pos: ${motor.position}")
-                motor.setPosition(if (Robot.isCompBot) 0.11 else 0.13)
-            }
-        )
-    }
+//    private fun homeMotor(motor: TalonFX, hitHardStopSupplier: () -> Boolean): Command {
+//        return sequenceCommand(
+//            runCommand {
+//                println("going in?")
+//                motor.setControl(DutyCycleOut(HOMING_POWER))
+//            }.onlyRunWhileTrue { hitHardStopSupplier.invoke() },
+//            runCommand {
+//                println("going out?")
+//                motor.setControl(DutyCycleOut(-HOMING_POWER))
+//            }.onlyRunWhileFalse { hitHardStopSupplier.invoke() }.withTimeout(6.0).finallyRun {
+//                motor.setControl(DutyCycleOut(0.0))
+//                println("Deploy Pos: ${motor.position}")
+//                motor.setPosition(if (Robot.isCompBot) 0.11 else 0.13)
+//            }
+//        )
+//    }
 
-    private fun homeMotorOut(motor: TalonFX, hitHardStopSupplier: () -> Boolean): Command {
-        val timer = Timer()
-        return sequenceCommand(
-            runOnceCommand {
-                timer.restart()
-            },
-            runCommand {
-                println("going out?")
-                motor.setControl(DutyCycleOut(HOMING_POWER))
-            }.onlyRunWhileFalse { hitHardStopSupplier.invoke() && timer.get() > 0.5 }.withTimeout(6.0).finallyRun {
-                motor.setControl(DutyCycleOut(0.0))
-                println("Deploy Pos: ${motor.position}")
-                motor.setPosition(DEPLOY_POSE + 0.5)
-            }
-        )
-    }
-
-
-    fun pulse(): Command = sequenceCommand(
-        runOnceCommand { stow() },
-        waitCommand(0.25),
-        runOnceCommand { deploy() },
-        waitCommand(0.25),
-    ).repeatedly().onlyRunWhileTrue { Robot.isAutonomous || OI.driverController.rightTriggerAxis > 0.75 }.finallyRun {
-        stow()
-    }
+//    private fun homeMotorOut(motor: TalonFX, hitHardStopSupplier: () -> Boolean): Command {
+//        val timer = Timer()
+//        return sequenceCommand(
+//            runOnceCommand {
+//                timer.restart()
+//            },
+//            runCommand {
+//                println("going out?")
+//                motor.setControl(DutyCycleOut(HOMING_POWER))
+//            }.onlyRunWhileFalse { hitHardStopSupplier.invoke() && timer.get() > 0.5 }.withTimeout(6.0).finallyRun {
+//                motor.setControl(DutyCycleOut(0.0))
+//                println("Deploy Pos: ${motor.position}")
+//                motor.setPosition(DEPLOY_POSE + 0.5)
+//            }
+//        )
+//    }
 
 
-    fun homeDeploy(): Command = runOnce {
+//    fun pulse(): Command = sequenceCommand(
+//        runOnceCommand { stow() },
+//        waitCommand(0.25),
+//        runOnceCommand { deploy() },
+//        waitCommand(0.25),
+//    ).repeatedly().onlyRunWhileTrue { Robot.isAutonomous || OI.driverController.rightTriggerAxis > 0.75 }.finallyRun {
+//        stow()
+//    }
+
+
+    fun homeDeploy(): Command = run {
         deployMotor0.setPosition(deploySetpoint)
         if (Robot.isCompBot) deployMotor1.setPosition(deploySetpoint)
-    }
+    }.named("HomeDeploy")
 
 
     private fun default(): Command = run {
@@ -472,7 +474,7 @@ object Intake: SubsystemBase("Intake") {
 
 
         LoopLogger.record("Intake default")
-    }
+    }.named("Intake Default")
 
     enum class IntakeState {
         INTAKING,

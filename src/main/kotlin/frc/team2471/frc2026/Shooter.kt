@@ -8,7 +8,7 @@ import com.ctre.phoenix6.controls.PositionVoltage
 import com.ctre.phoenix6.controls.VoltageOut
 import com.ctre.phoenix6.hardware.CANcoder
 import com.ctre.phoenix6.signals.InvertedValue
-import com.ctre.phoenix6.signals.MotorAlignmentValue
+//import com.ctre.phoenix6.signals.MotorAlignmentValue
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue
 import edu.wpi.first.math.filter.Debouncer
 import edu.wpi.first.math.geometry.Translation2d
@@ -22,9 +22,9 @@ import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.units.measure.AngularVelocity
 import edu.wpi.first.units.measure.Voltage
 import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog
-import edu.wpi.first.wpilibj2.command.Command
-import edu.wpi.first.wpilibj2.command.SubsystemBase
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine
+//import edu.wpi.first.wpilibj2.command.Command
+//import edu.wpi.first.wpilibj2.command.SubsystemBase
+//import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine
 import frc.team2471.frc2026.AimUtils.shooterEfficiency
 import frc.team2471.frc2026.AimUtils.toExitVelocity
 import frc.team2471.frc2026.Robot.isCompBot
@@ -34,12 +34,12 @@ import kotlinx.coroutines.launch
 import org.littletonrobotics.junction.AutoLogOutput
 import org.littletonrobotics.junction.Logger
 import org.team2471.frc.lib.control.LoopLogger
-import org.team2471.frc.lib.control.commands.finallyRun
-import org.team2471.frc.lib.control.commands.onlyRunWhileFalse
-import org.team2471.frc.lib.control.commands.onlyRunWhileTrue
-import org.team2471.frc.lib.control.commands.parallelCommand
-import org.team2471.frc.lib.control.commands.runCommand
-import org.team2471.frc.lib.control.commands.runOnceCommand
+//import org.team2471.frc.lib.control.commands.finallyRun
+//import org.team2471.frc.lib.control.commands.onlyRunWhileFalse
+//import org.team2471.frc.lib.control.commands.onlyRunWhileTrue
+//import org.team2471.frc.lib.control.commands.parallelCommand
+//import org.team2471.frc.lib.control.commands.runCommand
+//import org.team2471.frc.lib.control.commands.runOnceCommand
 import org.team2471.frc.lib.control.rightStickButton
 import org.team2471.frc.lib.ctre.addFollower
 import org.team2471.frc.lib.ctre.applyConfiguration
@@ -77,10 +77,12 @@ import org.team2471.frc.lib.units.voltsPerSecond
 import org.team2471.frc.lib.util.angleTo
 import org.team2471.frc.lib.util.isReal
 import org.team2471.frc.lib.util.isSim
+import org.wpilib.commands3.Command
+import org.wpilib.commands3.Mechanism
 import kotlin.math.abs
 import kotlin.math.cos
 
-object Shooter: SubsystemBase("Shooter") {
+object Shooter: Mechanism("Shooter") {
     val table = NetworkTableInstance.getDefault().getTable("Shooter")
 
     // feet, rot/s (of the wheel not the motor) (in an ideal condition. need to divide by SHOOTER_EFFICIENCY)
@@ -372,7 +374,7 @@ object Shooter: SubsystemBase("Shooter") {
 //            TorqueCurrent.PeakForwardTorqueCurrent = 40.0
 //            TorqueCurrent.PeakReverseTorqueCurrent = 0.0
         }
-        shooterMotor.addFollower(shooterMotorFollower, MotorAlignmentValue.Opposed)
+        shooterMotor.addFollower(shooterMotorFollower, true)
 
         if (Robot.isCompBot) {
             hoodEncoder.applyConfiguration {
@@ -430,7 +432,7 @@ object Shooter: SubsystemBase("Shooter") {
 
 
 
-    override fun periodic() {
+    fun periodic() {
         LoopLogger.record("b4 Shooter periodic")
         if (isSim) {
             if (isShooting) {
@@ -460,7 +462,7 @@ object Shooter: SubsystemBase("Shooter") {
         LoopLogger.record("Shooter periodic")
     }
 
-    fun default(): Command = runCommand(this) {
+    fun default(): Command = run {
         if ((doAutoShoot && !Drive.cameraDisconnected) && Drive.useAprilTags && AimUtils.isAimingAtGoal) {
             if (FieldManager.inScoringZone && !FieldManager.inNoShootArea /*&& AimUtils.distanceToTarget < 13.0.feet*/ && FieldManager.shouldShoot) {
                 shootLoop()
@@ -482,38 +484,38 @@ object Shooter: SubsystemBase("Shooter") {
                 Spindexer.currentState = Spindexer.State.OFF
             }
         }
-    }
+    }.named("Shooter Default")
 
 
-    fun shootOrRamp(): Command {
-        return parallelCommand(
-            runCommand(Shooter) {
-                rampUpLoop()
-            },
-            runCommand {
-                shootLoop()
-            }.onlyRunWhileTrue { OI.driverController.rightTriggerAxis >= 0.1 || OI.driverController.rightStickButton }.repeatedly(),
-            runCommand {
-                isShooting = false
-                Spindexer.currentState = Spindexer.State.OFF
-                hoodAngleSetpoint = hoodAngleSetpoint.coerceAtMost(HOOD_UNDER_TRENCH_MAX_ANGLE)//HOOD_STOW_SETPOINT.degrees
-            }.onlyRunWhileFalse { OI.driverController.rightTriggerAxis >= 0.1 || OI.driverController.rightStickButton }.repeatedly()
-        ).finallyRun {
-            isShooting = false
-            Spindexer.currentState = Spindexer.State.OFF
-            hoodAngleSetpoint = hoodAngleSetpoint.coerceAtMost(HOOD_UNDER_TRENCH_MAX_ANGLE)//HOOD_STOW_SETPOINT.degrees
-        }
-    }
+//    fun shootOrRamp(): Command {
+//        return parallelCommand(
+//            runCommand(Shooter) {
+//                rampUpLoop()
+//            },
+//            runCommand {
+//                shootLoop()
+//            }.onlyRunWhileTrue { OI.driverController.rightTriggerAxis >= 0.1 || OI.driverController.rightStickButton }.repeatedly(),
+//            runCommand {
+//                isShooting = false
+//                Spindexer.currentState = Spindexer.State.OFF
+//                hoodAngleSetpoint = hoodAngleSetpoint.coerceAtMost(HOOD_UNDER_TRENCH_MAX_ANGLE)//HOOD_STOW_SETPOINT.degrees
+//            }.onlyRunWhileFalse { OI.driverController.rightTriggerAxis >= 0.1 || OI.driverController.rightStickButton }.repeatedly()
+//        ).finallyRun {
+//            isShooting = false
+//            Spindexer.currentState = Spindexer.State.OFF
+//            hoodAngleSetpoint = hoodAngleSetpoint.coerceAtMost(HOOD_UNDER_TRENCH_MAX_ANGLE)//HOOD_STOW_SETPOINT.degrees
+//        }
+//    }
 
 
-    fun shoot(ignoreRampUp: Boolean = false): Command = runCommand(Shooter) {
-        shootLoop(ignoreRampUp)
-        rampUpLoop()
-    }.finallyRun {
-        isShooting = false
-        Spindexer.currentState = Spindexer.State.OFF
-        hoodAngleSetpoint = HOOD_ZERO.degrees
-    }
+//    fun shoot(ignoreRampUp: Boolean = false): Command = runCommand(Shooter) {
+//        shootLoop(ignoreRampUp)
+//        rampUpLoop()
+//    }.finallyRun {
+//        isShooting = false
+//        Spindexer.currentState = Spindexer.State.OFF
+//        hoodAngleSetpoint = HOOD_ZERO.degrees
+//    }
 
     fun rampUpLoop() {
         shooterVelocitySetpoint = AimUtils.getShooterRPS()
@@ -549,13 +551,13 @@ object Shooter: SubsystemBase("Shooter") {
     }
 
 
-    fun rampUp(): Command = runCommand(Shooter) {
-        rampUpLoop()
-    }
-
-    fun rampDown(): Command = runOnceCommand(Shooter) {
-        shooterVelocitySetpoint = 0.0.rotationsPerSecond
-    }
+//    fun rampUp(): Command = runCommand(Shooter) {
+//        rampUpLoop()
+//    }
+//
+//    fun rampDown(): Command = runOnceCommand(Shooter) {
+//        shooterVelocitySetpoint = 0.0.rotationsPerSecond
+//    }
 
     fun shootSimulatedFuel() {
         val exitVelocity = (AimUtils.getShooterRPS() * SHOOTER_GEAR_RATIO * AimUtils.shooterEfficiency).toExitVelocity().asMetersPerSecond
@@ -581,21 +583,21 @@ object Shooter: SubsystemBase("Shooter") {
         ))
     }
 
-    val sysIDShooterRoutine = SysIdRoutine(
-        SysIdRoutine.Config(
-            1.0.voltsPerSecond,
-            7.0.volts,
-            5.0.seconds
-        ) { state: SysIdRoutineLog.State ->
-            SignalLogger.writeString("SysIdShooterLeft_State", state.toString())
-            Logger.recordOutput("SysIdShooterLeft_State", state.toString())
-            Logger.recordOutput("Shooter_Left_Position", shooterMotor.position.valueAsDouble)
-            Logger.recordOutput("Shooter_Left_Velocity", shooterMotor.velocity.valueAsDouble)
-        },
-        SysIdRoutine.Mechanism({ output: Voltage ->
-            shooterMotor.setControl(VoltageOut(output.asVolts))
-            /* also log the requested output for SysId */
-            Logger.recordOutput("Shooter_Left_Voltage", output.asVolts + 0.0001 * Math.random())
-        }, null, this)
-    )
+//    val sysIDShooterRoutine = SysIdRoutine(
+//        SysIdRoutine.Config(
+//            1.0.voltsPerSecond,
+//            7.0.volts,
+//            5.0.seconds
+//        ) { state: SysIdRoutineLog.State ->
+//            SignalLogger.writeString("SysIdShooterLeft_State", state.toString())
+//            Logger.recordOutput("SysIdShooterLeft_State", state.toString())
+//            Logger.recordOutput("Shooter_Left_Position", shooterMotor.position.valueAsDouble)
+//            Logger.recordOutput("Shooter_Left_Velocity", shooterMotor.velocity.valueAsDouble)
+//        },
+//        SysIdRoutine.Mechanism({ output: Voltage ->
+//            shooterMotor.setControl(VoltageOut(output.asVolts))
+//            /* also log the requested output for SysId */
+//            Logger.recordOutput("Shooter_Left_Voltage", output.asVolts + 0.0001 * Math.random())
+//        }, null, this)
+//    )
 }

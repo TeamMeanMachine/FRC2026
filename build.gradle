@@ -3,23 +3,27 @@ import groovy.json.JsonSlurper
 
 plugins {
     id "java"
-    id "edu.wpi.first.GradleRIO2027" version "2027.0.0-alpha-2"
-    id "org.jetbrains.kotlin.jvm" version "2.2.0"
-    id "org.jetbrains.kotlin.kapt" version "2.2.0"
-    id "idea"
+    id "edu.wpi.first.GradleRIO2027" version "2027.0.0-alpha-1"
+    id 'org.jetbrains.kotlin.jvm' version '2.3.21'
+//    id "org.jetbrains.kotlin.kapt" version "2.3.21"
 }
 
-wpi.maven.useLocal = true
-wpi.maven.useDevelopment = false
+wpi.maven.useLocal = false
+wpi.maven.useDevelopment = true
 wpi.versions.wpilibVersion = '2027.0.0-alpha-3'
+wpi.versions.wpimathVersion = '2027.0.0-alpha-3'
+wpi.versions.glassVersion = '2027.0.0-alpha-3'
+wpi.versions.sysIdVersion = '2027.0.0-alpha-3'
+wpi.versions.dataLogToolVersion = '2027.0.0-alpha-3'
+wpi.versions.outlineViewerVersion = '2027.0.0-alpha-3'
 
 java {
 }
 
 def ROBOT_MAIN_CLASS = "frc.team2471.frc2026.Main"
 
-// Define my targets (RoboRIO) and artifacts (deployable files)
-// This is added by GradleRIO"s backing project DeployUtils.
+// Define my targets (SystemCore) and artifacts (deployable files)
+// This is added by GradleRIO's backing project DeployUtils.
 deploy {
     targets {
         systemcore(getTargetTypeClass('SystemCore')) {
@@ -49,14 +53,6 @@ deploy {
     }
 }
 
-// Automatically download documentation from libraries
-idea {
-    module {
-        downloadJavadoc = true
-        downloadSources = true
-    }
-}
-
 def deployArtifact = deploy.targets.systemcore.artifacts.frcJava
 
 // Set to true to use debug for JNI.
@@ -65,14 +61,8 @@ wpi.java.debugJni = false
 // Set this to true to enable desktop support.
 def includeDesktopSupport = true
 
-// Configuration for AdvantageKit
-task(replayWatch, type: JavaExec) {
-    mainClass = "org.littletonrobotics.junction.ReplayWatch"
-    classpath = sourceSets.main.runtimeClasspath
-}
-
 // Defining my dependencies. In this case, WPILib (+ friends), and vendor libraries.
-// Also defines JUnit 4.
+// Also defines JUnit 5.
 dependencies {
     implementation(project(":meanlib"))
 
@@ -106,7 +96,7 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib"
 
     def akitJson = new JsonSlurper().parseText(new File(projectDir.getAbsolutePath() + "/vendordeps/AdvantageKit.json").text)
-    kapt "org.littletonrobotics.akit:akit-autolog:$akitJson.version"
+//    kapt "org.littletonrobotics.akit:akit-autolog:$akitJson.version"
 //    kapt "edu.wpi.first.epilogue:epilogue-processor-java:2026.2.2"
 }
 
@@ -116,15 +106,10 @@ test {
 }
 
 // Simulation configuration (e.g. environment variables).
-//
-// The sim GUI is *disabled* by default to support running
-// AdvantageKit log replay from the command line. Set the
-// value to "true" to enable the sim GUI by default (this
-// is the standard WPILib behavior).
 wpi.sim.addGui().defaultEnabled = true
 wpi.sim.addDriverstation()
 
-// Setting up my Jar File. In this case, adding all libraries into the main jar ("fat jar")
+// Setting up my Jar File. In this case, adding all libraries into the main jar ('fat jar')
 // in order to make them all available at runtime. Also adding the manifest so WPILib
 // knows where to look for our Robot Class.
 jar {
@@ -135,52 +120,23 @@ jar {
     duplicatesStrategy = DuplicatesStrategy.INCLUDE
 }
 
-def copyVendordeps = {
-    subprojects {
-        def vendordepsDir = file("$projectDir/vendordeps")
-        if (vendordepsDir.exists()) {
-            rootProject.copy {
-                from vendordepsDir
-                into "${rootProject.projectDir}/vendordeps"
-                include '*.json'
-            }
-        }
-    }
-}
-
-gradle.projectsEvaluated {
-    copyVendordeps()
-}
-
-tasks.matching { it.name == "build" }.all {
-    doFirst {
-        copyVendordeps()
-    }
-}
-
-tasks.matching { it.name == "deploy" }.all {
-    doFirst {
-        copyVendordeps()
-    }
-}
-
-
 // Configure jar and deploy tasks
 deployArtifact.jarTask = jar
 wpi.java.configureExecutableTasks(jar)
 wpi.java.configureTestTasks(test)
 
 // Configure string concat to always inline compile
-tasks.withType(JavaCompile).configureEach {
-    options.compilerArgs.add "-XDstringConcat=inline"
+tasks.withType(JavaCompile) {
+    options.compilerArgs.add '-XDstringConcat=inline'
 }
 
-tasks.register('printHubCurves', JavaExec) {
-    classpath = sourceSets.main.runtimeClasspath
-    mainClass = 'frc.team2471.frc2026.tests.PrintHubCurves'
-
-    systemProperty 'java.library.path', "${projectDir}/build/jni/release"
+tasks.withType(JavaExec).configureEach {
+    jvmArgs += [
+            "--add-opens=java.base/jdk.internal.vm=ALL-UNNAMED",
+            "--enable-native-access=ALL-UNNAMED"
+    ]
 }
+
 
 tasks.register('printPassCurves', JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
@@ -190,13 +146,12 @@ tasks.register('printPassCurves', JavaExec) {
 }
 
 repositories {
-    mavenLocal()
     mavenCentral()
     maven {
-        name = "wpilib"
-        url = uri("${System.getProperty('user.home')}/repository/org/")
+        name = "WPILib Development"
+        url = uri("https://frcmaven.wpi.edu/artifactory/development-2027/")
     }
 }
 kotlin {
-    jvmToolchain(24)
+    jvmToolchain(21)
 }

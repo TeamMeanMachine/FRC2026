@@ -6,19 +6,20 @@ import edu.wpi.first.math.geometry.Translation2d
 import edu.wpi.first.networktables.NetworkTableInstance
 import edu.wpi.first.wpilibj.Alert
 import edu.wpi.first.wpilibj.GenericHID
-import edu.wpi.first.wpilibj2.command.SubsystemBase
+//import edu.wpi.first.wpilibj2.command.SubsystemBase
 import org.team2471.frc.lib.control.LoopLogger
 import org.team2471.frc.lib.control.MeanCommandXboxController
-import org.team2471.frc.lib.control.commands.finallyRun
-import org.team2471.frc.lib.control.commands.parallelCommand
-import org.team2471.frc.lib.control.commands.runCommand
-import org.team2471.frc.lib.control.commands.runOnceCommand
-import org.team2471.frc.lib.control.commands.toCommand
+//import org.team2471.frc.lib.control.commands.finallyRun
+//import org.team2471.frc.lib.control.commands.parallelCommand
+//import org.team2471.frc.lib.control.commands.runCommand
+//import org.team2471.frc.lib.control.commands.runOnceCommand
+//import org.team2471.frc.lib.control.commands.toCommand
 import org.team2471.frc.lib.math.deadband
 import org.team2471.frc.lib.math.normalize
 import org.team2471.frc.lib.units.degrees
+import org.wpilib.commands3.Mechanism
 
-object OI: SubsystemBase("OI") {
+object OI: Mechanism("OI") {
     private val table = NetworkTableInstance.getDefault().getTable("OI")
 
     val rotationMultiplierEntry = table.getEntry("Rotation Multiplier")
@@ -95,50 +96,50 @@ object OI: SubsystemBase("OI") {
         // Default command, normal field-relative drive
         Drive.defaultCommand = Drive.joystickDrive()
 
-        Turret.defaultCommand = Turret.aimAtTarget().ignoringDisable(true)
+        Turret.defaultCommand = Turret.aimAtTarget()//.ignoringDisable(true)
 
-        Shooter.defaultCommand = Shooter.default().ignoringDisable(true)
+        Shooter.defaultCommand = Shooter.default()//.ignoringDisable(true)
 
         // Zero Gyro
-        driverController.back().onTrue({
-                println("zero gyro")
-                Drive.zeroGyro()
-            }.toCommand(Drive).ignoringDisable(true))
+//        driverController.back().onTrue({
+//                println("zero gyro")
+//                Drive.zeroGyro()
+//            }.toCommand(Drive).ignoringDisable(true))
 
         // Reset Odometry Position
-        driverController.start().onTrue( {
-            Drive.pose = Pose2d(Translation2d(3.0, 3.0), Drive.heading)
-        }.toCommand(Drive).ignoringDisable(true))
+//        driverController.start().onTrue( {
+//            Drive.pose = Pose2d(Translation2d(3.0, 3.0), Drive.heading)
+//        }.toCommand(Drive).ignoringDisable(true))
 
-        (driverController.y().and(driverController.povDown().negate())).onTrue(Intake.home())
+//        (driverController.y().and(driverController.povDown().negate())).onTrue(Intake.home())
 
-        driverController.rightTrigger(0.1)
-            .or(driverController.rightBumper())
-            .or(driverController.rightStick())
-            .whileTrue(
-            parallelCommand(
-                Shooter.shootOrRamp(),
-//                Intake.pulse().onlyRunWhileTrue { driverController.rightTriggerAxis > 0.75 }.repeatedly()
-            ).ignoringDisable(true)
-        )
+//        driverController.rightTrigger(0.1)
+//            .or(driverController.rightBumper())
+//            .or(driverController.rightStick())
+//            .whileTrue(
+//            parallelCommand(
+//                Shooter.shootOrRamp(),
+////                Intake.pulse().onlyRunWhileTrue { driverController.rightTriggerAxis > 0.75 }.repeatedly()
+//            ).ignoringDisable(true)
+//        )
 
-        driverController.leftBumper().and(driverController.povDown().negate()).whileTrue(runCommand {
-            Intake.deploy()
-//            if (!Intake.goingToSetpoint) {
-                Intake.intakeState = Intake.IntakeState.INTAKING
+//        driverController.leftBumper().and(driverController.povDown().negate()).whileTrue(runCommand {
+//            Intake.deploy()
+////            if (!Intake.goingToSetpoint) {
+//                Intake.intakeState = Intake.IntakeState.INTAKING
+////            }
+//        }.finallyRun {
+////            Intake.stow()
+//            Intake.intakeState = Intake.IntakeState.OFF
+//        })
+
+//        driverController.leftStick().onTrue(runOnceCommand {
+//            if (Intake.isDeployed) {
+//                Intake.stow()
+//            } else {
+//                Intake.deploy()
 //            }
-        }.finallyRun {
-//            Intake.stow()
-            Intake.intakeState = Intake.IntakeState.OFF
-        })
-
-        driverController.leftStick().onTrue(runOnceCommand {
-            if (Intake.isDeployed) {
-                Intake.stow()
-            } else {
-                Intake.deploy()
-            }
-        })
+//        })
 
 //        driverController.a().whileTrue(
 //            Drive.snakeMode()
@@ -158,16 +159,16 @@ object OI: SubsystemBase("OI") {
 //        })
 
         (driverController.povDown().and(driverController.y())).onTrue(Intake.homeDeploy())
-        (driverController.povDown().and(driverController.leftBumper())).onTrue(runOnceCommand { Intake.deepStow() })
+//        (driverController.povDown().and(driverController.leftBumper())).onTrue(runOnceCommand { Intake.deepStow() })
 
         driverController.povLeft().whileTrue(Turret.staticAimAtTarget())
-        driverController.povRight().whileTrue(FieldManager.disableAutoHoodRetractionCommand())
+//        driverController.povRight().whileTrue(FieldManager.disableAutoHoodRetractionCommand())
 
-        driverController.povUp().onTrue(runOnceCommand { Turret.offset -= 2.0.degrees})
-        driverController.povDown().and(driverController.y().negate()).and(driverController.leftBumper().negate()).onTrue(runOnceCommand { Turret.offset += 2.0.degrees})
+//        driverController.povUp().onTrue(runOnceCommand { Turret.offset -= 2.0.degrees})
+//        driverController.povDown().and(driverController.y().negate()).and(driverController.leftBumper().negate()).onTrue(runOnceCommand { Turret.offset += 2.0.degrees})
     }
 
-    override fun periodic() {
+    fun periodic() {
         LoopLogger.record("b4 OI piodc")
         driverNotConnectedAlert.set(driverDebouncer.calculate(!driverController.isConnected))
         operatorNotConnectedAlert.set(operatorDebouncer.calculate(!operatorController.isConnected))

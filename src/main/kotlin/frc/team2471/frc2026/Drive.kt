@@ -21,7 +21,7 @@ import edu.wpi.first.math.numbers.N3
 import edu.wpi.first.networktables.NetworkTableInstance
 import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.wpilibj.Timer
-import edu.wpi.first.wpilibj2.command.Command
+//import edu.wpi.first.wpilibj2.command.Command
 import frc.team2471.frc2026.OI.driverController
 import frc.team2471.frc2026.Robot.powerTracker
 import kotlinx.coroutines.GlobalScope
@@ -30,8 +30,8 @@ import org.littletonrobotics.junction.AutoLogOutput
 import org.littletonrobotics.junction.Logger
 import org.team2471.frc.lib.control.CurrentLimits
 import org.team2471.frc.lib.control.LoopLogger
-import org.team2471.frc.lib.control.commands.finallyRun
-import org.team2471.frc.lib.control.commands.runCommand
+//import org.team2471.frc.lib.control.commands.finallyRun
+//import org.team2471.frc.lib.control.commands.runCommand
 import org.team2471.frc.lib.control.rightStickButton
 import org.team2471.frc.lib.ctre.PhoenixUtil
 import org.team2471.frc.lib.ctre.applyConfiguration
@@ -141,10 +141,10 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
         +y   o   -y
          *  back *
              -x      */
-        PhotonVisionCamera("FrontLeft", Transform3d(Translation3d(-12.5.inches.asMeters, 13.1.inches.asMeters, 21.0.inches.asMeters), Rotation3d(0.0, -25.0.degrees.asRadians, 45.0.degrees.asRadians)), arrayOf(PipelineConfig())),
-        PhotonVisionCamera("FrontRight", Transform3d(Translation3d(-12.5.inches.asMeters, -13.1.inches.asMeters, 21.0.inches.asMeters), Rotation3d(0.0, -25.0.degrees.asRadians, -45.0.degrees.asRadians)), arrayOf(PipelineConfig())),
-        PhotonVisionCamera("BackLeft", Transform3d(Translation3d(-13.7.inches.asMeters, 10.7.inches.asMeters, 21.0.inches.asMeters), Rotation3d(0.0, -25.0.degrees.asRadians, 130.0.degrees.asRadians)), arrayOf(PipelineConfig())),
-        PhotonVisionCamera("BackRight", Transform3d(Translation3d(-13.7.inches.asMeters, -10.7.inches.asMeters, 21.0.inches.asMeters), Rotation3d(0.0, -25.0.degrees.asRadians, -130.0.degrees.asRadians)), arrayOf(PipelineConfig())),
+//        PhotonVisionCamera("FrontLeft", Transform3d(Translation3d(-12.5.inches.asMeters, 13.1.inches.asMeters, 21.0.inches.asMeters), Rotation3d(0.0, -25.0.degrees.asRadians, 45.0.degrees.asRadians)), arrayOf(PipelineConfig())),
+//        PhotonVisionCamera("FrontRight", Transform3d(Translation3d(-12.5.inches.asMeters, -13.1.inches.asMeters, 21.0.inches.asMeters), Rotation3d(0.0, -25.0.degrees.asRadians, -45.0.degrees.asRadians)), arrayOf(PipelineConfig())),
+//        PhotonVisionCamera("BackLeft", Transform3d(Translation3d(-13.7.inches.asMeters, 10.7.inches.asMeters, 21.0.inches.asMeters), Rotation3d(0.0, -25.0.degrees.asRadians, 130.0.degrees.asRadians)), arrayOf(PipelineConfig())),
+//        PhotonVisionCamera("BackRight", Transform3d(Translation3d(-13.7.inches.asMeters, -10.7.inches.asMeters, 21.0.inches.asMeters), Rotation3d(0.0, -25.0.degrees.asRadians, -130.0.degrees.asRadians)), arrayOf(PipelineConfig())),
     )
 
     val cameraDisconnected: Boolean
@@ -173,7 +173,7 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
 //        get() = if (isReal) quest.isTracking else simulateQuest
 //    @get:AutoLogOutput(key = "Drive/Quest/isTrackingMaybe")
     var questTrackingMaybe: Boolean = false
-    val robotToQuestTransformMeters = Transform3d(-12.5.inches.asMeters, -12.5.inches.asMeters, 12.5.inches.asMeters, Rotation3d(90.0.degrees, 0.0.degrees, 180.0.degrees))
+//    val robotToQuestTransformMeters = Transform3d(-12.5.inches.asMeters, -12.5.inches.asMeters, 12.5.inches.asMeters, Rotation3d(90.0.degrees, 0.0.degrees, 180.0.degrees))
 
     var questPose: Pose3d = Pose3d()
         private set
@@ -231,7 +231,7 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
         // MUST start inside the field on bootup for accurate heading measurements due to a PoseLocalizer bug.
         pose = Pose2d(3.0, 3.0, heading)
 
-        setStateStdDevs(DRIVE_STD_DEVS)
+        io.setStateStdDevs(DRIVE_STD_DEVS)
 
 //        backupPigeon.applyConfiguration()
 
@@ -246,7 +246,7 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
             powerTracker.addMotors("Drive", {
                 var tempTotalDriveCurrent = 0.0
                 var tempTotalSteerCurrent = 0.0
-                modules.forEach {
+                io.modules.forEach {
                     tempTotalDriveCurrent += it.driveMotor.supplyCurrent.valueAsDouble
                     tempTotalSteerCurrent += it.steerMotor.supplyCurrent.valueAsDouble
                 }
@@ -365,7 +365,7 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
      */
     fun setDriveCurrentLimits(currentLimits: CurrentLimits) {
         GlobalScope.launch {
-            Drive.modules.forEach {
+            io.modules.forEach {
                 it.driveMotor.modifyConfiguration {
                     currentLimits(
                         currentLimits.continuousLimit,
@@ -395,21 +395,21 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
     }
 
     var inSnakeMode = false
-    fun snakeMode(): Command = runCommand(Drive) {
-        inSnakeMode = true
-        if (OI.rawDriveTranslation.norm > 0.1) {
-            driveAtAngle(
-                atan2(
-                    driverController.leftY,
-                    -driverController.leftX
-                ).radians.asRotation2d - Rotation2d(90.0.degrees)
-            )
-        } else {
-            driveVelocity(getChassisSpeedsFromJoystick().apply { omegaRadiansPerSecond = 0.0 })
-        }
-    }.finallyRun {
-        inSnakeMode = false
-    }
+//    fun snakeMode(): Command = runCommand(Drive) {
+//        inSnakeMode = true
+//        if (OI.rawDriveTranslation.norm > 0.1) {
+//            driveAtAngle(
+//                atan2(
+//                    driverController.leftY,
+//                    -driverController.leftX
+//                ).radians.asRotation2d - Rotation2d(90.0.degrees)
+//            )
+//        } else {
+//            driveVelocity(getChassisSpeedsFromJoystick().apply { omegaRadiansPerSecond = 0.0 })
+//        }
+//    }.finallyRun {
+//        inSnakeMode = false
+//    }
 
     fun resetOdometryToAbsolute() {
         println("resetting odometry to localizer pose")

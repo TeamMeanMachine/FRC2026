@@ -4,7 +4,7 @@ pluginManagement {
     repositories {
         mavenLocal()
         gradlePluginPortal()
-        String frcYear = '2027.+'
+        String frcYear = '2027_alpha1'
         File frcHome
         if (OperatingSystem.current().isWindows()) {
             String publicFolder = System.getenv('PUBLIC')
@@ -20,10 +20,13 @@ pluginManagement {
         }
         def frcHomeMaven = new File(frcHome, 'maven')
         maven {
-            name 'frcHome'
-            url frcHomeMaven
+            name = 'frcHome'
+            url = frcHomeMaven
         }
     }
+}
+plugins {
+    id 'org.gradle.toolchains.foojay-resolver-convention' version '1.0.0'
 }
 
 Properties props = System.getProperties()

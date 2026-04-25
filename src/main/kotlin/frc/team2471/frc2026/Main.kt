@@ -1,21 +1,19 @@
 @file:JvmName("Main") // set the compiled Java class name to "Main" rather than "MainKt"
 package frc.team2471.frc2026
 
+//import edu.wpi.first.hal.FRCNetComm.tInstances
+//import edu.wpi.first.hal.FRCNetComm.tResourceType
+//import edu.wpi.first.wpilibj2.command.CommandScheduler
+//import edu.wpi.first.wpilibj2.command.Commands
 import com.ctre.phoenix6.SignalLogger
-import edu.wpi.first.hal.FRCNetComm.tInstances
-import edu.wpi.first.hal.FRCNetComm.tResourceType
-import edu.wpi.first.hal.HAL
-import edu.wpi.first.wpilibj.DriverStation
-import edu.wpi.first.wpilibj.IterativeRobotBase
-import edu.wpi.first.wpilibj.RobotBase
-import edu.wpi.first.wpilibj.Timer
-import edu.wpi.first.wpilibj.Watchdog
-import edu.wpi.first.wpilibj2.command.CommandScheduler
-import edu.wpi.first.wpilibj2.command.Commands
+import edu.wpi.first.hal.DriverStationJNI
+import edu.wpi.first.hal.NotifierJNI
+import edu.wpi.first.wpilibj.*
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.littletonrobotics.junction.AutoLogOutputManager
 import org.littletonrobotics.junction.LogFileUtil
 import org.littletonrobotics.junction.LoggedRobot
 import org.littletonrobotics.junction.Logger
@@ -25,11 +23,13 @@ import org.littletonrobotics.junction.wpilog.WPILOGWriter
 import org.team2471.frc.lib.control.LoopLogger
 import org.team2471.frc.lib.coroutines.periodiccc
 import org.team2471.frc.lib.ctre.loggedTalonFX.MasterMotor
+import org.team2471.frc.lib.logging.NT4NonFMSPublisher
 import org.team2471.frc.lib.units.asFeet
 import org.team2471.frc.lib.util.PowerTracker
-import org.team2471.frc.lib.logging.NT4NonFMSPublisher
 import org.team2471.frc.lib.util.RobotMode
 import org.team2471.frc.lib.util.robotMode
+import org.wpilib.commands3.Mechanism
+import org.wpilib.commands3.Scheduler
 import java.net.NetworkInterface
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -53,7 +53,7 @@ object Robot : LoggedRobot() {
     private var wasAutonomous = false
     private var wasTeleop = false
 
-    val commandScheduler = CommandScheduler.getInstance()
+//    val commandScheduler = CommandScheduler.getInstance()
 
     @get:JvmName("RobotIsEnabled")
     var isEnabled = false
@@ -86,24 +86,24 @@ object Robot : LoggedRobot() {
     val fieldManager = FieldManager
     val aimUtils = AimUtils
 
-    var allSubsystems = arrayOf(drive, intake, shooter, turret, spindexer, oi)
+    var allSubsystems = arrayOf<Mechanism>(drive, intake, shooter, turret, spindexer, oi)
 
     init {
         // Tells FRC we use Kotlin
-        HAL.report(tResourceType.kResourceType_Language, tInstances.kLanguage_Kotlin)
+//        HAL.report(tResourceType.kResourceType_Language, tInstances.kLanguage_Kotlin)
 
         // Set up data receivers & replay source
         when (robotMode) {
             RobotMode.REAL -> { // Running on a real robot, log to a USB stick ("/U/logs")
-//                Logger.addDataReceiver(WPILOGWriter())
+                Logger.addDataReceiver(WPILOGWriter())
                 Logger.addDataReceiver(NT4NonFMSPublisher()) // Only log to NT if FMS is not connected
             }
             RobotMode.SIM -> {
-                Logger.addDataReceiver(NT4Publisher())
-                Logger.addDataReceiver(WPILOGWriter())
+//                Logger.addDataReceiver(NT4Publisher())
+//                Logger.addDataReceiver(WPILOGWriter())
             } // Running a physics simulator, log to NT
             RobotMode.REPLAY -> { // Replaying a log, set up replay source
-                setUseTiming(true) // false - simulate as fast as possible, true - simulate in real time (particle filter needs true)
+//                setUseTiming(true) // false - simulate as fast as possible, true - simulate in real time (particle filter needs true)
                 val logPath = LogFileUtil.findReplayLog()
                 Logger.setReplaySource(WPILOGReader(logPath))
                 Logger.addDataReceiver(WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim")))
@@ -117,11 +117,11 @@ object Robot : LoggedRobot() {
         SignalLogger.stop()
 
         // Start AdvantageKit logger
-        Logger.start()
+//        Logger.start()
         // Call all subsystems, make sure their init's run
         allSubsystems.forEach { println("activating subsystem ${it.name}") }
         println("FieldManager thinks the field is ${FieldManager.fieldDimensions.asFeet} feet big")
-        println("We see ${Autonomous.paths.size} paths and they are made on the ${if (Drive.choreoPathsStartOnRed) "red" else "blue"} side.")
+//        println("We see ${Autonomous.paths.size} paths and they are made on the ${if (Drive.choreoPathsStartOnRed) "red" else "blue"} side.")
 
         // Code stolen from Mechanical Advantage:
         // https://github.com/Mechanical-Advantage/RobotCode2025Public/blob/3ea1eb036b2dc06e4ecb14d98bba7f602a1cd62a/src/main/java/org/littletonrobotics/frc2025/Robot.java#L145
@@ -135,7 +135,7 @@ object Robot : LoggedRobot() {
         } catch (_: Exception) {
             DriverStation.reportWarning("Failed to disable loop overrun warnings.", false)
         }
-        commandScheduler.setPeriod(loopOverrunWarningTimeout)
+//        commandScheduler.setPeriod(loopOverrunWarningTimeout)
 
         GlobalScope.launch {
             // Attempt to clear out small occasional loop overruns when periodically calling DriverStation.isEnabled()
@@ -185,11 +185,11 @@ object Robot : LoggedRobot() {
 
 
         LoopLogger.record("b4 CommandScheduler")
-        try {
-            commandScheduler.run()
-        } catch (e: ConcurrentModificationException) {
-            println("ConcurrentModificationException!!!! $e")
-        }
+//        try {
+//            commandScheduler.run()
+//        } catch (e: ConcurrentModificationException) {
+//            println("ConcurrentModificationException!!!! $e")
+//        }
         LoopLogger.record("after CommandScheduler")
 
         powerTracker.logData()
@@ -228,8 +228,8 @@ object Robot : LoggedRobot() {
     /** This function is called once when the robot is disabled.  */
     override fun disabledInit() {
         Drive.coastMode()
-        Autonomous.autonomousCommand?.cancel() // This makes sure that the autonomous stops running when teleop starts running.
-        Autonomous.testCommand?.cancel()
+//        Autonomous.autonomousCommand?.cancel() // This makes sure that the autonomous stops running when teleop starts running.
+//        Autonomous.testCommand?.cancel()
 
         if (wasAutonomous) {
             wasAutonomous = false
@@ -276,7 +276,7 @@ object Robot : LoggedRobot() {
 //        println("Autonomous init $timeSinceEnabled")
 //        Autonomous.setDrivePositionToAutoStartPose()
 //        println("scheduling auto command $timeSinceEnabled")
-        commandScheduler.schedule(Autonomous.autonomousCommand ?: Commands.runOnce({ println("THE AUTONOMOUS COMMAND IS NULL") }))
+//        commandScheduler.schedule(Autonomous.autonomousCommand ?: Commands.runOnce({ println("THE AUTONOMOUS COMMAND IS NULL") }))
         wasAutonomous = true
 //        println("scheduled auto command $timeSinceEnabled")
     }
@@ -294,8 +294,8 @@ object Robot : LoggedRobot() {
 
     /** This function is called once when test mode is enabled.  */
     override fun testInit() {
-        CommandScheduler.getInstance().cancelAll() // Cancels all running commands at the start of test mode.
-        CommandScheduler.getInstance().schedule((Autonomous.testCommand ?: Commands.runOnce({println("THE TEST COMMAND IS NULL")})))
+//        CommandScheduler.getInstance().cancelAll() // Cancels all running commands at the start of test mode.
+//        CommandScheduler.getInstance().schedule((Autonomous.testCommand ?: Commands.runOnce({println("THE TEST COMMAND IS NULL")})))
     }
 
     /** This function is called periodically during test mode.  */
@@ -334,6 +334,36 @@ object Robot : LoggedRobot() {
         } else { println("Not real so I am compbot") }
         println("I am compbot = $compBot")
         return compBot
+    }
+
+
+    /** Provide an alternate "main loop" via startCompetition().  */
+    override fun startCompetition() {
+        // Robot init methods
+        val initStat = RobotController.getFPGATime()
+        if (isSimulation()) {
+            simulationInit()
+        }
+        val initEnd = RobotController.getFPGATime()
+
+        // Register auto logged outputs
+        AutoLogOutputManager.addObject(this)
+
+        // Save data from init cycle
+
+        // Tell the DS that the robot is ready to be enabled
+        println("********** Robot program startup complete **********")
+        DriverStationJNI.observeUserProgramStarting()
+
+        // Loop forever, calling the appropriate mode-dependent function
+        while (true) {
+
+            loopFunc()
+        }
+    }
+
+    /** Ends the main loop in startCompetition().  */
+    override fun endCompetition() {
     }
 }
 

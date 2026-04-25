@@ -7,7 +7,7 @@ import edu.wpi.first.math.geometry.Translation2d
 import edu.wpi.first.networktables.NetworkTableInstance
 import edu.wpi.first.units.measure.Distance
 import edu.wpi.first.wpilibj.DriverStation
-import edu.wpi.first.wpilibj2.command.Command
+//import edu.wpi.first.wpilibj2.command.Command
 import frc.team2471.frc2026.FieldManager.reflectAcrossField
 import frc.team2471.frc2026.FieldManager.rotateAroundField
 import frc.team2471.frc2026.Robot.isAutonomous
@@ -20,9 +20,9 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser
 import org.littletonrobotics.junction.networktables.NT4Publisher
 import org.littletonrobotics.junction.wpilog.WPILOGReader
 import org.littletonrobotics.junction.wpilog.WPILOGWriter
-import org.team2471.frc.lib.control.commands.runCommand
-import org.team2471.frc.lib.control.commands.runOnceCommand
-import org.team2471.frc.lib.control.commands.sequenceCommand
+//import org.team2471.frc.lib.control.commands.runCommand
+//import org.team2471.frc.lib.control.commands.runOnceCommand
+//import org.team2471.frc.lib.control.commands.sequenceCommand
 import org.team2471.frc.lib.coroutines.periodiccc
 import org.team2471.frc.lib.units.*
 import org.team2471.frc.lib.util.RobotMode
@@ -35,7 +35,7 @@ import kotlin.math.sign
 object FieldManager {
     private val table = NetworkTableInstance.getDefault().getTable("FieldManager")
 
-    val aprilTagFieldLayout: AprilTagFieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded) //AprilTagFieldLayout(Filesystem.getDeployDirectory().path + "/2026Field.json")
+    val aprilTagFieldLayout: AprilTagFieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField) //AprilTagFieldLayout(Filesystem.getDeployDirectory().path + "/2026Field.json")
     val allAprilTags = aprilTagFieldLayout.tags
 
     // x
@@ -54,12 +54,12 @@ object FieldManager {
     val blueHubTags = allAprilTags.filter { it.ID in 18..21 || it.ID in 24..27 }
     val hubTags = redHubTags + blueHubTags
 
-    val overrideAutoWinner: LoggedDashboardChooser<String?> =
-        LoggedDashboardChooser<String?>("Override Auto Winner").apply {
-            addDefaultOption("No Override", null)
-            addOption("Red", "R")
-            addOption("Blue", "B")
-        }
+//    val overrideAutoWinner: LoggedDashboardChooser<String?> =
+//        LoggedDashboardChooser<String?>("Override Auto Winner").apply {
+//            addDefaultOption("No Override", null)
+//            addOption("Red", "R")
+//            addOption("Blue", "B")
+//        }
 
     val trenchAreaWidth = 50.0.inches
     val trenchAreaLength = 27.0.inches
@@ -74,8 +74,8 @@ object FieldManager {
 
 
 
-    val lowerBlueTrenchPosition = ((allAprilTags[21].pose.toPose2d().translation + allAprilTags[22].pose.toPose2d().translation)/2.0)
-    val upperBlueTrenchPosition = ((allAprilTags[16].pose.toPose2d().translation + allAprilTags[27].pose.toPose2d().translation)/2.0)
+    val lowerBlueTrenchPosition = ((allAprilTags[0].pose.toPose2d().translation + allAprilTags[0].pose.toPose2d().translation)/2.0)
+    val upperBlueTrenchPosition = ((allAprilTags[16].pose.toPose2d().translation + allAprilTags[0].pose.toPose2d().translation)/2.0)
     val lowerRedTrenchPosition = ((allAprilTags[0].pose.toPose2d().translation + allAprilTags[11].pose.toPose2d().translation)/2.0)
     val upperRedTrenchPosition = ((allAprilTags[5].pose.toPose2d().translation + allAprilTags[6].pose.toPose2d().translation)/2.0)
 
@@ -130,7 +130,7 @@ object FieldManager {
 
 
     val redTowerPose = (allAprilTags[14].pose.toPose2d().translation + Translation2d(-1.75, 0.0))
-    val blueTowerPose = (allAprilTags[30].pose.toPose2d().translation + Translation2d(1.75, 0.0))
+    val blueTowerPose = (allAprilTags[0].pose.toPose2d().translation + Translation2d(1.75, 0.0))
 
     val towerPose = Translation2d(11.0.feet.asMeters, 14.0.feet.asMeters)
 
@@ -138,7 +138,7 @@ object FieldManager {
 
 
     val redGoalPose = (allAprilTags[3].pose.toPose2d().translation + allAprilTags[9].pose.toPose2d().translation)/2.0
-    val blueGoalPose = (allAprilTags[19].pose.toPose2d().translation + allAprilTags[25].pose.toPose2d().translation)/2.0
+    val blueGoalPose = (allAprilTags[0].pose.toPose2d().translation + allAprilTags[0].pose.toPose2d().translation)/2.0
 
     @get:AutoLogOutput(key = "FieldManager/Goal Pose")
     val goalPose: Translation2d
@@ -182,7 +182,7 @@ object FieldManager {
 
     @get:AutoLogOutput(key = "FieldManager/gameData")
     val gameData: String
-        get() = overrideAutoWinner.get() ?: rawGameData
+        get() = null/*overrideAutoWinner.get()*/ ?: rawGameData
 
     @get:AutoLogOutput(key = "FieldManager/redWonAuto")
     val redWonAuto: Boolean
@@ -278,30 +278,30 @@ object FieldManager {
                 Logger.addDataReceiver(NT4Publisher())
             }
             RobotMode.SIM -> {
-                Logger.addDataReceiver(NT4Publisher())
-                Logger.addDataReceiver(WPILOGWriter())
+//                Logger.addDataReceiver(NT4Publisher())
+//                Logger.addDataReceiver(WPILOGWriter())
             } // Running a physics simulator, log to NT
             RobotMode.REPLAY -> { // Replaying a log, set up replay source
-                Robot.setUseTiming(true) // false - simulate as fast as possible, true - simulate in real time (particle filter needs true)
+//                Robot.setUseTiming(true) // false - simulate as fast as possible, true - simulate in real time (particle filter needs true)
                 val logPath = LogFileUtil.findReplayLog()
                 Logger.setReplaySource(WPILOGReader(logPath))
                 Logger.addDataReceiver(WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim")))
             }
         }
 
-        Logger.start()
+//        Logger.start()
 
         doShiftTimingEntry.setBoolean(true)
         autoHoodRetractionEntry.setBoolean(true)
 
         val apriltagPositions = allAprilTags.map { it.pose }
-        Logger.recordOutput("FieldManager/All apriltags", *apriltagPositions.toTypedArray())
+//        Logger.recordOutput("FieldManager/All apriltags", *apriltagPositions.toTypedArray())
         println("FieldManager init. Field dimensions: $fieldDimensions. ${allAprilTags.size} tags.")
 
-        Logger.recordOutput("FieldManager/Trench Poses", *trenchPositions)
+//        Logger.recordOutput("FieldManager/Trench Poses", *trenchPositions)
 
-        Logger.recordOutput("FieldManager/TowerPoseRed", redTowerPose)
-        Logger.recordOutput("FieldManager/TowerPoseBlue", blueTowerPose)
+//        Logger.recordOutput("FieldManager/TowerPoseRed", redTowerPose)
+//        Logger.recordOutput("FieldManager/TowerPoseBlue", blueTowerPose)
 
         GlobalScope.launch {
             periodiccc {
@@ -320,23 +320,23 @@ object FieldManager {
         }
     }
 
-    fun disableAutoHoodRetractionCommand(): Command {
-        var oldValue = autoHoodRetraction
-        return sequenceCommand(
-            runOnceCommand {
-                oldValue = autoHoodRetraction
-                autoHoodRetraction = false
-                println("Disabling autoHoodRetraction. oldValue: $oldValue")
-            },
-            runCommand {
-                autoHoodRetraction = false
-            },
-            runOnceCommand {
-                autoHoodRetraction = oldValue
-                println("Finished disabling autoHoodRetraction. autoHoodRetraction: $autoHoodRetraction")
-            }
-        ).withName("AutoHoodRetractionDisableCommand")
-    }
+//    fun disableAutoHoodRetractionCommand(): Command {
+//        var oldValue = autoHoodRetraction
+//        return sequenceCommand(
+//            runOnceCommand {
+//                oldValue = autoHoodRetraction
+//                autoHoodRetraction = false
+//                println("Disabling autoHoodRetraction. oldValue: $oldValue")
+//            },
+//            runCommand {
+//                autoHoodRetraction = false
+//            },
+//            runOnceCommand {
+//                autoHoodRetraction = oldValue
+//                println("Finished disabling autoHoodRetraction. autoHoodRetraction: $autoHoodRetraction")
+//            }
+//        ).withName("AutoHoodRetractionDisableCommand")
+//    }
 
     /**
      * Reflects [Translation2d] across the midline of the field. Useful for mirrored field layouts (2023, 2024).
