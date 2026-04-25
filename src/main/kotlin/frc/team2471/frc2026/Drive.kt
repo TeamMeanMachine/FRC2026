@@ -28,6 +28,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.littletonrobotics.junction.AutoLogOutput
 import org.littletonrobotics.junction.Logger
+import org.team2471.frc.lib.commands.periodic
 import org.team2471.frc.lib.control.CurrentLimits
 import org.team2471.frc.lib.control.LoopLogger
 //import org.team2471.frc.lib.control.commands.finallyRun
@@ -60,6 +61,7 @@ import org.team2471.frc.lib.vision.Fiducial
 import org.team2471.frc.lib.vision.PipelineConfig
 import org.team2471.frc.lib.vision.QuixVisionCamera
 import org.team2471.frc.lib.vision.photonVision.PhotonVisionCamera
+import org.wpilib.commands3.Coroutine
 import kotlin.math.atan2
 
 
@@ -358,6 +360,10 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
         Logger.recordOutput("Swerve/SingleTagPose", localizer.singleTagPose)
 
         LoopLogger.record("Drive pirdc")
+    }
+
+    override fun Coroutine.default() {
+        await(joystickDrive())
     }
 
     /**

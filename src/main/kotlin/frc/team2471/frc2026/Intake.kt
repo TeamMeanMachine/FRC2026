@@ -18,6 +18,11 @@ import frc.team2471.frc2026.Robot.powerTracker
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.littletonrobotics.junction.AutoLogOutput
+import org.team2471.frc.lib.commands.MechanismBase
+import org.team2471.frc.lib.commands.parallel
+import org.team2471.frc.lib.commands.periodic
+import org.team2471.frc.lib.commands.periodicTimeout
+import org.team2471.frc.lib.commands.use
 import org.team2471.frc.lib.control.CurrentLimits
 import org.team2471.frc.lib.control.LoopLogger
 //import org.team2471.frc.lib.control.commands.finallyRun
@@ -41,10 +46,11 @@ import org.team2471.frc.lib.ctre.s
 import org.team2471.frc.lib.units.asVolts
 import org.team2471.frc.lib.util.isSim
 import org.wpilib.commands3.Command
+import org.wpilib.commands3.Coroutine
 import org.wpilib.commands3.Mechanism
 import kotlin.math.absoluteValue
 
-object Intake: Mechanism("Intake") {
+object Intake: MechanismBase("Intake") {
     private val table = NetworkTableInstance.getDefault().getTable("Intake")
 
     val deployPoseEntry = table.getEntry("deployPose")
@@ -310,7 +316,7 @@ object Intake: Mechanism("Intake") {
             }
         }
 
-        this.defaultCommand = default()//.ignoringDisable(true)
+        //this.defaultCommand = default()//.ignoringDisable(true)
 
 
         GlobalScope.launch {
@@ -320,7 +326,7 @@ object Intake: Mechanism("Intake") {
         }
     }
 
-    fun periodic() {
+    override fun periodic() {
         if (maxForwardTorque != prevMaxForwardTorque) {
             GlobalScope.launch {
                 deployMotor0.modifyConfiguration {
@@ -359,6 +365,15 @@ object Intake: Mechanism("Intake") {
         isDeployed = false
     }
 
+    fun home(): Command = use("Home", this) {
+        finishedHoming = false
+        parallel(
+            homeMotorOut(deployMotor0, { deployVelocity0.absoluteValue < HOME_VELOCITY_THRESHOLD && deployVelocity1.absoluteValue < HOME_VELOCITY_THRESHOLD }),
+            homeMotorOut(deployMotor1, { deployVelocity1.absoluteValue < HOME_VELOCITY_THRESHOLD && deployVelocity0.absoluteValue < HOME_VELOCITY_THRESHOLD })
+        )
+        finishedHoming = true
+        deploySetpoint = DEPLOY_POSE
+    }
 
 //    fun home(): Command  = if (Robot.isCompBot) {
 //        parallelCommand(
@@ -403,22 +418,22 @@ object Intake: Mechanism("Intake") {
 //        )
 //    }
 
-//    private fun homeMotorOut(motor: TalonFX, hitHardStopSupplier: () -> Boolean): Command {
-//        val timer = Timer()
-//        return sequenceCommand(
-//            runOnceCommand {
-//                timer.restart()
-//            },
-//            runCommand {
-//                println("going out?")
-//                motor.setControl(DutyCycleOut(HOMING_POWER))
-//            }.onlyRunWhileFalse { hitHardStopSupplier.invoke() && timer.get() > 0.5 }.withTimeout(6.0).finallyRun {
-//                motor.setControl(DutyCycleOut(0.0))
-//                println("Deploy Pos: ${motor.position}")
-//                motor.setPosition(DEPLOY_POSE + 0.5)
-//            }
-//        )
-//    }
+    // V3 Commands
+    private fun homeMotorOut(motor: TalonFX, hitHardStopSupplier: () -> Boolean): Command = use("HomeMotorOut") {
+        val timer = Timer()
+        timer.start()
+        periodic {
+            if ((hitHardStopSupplier.invoke() && timer.get() > 0.5) || timer.get() > 6.0) {
+                stop()
+            } else {
+                println("going out?")
+                motor.setControl(DutyCycleOut(HOMING_POWER))
+            }
+        }
+        motor.setControl(DutyCycleOut(0.0))
+        println("Deploy Pos: ${motor.position}")
+        motor.setPosition(DEPLOY_POSE + 0.5)
+    }
 
 
 //    fun pulse(): Command = sequenceCommand(
@@ -437,29 +452,30 @@ object Intake: Mechanism("Intake") {
     }.named("HomeDeploy")
 
 
-    private fun default(): Command = run {
-        LoopLogger.record("b4 Intake default")
-        when (intakeState) {
-            IntakeState.OFF -> {
-                velocitySetpoint = 0.0
-            }
-            IntakeState.INTAKING -> {
-                velocitySetpoint = if (Robot.isAutonomous) 100.0 else INTAKE_POWER
-                if (!Shooter.isShooting) {
-                    Spindexer.currentState = Spindexer.State.AGITATING
+    override fun Coroutine.default() {
+        periodic {
+            LoopLogger.record("b4 Intake default")
+            when (intakeState) {
+                IntakeState.OFF -> {
+                    velocitySetpoint = 0.0
+                }
+                IntakeState.INTAKING -> {
+                    velocitySetpoint = if (Robot.isAutonomous) 100.0 else INTAKE_POWER
+                    if (!Shooter.isShooting) {
+                        Spindexer.currentState = Spindexer.State.AGITATING
+                    }
+                }
+                IntakeState.SPITTING -> {
+                    velocitySetpoint = -INTAKE_POWER
                 }
             }
-            IntakeState.SPITTING -> {
-                velocitySetpoint = -INTAKE_POWER
+
+            LoopLogger.record("Intake default when")
+
+            if (prevIntakeState == IntakeState.INTAKING && intakeState != IntakeState.INTAKING) {
+                Spindexer.currentState = Spindexer.State.OFF
             }
-        }
-
-        LoopLogger.record("Intake default when")
-
-        if (prevIntakeState == IntakeState.INTAKING && intakeState != IntakeState.INTAKING) {
-            Spindexer.currentState = Spindexer.State.OFF
-        }
-        prevIntakeState = intakeState
+            prevIntakeState = intakeState
 
 //        if (goingToSetpoint0 && deployMotor0Error.absoluteValue < FLEX_THRESHOLD) {
 //            goingToSetpoint0 = false
@@ -473,8 +489,9 @@ object Intake: Mechanism("Intake") {
 //        LoopLogger.record("Intake default b4 controlMode")
 
 
-        LoopLogger.record("Intake default")
-    }.named("Intake Default")
+            LoopLogger.record("Intake default")
+        }
+    }
 
     enum class IntakeState {
         INTAKING,

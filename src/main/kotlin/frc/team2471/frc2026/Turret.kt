@@ -18,6 +18,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.littletonrobotics.junction.AutoLogOutput
 import org.littletonrobotics.junction.Logger
+import org.team2471.frc.lib.commands.MechanismBase
 import org.team2471.frc.lib.control.LoopLogger
 //import org.team2471.frc.lib.control.commands.onlyRunWhileFalse
 import org.team2471.frc.lib.ctre.PhoenixUtil
@@ -55,12 +56,13 @@ import org.team2471.frc.lib.units.asMeters
 import org.team2471.frc.lib.units.rotationsPerSecond
 import org.team2471.frc.lib.util.isSim
 import org.wpilib.commands3.Command
+import org.wpilib.commands3.Coroutine
 import org.wpilib.commands3.Mechanism
 import kotlin.collections.toDoubleArray
 import kotlin.math.IEEErem
 import kotlin.math.absoluteValue
 
-object Turret: Mechanism("Turret") {
+object Turret: MechanismBase("Turret") {
     private val table = NetworkTableInstance.getDefault().getTable("Turret")
     val encoder1OffsetEntry = table.getEntry("Encoder 1 Offset")
     val encoder2OffsetEntry = table.getEntry("Encoder 2 Offset")
@@ -390,7 +392,7 @@ object Turret: Mechanism("Turret") {
         zeroTurretMotor()
     }
 
-    fun periodic() {
+    override fun periodic() {
         LoopLogger.record("b4 turret periodic")
         val aimTarget = AimUtils.aimTarget
         val turretTranslation = turretTranslation
@@ -413,6 +415,10 @@ object Turret: Mechanism("Turret") {
         }
 
         LoopLogger.record("turret periodic")
+    }
+
+    override fun Coroutine.default() {
+        await(aimAtTarget())
     }
 
     fun aimAtTarget(): Command = run {

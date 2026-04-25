@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj.Timer
 //import edu.wpi.first.wpilibj2.command.SubsystemBase
 import frc.team2471.frc2026.Robot.powerTracker
 import org.littletonrobotics.junction.AutoLogOutput
+import org.team2471.frc.lib.commands.MechanismBase
 import org.team2471.frc.lib.control.LoopLogger
 import org.team2471.frc.lib.ctre.addFollower
 import org.team2471.frc.lib.ctre.applyConfiguration
@@ -26,7 +27,7 @@ import org.team2471.frc.lib.units.asAmps
 import org.team2471.frc.lib.util.isSim
 import org.wpilib.commands3.Mechanism
 
-object Spindexer: Mechanism("Spindexer") {
+object Spindexer: MechanismBase("Spindexer") {
     val table = NetworkTableInstance.getDefault().getTable("Spindexer")
 
     val spinMotor = TalonFX(Falcons.SPIN_0)
@@ -197,7 +198,7 @@ object Spindexer: Mechanism("Spindexer") {
     }
 
 
-    fun periodic() {
+    override fun periodic() {
         LoopLogger.record("b4 spindexer periodic")
         when (currentState) {
             State.OFF -> {

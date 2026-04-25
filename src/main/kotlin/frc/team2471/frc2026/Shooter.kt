@@ -33,6 +33,8 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.littletonrobotics.junction.AutoLogOutput
 import org.littletonrobotics.junction.Logger
+import org.team2471.frc.lib.commands.MechanismBase
+import org.team2471.frc.lib.commands.periodic
 import org.team2471.frc.lib.control.LoopLogger
 //import org.team2471.frc.lib.control.commands.finallyRun
 //import org.team2471.frc.lib.control.commands.onlyRunWhileFalse
@@ -78,11 +80,12 @@ import org.team2471.frc.lib.util.angleTo
 import org.team2471.frc.lib.util.isReal
 import org.team2471.frc.lib.util.isSim
 import org.wpilib.commands3.Command
+import org.wpilib.commands3.Coroutine
 import org.wpilib.commands3.Mechanism
 import kotlin.math.abs
 import kotlin.math.cos
 
-object Shooter: Mechanism("Shooter") {
+object Shooter: MechanismBase("Shooter") {
     val table = NetworkTableInstance.getDefault().getTable("Shooter")
 
     // feet, rot/s (of the wheel not the motor) (in an ideal condition. need to divide by SHOOTER_EFFICIENCY)
@@ -432,7 +435,7 @@ object Shooter: Mechanism("Shooter") {
 
 
 
-    fun periodic() {
+    override fun periodic() {
         LoopLogger.record("b4 Shooter periodic")
         if (isSim) {
             if (isShooting) {
@@ -462,29 +465,31 @@ object Shooter: Mechanism("Shooter") {
         LoopLogger.record("Shooter periodic")
     }
 
-    fun default(): Command = run {
-        if ((doAutoShoot && !Drive.cameraDisconnected) && Drive.useAprilTags && AimUtils.isAimingAtGoal) {
-            if (FieldManager.inScoringZone && !FieldManager.inNoShootArea /*&& AimUtils.distanceToTarget < 13.0.feet*/ && FieldManager.shouldShoot) {
-                shootLoop()
+    override fun Coroutine.default() {
+        periodic {
+            if ((doAutoShoot && !Drive.cameraDisconnected) && Drive.useAprilTags && AimUtils.isAimingAtGoal) {
+                if (FieldManager.inScoringZone && !FieldManager.inNoShootArea /*&& AimUtils.distanceToTarget < 13.0.feet*/ && FieldManager.shouldShoot) {
+                    shootLoop()
+                } else {
+                    isShooting = false
+                    if (Intake.intakeState != Intake.IntakeState.INTAKING) {
+                        Spindexer.currentState = Spindexer.State.OFF
+                    }
+                    hoodAngleSetpoint = hoodAngleSetpoint.coerceAtMost(HOOD_UNDER_TRENCH_MAX_ANGLE)//HOOD_STOW_SETPOINT.degrees
+                }
+                if (FieldManager.shouldShoot && FieldManager.inScoringZone) {
+                    rampUpLoop()
+                }
             } else {
+                hoodAngleSetpoint = hoodAngleSetpoint.coerceAtMost(HOOD_UNDER_TRENCH_MAX_ANGLE)//HOOD_STOW_SETPOINT.degrees
+                shooterVelocitySetpoint = 0.0.rotationsPerSecond//if (doAutoRamp) 50.0.rotationsPerSecond / SHOOTER_GEAR_RATIO / AimUtils.shooterEfficiency else 0.0.rotationsPerSecond
                 isShooting = false
                 if (Intake.intakeState != Intake.IntakeState.INTAKING) {
                     Spindexer.currentState = Spindexer.State.OFF
                 }
-                hoodAngleSetpoint = hoodAngleSetpoint.coerceAtMost(HOOD_UNDER_TRENCH_MAX_ANGLE)//HOOD_STOW_SETPOINT.degrees
-            }
-            if (FieldManager.shouldShoot && FieldManager.inScoringZone) {
-                rampUpLoop()
-            }
-        } else {
-            hoodAngleSetpoint = hoodAngleSetpoint.coerceAtMost(HOOD_UNDER_TRENCH_MAX_ANGLE)//HOOD_STOW_SETPOINT.degrees
-            shooterVelocitySetpoint = 0.0.rotationsPerSecond//if (doAutoRamp) 50.0.rotationsPerSecond / SHOOTER_GEAR_RATIO / AimUtils.shooterEfficiency else 0.0.rotationsPerSecond
-            isShooting = false
-            if (Intake.intakeState != Intake.IntakeState.INTAKING) {
-                Spindexer.currentState = Spindexer.State.OFF
             }
         }
-    }.named("Shooter Default")
+    }
 
 
 //    fun shootOrRamp(): Command {

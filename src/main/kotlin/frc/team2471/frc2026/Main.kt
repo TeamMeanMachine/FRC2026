@@ -53,7 +53,7 @@ object Robot : LoggedRobot() {
     private var wasAutonomous = false
     private var wasTeleop = false
 
-//    val commandScheduler = CommandScheduler.getInstance()
+    val scheduler = Scheduler.getDefault()
 
     @get:JvmName("RobotIsEnabled")
     var isEnabled = false
@@ -185,11 +185,9 @@ object Robot : LoggedRobot() {
 
 
         LoopLogger.record("b4 CommandScheduler")
-//        try {
-//            commandScheduler.run()
-//        } catch (e: ConcurrentModificationException) {
-//            println("ConcurrentModificationException!!!! $e")
-//        }
+
+        scheduler.run()
+
         LoopLogger.record("after CommandScheduler")
 
         powerTracker.logData()
@@ -206,7 +204,7 @@ object Robot : LoggedRobot() {
     fun enabledInitAsync() {
         if (beforeFirstEnableAsync) {
             if (!isAutonomous) {
-//                commandScheduler.schedule(Intake.home())
+                scheduler.schedule(Intake.home())
 
 //                Drive.localizer.trackAllTags()
             } else {

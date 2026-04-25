@@ -6,6 +6,7 @@ import edu.wpi.first.math.geometry.Translation2d
 import edu.wpi.first.networktables.NetworkTableInstance
 import edu.wpi.first.wpilibj.Alert
 import edu.wpi.first.wpilibj.GenericHID
+import org.team2471.frc.lib.commands.MechanismBase
 //import edu.wpi.first.wpilibj2.command.SubsystemBase
 import org.team2471.frc.lib.control.LoopLogger
 import org.team2471.frc.lib.control.MeanCommandXboxController
@@ -19,7 +20,7 @@ import org.team2471.frc.lib.math.normalize
 import org.team2471.frc.lib.units.degrees
 import org.wpilib.commands3.Mechanism
 
-object OI: Mechanism("OI") {
+object OI: MechanismBase("OI") {
     private val table = NetworkTableInstance.getDefault().getTable("OI")
 
     val rotationMultiplierEntry = table.getEntry("Rotation Multiplier")
@@ -93,13 +94,6 @@ object OI: Mechanism("OI") {
         if (!rotationMultiplierEntry.exists()) rotationMultiplierEntry.setDouble(rotationMultiplier)
         rotationMultiplierEntry.setPersistent()
 
-        // Default command, normal field-relative drive
-        Drive.defaultCommand = Drive.joystickDrive()
-
-        Turret.defaultCommand = Turret.aimAtTarget()//.ignoringDisable(true)
-
-        Shooter.defaultCommand = Shooter.default()//.ignoringDisable(true)
-
         // Zero Gyro
 //        driverController.back().onTrue({
 //                println("zero gyro")
@@ -168,7 +162,7 @@ object OI: Mechanism("OI") {
 //        driverController.povDown().and(driverController.y().negate()).and(driverController.leftBumper().negate()).onTrue(runOnceCommand { Turret.offset += 2.0.degrees})
     }
 
-    fun periodic() {
+    override fun periodic() {
         LoopLogger.record("b4 OI piodc")
         driverNotConnectedAlert.set(driverDebouncer.calculate(!driverController.isConnected))
         operatorNotConnectedAlert.set(operatorDebouncer.calculate(!operatorController.isConnected))
