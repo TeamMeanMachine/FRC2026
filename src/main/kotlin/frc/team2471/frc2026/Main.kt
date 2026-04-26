@@ -11,7 +11,9 @@ import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import org.littletonrobotics.junction.*
+import org.littletonrobotics.junction.LogFileUtil
+import org.littletonrobotics.junction.Logger
+import org.littletonrobotics.junction.MeanLogger
 import org.littletonrobotics.junction.networktables.MeanNT4Publisher
 import org.littletonrobotics.junction.wpilog.WPILOGReader
 import org.littletonrobotics.junction.wpilog.WPILOGWriter
@@ -37,7 +39,7 @@ import kotlin.time.Duration.Companion.milliseconds
  * project.
  */
 @OptIn(DelicateCoroutinesApi::class)
-object Robot : LoggedRobot() {
+object Robot : TimedRobot() {
     val isCompBot = getCompBotBoolean()
     private var wasDisabled = true
     private var doEnableInitAsync = false
@@ -162,6 +164,7 @@ object Robot : LoggedRobot() {
 
     /** This function is called periodically during all modes.  */
     override fun robotPeriodic() {
+        MeanLogger.periodicBeforeUser()
         LoopLogger.reset()
         LoopLogger.record("after LL reset")
         // Optionally switch the thread to high priority to improve loop
@@ -196,6 +199,7 @@ object Robot : LoggedRobot() {
         // Return to non-RT thread priority (do not modify the first argument)
 //         Threads.setCurrentThreadPriority(false, 10);
         LoopLogger.record("Robot periodic()")
+        MeanLogger.periodicAfterUser(0.1.toLong(), 0.1.toLong())
     }
 
     fun enabledInit() {}
@@ -335,63 +339,6 @@ object Robot : LoggedRobot() {
         return compBot
     }
 
-
-    /** Provide an alternate "main loop" via startCompetition().  */
-    override fun startCompetition() {
-
-
-        // Robot init methods
-        val initStat = RobotController.getFPGATime()
-//        robotInit()
-        if (isSimulation()) {
-            simulationInit()
-        }
-        val initEnd = RobotController.getFPGATime()
-
-
-        // Register auto logged outputs
-        AutoLogOutputManager.addObject(this)
-
-
-        // Save data from init cycle
-        MeanLogger.periodicAfterUser(0.1.toLong(), 0)
-
-
-        // Tell the DS that the robot is ready to be enabled
-        println("********** Robot program startup complete **********")
-        DriverStationJNI.observeUserProgramStarting()
-
-        var nextCycleUs = 0.0.toLong()
-
-        // Loop forever, calling the appropriate mode-dependent function
-        while (true) {
-//            if (true) {
-//                val currentTimeUs = RobotController.getFPGATime()
-//                if (nextCycleUs < currentTimeUs) {
-//                    // Loop overrun, start next cycle immediately
-//                    nextCycleUs = currentTimeUs
-//                } else {
-//                    // Wait before next cycle
-////                    NotifierJNI.updateNotifierAlarm(notifier, nextCycleUs)
-////                    if (NotifierJNI.waitForNotifierAlarm(notifier) == 0L) {
-//                        // Break the loop if the notifier was stopped
-////                        Logger.end()
-////                        break
-////                    }
-//                }
-//                nextCycleUs += (0.02 * 1000000).toLong()
-//            }
-
-//            val periodicBeforeStart = RobotController.getFPGATime()
-            MeanLogger.periodicBeforeUser()
-//            val userCodeStart = RobotController.getFPGATime()
-            loopFunc()
-//            val userCodeEnd = RobotController.getFPGATime()
-
-//            gcStatsCollector.update()
-            MeanLogger.periodicAfterUser(0.1.toLong(), 0.1.toLong())
-        }
-    }
 
     /** Ends the main loop in startCompetition().  */
     override fun endCompetition() {
