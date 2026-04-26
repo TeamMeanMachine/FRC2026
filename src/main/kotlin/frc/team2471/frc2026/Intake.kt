@@ -21,7 +21,6 @@ import org.littletonrobotics.junction.AutoLogOutput
 import org.team2471.frc.lib.commands.MechanismBase
 import org.team2471.frc.lib.commands.parallel
 import org.team2471.frc.lib.commands.periodic
-import org.team2471.frc.lib.commands.periodicTimeout
 import org.team2471.frc.lib.commands.use
 import org.team2471.frc.lib.control.CurrentLimits
 import org.team2471.frc.lib.control.LoopLogger
@@ -47,7 +46,6 @@ import org.team2471.frc.lib.units.asVolts
 import org.team2471.frc.lib.util.isSim
 import org.wpilib.commands3.Command
 import org.wpilib.commands3.Coroutine
-import org.wpilib.commands3.Mechanism
 import kotlin.math.absoluteValue
 
 object Intake: MechanismBase("Intake") {
@@ -303,7 +301,7 @@ object Intake: MechanismBase("Intake") {
             coastMode()
         }
         if (Robot.isCompBot) {
-            rollerMotor.addFollower(rollerMotorFollower, false)
+            rollerMotor.addFollower(rollerMotorFollower/*, false*/)
         } else {
             rollerMotor.addFollower(rollerMotorFollower)
         }
@@ -320,7 +318,7 @@ object Intake: MechanismBase("Intake") {
 
 
         GlobalScope.launch {
-            org.team2471.frc.lib.coroutines.periodiccc {
+            org.team2471.frc.lib.coroutines.periodic {
                 deploySetpoint = deploySetpoint
             }
         }

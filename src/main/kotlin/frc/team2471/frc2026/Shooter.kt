@@ -1,11 +1,9 @@
 package frc.team2471.frc2026
 
-import com.ctre.phoenix6.SignalLogger
 import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage
 import com.ctre.phoenix6.controls.MotionMagicVoltage
 import com.ctre.phoenix6.controls.NeutralOut
 import com.ctre.phoenix6.controls.PositionVoltage
-import com.ctre.phoenix6.controls.VoltageOut
 import com.ctre.phoenix6.hardware.CANcoder
 import com.ctre.phoenix6.signals.InvertedValue
 //import com.ctre.phoenix6.signals.MotorAlignmentValue
@@ -20,8 +18,6 @@ import edu.wpi.first.math.system.plant.DCMotor
 import edu.wpi.first.networktables.NetworkTableInstance
 import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.units.measure.AngularVelocity
-import edu.wpi.first.units.measure.Voltage
-import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog
 //import edu.wpi.first.wpilibj2.command.Command
 //import edu.wpi.first.wpilibj2.command.SubsystemBase
 //import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine
@@ -32,7 +28,6 @@ import frc.team2471.frc2026.Robot.powerTracker
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.littletonrobotics.junction.AutoLogOutput
-import org.littletonrobotics.junction.Logger
 import org.team2471.frc.lib.commands.MechanismBase
 import org.team2471.frc.lib.commands.periodic
 import org.team2471.frc.lib.control.LoopLogger
@@ -42,7 +37,6 @@ import org.team2471.frc.lib.control.LoopLogger
 //import org.team2471.frc.lib.control.commands.parallelCommand
 //import org.team2471.frc.lib.control.commands.runCommand
 //import org.team2471.frc.lib.control.commands.runOnceCommand
-import org.team2471.frc.lib.control.rightStickButton
 import org.team2471.frc.lib.ctre.addFollower
 import org.team2471.frc.lib.ctre.applyConfiguration
 import org.team2471.frc.lib.ctre.brakeMode
@@ -65,23 +59,18 @@ import org.team2471.frc.lib.units.asMeters
 import org.team2471.frc.lib.units.asMetersPerSecond
 import org.team2471.frc.lib.units.asRadiansPerSecond
 import org.team2471.frc.lib.units.asRotation2d
-import org.team2471.frc.lib.units.asVolts
+import org.team2471.frc.lib.units.asRotations
 import org.team2471.frc.lib.units.cos
 import org.team2471.frc.lib.units.degrees
 import org.team2471.frc.lib.units.inches
 import org.team2471.frc.lib.units.radians
 import org.team2471.frc.lib.units.rotations
 import org.team2471.frc.lib.units.rotationsPerSecond
-import org.team2471.frc.lib.units.seconds
 import org.team2471.frc.lib.units.sin
-import org.team2471.frc.lib.units.volts
-import org.team2471.frc.lib.units.voltsPerSecond
 import org.team2471.frc.lib.util.angleTo
 import org.team2471.frc.lib.util.isReal
 import org.team2471.frc.lib.util.isSim
-import org.wpilib.commands3.Command
 import org.wpilib.commands3.Coroutine
-import org.wpilib.commands3.Mechanism
 import kotlin.math.abs
 import kotlin.math.cos
 
@@ -256,7 +245,7 @@ object Shooter: MechanismBase("Shooter") {
         set(value) {
             if (isCompBot) {
                 field = value.coerceIn(HOOD_ZERO.degrees, 45.0.degrees)
-                hoodMotor.setControl(PositionVoltage(field).withFeedForward(0.0))
+                hoodMotor.setControl(PositionVoltage(field.asRotations).withFeedForward(0.0))
             } else {
                 field = value.coerceIn(0.0.degrees, 44.0.degrees)
                 if (field == 0.0.degrees && hoodAngle > 5.0.degrees) {
@@ -377,7 +366,7 @@ object Shooter: MechanismBase("Shooter") {
 //            TorqueCurrent.PeakForwardTorqueCurrent = 40.0
 //            TorqueCurrent.PeakReverseTorqueCurrent = 0.0
         }
-        shooterMotor.addFollower(shooterMotorFollower, true)
+        shooterMotor.addFollower(shooterMotorFollower/*, true*/)
 
         if (Robot.isCompBot) {
             hoodEncoder.applyConfiguration {
@@ -425,7 +414,7 @@ object Shooter: MechanismBase("Shooter") {
 
 
         GlobalScope.launch {
-            org.team2471.frc.lib.coroutines.periodiccc(0.01) {
+            org.team2471.frc.lib.coroutines.periodic(0.01) {
 //                SHOOTER_CUSTOM_I += shooterVelocityError.asRotationsPerSecond * 0.02 * shooterI
 //                val requestedVoltage = shooterController.updateVoltage(shooterVelocitySetpoint.asRotationsPerSecond, shooterVelocity.asRotationsPerSecond).coerceIn(0.0, 13.0)
 //                shooterMotor.setControl(VoltageOut(requestedVoltage))

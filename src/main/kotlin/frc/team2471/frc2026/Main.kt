@@ -3,8 +3,6 @@ package frc.team2471.frc2026
 
 //import edu.wpi.first.hal.FRCNetComm.tInstances
 //import edu.wpi.first.hal.FRCNetComm.tResourceType
-//import edu.wpi.first.wpilibj2.command.CommandScheduler
-//import edu.wpi.first.wpilibj2.command.Commands
 import com.ctre.phoenix6.SignalLogger
 import edu.wpi.first.hal.DriverStationJNI
 import edu.wpi.first.hal.NotifierJNI
@@ -13,15 +11,13 @@ import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import org.littletonrobotics.junction.AutoLogOutputManager
-import org.littletonrobotics.junction.LogFileUtil
-import org.littletonrobotics.junction.LoggedRobot
-import org.littletonrobotics.junction.Logger
-import org.littletonrobotics.junction.networktables.NT4Publisher
+import org.littletonrobotics.junction.*
+import org.littletonrobotics.junction.networktables.MeanNT4Publisher
 import org.littletonrobotics.junction.wpilog.WPILOGReader
 import org.littletonrobotics.junction.wpilog.WPILOGWriter
+import org.team2471.frc.lib.commands.use
 import org.team2471.frc.lib.control.LoopLogger
-import org.team2471.frc.lib.coroutines.periodiccc
+import org.team2471.frc.lib.coroutines.periodic
 import org.team2471.frc.lib.ctre.loggedTalonFX.MasterMotor
 import org.team2471.frc.lib.logging.NT4NonFMSPublisher
 import org.team2471.frc.lib.units.asFeet
@@ -99,8 +95,8 @@ object Robot : LoggedRobot() {
                 Logger.addDataReceiver(NT4NonFMSPublisher()) // Only log to NT if FMS is not connected
             }
             RobotMode.SIM -> {
-//                Logger.addDataReceiver(NT4Publisher())
-//                Logger.addDataReceiver(WPILOGWriter())
+                MeanLogger.addDataReceiver(MeanNT4Publisher())
+//                MeanLogger.addDataReceiver(WPILOGWriter())
             } // Running a physics simulator, log to NT
             RobotMode.REPLAY -> { // Replaying a log, set up replay source
 //                setUseTiming(true) // false - simulate as fast as possible, true - simulate in real time (particle filter needs true)
@@ -117,7 +113,7 @@ object Robot : LoggedRobot() {
         SignalLogger.stop()
 
         // Start AdvantageKit logger
-//        Logger.start()
+        MeanLogger.start()
         // Call all subsystems, make sure their init's run
         allSubsystems.forEach { println("activating subsystem ${it.name}") }
         println("FieldManager thinks the field is ${FieldManager.fieldDimensions.asFeet} feet big")
@@ -135,7 +131,6 @@ object Robot : LoggedRobot() {
         } catch (_: Exception) {
             DriverStation.reportWarning("Failed to disable loop overrun warnings.", false)
         }
-//        commandScheduler.setPeriod(loopOverrunWarningTimeout)
 
         GlobalScope.launch {
             // Attempt to clear out small occasional loop overruns when periodically calling DriverStation.isEnabled()
@@ -155,9 +150,10 @@ object Robot : LoggedRobot() {
             }
         }
 
+        RobotController.setTimeSource { RobotController.getFPGATime() }
         GlobalScope.launch {
             val t = Timer()
-            periodiccc {
+            periodic {
                 powerTracker.update(t.get())
                 t.restart()
             }
@@ -184,11 +180,15 @@ object Robot : LoggedRobot() {
         }
 
 
-        LoopLogger.record("b4 CommandScheduler")
+        LoopLogger.record("b4 Scheduler")
 
+        // Runs the Scheduler.  This is responsible for polling buttons, adding newly scheduled
+        // commands, running already-scheduled commands, removing finished or interrupted commands,
+        // and running subsystem periodic() methods.  This must be called from the robot's periodic
+        // block in order for anything in the Command-based framework to work.
         scheduler.run()
 
-        LoopLogger.record("after CommandScheduler")
+        LoopLogger.record("after Scheduler")
 
         powerTracker.logData()
         LoopLogger.record("after powerTracker update")
@@ -226,13 +226,15 @@ object Robot : LoggedRobot() {
     /** This function is called once when the robot is disabled.  */
     override fun disabledInit() {
         Drive.coastMode()
-//        Autonomous.autonomousCommand?.cancel() // This makes sure that the autonomous stops running when teleop starts running.
-//        Autonomous.testCommand?.cancel()
+        Autonomous.autonomousCommand?.let { this.scheduler.cancel(it) }
+        Autonomous.testCommand?.let { this.scheduler.cancel(it) }
+//        scheduler.cancel(Autonomous.autonomousCommand) // This makes sure that the autonomous stops running when teleop starts running.
+//        scheduler.cancel(Autonomous.testCommand)
+    }
 
-        if (wasAutonomous) {
-            wasAutonomous = false
-            println("Was autonomous")
-            Drive.setDriveCurrentLimits(TunerConstants.driveTeleCurrentLimits)
+    override fun autonomousExit() {
+        println("Was autonomous")
+        Drive.setDriveCurrentLimits(TunerConstants.driveTeleCurrentLimits)
 //            Intake.rollerMotor.modifyConfiguration {
 //                currentLimits(
 //                    Intake.teleopCurrentLimits.continuousLimit,
@@ -240,10 +242,10 @@ object Robot : LoggedRobot() {
 //                    Intake.teleopCurrentLimits.peakDuration
 //                )
 //            }
-        }
-        if (wasTeleop) {
-            wasTeleop = false
-            println("Was teleop")
+    }
+
+    override fun teleopExit() {
+        println("Was teleop")
 //            Drive.modules.forEach {
 //                GlobalScope.launch {
 //                    it.driveMotor.modifyConfiguration {
@@ -256,7 +258,6 @@ object Robot : LoggedRobot() {
 //                    }
 //                }
 //            }
-        }
     }
 
     /** This function is called periodically when disabled.  */
@@ -274,7 +275,7 @@ object Robot : LoggedRobot() {
 //        println("Autonomous init $timeSinceEnabled")
 //        Autonomous.setDrivePositionToAutoStartPose()
 //        println("scheduling auto command $timeSinceEnabled")
-//        commandScheduler.schedule(Autonomous.autonomousCommand ?: Commands.runOnce({ println("THE AUTONOMOUS COMMAND IS NULL") }))
+        scheduler.schedule(Autonomous.autonomousCommand ?: use("NullAutoCommand") { println("THE AUTONOMOUS COMMAND IS NULL")})
         wasAutonomous = true
 //        println("scheduled auto command $timeSinceEnabled")
     }
@@ -292,8 +293,8 @@ object Robot : LoggedRobot() {
 
     /** This function is called once when test mode is enabled.  */
     override fun testInit() {
-//        CommandScheduler.getInstance().cancelAll() // Cancels all running commands at the start of test mode.
-//        CommandScheduler.getInstance().schedule((Autonomous.testCommand ?: Commands.runOnce({println("THE TEST COMMAND IS NULL")})))
+        scheduler.cancelAll() // Cancels all running commands at the start of test mode.
+        scheduler.schedule(Autonomous.testCommand ?: use("NullTestCommand") { println("THE TEST COMMAND IS NULL") })
     }
 
     /** This function is called periodically during test mode.  */
@@ -337,26 +338,58 @@ object Robot : LoggedRobot() {
 
     /** Provide an alternate "main loop" via startCompetition().  */
     override fun startCompetition() {
+
+
         // Robot init methods
         val initStat = RobotController.getFPGATime()
+//        robotInit()
         if (isSimulation()) {
             simulationInit()
         }
         val initEnd = RobotController.getFPGATime()
 
+
         // Register auto logged outputs
         AutoLogOutputManager.addObject(this)
 
+
         // Save data from init cycle
+        MeanLogger.periodicAfterUser(0.1.toLong(), 0)
+
 
         // Tell the DS that the robot is ready to be enabled
         println("********** Robot program startup complete **********")
         DriverStationJNI.observeUserProgramStarting()
 
+        var nextCycleUs = 0.0.toLong()
+
         // Loop forever, calling the appropriate mode-dependent function
         while (true) {
+//            if (true) {
+//                val currentTimeUs = RobotController.getFPGATime()
+//                if (nextCycleUs < currentTimeUs) {
+//                    // Loop overrun, start next cycle immediately
+//                    nextCycleUs = currentTimeUs
+//                } else {
+//                    // Wait before next cycle
+////                    NotifierJNI.updateNotifierAlarm(notifier, nextCycleUs)
+////                    if (NotifierJNI.waitForNotifierAlarm(notifier) == 0L) {
+//                        // Break the loop if the notifier was stopped
+////                        Logger.end()
+////                        break
+////                    }
+//                }
+//                nextCycleUs += (0.02 * 1000000).toLong()
+//            }
 
+//            val periodicBeforeStart = RobotController.getFPGATime()
+            MeanLogger.periodicBeforeUser()
+//            val userCodeStart = RobotController.getFPGATime()
             loopFunc()
+//            val userCodeEnd = RobotController.getFPGATime()
+
+//            gcStatsCollector.update()
+            MeanLogger.periodicAfterUser(0.1.toLong(), 0.1.toLong())
         }
     }
 

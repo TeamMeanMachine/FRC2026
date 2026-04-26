@@ -16,14 +16,14 @@ import kotlinx.coroutines.launch
 import org.littletonrobotics.junction.AutoLogOutput
 import org.littletonrobotics.junction.LogFileUtil
 import org.littletonrobotics.junction.Logger
-import org.littletonrobotics.junction.networktables.LoggedDashboardChooser
+import org.littletonrobotics.junction.MeanLogger
 import org.littletonrobotics.junction.networktables.NT4Publisher
 import org.littletonrobotics.junction.wpilog.WPILOGReader
 import org.littletonrobotics.junction.wpilog.WPILOGWriter
 //import org.team2471.frc.lib.control.commands.runCommand
 //import org.team2471.frc.lib.control.commands.runOnceCommand
 //import org.team2471.frc.lib.control.commands.sequenceCommand
-import org.team2471.frc.lib.coroutines.periodiccc
+import org.team2471.frc.lib.coroutines.periodic
 import org.team2471.frc.lib.units.*
 import org.team2471.frc.lib.util.RobotMode
 import org.team2471.frc.lib.util.isRedAlliance
@@ -93,7 +93,7 @@ object FieldManager {
                 val relativePose = pose - Drive.localizer.pose.translation
                 if (relativePose.y.absoluteValue.meters < (trenchAreaWidth/2.0)) {
                     val predictedPose = Drive.localizer.pose.translation + Drive.velocity * Shooter.HOOD_DOWN_TIME
-                    Logger.recordOutput("Drive/predictedPose", predictedPose)
+                    MeanLogger.recordOutput("Drive/predictedPose", predictedPose)
                     val predictedRelativePose = pose - predictedPose
                     if ((predictedRelativePose.x.sign != relativePose.x.sign) || (relativePose.x.absoluteValue.meters < (trenchAreaLength/2.0))) {
                         return true
@@ -304,7 +304,7 @@ object FieldManager {
 //        Logger.recordOutput("FieldManager/TowerPoseBlue", blueTowerPose)
 
         GlobalScope.launch {
-            periodiccc {
+            periodic {
                 weWonAutoEntry.setBoolean(weWonAuto)
                 hubCountdownEntry.setDouble(if (matchTime > 130.0) matchTime - 130.0 else if (matchTime < 30.0 || (matchTime < 55.0 && weWonAuto)) matchTime else (matchTime - 5) % 25.0)
                 activeHubEntry.setString(

@@ -18,6 +18,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.littletonrobotics.junction.AutoLogOutput
 import org.littletonrobotics.junction.Logger
+import org.littletonrobotics.junction.MeanLogger
 import org.team2471.frc.lib.commands.MechanismBase
 import org.team2471.frc.lib.control.LoopLogger
 //import org.team2471.frc.lib.control.commands.onlyRunWhileFalse
@@ -47,7 +48,7 @@ import org.team2471.frc.lib.units.wrap
 import org.team2471.frc.lib.util.angleTo
 import org.team2471.frc.lib.util.isReal
 import kotlin.math.abs
-import org.team2471.frc.lib.coroutines.periodiccc
+import org.team2471.frc.lib.coroutines.periodic
 import org.team2471.frc.lib.ctre.alternateFeedbackSensor
 import org.team2471.frc.lib.ctre.brakeMode
 import org.team2471.frc.lib.units.asAmps
@@ -57,8 +58,6 @@ import org.team2471.frc.lib.units.rotationsPerSecond
 import org.team2471.frc.lib.util.isSim
 import org.wpilib.commands3.Command
 import org.wpilib.commands3.Coroutine
-import org.wpilib.commands3.Mechanism
-import kotlin.collections.toDoubleArray
 import kotlin.math.IEEErem
 import kotlin.math.absoluteValue
 
@@ -228,7 +227,7 @@ object Turret: MechanismBase("Turret") {
                     val robotCentricNoGyroSetpoint = (turretMotorRotorAngle + noGyroError)
                     val robotCentricNoGyroSetpointWrapped = robotCentricNoGyroSetpoint.asDegrees.IEEErem(TURRET_TOP_LIMIT.asDegrees.absoluteValue + TURRET_BOTTOM_LIMIT.asDegrees.absoluteValue).degrees
                     println("Turret Gyro Disconnect ${robotCentricNoGyroSetpointWrapped.asDegrees}")
-                    Logger.recordOutput("Turret/testMotorCentricSetpointDeg", robotCentricNoGyroSetpointWrapped.asDegrees)
+                    MeanLogger.recordOutput("Turret/testMotorCentricSetpointDeg", robotCentricNoGyroSetpointWrapped.asDegrees)
                     turretMotor.setControl(PositionVoltage(robotCentricNoGyroSetpointWrapped.asRotations).withFeedForward(turretFeedforward))
                 }
             } else {
@@ -329,7 +328,7 @@ object Turret: MechanismBase("Turret") {
 
 //            motionMagic(0.2, 12.2)
             if (useTurretGyro) {
-                alternateFeedbackSensor(turretPigeon.deviceID, FeedbackSensorSourceValue.RemotePigeon2_Yaw, motorGearRatio)
+//                alternateFeedbackSensor(turretPigeon.deviceID, FeedbackSensorSourceValue.RemotePigeon2_Yaw, motorGearRatio)
             }
 
             ClosedLoopGeneral.ContinuousWrap = false
@@ -346,7 +345,7 @@ object Turret: MechanismBase("Turret") {
 
         //Loop that updates setpoint for constantly updating wrap limits and feedforward
         GlobalScope.launch {
-            periodiccc {
+            periodic {
                 if (Robot.isDisabled) {
                     fieldCentricSetpoint = fieldCentricAngle
                 } else {
@@ -359,11 +358,12 @@ object Turret: MechanismBase("Turret") {
 
         //Loop that updates the unwrapped robot heading also sets the turret pigeon offset.
         GlobalScope.launch {
-            periodiccc {
+            periodic {
 
                 if ((fieldCentricAngle - fieldCentricTurretMotorRotorAngle.unWrap(fieldCentricAngle)).absoluteValue() > 1.0.degrees && turretVelocity.absoluteValue() < 3.0.rotationsPerSecond) {
 //                    if (!resettingGyro) {
 //                        resettingGyro = true
+                    if (isReal) {
                         GlobalScope.launch {
 //                            println("setting turret pigeon yaw to motor angle")
 //                        println("Detected Error. Trying to change gyro angle from ${fieldCentricAngle.asDegrees.round(3)} to ${fieldCentricTurretMotorRotorAngle.unWrap(fieldCentricAngle).asDegrees.round(3)}")
@@ -372,17 +372,19 @@ object Turret: MechanismBase("Turret") {
 //                            println("finished setting turret pigeon yaw, status ok: ${status.isOK}")
 //                            resettingGyro = false
                         }
-//                    }
+                    }
                 }
 
                 val tempResetAngle = tempHeadingResetAngle
                 if (tempResetAngle != null) {
                     tempHeadingResetAngle = null
                     Drive.headingAngleUnwrapped = tempResetAngle
-                    GlobalScope.launch {
+                    if (isReal) {
+                        GlobalScope.launch {
 //                        println("setting turret pigeon yaw")
-                        turretPigeon.setYaw(fieldCentricFusedEncoderAngle.unWrap(fieldCentricAngle).asDegrees)
+                            turretPigeon.setYaw(fieldCentricFusedEncoderAngle.unWrap(fieldCentricAngle).asDegrees)
 //                        println("finished setting turret pigeon yaw")
+                        }
                     }
                 }
                 Drive.headingAngleUnwrapped = Drive.heading.measure.unWrap(Drive.headingAngleUnwrapped)
@@ -398,11 +400,11 @@ object Turret: MechanismBase("Turret") {
         val turretTranslation = turretTranslation
         val turretPigeonConnected = turretPigeonIsConnected
 //        Logger.recordOutput("aim target", aimTarget.toPose2d())
-        Logger.recordOutput("Turret/turret setpoint pose", turretTranslation.toPose2d(fieldCentricSetpoint.asRotation2d))
-        Logger.recordOutput("Turret/turret pose", turretTranslation.toPose2d(fieldCentricAngle.asRotation2d))
-        Logger.recordOutput("Turret/distToGoalFeet", aimTarget.getDistance(Drive.localizer.pose.translation).meters.asFeet)
-        Logger.recordOutput("Turret/turretPigeonLatency", turretPigeonLatency)
-        Logger.recordOutput("Turret/turretPigeonIsConnected", turretPigeonConnected)
+        MeanLogger.recordOutput("Turret/turret setpoint pose", turretTranslation.toPose2d(fieldCentricSetpoint.asRotation2d))
+        MeanLogger.recordOutput("Turret/turret pose", turretTranslation.toPose2d(fieldCentricAngle.asRotation2d))
+        MeanLogger.recordOutput("Turret/distToGoalFeet", aimTarget.getDistance(Drive.localizer.pose.translation).meters.asFeet)
+        MeanLogger.recordOutput("Turret/turretPigeonLatency", turretPigeonLatency)
+        MeanLogger.recordOutput("Turret/turretPigeonIsConnected", turretPigeonConnected)
         turretPigeonIsConnectedEntry.setBoolean(turretPigeonConnected)
         LoopLogger.record("turret logging")
 

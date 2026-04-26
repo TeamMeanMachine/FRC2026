@@ -1,7 +1,5 @@
 package frc.team2471.frc2026
 
-import com.ctre.phoenix6.CANBus
-import com.ctre.phoenix6.hardware.Pigeon2
 import com.ctre.phoenix6.swerve.utility.PhoenixPIDController
 import edu.wpi.first.math.Matrix
 import edu.wpi.first.math.VecBuilder
@@ -9,10 +7,7 @@ import edu.wpi.first.math.controller.PIDController
 import edu.wpi.first.math.geometry.Pose2d
 import edu.wpi.first.math.geometry.Pose3d
 import edu.wpi.first.math.geometry.Rotation2d
-import edu.wpi.first.math.geometry.Rotation3d
-import edu.wpi.first.math.geometry.Transform3d
 import edu.wpi.first.math.geometry.Translation2d
-import edu.wpi.first.math.geometry.Translation3d
 import edu.wpi.first.math.interpolation.Interpolator
 import edu.wpi.first.math.interpolation.InverseInterpolator
 import edu.wpi.first.math.kinematics.ChassisSpeeds
@@ -22,20 +17,21 @@ import edu.wpi.first.networktables.NetworkTableInstance
 import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.wpilibj.Timer
 //import edu.wpi.first.wpilibj2.command.Command
-import frc.team2471.frc2026.OI.driverController
 import frc.team2471.frc2026.Robot.powerTracker
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.littletonrobotics.junction.AutoLogOutput
 import org.littletonrobotics.junction.Logger
+import org.littletonrobotics.junction.MeanLogger
+import org.team2471.frc.lib.commands.parallel
 import org.team2471.frc.lib.commands.periodic
+import org.team2471.frc.lib.commands.use
 import org.team2471.frc.lib.control.CurrentLimits
 import org.team2471.frc.lib.control.LoopLogger
 //import org.team2471.frc.lib.control.commands.finallyRun
 //import org.team2471.frc.lib.control.commands.runCommand
 import org.team2471.frc.lib.control.rightStickButton
 import org.team2471.frc.lib.ctre.PhoenixUtil
-import org.team2471.frc.lib.ctre.applyConfiguration
 import org.team2471.frc.lib.ctre.currentLimits
 import org.team2471.frc.lib.ctre.modifyConfiguration
 import org.team2471.frc.lib.localization.PoseLocalizer
@@ -43,26 +39,19 @@ import org.team2471.frc.lib.math.cube
 import org.team2471.frc.lib.math.square
 import org.team2471.frc.lib.swerve.SwerveDriveSubsystem
 import org.team2471.frc.lib.units.asMetersPerSecondPerSecond
-import org.team2471.frc.lib.units.asRotation2d
 import org.team2471.frc.lib.units.degrees
 import org.team2471.frc.lib.units.inches
 import org.team2471.frc.lib.math.DynamicInterpolatingTreeMap
-import org.team2471.frc.lib.units.asMeters
-import org.team2471.frc.lib.units.asRadians
 import org.team2471.frc.lib.units.inchesPerSecond
 import org.team2471.frc.lib.units.metersPerSecondPerSecond
 import org.team2471.frc.lib.units.perSecond
-import org.team2471.frc.lib.units.radians
 import org.team2471.frc.lib.units.unWrap
 import org.team2471.frc.lib.util.demoSpeed
 import org.team2471.frc.lib.util.isBlueAlliance
 import org.team2471.frc.lib.util.isSim
 import org.team2471.frc.lib.vision.Fiducial
-import org.team2471.frc.lib.vision.PipelineConfig
 import org.team2471.frc.lib.vision.QuixVisionCamera
-import org.team2471.frc.lib.vision.photonVision.PhotonVisionCamera
 import org.wpilib.commands3.Coroutine
-import kotlin.math.atan2
 
 
 object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerConstants.moduleConfigs) {
@@ -72,6 +61,9 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
     private val frontRightConnectedEntry = table.getEntry("FrontRightConnected")
     private val backLeftConnectedEntry = table.getEntry("BackLeftConnected")
     private val backRightConnectedEntry = table.getEntry("BackRightConnected")
+    private val positionXEntry = table.getEntry("PositionX")
+    private val positionYEntry = table.getEntry("PositionY")
+    private val positionOEntry = table.getEntry("PositionO")
 
     val increaseDriveCurrentEntry = table.getEntry("IncreaseDriveCurrent")
     val increaseDriveCurrent get() = increaseDriveCurrentEntry.getBoolean(false)
@@ -315,10 +307,10 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
         LoopLogger.record("Drive camera updateInputs")
 
 
-        frontLeftConnectedEntry.setBoolean(cameras[0].isConnected)
-        frontRightConnectedEntry.setBoolean(cameras[1].isConnected)
-        backLeftConnectedEntry.setBoolean(cameras[2].isConnected)
-        backRightConnectedEntry.setBoolean(cameras[3].isConnected)
+//        frontLeftConnectedEntry.setBoolean(cameras[0].isConnected)
+//        frontRightConnectedEntry.setBoolean(cameras[1].isConnected)
+//        backLeftConnectedEntry.setBoolean(cameras[2].isConnected)
+//        backRightConnectedEntry.setBoolean(cameras[3].isConnected)
 
         LoopLogger.record("Camera Connected Publisher")
 
@@ -351,13 +343,14 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
         LoopLogger.record("Cameras isConnected publish")
 
         // Log all the poses for debugging
-        Logger.recordOutput("Drive/Quest/questPose", questPose)
-        Logger.recordOutput("Swerve/Odometry", localizer.odometryPose)
-        Logger.recordOutput("Swerve/InterpolatedOdometry", localizer.interpolatedOdometryPose)
-        Logger.recordOutput("Swerve/InterpolatedPose", localizer.interpolatedPose)
-        Logger.recordOutput("Swerve/Localizer Raw", localizer.rawPose)
-        Logger.recordOutput("Swerve/Localizer", localizer.pose)
-        Logger.recordOutput("Swerve/SingleTagPose", localizer.singleTagPose)
+        MeanLogger.recordOutput("Drive/Quest/questPose", questPose)
+        MeanLogger.recordOutput("Swerve/Odometry", localizer.odometryPose)
+        MeanLogger.recordOutput("Swerve/InterpolatedOdometry", localizer.interpolatedOdometryPose)
+        MeanLogger.recordOutput("Swerve/InterpolatedPose", localizer.interpolatedPose)
+        MeanLogger.recordOutput("Swerve/Localizer Raw", localizer.rawPose)
+        MeanLogger.recordOutput("Swerve/Localizer", localizer.pose)
+        MeanLogger.recordOutput("Swerve/SingleTagPose", localizer.singleTagPose)
+
 
         LoopLogger.record("Drive pirdc")
     }

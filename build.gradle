@@ -133,7 +133,8 @@ tasks.withType(JavaCompile) {
 tasks.withType(JavaExec).configureEach {
     jvmArgs += [
             "--add-opens=java.base/jdk.internal.vm=ALL-UNNAMED",
-            "--enable-native-access=ALL-UNNAMED"
+            "--enable-native-access=ALL-UNNAMED",
+            "--add-opens=java.base/java.lang=ALL-UNNAMED"
     ]
 }
 
