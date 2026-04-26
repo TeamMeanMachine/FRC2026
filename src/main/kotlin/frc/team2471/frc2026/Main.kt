@@ -189,7 +189,11 @@ object Robot : TimedRobot() {
         // commands, running already-scheduled commands, removing finished or interrupted commands,
         // and running subsystem periodic() methods.  This must be called from the robot's periodic
         // block in order for anything in the Command-based framework to work.
+//        println("Queued Commands: ${scheduler.queuedCommands.map { it.name() }}")
         scheduler.run()
+
+        MeanLogger.recordOutput("Scheduler/runningCommands", scheduler.runningCommands.map { it.name() }.toTypedArray())
+        MeanLogger.recordOutput("LoopLogger/SchedulerLastRuntime", scheduler.lastRuntimeMs() / 1000.0)
 
         LoopLogger.record("after Scheduler")
 

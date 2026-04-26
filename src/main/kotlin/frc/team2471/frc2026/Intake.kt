@@ -18,6 +18,7 @@ import frc.team2471.frc2026.Robot.powerTracker
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.littletonrobotics.junction.AutoLogOutput
+import org.littletonrobotics.junction.Logger
 import org.team2471.frc.lib.commands.MechanismBase
 import org.team2471.frc.lib.commands.parallel
 import org.team2471.frc.lib.commands.periodic
@@ -314,7 +315,13 @@ object Intake: MechanismBase("Intake") {
             }
         }
 
-        //this.defaultCommand = default()//.ignoringDisable(true)
+//        this.defaultCommand = use("Intake Default", this) { default()}//default()//.ignoringDisable(true)
+
+        this.defaultCommand = use("Intake Default", this) {
+            periodic(0.0) {
+                LoopLogger.record("b4 Intake default")
+            }
+        }
 
 
         GlobalScope.launch {

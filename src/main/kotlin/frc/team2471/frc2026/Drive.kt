@@ -61,9 +61,6 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
     private val frontRightConnectedEntry = table.getEntry("FrontRightConnected")
     private val backLeftConnectedEntry = table.getEntry("BackLeftConnected")
     private val backRightConnectedEntry = table.getEntry("BackRightConnected")
-    private val positionXEntry = table.getEntry("PositionX")
-    private val positionYEntry = table.getEntry("PositionY")
-    private val positionOEntry = table.getEntry("PositionO")
 
     val increaseDriveCurrentEntry = table.getEntry("IncreaseDriveCurrent")
     val increaseDriveCurrent get() = increaseDriveCurrentEntry.getBoolean(false)

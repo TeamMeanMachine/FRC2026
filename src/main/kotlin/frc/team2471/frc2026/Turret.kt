@@ -20,6 +20,7 @@ import org.littletonrobotics.junction.AutoLogOutput
 import org.littletonrobotics.junction.Logger
 import org.littletonrobotics.junction.MeanLogger
 import org.team2471.frc.lib.commands.MechanismBase
+import org.team2471.frc.lib.commands.periodic
 import org.team2471.frc.lib.control.LoopLogger
 //import org.team2471.frc.lib.control.commands.onlyRunWhileFalse
 import org.team2471.frc.lib.ctre.PhoenixUtil
@@ -420,7 +421,9 @@ object Turret: MechanismBase("Turret") {
     }
 
     override fun Coroutine.default() {
-        await(aimAtTarget())
+        periodic {
+            await(aimAtTarget())
+        }
     }
 
     fun aimAtTarget(): Command = run {
