@@ -10,6 +10,8 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase
 import org.team2471.frc.lib.control.LoopLogger
 import org.team2471.frc.lib.control.MeanCommandXboxController
 import org.team2471.frc.lib.control.commands.finallyRun
+import org.team2471.frc.lib.control.commands.onlyRunWhileFalse
+import org.team2471.frc.lib.control.commands.onlyRunWhileTrue
 import org.team2471.frc.lib.control.commands.parallelCommand
 import org.team2471.frc.lib.control.commands.runCommand
 import org.team2471.frc.lib.control.commands.runOnceCommand
@@ -17,6 +19,7 @@ import org.team2471.frc.lib.control.commands.toCommand
 import org.team2471.frc.lib.math.deadband
 import org.team2471.frc.lib.math.normalize
 import org.team2471.frc.lib.units.degrees
+import org.team2471.frc.lib.util.demoMode
 
 object OI: SubsystemBase("OI") {
     private val table = NetworkTableInstance.getDefault().getTable("OI")
@@ -160,11 +163,14 @@ object OI: SubsystemBase("OI") {
         (driverController.povDown().and(driverController.y())).onTrue(Intake.homeDeploy())
         (driverController.povDown().and(driverController.leftBumper())).onTrue(runOnceCommand { Intake.deepStow() })
 
-        driverController.povLeft().whileTrue(Turret.staticAimAtTarget())
-        driverController.povRight().whileTrue(FieldManager.disableAutoHoodRetractionCommand())
+        driverController.povLeft().onTrue(runOnceCommand { if (demoMode) Shooter.demoShootingSpeedEntry.setDouble(Shooter.demoShootingSpeed - 2.0) })
+        driverController.povRight().onTrue(runOnceCommand { if (demoMode) Shooter.demoShootingSpeedEntry.setDouble(Shooter.demoShootingSpeed + 2.0) })
 
-        driverController.povUp().onTrue(runOnceCommand { Turret.offset -= 2.0.degrees})
-        driverController.povDown().and(driverController.y().negate()).and(driverController.leftBumper().negate()).onTrue(runOnceCommand { Turret.offset += 2.0.degrees})
+        driverController.povLeft().whileTrue(Turret.staticAimAtTarget().onlyRunWhileFalse{demoMode})
+        driverController.povRight().whileTrue(FieldManager.disableAutoHoodRetractionCommand().onlyRunWhileFalse{demoMode})
+
+        driverController.povUp().onTrue(runOnceCommand { if (!demoMode) Turret.offset -= 2.0.degrees else Shooter.demoShootingAngleEntry.setDouble(Shooter.demoShootingAngle + 2.0) })
+        driverController.povDown().and(driverController.y().negate()).and(driverController.leftBumper().negate()).onTrue(runOnceCommand { if (!demoMode) Turret.offset += 2.0.degrees else Shooter.demoShootingAngleEntry.setDouble(Shooter.demoShootingAngle - 2.0) })
     }
 
     override fun periodic() {

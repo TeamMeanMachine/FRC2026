@@ -34,6 +34,7 @@ import org.team2471.frc.lib.units.metersPerSecond
 import org.team2471.frc.lib.units.radians
 import org.team2471.frc.lib.units.rotationsPerSecond
 import org.team2471.frc.lib.units.sin
+import org.team2471.frc.lib.util.demoMode
 import org.team2471.frc.lib.util.isRedAlliance
 import kotlin.math.absoluteValue
 import kotlin.math.atan2
@@ -80,7 +81,7 @@ object AimUtils {
     val aimTarget: Translation2d
         get() {
             if (!Drive.useAprilTags) {
-                FieldManager.goalPose
+                return FieldManager.goalPose
             }
 
             return if (isAimingAtGoal) {
@@ -137,7 +138,7 @@ object AimUtils {
         return offset
     }
 
-    val isAimingAtGoal get() = DriverStation.isAutonomous() || FieldManager.inScoringZone
+    val isAimingAtGoal get() = DriverStation.isAutonomous() || FieldManager.inScoringZone || demoMode
 
     val distanceToTarget get() = Turret.turretTranslation.getDistance(aimTarget).absoluteValue.meters
 

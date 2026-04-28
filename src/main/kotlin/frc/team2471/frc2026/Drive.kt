@@ -22,6 +22,7 @@ import edu.wpi.first.networktables.NetworkTableInstance
 import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.wpilibj.Timer
 import edu.wpi.first.wpilibj2.command.Command
+import frc.team2471.frc2026.OI.driveLeftTriggerFullPress
 import frc.team2471.frc2026.OI.driverController
 import frc.team2471.frc2026.Robot.powerTracker
 import kotlinx.coroutines.GlobalScope
@@ -53,6 +54,7 @@ import org.team2471.frc.lib.units.metersPerSecondPerSecond
 import org.team2471.frc.lib.units.perSecond
 import org.team2471.frc.lib.units.radians
 import org.team2471.frc.lib.units.unWrap
+import org.team2471.frc.lib.util.demoMode
 import org.team2471.frc.lib.util.demoSpeed
 import org.team2471.frc.lib.util.isBlueAlliance
 import org.team2471.frc.lib.util.isSim
@@ -389,7 +391,7 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
 
         val rawJoystickRotation = OI.driveRotation
         // Cube rotation input and apply demoSpeed
-        val omega = rawJoystickRotation.cube() * demoSpeed
+        val omega = if ((!demoMode) && driveLeftTriggerFullPress) rawJoystickRotation.cube() * demoSpeed else 0.0
 
         return ChassisSpeeds(joystickTranslation.x, joystickTranslation.y, omega)
     }

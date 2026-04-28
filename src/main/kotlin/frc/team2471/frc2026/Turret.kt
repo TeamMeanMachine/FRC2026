@@ -6,6 +6,7 @@ import com.ctre.phoenix6.hardware.CANcoder
 import com.ctre.phoenix6.hardware.Pigeon2
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue
+import edu.wpi.first.math.geometry.Rotation2d
 import edu.wpi.first.math.geometry.Translation2d
 import edu.wpi.first.math.system.plant.DCMotor
 import edu.wpi.first.networktables.NetworkTableInstance
@@ -13,12 +14,15 @@ import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.units.measure.AngularVelocity
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.SubsystemBase
+import frc.team2471.frc2026.OI.driveLeftTriggerFullPress
 import frc.team2471.frc2026.Robot.powerTracker
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import org.apache.commons.math3.geometry.euclidean.twod.Vector2D
 import org.littletonrobotics.junction.AutoLogOutput
 import org.littletonrobotics.junction.Logger
 import org.team2471.frc.lib.control.LoopLogger
+import org.team2471.frc.lib.control.b
 import org.team2471.frc.lib.control.commands.onlyRunWhileFalse
 import org.team2471.frc.lib.ctre.PhoenixUtil
 import org.team2471.frc.lib.ctre.addFollower
@@ -53,10 +57,12 @@ import org.team2471.frc.lib.ctre.coastMode
 import org.team2471.frc.lib.units.asAmps
 import org.team2471.frc.lib.units.asFeet
 import org.team2471.frc.lib.units.rotationsPerSecond
+import org.team2471.frc.lib.util.demoMode
 import org.team2471.frc.lib.util.isSim
 import kotlin.collections.toDoubleArray
 import kotlin.math.IEEErem
 import kotlin.math.absoluteValue
+import kotlin.math.hypot
 
 object Turret: SubsystemBase("Turret") {
     private val table = NetworkTableInstance.getDefault().getTable("Turret")
@@ -414,15 +420,19 @@ object Turret: SubsystemBase("Turret") {
     }
 
     fun aimAtTarget(): Command = run {
-        if (lookForwardOverride) {
-            if (Robot.isEnabled) {
-                fieldCentricSetpoint = Drive.heading.measure
+        if (!demoMode || OI.driverController.b) {
+            if (lookForwardOverride) {
+                if (Robot.isEnabled) {
+                    fieldCentricSetpoint = Drive.heading.measure
+                }
+            } else {
+                val aimingAngle = turretTranslation.angleTo(AimUtils.aimTarget)
+                if (Robot.isEnabled) {
+                    fieldCentricSetpoint = aimingAngle
+                }
             }
-        } else {
-            val aimingAngle = turretTranslation.angleTo(AimUtils.aimTarget)
-            if (Robot.isEnabled) {
-                fieldCentricSetpoint = aimingAngle
-            }
+        } else if (driveLeftTriggerFullPress && hypot(OI.driverController.rightX, -OI.driverController.rightY) > 0.7) {
+            fieldCentricSetpoint = Rotation2d(OI.driverController.rightX, -OI.driverController.rightY).measure
         }
     }.onlyRunWhileFalse { Robot.isTestEnabled && Drive.useAprilTags }
 

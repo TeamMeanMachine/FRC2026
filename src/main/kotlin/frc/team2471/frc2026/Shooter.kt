@@ -34,6 +34,7 @@ import kotlinx.coroutines.launch
 import org.littletonrobotics.junction.AutoLogOutput
 import org.littletonrobotics.junction.Logger
 import org.team2471.frc.lib.control.LoopLogger
+import org.team2471.frc.lib.control.b
 import org.team2471.frc.lib.control.commands.finallyRun
 import org.team2471.frc.lib.control.commands.onlyRunWhileFalse
 import org.team2471.frc.lib.control.commands.onlyRunWhileTrue
@@ -75,6 +76,8 @@ import org.team2471.frc.lib.units.sin
 import org.team2471.frc.lib.units.volts
 import org.team2471.frc.lib.units.voltsPerSecond
 import org.team2471.frc.lib.util.angleTo
+import org.team2471.frc.lib.util.demoMode
+import org.team2471.frc.lib.util.demoSpeed
 import org.team2471.frc.lib.util.isReal
 import org.team2471.frc.lib.util.isSim
 import kotlin.math.abs
@@ -198,10 +201,17 @@ object Shooter: SubsystemBase("Shooter") {
 
     val zeroHoodButtonEntry = table.getEntry("Zero Hood")
 
+    val demoShootingSpeedEntry = table.getEntry("Demo Shooting Speed")
+    val demoShootingAngleEntry = table.getEntry("Demo Shooting Angle")
+
+    val demoShootingSpeed = demoShootingSpeedEntry.getDouble(6.0)
+    val demoShootingAngle = demoShootingAngleEntry.getDouble(15.0)
+
+
     val shootingTestSpeed: Double get() = shootingTestSpeedEntry.getDouble(40.0)
     val shootingTestAngle: Double get() = shootingTestAngleEntry.getDouble(40.0)
-    val doAutoShoot: Boolean get() = doAutoShootEntry.getBoolean(true)
-    val doAutoRamp: Boolean get() = doAutoRampEntry.getBoolean(true)
+    val doAutoShoot: Boolean get() = doAutoShootEntry.getBoolean(true) && !(demoMode)
+    val doAutoRamp: Boolean get() = doAutoRampEntry.getBoolean(true) && !(demoMode)
 
 
     val shooterMotor = LoggedTalonFX(Falcons.SHOOTER_0, CANivores.TURRET_CAN)
@@ -337,6 +347,9 @@ object Shooter: SubsystemBase("Shooter") {
 
         zeroHoodButtonEntry.setBoolean(false)
 
+        demoShootingSpeedEntry.setDouble(demoShootingSpeed)
+        demoShootingAngleEntry.setDouble(demoShootingAngle)
+
         shooterMotor.applyConfiguration {
             currentLimits(10.0, 30.0, 0.3)
             coastMode()
@@ -461,7 +474,7 @@ object Shooter: SubsystemBase("Shooter") {
     }
 
     fun default(): Command = runCommand(this) {
-        if ((doAutoShoot && !Drive.cameraDisconnected) && Drive.useAprilTags && AimUtils.isAimingAtGoal) {
+        if ((doAutoShoot && !Drive.cameraDisconnected) && Drive.useAprilTags && AimUtils.isAimingAtGoal && !demoMode) {
             if (FieldManager.inScoringZone && !FieldManager.inNoShootArea /*&& AimUtils.distanceToTarget < 13.0.feet*/ && FieldManager.shouldShoot) {
                 shootLoop()
             } else {
@@ -469,14 +482,17 @@ object Shooter: SubsystemBase("Shooter") {
                 if (Intake.intakeState != Intake.IntakeState.INTAKING) {
                     Spindexer.currentState = Spindexer.State.OFF
                 }
-                hoodAngleSetpoint = hoodAngleSetpoint.coerceAtMost(HOOD_UNDER_TRENCH_MAX_ANGLE)//HOOD_STOW_SETPOINT.degrees
+                hoodAngleSetpoint =
+                    hoodAngleSetpoint.coerceAtMost(HOOD_UNDER_TRENCH_MAX_ANGLE)//HOOD_STOW_SETPOINT.degrees
             }
             if (FieldManager.shouldShoot && FieldManager.inScoringZone) {
                 rampUpLoop()
             }
         } else {
-            hoodAngleSetpoint = hoodAngleSetpoint.coerceAtMost(HOOD_UNDER_TRENCH_MAX_ANGLE)//HOOD_STOW_SETPOINT.degrees
-            shooterVelocitySetpoint = 0.0.rotationsPerSecond//if (doAutoRamp) 50.0.rotationsPerSecond / SHOOTER_GEAR_RATIO / AimUtils.shooterEfficiency else 0.0.rotationsPerSecond
+            hoodAngleSetpoint =
+                hoodAngleSetpoint.coerceAtMost(HOOD_UNDER_TRENCH_MAX_ANGLE)//HOOD_STOW_SETPOINT.degrees
+            shooterVelocitySetpoint =
+                0.0.rotationsPerSecond//if (doAutoRamp) 50.0.rotationsPerSecond / SHOOTER_GEAR_RATIO / AimUtils.shooterEfficiency else 0.0.rotationsPerSecond
             isShooting = false
             if (Intake.intakeState != Intake.IntakeState.INTAKING) {
                 Spindexer.currentState = Spindexer.State.OFF
@@ -516,7 +532,7 @@ object Shooter: SubsystemBase("Shooter") {
     }
 
     fun rampUpLoop() {
-        shooterVelocitySetpoint = AimUtils.getShooterRPS()
+        shooterVelocitySetpoint = if (!demoMode || OI.driverController.b) AimUtils.getShooterRPS() else demoShootingSpeed.rotationsPerSecond
     }
 
     fun shootLoop(ignoreRampUp: Boolean = false) {
@@ -533,10 +549,13 @@ object Shooter: SubsystemBase("Shooter") {
             if (Turret.isTurretWrapping)
                 HOOD_ZERO
             else
-                if (AimUtils.isAimingAtGoal)
-                    BALL_ANGLE_AT_HOOD_ZERO - hubAngleCurve.get(AimUtils.distanceToTarget.asFeet)
+                if (!demoMode || OI.driverController.b)
+                    if (AimUtils.isAimingAtGoal)
+                        BALL_ANGLE_AT_HOOD_ZERO - hubAngleCurve.get(AimUtils.distanceToTarget.asFeet)
+                    else
+                        BALL_ANGLE_AT_HOOD_ZERO - floorAngleCurve.get(AimUtils.distanceToTarget.asFeet)
                 else
-                    BALL_ANGLE_AT_HOOD_ZERO - floorAngleCurve.get(AimUtils.distanceToTarget.asFeet)
+                    BALL_ANGLE_AT_HOOD_ZERO - demoShootingAngle
             ).degrees
 
 

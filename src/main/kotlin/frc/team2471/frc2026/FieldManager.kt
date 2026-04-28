@@ -26,6 +26,7 @@ import org.team2471.frc.lib.control.commands.sequenceCommand
 import org.team2471.frc.lib.coroutines.periodic
 import org.team2471.frc.lib.units.*
 import org.team2471.frc.lib.util.RobotMode
+import org.team2471.frc.lib.util.demoMode
 import org.team2471.frc.lib.util.isRedAlliance
 import org.team2471.frc.lib.util.robotMode
 import kotlin.math.absoluteValue
@@ -213,7 +214,7 @@ object FieldManager {
     val hubCountdownEntry = table.getEntry("HubCountdown")
     val activeHubEntry = table.getEntry("ActiveHub")
 
-    val doShiftTiming get() = doShiftTimingEntry.getBoolean(true)
+    val doShiftTiming get() = doShiftTimingEntry.getBoolean(true) && !demoMode
     var autoHoodRetraction
         get() = autoHoodRetractionEntry.getBoolean(true)
         set(value) {
