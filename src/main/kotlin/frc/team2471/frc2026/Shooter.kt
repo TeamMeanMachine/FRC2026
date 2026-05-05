@@ -204,9 +204,8 @@ object Shooter: SubsystemBase("Shooter") {
     val demoShootingSpeedEntry = table.getEntry("Demo Shooting Speed")
     val demoShootingAngleEntry = table.getEntry("Demo Shooting Angle")
 
-    val demoShootingSpeed = demoShootingSpeedEntry.getDouble(6.0)
-    val demoShootingAngle = demoShootingAngleEntry.getDouble(15.0)
-
+    val demoShootingSpeed get() = demoShootingSpeedEntry.getDouble(30.0)
+    val demoShootingAngle get() = demoShootingAngleEntry.getDouble(65.0)
 
     val shootingTestSpeed: Double get() = shootingTestSpeedEntry.getDouble(40.0)
     val shootingTestAngle: Double get() = shootingTestAngleEntry.getDouble(40.0)
@@ -550,7 +549,7 @@ object Shooter: SubsystemBase("Shooter") {
                 HOOD_ZERO
             else
                 if (!demoMode || OI.driverController.b)
-                    if (AimUtils.isAimingAtGoal)
+                    if (AimUtils.isAimingAtGoal || demoMode)
                         BALL_ANGLE_AT_HOOD_ZERO - hubAngleCurve.get(AimUtils.distanceToTarget.asFeet)
                     else
                         BALL_ANGLE_AT_HOOD_ZERO - floorAngleCurve.get(AimUtils.distanceToTarget.asFeet)
@@ -567,14 +566,6 @@ object Shooter: SubsystemBase("Shooter") {
 
     }
 
-
-    fun rampUp(): Command = runCommand(Shooter) {
-        rampUpLoop()
-    }
-
-    fun rampDown(): Command = runOnceCommand(Shooter) {
-        shooterVelocitySetpoint = 0.0.rotationsPerSecond
-    }
 
     fun shootSimulatedFuel() {
         val exitVelocity = (AimUtils.getShooterRPS() * SHOOTER_GEAR_RATIO * AimUtils.shooterEfficiency).toExitVelocity().asMetersPerSecond

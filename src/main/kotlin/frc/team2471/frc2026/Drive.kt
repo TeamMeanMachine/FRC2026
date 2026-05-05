@@ -391,7 +391,7 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
 
         val rawJoystickRotation = OI.driveRotation
         // Cube rotation input and apply demoSpeed
-        val omega = if ((!demoMode) && driveLeftTriggerFullPress) rawJoystickRotation.cube() * demoSpeed else 0.0
+        val omega = if (!(demoMode && driveLeftTriggerFullPress)) rawJoystickRotation.cube() * demoSpeed else 0.0
 
         return ChassisSpeeds(joystickTranslation.x, joystickTranslation.y, omega)
     }

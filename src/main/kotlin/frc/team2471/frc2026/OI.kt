@@ -143,6 +143,36 @@ object OI: SubsystemBase("OI") {
             }
         })
 
+
+        (driverController.povDown().and(driverController.y())).onTrue(Intake.homeDeploy())
+        (driverController.povDown().and(driverController.leftBumper())).onTrue(runOnceCommand { Intake.deepStow() })
+
+        driverController.povLeft().whileTrue(Turret.staticAimAtTarget().onlyRunWhileFalse{demoMode})
+        driverController.povRight().whileTrue(FieldManager.disableAutoHoodRetractionCommand().onlyRunWhileFalse{demoMode})
+
+        /**
+         * Demo controls:
+         * left trigger and right stick to aim turret
+         * b to aim at hub
+         * pov up/down to adjust angle
+         * pov left/right to adjust speed
+         *
+         * y to home intake (must do after reboot)
+         * left bumper to intake
+         * left weird little button thingy to toggle intake deploy
+         * right trigger to shoot
+        **/
+
+        // demo shooting speed
+        driverController.povLeft().onTrue(runOnceCommand { if (demoMode) Shooter.demoShootingSpeedEntry.setDouble(Shooter.demoShootingSpeed - 2.0) })
+        driverController.povRight().onTrue(runOnceCommand { if (demoMode) Shooter.demoShootingSpeedEntry.setDouble(Shooter.demoShootingSpeed + 2.0) })
+
+        // turret adjust or demo shooting angle
+        driverController.povUp().onTrue(runOnceCommand { if (!demoMode) Turret.offset -= 2.0.degrees else Shooter.demoShootingAngleEntry.setDouble(Shooter.demoShootingAngle + 2.0) })
+        driverController.povDown().and(driverController.y().negate()).and(driverController.leftBumper().negate()).onTrue(runOnceCommand { if (!demoMode) Turret.offset += 2.0.degrees else Shooter.demoShootingAngleEntry.setDouble(Shooter.demoShootingAngle - 2.0) })
+
+
+
 //        driverController.a().whileTrue(
 //            Drive.snakeMode()
 //        )
@@ -159,18 +189,6 @@ object OI: SubsystemBase("OI") {
 //        driverController.b().onTrue(runOnceCommand {
 //            Intake.deploySetpoint = Intake.DEPLOY_POSE
 //        })
-
-        (driverController.povDown().and(driverController.y())).onTrue(Intake.homeDeploy())
-        (driverController.povDown().and(driverController.leftBumper())).onTrue(runOnceCommand { Intake.deepStow() })
-
-        driverController.povLeft().onTrue(runOnceCommand { if (demoMode) Shooter.demoShootingSpeedEntry.setDouble(Shooter.demoShootingSpeed - 2.0) })
-        driverController.povRight().onTrue(runOnceCommand { if (demoMode) Shooter.demoShootingSpeedEntry.setDouble(Shooter.demoShootingSpeed + 2.0) })
-
-        driverController.povLeft().whileTrue(Turret.staticAimAtTarget().onlyRunWhileFalse{demoMode})
-        driverController.povRight().whileTrue(FieldManager.disableAutoHoodRetractionCommand().onlyRunWhileFalse{demoMode})
-
-        driverController.povUp().onTrue(runOnceCommand { if (!demoMode) Turret.offset -= 2.0.degrees else Shooter.demoShootingAngleEntry.setDouble(Shooter.demoShootingAngle + 2.0) })
-        driverController.povDown().and(driverController.y().negate()).and(driverController.leftBumper().negate()).onTrue(runOnceCommand { if (!demoMode) Turret.offset += 2.0.degrees else Shooter.demoShootingAngleEntry.setDouble(Shooter.demoShootingAngle - 2.0) })
     }
 
     override fun periodic() {

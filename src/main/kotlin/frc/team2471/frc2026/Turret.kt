@@ -82,8 +82,8 @@ object Turret: SubsystemBase("Turret") {
     val turretEncoder2 = CANcoder(CANCoders.TURRET_1, CANivores.TURRET_CAN)
     val turretPigeon = Pigeon2(CANSensors.TURRET_PIGEON, CANivores.TURRET_CAN)
 
-    val TURRET_TOP_LIMIT = if (Robot.isCompBot) 190.0.degrees else 270.0.degrees
-    val TURRET_BOTTOM_LIMIT = if (Robot.isCompBot) -190.0.degrees else -270.0.degrees
+    val TURRET_TOP_LIMIT = if (Robot.isCompBot) 200.0.degrees else 270.0.degrees
+    val TURRET_BOTTOM_LIMIT = if (Robot.isCompBot) -200.0.degrees else -270.0.degrees
     val TURRET_RANGE = TURRET_TOP_LIMIT - TURRET_BOTTOM_LIMIT
     val TURRET_ENCODER_LIMIT = if (Robot.isCompBot) 600.0.degrees else 720.0.degrees
 
@@ -432,7 +432,7 @@ object Turret: SubsystemBase("Turret") {
                 }
             }
         } else if (driveLeftTriggerFullPress && hypot(OI.driverController.rightX, -OI.driverController.rightY) > 0.7) {
-            fieldCentricSetpoint = Rotation2d(OI.driverController.rightX, -OI.driverController.rightY).measure
+            fieldCentricSetpoint = Rotation2d(OI.driverController.rightX, -OI.driverController.rightY).measure + 90.0.degrees
         }
     }.onlyRunWhileFalse { Robot.isTestEnabled && Drive.useAprilTags }
 

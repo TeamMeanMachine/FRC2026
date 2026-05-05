@@ -113,7 +113,7 @@ object AimUtils {
 //        } else if (Robot.isAutonomous) {
 //            (if (isAimingAtGoal) hubSpeedCurve.get(distanceToTarget.asFeet) else hubSpeedCurve.get(11.0)).rotationsPerSecond
         } else {
-            (if (isAimingAtGoal || FieldManager.shouldRamp) hubSpeedCurve.get(distanceToTarget.asFeet) else floorSpeedCurve.get(distanceToTarget.asFeet)).rotationsPerSecond
+            (if (isAimingAtGoal || FieldManager.shouldRamp || demoMode) hubSpeedCurve.get(distanceToTarget.asFeet) else floorSpeedCurve.get(distanceToTarget.asFeet)).rotationsPerSecond
         } / SHOOTER_GEAR_RATIO / shooterEfficiency
     }
 

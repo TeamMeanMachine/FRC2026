@@ -94,9 +94,9 @@ object Intake: SubsystemBase("Intake") {
             }
         }
 
-    var lastReachedSetpoint = 0.0
-
-    const val REACHED_SETPOINT_THRESHOLD = 0.05
+//    var lastReachedSetpoint = 0.0
+//
+//    const val REACHED_SETPOINT_THRESHOLD = 0.05
 
     @get:AutoLogOutput(key = "Intake/Deploy Setpoint")
     var deploySetpoint: Double = 0.0
