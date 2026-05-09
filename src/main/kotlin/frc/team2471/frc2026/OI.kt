@@ -151,16 +151,17 @@ object OI: SubsystemBase("OI") {
         driverController.povRight().whileTrue(FieldManager.disableAutoHoodRetractionCommand().onlyRunWhileFalse{demoMode})
 
         /**
-         * Demo controls:
+         * DEMO CONTROLS:
          * left trigger and right stick to aim turret
          * b to aim at hub
+         * right trigger to shoot
+         * right weird little button thingy to aim at hub and shoot
+         * left bumper to intake
          * pov up/down to adjust angle
          * pov left/right to adjust speed
          *
-         * y to home intake (must do after reboot)
-         * left bumper to intake
+         * y to home intake
          * left weird little button thingy to toggle intake deploy
-         * right trigger to shoot
         **/
 
         // demo shooting speed

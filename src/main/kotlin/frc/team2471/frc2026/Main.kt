@@ -208,7 +208,7 @@ object Robot : LoggedRobot() {
     fun enabledInitAsync() {
         if (beforeFirstEnableAsync) {
             if (!isAutonomous) {
-//                commandScheduler.schedule(Intake.home())
+                commandScheduler.schedule(Intake.home())
 
 //                Drive.localizer.trackAllTags()
             } else {

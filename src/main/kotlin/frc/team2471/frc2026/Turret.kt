@@ -22,7 +22,6 @@ import org.apache.commons.math3.geometry.euclidean.twod.Vector2D
 import org.littletonrobotics.junction.AutoLogOutput
 import org.littletonrobotics.junction.Logger
 import org.team2471.frc.lib.control.LoopLogger
-import org.team2471.frc.lib.control.b
 import org.team2471.frc.lib.control.commands.onlyRunWhileFalse
 import org.team2471.frc.lib.ctre.PhoenixUtil
 import org.team2471.frc.lib.ctre.addFollower
@@ -58,6 +57,7 @@ import org.team2471.frc.lib.units.asAmps
 import org.team2471.frc.lib.units.asFeet
 import org.team2471.frc.lib.units.rotationsPerSecond
 import org.team2471.frc.lib.util.demoMode
+import org.team2471.frc.lib.util.isRedAlliance
 import org.team2471.frc.lib.util.isSim
 import kotlin.collections.toDoubleArray
 import kotlin.math.IEEErem
@@ -420,7 +420,7 @@ object Turret: SubsystemBase("Turret") {
     }
 
     fun aimAtTarget(): Command = run {
-        if (!demoMode || OI.driverController.b) {
+        if (!demoMode || Shooter.demoAimAtHub) {
             if (lookForwardOverride) {
                 if (Robot.isEnabled) {
                     fieldCentricSetpoint = Drive.heading.measure
@@ -432,7 +432,7 @@ object Turret: SubsystemBase("Turret") {
                 }
             }
         } else if (driveLeftTriggerFullPress && hypot(OI.driverController.rightX, -OI.driverController.rightY) > 0.7) {
-            fieldCentricSetpoint = Rotation2d(OI.driverController.rightX, -OI.driverController.rightY).measure + 90.0.degrees
+            fieldCentricSetpoint = Rotation2d(OI.driverController.rightX, -OI.driverController.rightY).measure + 90.0.degrees * if (isRedAlliance) 1.0 else -1.0
         }
     }.onlyRunWhileFalse { Robot.isTestEnabled && Drive.useAprilTags }
 

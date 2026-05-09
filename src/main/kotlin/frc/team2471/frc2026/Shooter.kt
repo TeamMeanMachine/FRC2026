@@ -207,6 +207,8 @@ object Shooter: SubsystemBase("Shooter") {
     val demoShootingSpeed get() = demoShootingSpeedEntry.getDouble(30.0)
     val demoShootingAngle get() = demoShootingAngleEntry.getDouble(65.0)
 
+    val demoAimAtHub get() = OI.driverController.b || OI.driverController.rightStickButton
+
     val shootingTestSpeed: Double get() = shootingTestSpeedEntry.getDouble(40.0)
     val shootingTestAngle: Double get() = shootingTestAngleEntry.getDouble(40.0)
     val doAutoShoot: Boolean get() = doAutoShootEntry.getBoolean(true) && !(demoMode)
@@ -531,7 +533,7 @@ object Shooter: SubsystemBase("Shooter") {
     }
 
     fun rampUpLoop() {
-        shooterVelocitySetpoint = if (!demoMode || OI.driverController.b) AimUtils.getShooterRPS() else demoShootingSpeed.rotationsPerSecond
+        shooterVelocitySetpoint = if (!demoMode || demoAimAtHub) AimUtils.getShooterRPS() else demoShootingSpeed.rotationsPerSecond
     }
 
     fun shootLoop(ignoreRampUp: Boolean = false) {
@@ -548,7 +550,7 @@ object Shooter: SubsystemBase("Shooter") {
             if (Turret.isTurretWrapping)
                 HOOD_ZERO
             else
-                if (!demoMode || OI.driverController.b)
+                if (!demoMode || demoAimAtHub)
                     if (AimUtils.isAimingAtGoal || demoMode)
                         BALL_ANGLE_AT_HOOD_ZERO - hubAngleCurve.get(AimUtils.distanceToTarget.asFeet)
                     else
