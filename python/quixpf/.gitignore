@@ -1,8 +1,0 @@
-.vscode/*
-.idea/*
-python/.idea/*
-cpp/.vscode/*
-__pycache__/
-cpp/build/*
-build/*
-*.csv
