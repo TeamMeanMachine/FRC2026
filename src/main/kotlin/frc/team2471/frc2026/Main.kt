@@ -4,8 +4,6 @@ package frc.team2471.frc2026
 //import edu.wpi.first.hal.FRCNetComm.tInstances
 //import edu.wpi.first.hal.FRCNetComm.tResourceType
 import com.ctre.phoenix6.SignalLogger
-import edu.wpi.first.hal.DriverStationJNI
-import edu.wpi.first.hal.NotifierJNI
 import edu.wpi.first.wpilibj.*
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
@@ -192,8 +190,19 @@ object Robot : TimedRobot() {
 //        println("Queued Commands: ${scheduler.queuedCommands.map { it.name() }}")
         scheduler.run()
 
-        MeanLogger.recordOutput("Scheduler/runningCommands", scheduler.runningCommands.map { it.name() }.toTypedArray())
-        MeanLogger.recordOutput("LoopLogger/SchedulerLastRuntime", scheduler.lastRuntimeMs() / 1000.0)
+        MeanLogger.recordOutput("Scheduler/scheduler", scheduler)
+
+        var allCommandsRuntime = 0.0
+        scheduler.runningCommands.forEach {
+            val runtimeS = scheduler.lastCommandRuntimeMs(it) / 1000.0
+            allCommandsRuntime += runtimeS
+            if (runtimeS >= 0.0) {
+                MeanLogger.recordOutput("Scheduler/CommandRuntime/${it.name()}", runtimeS)
+            }
+        }
+        MeanLogger.recordOutput("Scheduler/CommandRuntime/ALL", allCommandsRuntime)
+        MeanLogger.recordOutput("Scheduler/totalRuntime", scheduler.lastRuntimeMs() / 1000.0)
+
 
         LoopLogger.record("after Scheduler")
 
