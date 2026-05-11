@@ -1,21 +1,6 @@
 package frc.team2471.frc2026
 
 import com.ctre.phoenix6.swerve.utility.PhoenixPIDController
-import edu.wpi.first.math.Matrix
-import edu.wpi.first.math.VecBuilder
-import edu.wpi.first.math.controller.PIDController
-import edu.wpi.first.math.geometry.Pose2d
-import edu.wpi.first.math.geometry.Pose3d
-import edu.wpi.first.math.geometry.Rotation2d
-import edu.wpi.first.math.geometry.Translation2d
-import edu.wpi.first.math.interpolation.Interpolator
-import edu.wpi.first.math.interpolation.InverseInterpolator
-import edu.wpi.first.math.kinematics.ChassisSpeeds
-import edu.wpi.first.math.numbers.N1
-import edu.wpi.first.math.numbers.N3
-import edu.wpi.first.networktables.NetworkTableInstance
-import edu.wpi.first.units.measure.Angle
-import edu.wpi.first.wpilibj.Timer
 //import edu.wpi.first.wpilibj2.command.Command
 import frc.team2471.frc2026.Robot.powerTracker
 import kotlinx.coroutines.GlobalScope
@@ -51,7 +36,23 @@ import org.team2471.frc.lib.util.isBlueAlliance
 import org.team2471.frc.lib.util.isSim
 import org.team2471.frc.lib.vision.Fiducial
 import org.team2471.frc.lib.vision.QuixVisionCamera
-import org.wpilib.commands3.Coroutine
+import org.wpilib.command3.Coroutine
+import org.wpilib.driverstation.RobotState
+import org.wpilib.math.controller.PIDController
+import org.wpilib.math.geometry.Pose2d
+import org.wpilib.math.geometry.Pose3d
+import org.wpilib.math.geometry.Rotation2d
+import org.wpilib.math.geometry.Translation2d
+import org.wpilib.math.interpolation.Interpolator
+import org.wpilib.math.interpolation.InverseInterpolator
+import org.wpilib.math.kinematics.ChassisVelocities
+import org.wpilib.math.linalg.Matrix
+import org.wpilib.math.linalg.VecBuilder
+import org.wpilib.math.numbers.N1
+import org.wpilib.math.numbers.N3
+import org.wpilib.networktables.NetworkTableInstance
+import org.wpilib.system.Timer
+import org.wpilib.units.measure.Angle
 
 
 object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerConstants.moduleConfigs) {
@@ -89,7 +90,7 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
 
     // To reset position use this, also add other pose sources that need reset here.
     override var pose: Pose2d
-        get() = savedState.Pose
+        get() = Pose2d()//savedState.Pose //TODO: UNCOMMENT WHEN PHOENIX 6 2027 RELEASES
         set(value) {
 //            tempQuestPose = Pose3d(value).transformBy(robotToQuestTransformMeters)
             resetPose(value)
@@ -120,7 +121,7 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
 //            } else {
 //                quest.setPose(Pose3d(questPose.translation, Rotation3d(value)).transformBy(robotToQuestTransformMeters))
 //            }
-            resetPoseTime = Timer.getFPGATimestamp()
+            resetPoseTime = Timer.getMonotonicTimestamp()
         }
 
     var headingAngleUnwrapped: Angle = heading.measure
@@ -175,7 +176,7 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
     val QUEST_STD_DEVS: Matrix<N3?, N1?> = VecBuilder.fill(0.025, 0.025, 99999.9)
 
     // TODO: Check heading accuracy
-    val localizer = PoseLocalizer(Fiducial.constructFiducialList(FieldManager.allAprilTags), cameras)
+    val localizer: PoseLocalizer = PoseLocalizer(Fiducial.constructFiducialList(FieldManager.allAprilTags), cameras)
 
     @get:AutoLogOutput(key = "Drive/Drive Velocity Vector")
     val velocityVector: Translation2d
@@ -222,7 +223,7 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
         // MUST start inside the field on bootup for accurate heading measurements due to a PoseLocalizer bug.
         pose = Pose2d(3.0, 3.0, heading)
 
-        io.setStateStdDevs(DRIVE_STD_DEVS)
+//        io.setStateStdDevs(DRIVE_STD_DEVS) //TODO: UNCOMMENT WHEN PHOENIX 6 2027 RELEASES
 
 //        backupPigeon.applyConfiguration()
 
@@ -237,10 +238,10 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
             powerTracker.addMotors("Drive", {
                 var tempTotalDriveCurrent = 0.0
                 var tempTotalSteerCurrent = 0.0
-                io.modules.forEach {
-                    tempTotalDriveCurrent += it.driveMotor.supplyCurrent.valueAsDouble
-                    tempTotalSteerCurrent += it.steerMotor.supplyCurrent.valueAsDouble
-                }
+//                io.modules.forEach { //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
+//                    tempTotalDriveCurrent += it.driveMotor.supplyCurrent.valueAsDouble //TODO: UNCOMMENT WHEN PHOENIX 6 2027 RELEASES
+//                    tempTotalSteerCurrent += it.steerMotor.supplyCurrent.valueAsDouble
+//                }
                 totalSteerCurrent = tempTotalSteerCurrent
                 totalDriveCurrent = tempTotalDriveCurrent
                 tempTotalDriveCurrent
@@ -255,7 +256,7 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
     override fun periodic() {
         LoopLogger.record("Inside Drive periodic")
 
-        if (Robot.isTeleopEnabled) {
+        if (RobotState.isTeleopEnabled()) {
             if (increaseDriveCurrent != prevIncreaseDriveCurrent) {
                 if (increaseDriveCurrent) {
                     setDriveCurrentLimits(TunerConstants.driveMaxCurrentLimits)
@@ -328,7 +329,7 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
 ////        quest.commandPeriodic()
 //        LoopLogger.record("Drive quest periodic")
 
-        headingHistory.put(Timer.getFPGATimestamp(), heading.degrees)
+        headingHistory.put(Timer.getMonotonicTimestamp(), heading.degrees)
         LoopLogger.record("Recorded HeadingHistory")
 
         if (cameras.isNotEmpty()) {
@@ -361,22 +362,22 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
      */
     fun setDriveCurrentLimits(currentLimits: CurrentLimits) {
         GlobalScope.launch {
-            io.modules.forEach {
-                it.driveMotor.modifyConfiguration {
-                    currentLimits(
-                        currentLimits.continuousLimit,
-                        currentLimits.peakLimit,
-                        currentLimits.peakDuration
-                    )
-                }
-            }
+//            io.modules.forEach { //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
+//                it.driveMotor.modifyConfiguration {
+//                    currentLimits(
+//                        currentLimits.continuousLimit,
+//                        currentLimits.peakLimit,
+//                        currentLimits.peakDuration
+//                    )
+//                }
+//            }
         }
     }
 
     /**
      * Returns [ChassisSpeeds] with a percentage power from the driver controller.
      */
-    override fun getJoystickPercentageSpeeds(): ChassisSpeeds {
+    override fun getJoystickPercentageVelocity(): ChassisVelocities {
         val rawJoystick = OI.rawDriveTranslation
         // Square drive input and apply demoSpeed
         val power = rawJoystick.norm.square() * demoSpeed * if ((Shooter.isShooting || OI.driverController.rightStickButton) && FieldManager.inScoringZone) 0.3 else if (inSnakeMode) 0.8 else 1.0
@@ -387,7 +388,7 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
         // Cube rotation input and apply demoSpeed
         val omega = rawJoystickRotation.cube() * demoSpeed
 
-        return ChassisSpeeds(joystickTranslation.x, joystickTranslation.y, omega)
+        return ChassisVelocities(joystickTranslation.x, joystickTranslation.y, omega)
     }
 
     var inSnakeMode = false

@@ -5,10 +5,6 @@ import com.ctre.phoenix6.controls.NeutralOut
 import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC
 import com.ctre.phoenix6.hardware.TalonFX
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue
-import edu.wpi.first.networktables.NetworkTableInstance
-import edu.wpi.first.units.measure.AngularVelocity
-import edu.wpi.first.units.measure.Current
-import edu.wpi.first.wpilibj.Timer
 //import edu.wpi.first.wpilibj2.command.SubsystemBase
 import frc.team2471.frc2026.Robot.powerTracker
 import org.littletonrobotics.junction.AutoLogOutput
@@ -23,17 +19,22 @@ import org.team2471.frc.lib.ctre.p
 import org.team2471.frc.lib.ctre.s
 import org.team2471.frc.lib.math.deadband
 import org.team2471.frc.lib.math.linearMap
+import org.team2471.frc.lib.units.amps
 import org.team2471.frc.lib.units.asAmps
+import org.team2471.frc.lib.units.degreesPerSecond
 import org.team2471.frc.lib.util.isSim
-import org.wpilib.commands3.Mechanism
+import org.wpilib.networktables.NetworkTableInstance
+import org.wpilib.system.Timer
+import org.wpilib.units.measure.AngularVelocity
+import org.wpilib.units.measure.Current
 
 object Spindexer: MechanismBase("Spindexer") {
     val table = NetworkTableInstance.getDefault().getTable("Spindexer")
 
-    val spinMotor = TalonFX(Falcons.SPIN_0)
-    val spinMotorFollower = TalonFX(Falcons.SPIN_1)
-    val sidetakeMotor = TalonFX(Falcons.SIDETAKE)
-    val uptakeMotor = TalonFX(Falcons.UPTAKE)
+//    val spinMotor = TalonFX(Falcons.SPIN_0)
+//    val spinMotorFollower = TalonFX(Falcons.SPIN_1)
+//    val sidetakeMotor = TalonFX(Falcons.SIDETAKE)
+//    val uptakeMotor = TalonFX(Falcons.UPTAKE)
 
     @get:AutoLogOutput(key = "Spindexer/Current State")
     var currentState = State.OFF
@@ -69,25 +70,25 @@ object Spindexer: MechanismBase("Spindexer") {
     val doSineSpinSlowdown: Boolean get() = doSineSpinSlowdownEntry.getBoolean(false)
 
     @get:AutoLogOutput(key = "Spindexer/Spin Velocity")
-    val spinVelocity: AngularVelocity get() = spinMotor.velocity.value
+    val spinVelocity: AngularVelocity get() = 0.0.degreesPerSecond//spinMotor.velocity.value //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
     @get:AutoLogOutput(key = "Spindexer/Uptake Velocity")
-    val uptakeVelocity: AngularVelocity get() = uptakeMotor.velocity.value
+    val uptakeVelocity: AngularVelocity get() = 0.0.degreesPerSecond//uptakeMotor.velocity.value //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
     @get:AutoLogOutput(key = "Spindexer/Sidetake Velocity")
-    val sidetakeVelocity: AngularVelocity get() = sidetakeMotor.velocity.value
+    val sidetakeVelocity: AngularVelocity get() = 0.0.degreesPerSecond//sidetakeMotor.velocity.value //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
 
     @get:AutoLogOutput(key = "Spindexer/Spindexer Current")
-    val spindexerCurrent: Current get() = spinMotor.supplyCurrent.value
+    val spindexerCurrent: Current get() = 0.0.amps//spinMotor.supplyCurrent.value//TODO: UNCOMMENT WHEN 2027 PHOENIX 6
     @get:AutoLogOutput(key = "Spindexer/Uptake Current")
-    val uptakeCurrent: Current get() = uptakeMotor.supplyCurrent.value
+    val uptakeCurrent: Current get() = 0.0.amps//uptakeMotor.supplyCurrent.value//TODO: UNCOMMENT WHEN 2027 PHOENIX 6
     @get:AutoLogOutput(key = "Spindexer/Sidetake Current")
-    val sidetakeCurrent: Current get() = sidetakeMotor.supplyCurrent.value
+    val sidetakeCurrent: Current get() = 0.0.amps//sidetakeMotor.supplyCurrent.value//TODO: UNCOMMENT WHEN 2027 PHOENIX 6
 
     @get:AutoLogOutput(key = "Spindexer/Spindexer TorqueCurrent")
-    val spindexerTorqueCurrent: Current get() = spinMotor.torqueCurrent.value
+    val spindexerTorqueCurrent: Current get() = 0.0.amps//spinMotor.torqueCurrent.value//TODO: UNCOMMENT WHEN 2027 PHOENIX 6
     @get:AutoLogOutput(key = "Spindexer/Uptake TorqueCurrent")
-    val uptakeTorqueCurrent: Current get() = uptakeMotor.torqueCurrent.value
+    val uptakeTorqueCurrent: Current get() = 0.0.amps//uptakeMotor.torqueCurrent.value//TODO: UNCOMMENT WHEN 2027 PHOENIX 6
     @get:AutoLogOutput(key = "Spindexer/Sidetake TorqueCurrent")
-    val sidetakeTorqueCurrent: Current get() = sidetakeMotor.torqueCurrent.value
+    val sidetakeTorqueCurrent: Current get() = 0.0.amps//sidetakeMotor.torqueCurrent.value//TODO: UNCOMMENT WHEN 2027 PHOENIX 6
 
     private val spinMotorControl = MotionMagicVelocityTorqueCurrentFOC(0.0)
     private val sidetakeMotorControl = VelocityTorqueCurrentFOC(0.0)
@@ -97,27 +98,27 @@ object Spindexer: MechanismBase("Spindexer") {
     @get:AutoLogOutput(key = "Spindexer/spinMotorVelocitySetpoint")
     var spinMotorVelocitySetpoint: Double = 0.0
         set(value) {
-            spinMotor.setControl(
-                if (value == 0.0) NeutralOut() else spinMotorControl.withVelocity(value)//MotionMagicVelocityTorqueCurrentFOC(value)
-            )
+//            spinMotor.setControl( // TODO: PHOENIX 6 2027
+//                if (value == 0.0) NeutralOut() else spinMotorControl.withVelocity(value)//MotionMagicVelocityTorqueCurrentFOC(value)
+//            )
             field = value
         }
 
     @get:AutoLogOutput(key = "Spindexer/sidetakeMotorVelocitySetpoint")
     var sidetakeMotorVelocitySetpoint: Double = 0.0
         set(value) {
-            sidetakeMotor.setControl(
-                if (value == 0.0) NeutralOut() else sidetakeMotorControl.withVelocity(value)//VelocityTorqueCurrentFOC(value)
-            )
+//            sidetakeMotor.setControl( // TODO: PHOENIX 6 2027
+//                if (value == 0.0) NeutralOut() else sidetakeMotorControl.withVelocity(value)//VelocityTorqueCurrentFOC(value)
+//            )
             field = value
         }
 
     @get:AutoLogOutput(key = "Spindexer/uptakeMotorVelocitySetpoint")
     var uptakeMotorVelocitySetpoint: Double = 0.0
         set(value) {
-            uptakeMotor.setControl(
-                if (value == 0.0) NeutralOut() else uptakeMotorControl.withVelocity(value)//VelocityTorqueCurrentFOC(value)
-            )
+//            uptakeMotor.setControl( // TODO: PHOENIX 6 2027
+//                if (value == 0.0) NeutralOut() else uptakeMotorControl.withVelocity(value)//VelocityTorqueCurrentFOC(value)
+//            )
             field = value
         }
 
@@ -159,40 +160,40 @@ object Spindexer: MechanismBase("Spindexer") {
         doSineSpinSlowdownEntry.setPersistent()
 
 
-        spinMotor.applyConfiguration {
-            currentLimits(10.0, 20.0, 0.5)
-            inverted(false)
-            coastMode()
-            s(2.0, StaticFeedforwardSignValue.UseVelocitySign)
-            p(6.0)
-            MotionMagic.MotionMagicAcceleration = 120.0
-
-
-            OpenLoopRamps.TorqueOpenLoopRampPeriod = 10.0
-        }
-        spinMotor.addFollower(spinMotorFollower)
-
-        uptakeMotor.applyConfiguration {
-            currentLimits(28.0, 40.0, 0.2)
-            coastMode()
-            inverted(true)
-
-            p(7.0)
-            s(2.0, StaticFeedforwardSignValue.UseVelocitySign)
-        }
-
-        sidetakeMotor.applyConfiguration {
-            currentLimits(30.0, 30.0, 1.0)
-            coastMode()
-
-            p(7.0)
-            s(2.0, StaticFeedforwardSignValue.UseVelocitySign)
-        }
+//        spinMotor.applyConfiguration { // TODO: PHOENIX 6 2027
+//            currentLimits(10.0, 20.0, 0.5)
+//            inverted(false)
+//            coastMode()
+//            s(2.0, StaticFeedforwardSignValue.UseVelocitySign)
+//            p(6.0)
+//            MotionMagic.MotionMagicAcceleration = 120.0
+//
+//
+//            OpenLoopRamps.TorqueOpenLoopRampPeriod = 10.0
+//        }
+//        spinMotor.addFollower(spinMotorFollower)
+//
+//        uptakeMotor.applyConfiguration {
+//            currentLimits(28.0, 40.0, 0.2)
+//            coastMode()
+//            inverted(true)
+//
+//            p(7.0)
+//            s(2.0, StaticFeedforwardSignValue.UseVelocitySign)
+//        }
+//
+//        sidetakeMotor.applyConfiguration {
+//            currentLimits(30.0, 30.0, 1.0)
+//            coastMode()
+//
+//            p(7.0)
+//            s(2.0, StaticFeedforwardSignValue.UseVelocitySign)
+//        }
 
         if (!isSim) {
-            powerTracker.addMotors("Dye Rotor Spin", { spinMotor.getSupplyCurrent(true).value.asAmps }, 2)
-            powerTracker.addMotors("Dye Rotor Uptake", { uptakeMotor.getSupplyCurrent(true).value.asAmps })
-            powerTracker.addMotors("Dye Rotor Sidetake", { sidetakeMotor.getSupplyCurrent(true).value.asAmps })
+            powerTracker.addMotors("Dye Rotor Spin", { 0.0 /*spinMotor.getSupplyCurrent(true).value.asAmps*/ }, 2) //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
+            powerTracker.addMotors("Dye Rotor Uptake", { 0.0/*uptakeMotor.getSupplyCurrent(true).value.asAmps*/ }) //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
+            powerTracker.addMotors("Dye Rotor Sidetake", { 0.0/*sidetakeMotor.getSupplyCurrent(true).value.asAmps*/ }) //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
         }
 
     }

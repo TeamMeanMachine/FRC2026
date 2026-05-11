@@ -4,7 +4,6 @@ package frc.team2471.frc2026
 //import edu.wpi.first.hal.FRCNetComm.tInstances
 //import edu.wpi.first.hal.FRCNetComm.tResourceType
 import com.ctre.phoenix6.SignalLogger
-import edu.wpi.first.wpilibj.*
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
@@ -24,8 +23,14 @@ import org.team2471.frc.lib.units.asFeet
 import org.team2471.frc.lib.util.PowerTracker
 import org.team2471.frc.lib.util.RobotMode
 import org.team2471.frc.lib.util.robotMode
-import org.wpilib.commands3.Mechanism
-import org.wpilib.commands3.Scheduler
+import org.wpilib.command3.Mechanism
+import org.wpilib.command3.Scheduler
+import org.wpilib.driverstation.RobotState
+import org.wpilib.driverstation.internal.DriverStationBackend
+import org.wpilib.framework.RobotBase
+import org.wpilib.framework.TimedRobot
+import org.wpilib.system.RobotController
+import org.wpilib.system.Timer
 import java.net.NetworkInterface
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -63,10 +68,6 @@ object Robot : TimedRobot() {
     @get:JvmName("RobotIsAutonomousEnabled")
     var isAutonomousEnabled = false
         private set
-    override fun isEnabled(): Boolean = isEnabled
-    override fun isAutonomous(): Boolean = isAutonomous
-    override fun isDisabled(): Boolean = isDisabled
-    override fun isAutonomousEnabled(): Boolean = isAutonomousEnabled
 
     val powerTracker = PowerTracker()
 
@@ -106,7 +107,8 @@ object Robot : TimedRobot() {
             }
         }
 
-        DriverStation.silenceJoystickConnectionWarning(true)
+
+        DriverStationBackend.silenceJoystickConnectionWarning(true)
 
         SignalLogger.setPath("")
 //        SignalLogger.start()
@@ -116,28 +118,15 @@ object Robot : TimedRobot() {
         MeanLogger.start()
         // Call all subsystems, make sure their init's run
         allSubsystems.forEach { println("activating subsystem ${it.name}") }
-        println("FieldManager thinks the field is ${FieldManager.fieldDimensions.asFeet} feet big")
+        println("FieldManager thinks the field is ${FieldManager.fieldDimensions.measureX.asFeet} feet big")
 //        println("We see ${Autonomous.paths.size} paths and they are made on the ${if (Drive.choreoPathsStartOnRed) "red" else "blue"} side.")
-
-        // Code stolen from Mechanical Advantage:
-        // https://github.com/Mechanical-Advantage/RobotCode2025Public/blob/3ea1eb036b2dc06e4ecb14d98bba7f602a1cd62a/src/main/java/org/littletonrobotics/frc2025/Robot.java#L145
-        // Changes loop overrun warning to be 0.2 instead of 0.02
-        val loopOverrunWarningTimeout = 0.2
-        try {
-            val watchdogField = IterativeRobotBase::class.java.getDeclaredField("m_watchdog")
-            watchdogField.setAccessible(true)
-            val watchdog = watchdogField.get(this) as Watchdog
-            watchdog.setTimeout(loopOverrunWarningTimeout)
-        } catch (_: Exception) {
-            DriverStation.reportWarning("Failed to disable loop overrun warnings.", false)
-        }
 
         GlobalScope.launch {
             // Attempt to clear out small occasional loop overruns when periodically calling DriverStation.isEnabled()
             while (true) {
-                isEnabled = DriverStation.isEnabled()
+                isEnabled = RobotState.isEnabled()
                 isDisabled = !isEnabled
-                isAutonomous = DriverStation.isAutonomous()
+                isAutonomous = RobotState.isAutonomous()
                 isAutonomousEnabled = isAutonomous && isEnabled
 
                 if (doEnableInitAsync) {
@@ -150,7 +139,7 @@ object Robot : TimedRobot() {
             }
         }
 
-        RobotController.setTimeSource { RobotController.getFPGATime() }
+        RobotController.setTimeSource { RobotController.getMonotonicTime() }
         GlobalScope.launch {
             val t = Timer()
             periodic {
@@ -158,6 +147,7 @@ object Robot : TimedRobot() {
                 t.restart()
             }
         }
+        println("Finished Robot init")
     }
 
     /** This function is called periodically during all modes.  */
@@ -225,10 +215,10 @@ object Robot : TimedRobot() {
 
 //                Drive.localizer.trackAllTags()
             } else {
-                Intake.deployMotor0.setPosition(0.0)
-                if (isCompBot) {
-                    Intake.deployMotor1.setPosition(0.0)
-                }
+//                Intake.deployMotor0.setPosition(0.0) // TODO: PHOENIX 6 2027
+//                if (isCompBot) {
+//                    Intake.deployMotor1.setPosition(0.0)
+//                }
                 Intake.finishedHoming = true
 
 //                if (isRedAlliance) {
@@ -308,14 +298,14 @@ object Robot : TimedRobot() {
     /** This function is called periodically during operator control.  */
     override fun teleopPeriodic() {}
 
-    /** This function is called once when test mode is enabled.  */
-    override fun testInit() {
-        scheduler.cancelAll() // Cancels all running commands at the start of test mode.
-        scheduler.schedule(Autonomous.testCommand ?: use("NullTestCommand") { println("THE TEST COMMAND IS NULL") })
-    }
-
-    /** This function is called periodically during test mode.  */
-    override fun testPeriodic() {}
+//    /** This function is called once when test mode is enabled.  */
+//    override fun testInit() {
+//        scheduler.cancelAll() // Cancels all running commands at the start of test mode.
+//        scheduler.schedule(Autonomous.testCommand ?: use("NullTestCommand") { println("THE TEST COMMAND IS NULL") })
+//    }
+//
+//    /** This function is called periodically during test mode.  */
+//    override fun testPeriodic() {}
 
     /** This function is called once when the robot is first started up.  */
     override fun simulationInit() {}
@@ -376,4 +366,11 @@ object Robot : TimedRobot() {
  * Rename * Refactoring when renaming the object, it will get changed everywhere
  * including here.)
  */
-fun main() = RobotBase.startRobot { Robot }
+fun main() = RobotBase.startRobot(DummyRobot::class.java)
+
+//TODO: This dummy class is the only option to keep Robot an object and startRobot to successfully run.
+// Perhaps figure out a way to not do this - 2027.0.0-alpha-6
+class DummyRobot : TimedRobot() {
+    override fun startCompetition() = Robot.startCompetition()
+    override fun endCompetition() = Robot.endCompetition()
+}

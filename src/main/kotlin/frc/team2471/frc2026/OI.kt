@@ -1,11 +1,5 @@
 package frc.team2471.frc2026
 
-import edu.wpi.first.math.filter.Debouncer
-import edu.wpi.first.math.geometry.Pose2d
-import edu.wpi.first.math.geometry.Translation2d
-import edu.wpi.first.networktables.NetworkTableInstance
-import edu.wpi.first.wpilibj.Alert
-import edu.wpi.first.wpilibj.GenericHID
 import org.team2471.frc.lib.commands.MechanismBase
 //import edu.wpi.first.wpilibj2.command.SubsystemBase
 import org.team2471.frc.lib.control.LoopLogger
@@ -18,7 +12,12 @@ import org.team2471.frc.lib.control.MeanCommandXboxController
 import org.team2471.frc.lib.math.deadband
 import org.team2471.frc.lib.math.normalize
 import org.team2471.frc.lib.units.degrees
-import org.wpilib.commands3.Mechanism
+import org.wpilib.driverstation.Alert
+import org.wpilib.driverstation.GenericHID
+import org.wpilib.driverstation.RobotState
+import org.wpilib.math.filter.Debouncer
+import org.wpilib.math.geometry.Translation2d
+import org.wpilib.networktables.NetworkTableInstance
 
 object OI: MechanismBase("OI") {
     private val table = NetworkTableInstance.getDefault().getTable("OI")
@@ -81,8 +80,8 @@ object OI: MechanismBase("OI") {
     val operatorRightY: Double
         get() = operatorController.rightY.deadband(deadbandOperator)
 
-    private val driverNotConnectedAlert: Alert = Alert("DRIVER JOYSTICK DISCONNECTED", Alert.AlertType.kError)
-    private val operatorNotConnectedAlert: Alert = Alert("OPERATOR JOYSTICK DISCONNECTED", Alert.AlertType.kError)
+    private val driverNotConnectedAlert: Alert = Alert("DRIVER JOYSTICK DISCONNECTED", Alert.Level.HIGH)
+    private val operatorNotConnectedAlert: Alert = Alert("OPERATOR JOYSTICK DISCONNECTED", Alert.Level.HIGH)
     private val driverDebouncer = Debouncer(0.05)
     private val operatorDebouncer = Debouncer(0.05)
 
@@ -160,6 +159,7 @@ object OI: MechanismBase("OI") {
 
 //        driverController.povUp().onTrue(runOnceCommand { Turret.offset -= 2.0.degrees})
 //        driverController.povDown().and(driverController.y().negate()).and(driverController.leftBumper().negate()).onTrue(runOnceCommand { Turret.offset += 2.0.degrees})
+        println("finished OI init")
     }
 
     override fun periodic() {
@@ -168,10 +168,10 @@ object OI: MechanismBase("OI") {
         operatorNotConnectedAlert.set(operatorDebouncer.calculate(!operatorController.isConnected))
 
 
-        if (Intake.intakeState == Intake.IntakeState.INTAKING && Robot.isTeleopEnabled) {
-            driverController.setRumble(GenericHID.RumbleType.kRightRumble, 0.013)
+        if (Intake.intakeState == Intake.IntakeState.INTAKING && RobotState.isTeleopEnabled()) {
+            driverController.setRumble(GenericHID.RumbleType.RIGHT_RUMBLE, 0.013)
         } else {
-            driverController.setRumble(GenericHID.RumbleType.kRightRumble, 0.0)
+            driverController.setRumble(GenericHID.RumbleType.RIGHT_RUMBLE, 0.0)
         }
 
         LoopLogger.record("OI piodc")

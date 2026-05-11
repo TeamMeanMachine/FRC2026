@@ -1,14 +1,13 @@
 package frc.team2471.frc2026
 
-import edu.wpi.first.math.geometry.Pose2d
-import edu.wpi.first.wpilibj.smartdashboard.SendableChooser
 //import frc.team2471.frc2026.tests.*
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser
 import org.team2471.frc.lib.control.Autonomi
-import org.team2471.frc.lib.swerve.sideToSideFlip
 import org.team2471.frc.lib.units.feet
 import org.team2471.frc.lib.units.meters
-import org.wpilib.commands3.Command
+import org.wpilib.command3.Command
+import org.wpilib.math.geometry.Pose2d
+import org.wpilib.smartdashboard.SendableChooser
 import kotlin.math.absoluteValue
 
 
@@ -222,7 +221,7 @@ object Autonomous: Autonomi() {
 //    }
 
     fun warmupDriveAlongPath(): Command {
-        val warmupPath = paths["LeftSideDoubleSwipe"]!!.sideToSideFlip(true)
+        val warmupPath = paths["LeftSideDoubleSwipe"]!!//.sideToSideFlip(true) //TODO: UNCOMMENT WHEN 2027 CHOREO
         return Drive.driveAlongChoreoPath(warmupPath.getSplit(0).get(), exitSupplier = { percent, error -> percent >= 1.0 || Robot.isEnabled})//.ignoringDisable(true)
     }
 }

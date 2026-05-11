@@ -1,7 +1,5 @@
 package frc.team2471.frc2026
 
-import edu.wpi.first.math.geometry.Translation3d
-import edu.wpi.first.wpilibj.Timer
 import frc.team2471.frc2026.AimUtils.AIR_DENSITY
 import frc.team2471.frc2026.AimUtils.FUEL_DRAG_COEFFICIENT
 import frc.team2471.frc2026.AimUtils.FUEL_FRONTAL_AREA
@@ -10,6 +8,8 @@ import frc.team2471.frc2026.AimUtils.G
 import org.littletonrobotics.junction.Logger
 import org.littletonrobotics.junction.MeanLogger
 import org.team2471.frc.lib.units.asKilograms
+import org.wpilib.math.geometry.Translation3d
+import org.wpilib.system.Timer
 import kotlin.math.pow
 
 class FuelSim(val x0: Translation3d, val v0: Translation3d) {
@@ -17,11 +17,11 @@ class FuelSim(val x0: Translation3d, val v0: Translation3d) {
     var velocity = v0
     var prevVelocity = v0
     var prevAcceleration = Translation3d(0.0, 0.0, -G)
-    var prevT = Timer.getFPGATimestamp()
+    var prevT = Timer.getMonotonicTimestamp()
 
     fun update(numSteps: Int = 1) {
         // Time from last update
-        val deltaT = Timer.getFPGATimestamp() - prevT
+        val deltaT = Timer.getMonotonicTimestamp() - prevT
 
 
         update(deltaT, numSteps)

@@ -1,14 +1,5 @@
 package frc.team2471.frc2026
 
-import edu.wpi.first.math.geometry.Translation2d
-import edu.wpi.first.math.geometry.Translation3d
-import edu.wpi.first.math.interpolation.InterpolatingTreeMap
-import edu.wpi.first.networktables.NetworkTableInstance
-import edu.wpi.first.units.measure.Angle
-import edu.wpi.first.units.measure.AngularVelocity
-import edu.wpi.first.units.measure.Distance
-import edu.wpi.first.units.measure.LinearVelocity
-import edu.wpi.first.wpilibj.DriverStation
 import frc.team2471.frc2026.Shooter.SHOOTER_GEAR_RATIO
 import frc.team2471.frc2026.Shooter.floorSpeedCurve
 import frc.team2471.frc2026.Shooter.hubSpeedCurve
@@ -35,6 +26,16 @@ import org.team2471.frc.lib.units.radians
 import org.team2471.frc.lib.units.rotationsPerSecond
 import org.team2471.frc.lib.units.sin
 import org.team2471.frc.lib.util.isRedAlliance
+import org.wpilib.driverstation.RobotState
+import org.wpilib.math.geometry.Translation2d
+import org.wpilib.math.geometry.Translation3d
+import org.wpilib.math.interpolation.InterpolatingTreeMap
+import org.wpilib.networktables.NetworkTableInstance
+import org.wpilib.system.RobotController
+import org.wpilib.units.measure.Angle
+import org.wpilib.units.measure.AngularVelocity
+import org.wpilib.units.measure.Distance
+import org.wpilib.units.measure.LinearVelocity
 import kotlin.math.absoluteValue
 import kotlin.math.atan2
 import kotlin.math.pow
@@ -91,7 +92,7 @@ object AimUtils {
         }
 
     val staticShotPos: Translation2d
-        get() = if (Drive.heading.measure > 0.0.degrees) {
+        get() = Translation2d() /*if (Drive.heading.measure > 0.0.degrees) { //TODO: FIX
                 if (isRedAlliance) {
                     FieldManager.upperRedStaticShotPosition
                 } else {
@@ -103,7 +104,7 @@ object AimUtils {
                 } else {
                     FieldManager.lowerBlueStaticShotPosition
                 }
-            }
+            }*/
 
     // Calculates how fast the shooter should spin to make a shot.
     fun getShooterRPS(): AngularVelocity {
@@ -137,7 +138,7 @@ object AimUtils {
         return offset
     }
 
-    val isAimingAtGoal get() = DriverStation.isAutonomous() || FieldManager.inScoringZone
+    val isAimingAtGoal get() = RobotState.isAutonomous() || FieldManager.inScoringZone
 
     val distanceToTarget get() = Turret.turretTranslation.getDistance(aimTarget).absoluteValue.meters
 

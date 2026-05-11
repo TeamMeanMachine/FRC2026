@@ -9,9 +9,6 @@ import com.ctre.phoenix6.controls.PositionTorqueCurrentFOC
 import com.ctre.phoenix6.hardware.TalonFX
 //import com.ctre.phoenix6.signals.MotorAlignmentValue
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue
-import edu.wpi.first.networktables.NetworkTableInstance
-import edu.wpi.first.wpilibj.DigitalInput
-import edu.wpi.first.wpilibj.Timer
 //import edu.wpi.first.wpilibj2.command.Command
 //import edu.wpi.first.wpilibj2.command.SubsystemBase
 import frc.team2471.frc2026.Robot.powerTracker
@@ -45,8 +42,11 @@ import org.team2471.frc.lib.ctre.p
 import org.team2471.frc.lib.ctre.s
 import org.team2471.frc.lib.units.asVolts
 import org.team2471.frc.lib.util.isSim
-import org.wpilib.commands3.Command
-import org.wpilib.commands3.Coroutine
+import org.wpilib.command3.Command
+import org.wpilib.command3.Coroutine
+import org.wpilib.hardware.discrete.DigitalInput
+import org.wpilib.networktables.NetworkTableInstance
+import org.wpilib.system.Timer
 import kotlin.math.absoluteValue
 
 object Intake: MechanismBase("Intake") {
@@ -70,10 +70,10 @@ object Intake: MechanismBase("Intake") {
 
     const val HOME_VELOCITY_THRESHOLD = 0.25
 
-    val rollerMotor = TalonFX(Falcons.INTAKE_ROLLER_0, if (Robot.isCompBot) CANivores.INTAKE_CAN else CANBus("rio"))
-    val rollerMotorFollower = TalonFX(Falcons.INTAKE_ROLLER_1, if (Robot.isCompBot) CANivores.INTAKE_CAN else CANBus("rio"))
-    val deployMotor0 = TalonFX(Falcons.INTAKE_DEPLOY_0)
-    val deployMotor1 = TalonFX(Falcons.INTAKE_DEPLOY_1)
+//    val rollerMotor = TalonFX(Falcons.INTAKE_ROLLER_0, if (Robot.isCompBot) CANivores.INTAKE_CAN else CANBus("rio")) // TODO: PHOENIX 6 2027
+//    val rollerMotorFollower = TalonFX(Falcons.INTAKE_ROLLER_1, if (Robot.isCompBot) CANivores.INTAKE_CAN else CANBus("rio"))
+//    val deployMotor0 = TalonFX(Falcons.INTAKE_DEPLOY_0)
+//    val deployMotor1 = TalonFX(Falcons.INTAKE_DEPLOY_1)
     val stopSensor0 = DigitalInput(DigitalSensors.INTAKE_STOP_SENSOR_0)
     val stopSensor1 = DigitalInput(DigitalSensors.INTAKE_STOP_SENSOR_1)
 
@@ -88,16 +88,16 @@ object Intake: MechanismBase("Intake") {
     val hitHardStop1 get() = !stopSensor1.get()
 
     @get:AutoLogOutput(key = "Intake/Roller Motor Temp")
-    val rollerTemp get() = rollerMotor.deviceTemp.valueAsDouble
+    val rollerTemp get() = 0.0//rollerMotor.deviceTemp.valueAsDouble //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
 
     @get:AutoLogOutput(key = "Intake/Velocity Setpoint")
     var velocitySetpoint: Double = 0.0
         set(value) {
             field = value.coerceIn(-100.0, 100.0)
             if (field == 0.0) {
-                rollerMotor.setControl(NeutralOut())
+//                rollerMotor.setControl(NeutralOut()) // TODO: PHOENIX 6 2027
             } else {
-                rollerMotor.setControl(DutyCycleOut(field / 100.0).withEnableFOC(true))
+//                rollerMotor.setControl(DutyCycleOut(field / 100.0).withEnableFOC(true))// TODO: PHOENIX 6 2027
             }
         }
 
@@ -111,14 +111,14 @@ object Intake: MechanismBase("Intake") {
             field = value
             if (finishedHoming) {
                 if (disableSpringProtection) {
-                    deployMotor0.setControl(MotionMagicVoltage(field).withSlot(1))
+//                    deployMotor0.setControl(MotionMagicVoltage(field).withSlot(1))// TODO: PHOENIX 6 2027
                     if (Robot.isCompBot) {
-                        deployMotor1.setControl(MotionMagicVoltage(field).withSlot(1))
+//                        deployMotor1.setControl(MotionMagicVoltage(field).withSlot(1))// TODO: PHOENIX 6 2027
                     }
                 } else {
-                    deployMotor0.setControl(PositionTorqueCurrentFOC(field))
+//                    deployMotor0.setControl(PositionTorqueCurrentFOC(field))// TODO: PHOENIX 6 2027
                     if (Robot.isCompBot) {
-                        deployMotor1.setControl(PositionTorqueCurrentFOC(field))
+//                        deployMotor1.setControl(PositionTorqueCurrentFOC(field))// TODO: PHOENIX 6 2027
                     }
                 }
 
@@ -190,35 +190,35 @@ object Intake: MechanismBase("Intake") {
 
     @get:AutoLogOutput(key = "Intake/Roller Velocity")
     val rollerVelocity: Double
-        get() = rollerMotor.velocity.valueAsDouble
+        get() = 0.0//rollerMotor.velocity.valueAsDouble //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
 
     @get:AutoLogOutput(key = "Intake/Roller Current")
     val rollerCurrent: Double
-        get() = rollerMotor.supplyCurrent.valueAsDouble
+        get() = 0.0//rollerMotor.supplyCurrent.valueAsDouble //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
 
     @get:AutoLogOutput(key = "Intake/Deploy0 Current")
     val deployCurrent0: Double
-        get() = deployMotor0.supplyCurrent.valueAsDouble
+        get() = 0.0//deployMotor0.supplyCurrent.valueAsDouble //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
 
     @get:AutoLogOutput(key = "Intake/Deploy1 Current")
     val deployCurrent1: Double
-        get() = deployMotor1.supplyCurrent.valueAsDouble
+        get() = 0.0//deployMotor1.supplyCurrent.valueAsDouble //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
 
     @get:AutoLogOutput(key = "Intake/Deploy0 Velocity")
     val deployVelocity0: Double
-        get() = deployMotor0.velocity.valueAsDouble
+        get() = 0.0//deployMotor0.velocity.valueAsDouble //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
 
     @get:AutoLogOutput(key = "Intake/Deploy1 Velocity")
     val deployVelocity1: Double
-        get() = deployMotor1.velocity.valueAsDouble
+        get() = 0.0//deployMotor1.velocity.valueAsDouble //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
 
     @get:AutoLogOutput(key = "Intake/Deploy Motor Position")
     val deployMotor0Position: Double
-        get() = deployMotor0.position.valueAsDouble
+        get() = 0.0//deployMotor0.position.valueAsDouble //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
 
     @get:AutoLogOutput(key = "Intake/Deploy Motor Follower Position")
     val deployMotor1Position: Double
-        get() = if (Robot.isCompBot) deployMotor1.position.valueAsDouble else 0.0
+        get() = 0.0//if (Robot.isCompBot) deployMotor1.position.valueAsDouble else 0.0 //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
 
 
     @get:AutoLogOutput(key = "Intake/Deploy Motor Error")
@@ -267,48 +267,48 @@ object Intake: MechanismBase("Intake") {
 
 
         // Create Intake deploy motor configuration
-        val deployConfig = TalonFXConfiguration().apply {
-            currentLimits(5.0, 25.0, 0.25)
-            coastMode()
-//            if (Robot.isCompBot) {
-                p(1.5, 1)
-                s(0.25, StaticFeedforwardSignValue.UseClosedLoopSign, 1)
+//        val deployConfig = TalonFXConfiguration().apply { // TODO: PHOENIX 6 2027
+//            currentLimits(5.0, 25.0, 0.25)
+//            coastMode()
+////            if (Robot.isCompBot) {
+//                p(1.5, 1)
+//                s(0.25, StaticFeedforwardSignValue.UseClosedLoopSign, 1)
+////
+////            } else {
+////                p(1.5)
+////                s(0.25, StaticFeedforwardSignValue.UseClosedLoopSign)
+////            }
+//            p(50.0)
+//            d(3.0)
 //
-//            } else {
-//                p(1.5)
-//                s(0.25, StaticFeedforwardSignValue.UseClosedLoopSign)
-//            }
-            p(50.0)
-            d(3.0)
-
-            TorqueCurrent.PeakForwardTorqueCurrent = maxForwardTorque
-
-            if (Robot.isCompBot) motionMagic(200.0, 500.0) else motionMagic(750.0, 1500.0)
-        }
+//            TorqueCurrent.PeakForwardTorqueCurrent = maxForwardTorque
+//
+//            if (Robot.isCompBot) motionMagic(200.0, 500.0) else motionMagic(750.0, 1500.0)
+//        }
 
         // Apply config to motors
-        deployMotor0.applyConfiguration(deployConfig.apply { inverted(true) })
-        deployMotor0.setPosition(0.0)
-
-        if (Robot.isCompBot) {
-            deployMotor1.applyConfiguration(deployConfig.apply { inverted(false) })
-            deployMotor1.setPosition(0.0)
-        }
-
-        rollerMotor.applyConfiguration {
-            currentLimits(autoCurrentLimits.peakLimit, autoCurrentLimits.continuousLimit, autoCurrentLimits.peakDuration)
-//            p(7.0)
-//            s(10.0, StaticFeedforwardSignValue.UseVelocitySign)
-            coastMode()
-        }
-        if (Robot.isCompBot) {
-            rollerMotor.addFollower(rollerMotorFollower/*, false*/)
-        } else {
-            rollerMotor.addFollower(rollerMotorFollower)
-        }
+//        deployMotor0.applyConfiguration(deployConfig.apply { inverted(true) }) // TODO: PHOENIX 6 2027
+//        deployMotor0.setPosition(0.0)
+//
+//        if (Robot.isCompBot) {
+//            deployMotor1.applyConfiguration(deployConfig.apply { inverted(false) })
+//            deployMotor1.setPosition(0.0)
+//        }
+//
+//        rollerMotor.applyConfiguration {
+//            currentLimits(autoCurrentLimits.peakLimit, autoCurrentLimits.continuousLimit, autoCurrentLimits.peakDuration)
+////            p(7.0)
+////            s(10.0, StaticFeedforwardSignValue.UseVelocitySign)
+//            coastMode()
+//        }
+//        if (Robot.isCompBot) {
+//            rollerMotor.addFollower(rollerMotorFollower/*, false*/)
+//        } else {
+//            rollerMotor.addFollower(rollerMotorFollower)
+//        }
 
         if (!isSim) {
-            powerTracker.addMotors("Intake Roller", { rollerCurrent }, 2, {rollerMotor.supplyVoltage.value.asVolts})
+            powerTracker.addMotors("Intake Roller", { rollerCurrent }, 2, {/*rollerMotor.supplyVoltage.value.asVolts*/0.0}) //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
             powerTracker.addMotors("Intake Deploy 0", { deployCurrent0 })
             if (Robot.isCompBot) {
                 powerTracker.addMotors("Intake Deploy 1", { deployCurrent1 })
@@ -334,12 +334,12 @@ object Intake: MechanismBase("Intake") {
     override fun periodic() {
         if (maxForwardTorque != prevMaxForwardTorque) {
             GlobalScope.launch {
-                deployMotor0.modifyConfiguration {
-                    TorqueCurrent.PeakForwardTorqueCurrent = maxForwardTorque
-                }
-                deployMotor1.modifyConfiguration {
-                    TorqueCurrent.PeakForwardTorqueCurrent = maxForwardTorque
-                }
+//                deployMotor0.modifyConfiguration { // TODO: PHOENIX 6 2027
+//                    TorqueCurrent.PeakForwardTorqueCurrent = maxForwardTorque
+//                }
+//                deployMotor1.modifyConfiguration {
+//                    TorqueCurrent.PeakForwardTorqueCurrent = maxForwardTorque
+//                }
             }
             prevMaxForwardTorque = maxForwardTorque
         }
@@ -372,10 +372,10 @@ object Intake: MechanismBase("Intake") {
 
     fun home(): Command = use("Home", this) {
         finishedHoming = false
-        parallel(
-            homeMotorOut(deployMotor0, { deployVelocity0.absoluteValue < HOME_VELOCITY_THRESHOLD && deployVelocity1.absoluteValue < HOME_VELOCITY_THRESHOLD }),
-            homeMotorOut(deployMotor1, { deployVelocity1.absoluteValue < HOME_VELOCITY_THRESHOLD && deployVelocity0.absoluteValue < HOME_VELOCITY_THRESHOLD })
-        )
+//        parallel( // TODO: PHOENIX 6 2027
+//            homeMotorOut(deployMotor0, { deployVelocity0.absoluteValue < HOME_VELOCITY_THRESHOLD && deployVelocity1.absoluteValue < HOME_VELOCITY_THRESHOLD }),
+//            homeMotorOut(deployMotor1, { deployVelocity1.absoluteValue < HOME_VELOCITY_THRESHOLD && deployVelocity0.absoluteValue < HOME_VELOCITY_THRESHOLD })
+//        )
         finishedHoming = true
         deploySetpoint = DEPLOY_POSE
     }
@@ -436,7 +436,7 @@ object Intake: MechanismBase("Intake") {
             }
         }
         motor.setControl(DutyCycleOut(0.0))
-        println("Deploy Pos: ${motor.position}")
+//        println("Deploy Pos: ${motor.position}") //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
         motor.setPosition(DEPLOY_POSE + 0.5)
     }
 
@@ -452,8 +452,8 @@ object Intake: MechanismBase("Intake") {
 
 
     fun homeDeploy(): Command = run {
-        deployMotor0.setPosition(deploySetpoint)
-        if (Robot.isCompBot) deployMotor1.setPosition(deploySetpoint)
+//        deployMotor0.setPosition(deploySetpoint) // TODO: PHOENIX 6 2027
+//        if (Robot.isCompBot) deployMotor1.setPosition(deploySetpoint)
     }.named("HomeDeploy")
 
 

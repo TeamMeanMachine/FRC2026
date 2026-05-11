@@ -8,16 +8,6 @@ import com.ctre.phoenix6.hardware.CANcoder
 import com.ctre.phoenix6.signals.InvertedValue
 //import com.ctre.phoenix6.signals.MotorAlignmentValue
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue
-import edu.wpi.first.math.filter.Debouncer
-import edu.wpi.first.math.geometry.Translation2d
-import edu.wpi.first.math.geometry.Translation3d
-import edu.wpi.first.math.interpolation.InterpolatingTreeMap
-import edu.wpi.first.math.interpolation.Interpolator
-import edu.wpi.first.math.interpolation.InverseInterpolator
-import edu.wpi.first.math.system.plant.DCMotor
-import edu.wpi.first.networktables.NetworkTableInstance
-import edu.wpi.first.units.measure.Angle
-import edu.wpi.first.units.measure.AngularVelocity
 //import edu.wpi.first.wpilibj2.command.Command
 //import edu.wpi.first.wpilibj2.command.SubsystemBase
 //import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine
@@ -53,6 +43,7 @@ import org.team2471.frc.lib.ctre.remoteCANCoder
 import org.team2471.frc.lib.ctre.s
 import org.team2471.frc.lib.ctre.setCANCoderAngle
 import org.team2471.frc.lib.units.absoluteValue
+import org.team2471.frc.lib.units.amps
 import org.team2471.frc.lib.units.asAmps
 import org.team2471.frc.lib.units.asFeet
 import org.team2471.frc.lib.units.asMeters
@@ -62,6 +53,7 @@ import org.team2471.frc.lib.units.asRotation2d
 import org.team2471.frc.lib.units.asRotations
 import org.team2471.frc.lib.units.cos
 import org.team2471.frc.lib.units.degrees
+import org.team2471.frc.lib.units.degreesPerSecond
 import org.team2471.frc.lib.units.inches
 import org.team2471.frc.lib.units.radians
 import org.team2471.frc.lib.units.rotations
@@ -70,7 +62,17 @@ import org.team2471.frc.lib.units.sin
 import org.team2471.frc.lib.util.angleTo
 import org.team2471.frc.lib.util.isReal
 import org.team2471.frc.lib.util.isSim
-import org.wpilib.commands3.Coroutine
+import org.wpilib.command3.Coroutine
+import org.wpilib.math.filter.Debouncer
+import org.wpilib.math.geometry.Translation2d
+import org.wpilib.math.geometry.Translation3d
+import org.wpilib.math.interpolation.InterpolatingTreeMap
+import org.wpilib.math.interpolation.Interpolator
+import org.wpilib.math.interpolation.InverseInterpolator
+import org.wpilib.math.system.DCMotor
+import org.wpilib.networktables.NetworkTableInstance
+import org.wpilib.units.measure.Angle
+import org.wpilib.units.measure.AngularVelocity
 import kotlin.math.abs
 import kotlin.math.cos
 
@@ -198,10 +200,10 @@ object Shooter: MechanismBase("Shooter") {
     val doAutoRamp: Boolean get() = doAutoRampEntry.getBoolean(true)
 
 
-    val shooterMotor = LoggedTalonFX(Falcons.SHOOTER_0, CANivores.TURRET_CAN)
-    val shooterMotorFollower = LoggedTalonFX(Falcons.SHOOTER_1, CANivores.TURRET_CAN)
-    val hoodMotor = LoggedTalonFX(Falcons.SHOOTER_HOOD, CANivores.TURRET_CAN)
-    val hoodEncoder = CANcoder(CANCoders.HOOD, CANivores.TURRET_CAN)
+//    val shooterMotor = LoggedTalonFX(Falcons.SHOOTER_0, CANivores.TURRET_CAN)
+//    val shooterMotorFollower = LoggedTalonFX(Falcons.SHOOTER_1, CANivores.TURRET_CAN)
+//    val hoodMotor = LoggedTalonFX(Falcons.SHOOTER_HOOD, CANivores.TURRET_CAN)
+//    val hoodEncoder = CANcoder(CANCoders.HOOD, CANivores.TURRET_CAN)
 
     val WHEEL_DIAMETER = 4.0.inches
 
@@ -218,19 +220,19 @@ object Shooter: MechanismBase("Shooter") {
         set(value) {
             field = value.coerceAtLeast(0.0.rotationsPerSecond)// / SHOOTER_GEAR_RATIO
             if (field > 0.0.rotationsPerSecond) {
-                shooterMotor.setControl(MotionMagicVelocityVoltage(field).withFeedForward(SHOOTER_CUSTOM_I))
+//                shooterMotor.setControl(MotionMagicVelocityVoltage(field).withFeedForward(SHOOTER_CUSTOM_I)) //TODO: UNCOMMENT WHEN PHOENIX 6 2027
             } else {
                 if (Robot.isCompBot) {
-                    shooterMotor.setControl(NeutralOut())
+//                    shooterMotor.setControl(NeutralOut()) // TODO: PHOENIX 6 2027
                 } else {
-                    shooterMotor.setControl(MotionMagicVoltage(0.0))
+//                    shooterMotor.setControl(MotionMagicVoltage(0.0)) // TODO: PHOENIX 6 2027
                 }
             }
         }
 
     @get:AutoLogOutput(key = "Shooter/Shooter Motor closedLoopReference")
     val shooterMotorReference
-        get() = shooterMotor.closedLoopReference.valueAsDouble
+        get() = 0.0//shooterMotor.closedLoopReference.valueAsDouble // TODO: PHOENIX 6 2027
 
     @get:AutoLogOutput(key = "Shooter/ShooterCurve Angular Velocity Setpoint")
     val shooterCurveVelocitySetpoint: AngularVelocity
@@ -245,40 +247,40 @@ object Shooter: MechanismBase("Shooter") {
         set(value) {
             if (isCompBot) {
                 field = value.coerceIn(HOOD_ZERO.degrees, 45.0.degrees)
-                hoodMotor.setControl(PositionVoltage(field.asRotations).withFeedForward(0.0))
+//                hoodMotor.setControl(PositionVoltage(field.asRotations).withFeedForward(0.0)) // TODO: PHOENIX 6 2027
             } else {
                 field = value.coerceIn(0.0.degrees, 44.0.degrees)
                 if (field == 0.0.degrees && hoodAngle > 5.0.degrees) {
-                    hoodMotor.setControl(PositionVoltage(field).withFeedForward(hoodFeedforward))
+//                    hoodMotor.setControl(PositionVoltage(field).withFeedForward(hoodFeedforward)) //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
                 } else {
-                    hoodMotor.setControl(MotionMagicVoltage(field).withFeedForward(hoodFeedforward))
+//                    hoodMotor.setControl(MotionMagicVoltage(field).withFeedForward(hoodFeedforward)) //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
                 }
             }
 
         }
 
     @get:AutoLogOutput(key = "Shooter/Hood Angle")
-    val hoodAngle: Angle get() = hoodMotor.position.valueAsDouble.rotations
+    val hoodAngle: Angle get() = 0.0.degrees//hoodMotor.position.valueAsDouble.rotations //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
 
     @get:AutoLogOutput(key = "Shooter/Hood Encoder Angle")
-    val hoodEncoderAngle: Angle get() = hoodEncoder.position.value
+    val hoodEncoderAngle: Angle get() = 0.0.degrees//hoodEncoder.position.value //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
 
     @get:AutoLogOutput(key = "Shooter/Shooter Angular Velocity")
     val shooterVelocity: AngularVelocity
-        get() = shooterMotor.velocity.valueAsDouble.rotationsPerSecond// * SHOOTER_GEAR_RATIO
+        get() = 0.0.degreesPerSecond//shooterMotor.velocity.valueAsDouble.rotationsPerSecond //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
 
     val shooterVelocityError: AngularVelocity
         get() = shooterVelocitySetpoint - shooterVelocity
 
     @get:AutoLogOutput(key = "Shooter/Shooter Current")
-    val shooterCurrent: Double get() = shooterMotor.supplyCurrent.valueAsDouble
+    val shooterCurrent: Double get() = 0.0//shooterMotor.supplyCurrent.valueAsDouble //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
     @get:AutoLogOutput(key = "Shooter/Shooter Motor Supply Voltage")
-    val shooterSupplyVoltage: Double get() = shooterMotor.supplyVoltage.valueAsDouble
+    val shooterSupplyVoltage: Double get() = 0.0//shooterMotor.supplyVoltage.valueAsDouble //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
     @get:AutoLogOutput(key = "Shooter/Shooter Motor Voltage")
-    val shooterMotorVoltage: Double get() = shooterMotor.motorVoltage.valueAsDouble
+    val shooterMotorVoltage: Double get() = 0.0//shooterMotor.motorVoltage.valueAsDouble //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
 
     @get:AutoLogOutput(key = "Shooter/Hood Current")
-    val hoodCurrent: Double get() = hoodMotor.supplyCurrent.valueAsDouble
+    val hoodCurrent: Double get() = 0.0//hoodMotor.supplyCurrent.valueAsDouble //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
 
     // degrees
     const val HOOD_ZERO = 15.0
@@ -287,10 +289,10 @@ object Shooter: MechanismBase("Shooter") {
     const val BALL_ANGLE_AT_HOOD_ZERO = 90.0
 
     @get:AutoLogOutput(key = "Shooter/Hood error distance")
-    val hoodErrorDistance get() = abs(AimUtils.distanceToTarget.asFeet * sin(hoodMotor.closedLoopError.valueAsDouble.radians))
+    val hoodErrorDistance get() = 0.0//abs(AimUtils.distanceToTarget.asFeet * sin(hoodMotor.closedLoopError.valueAsDouble.radians)) // TODO: PHOENIX 6 2027
 
     @get:AutoLogOutput(key = "Shooter/Velocity error distance")
-    val velocityErrorDistance get() = abs((if (AimUtils.isAimingAtGoal) AimUtils.MEASURED_SHOT_AIRTIME * cos(hubAngleCurve.get(AimUtils.distanceToTarget.asFeet)) else AimUtils.PASS_AIRTIME * cos(floorAngleCurve.get(AimUtils.distanceToTarget.asFeet))) * shooterMotor.closedLoopError.valueAsDouble * WHEEL_DIAMETER.asMeters * Math.PI * 0.5)
+    val velocityErrorDistance get() = 0.0//abs((if (AimUtils.isAimingAtGoal) AimUtils.MEASURED_SHOT_AIRTIME * cos(hubAngleCurve.get(AimUtils.distanceToTarget.asFeet)) else AimUtils.PASS_AIRTIME * cos(floorAngleCurve.get(AimUtils.distanceToTarget.asFeet))) * shooterMotor.closedLoopError.valueAsDouble * WHEEL_DIAMETER.asMeters * Math.PI * 0.5) // TODO: PHOENIX 6 2027
 
 //    @get:AutoLogOutput(key = "Shooter/Requested voltage")
 //    var requestedVoltage = 0.0
@@ -317,8 +319,8 @@ object Shooter: MechanismBase("Shooter") {
     var i = 0
 
     init {
-        shooterMotor.configSim(DCMotor.getKrakenX60(2), 0.1)
-        hoodMotor.configSim(DCMotor.getKrakenX60(1), 0.005)
+//        shooterMotor.configSim(DCMotor.getKrakenX60(2), 0.1) // TODO: PHOENIX 6 2027
+//        hoodMotor.configSim(DCMotor.getKrakenX60(1), 0.005)
 
         if (!shootingTestSpeedEntry.exists()) shootingTestSpeedEntry.setDouble(shootingTestSpeed)
         shootingTestSpeedEntry.setPersistent()
@@ -331,85 +333,85 @@ object Shooter: MechanismBase("Shooter") {
 
         zeroHoodButtonEntry.setBoolean(false)
 
-        shooterMotor.applyConfiguration {
-            currentLimits(10.0, 30.0, 0.3)
-            coastMode()
-
-            Feedback.withSensorToMechanismRatio(1.0/1.5) // Note: I don't think this line configures anything
-
-            inverted(InvertedValue.Clockwise_Positive)
-
-            if (isReal) {
-                if (isCompBot) {
-                    p(0.4)
-                    i(0.4)
-                } else {
-                    p(0.3)
-                    i(0.3)
-                }
-            } else {
-                p(4000.0)
-                i(0.0)
-            }
-
-//            d(0.0)
-//            s(0.0, StaticFeedforwardSignValue.UseVelocitySign)
-
-
-            if (isCompBot) {
-                MotionMagic.MotionMagicAcceleration = 120.0
-            } else {
-                MotionMagic.MotionMagicAcceleration = 25.0
-            }
-            //Bang bang torque
-//            p(99999999.9)
-//            TorqueCurrent.PeakForwardTorqueCurrent = 40.0
-//            TorqueCurrent.PeakReverseTorqueCurrent = 0.0
-        }
-        shooterMotor.addFollower(shooterMotorFollower/*, true*/)
-
-        if (Robot.isCompBot) {
-            hoodEncoder.applyConfiguration {
-                inverted(true)
-                magnetSensorOffset(0.046630859)
-            }
-        }
-
-        hoodMotor.applyConfiguration {
-            currentLimits(25.0, 30.0, 1.0)
-            inverted(true)
-            brakeMode()
-
-            if (isReal) {
-                if (isCompBot) {
-                    s(0.2, StaticFeedforwardSignValue.UseClosedLoopSign)
-                    p(200.0)
-                    d(0.0)
-                } else {
-                    s(0.05, StaticFeedforwardSignValue.UseClosedLoopSign)
-                    p(60.0)
-                    d(0.0)
-                }
-            } else {
-                s(0.05, StaticFeedforwardSignValue.UseClosedLoopSign)
-                p(60.0)
-                d(4.0)
-            }
-
-            if (!Robot.isCompBot) {
-                motionMagic(0.75, 5.0)
-            }
-
-//            if (Robot.isCompBot) {
-//                Feedback.SensorToMechanismRatio = 85.5
+//        shooterMotor.applyConfiguration { // TODO: PHOENIX 6 2027
+//            currentLimits(10.0, 30.0, 0.3)
+//            coastMode()
+//
+//            Feedback.withSensorToMechanismRatio(1.0/1.5) // Note: I don't think this line configures anything
+//
+//            inverted(InvertedValue.Clockwise_Positive)
+//
+//            if (isReal) {
+//                if (isCompBot) {
+//                    p(0.4)
+//                    i(0.4)
+//                } else {
+//                    p(0.3)
+//                    i(0.3)
+//                }
 //            } else {
-                remoteCANCoder(hoodEncoder.deviceID, if (Robot.isCompBot) 85.5 else 9.64285714285714)
+//                p(4000.0)
+//                i(0.0)
 //            }
-        }
+//
+////            d(0.0)
+////            s(0.0, StaticFeedforwardSignValue.UseVelocitySign)
+//
+//
+//            if (isCompBot) {
+//                MotionMagic.MotionMagicAcceleration = 120.0
+//            } else {
+//                MotionMagic.MotionMagicAcceleration = 25.0
+//            }
+//            //Bang bang torque
+////            p(99999999.9)
+////            TorqueCurrent.PeakForwardTorqueCurrent = 40.0
+////            TorqueCurrent.PeakReverseTorqueCurrent = 0.0
+//        }
+//        shooterMotor.addFollower(shooterMotorFollower/*, true*/)
+//
+//        if (Robot.isCompBot) {
+//            hoodEncoder.applyConfiguration {
+//                inverted(true)
+//                magnetSensorOffset(0.046630859)
+//            }
+//        }
+//
+//        hoodMotor.applyConfiguration {
+//            currentLimits(25.0, 30.0, 1.0)
+//            inverted(true)
+//            brakeMode()
+//
+//            if (isReal) {
+//                if (isCompBot) {
+//                    s(0.2, StaticFeedforwardSignValue.UseClosedLoopSign)
+//                    p(200.0)
+//                    d(0.0)
+//                } else {
+//                    s(0.05, StaticFeedforwardSignValue.UseClosedLoopSign)
+//                    p(60.0)
+//                    d(0.0)
+//                }
+//            } else {
+//                s(0.05, StaticFeedforwardSignValue.UseClosedLoopSign)
+//                p(60.0)
+//                d(4.0)
+//            }
+//
+//            if (!Robot.isCompBot) {
+//                motionMagic(0.75, 5.0)
+//            }
+//
+////            if (Robot.isCompBot) {
+////                Feedback.SensorToMechanismRatio = 85.5
+////            } else {
+//                remoteCANCoder(hoodEncoder.deviceID, if (Robot.isCompBot) 85.5 else 9.64285714285714)
+////            }
+//        }
 
         if (!isSim) {
-            powerTracker.addMotors("Shooter Roller", { shooterMotor.getSupplyCurrent(true).value.asAmps }, 2)
-            powerTracker.addMotors("Hood", { hoodMotor.getSupplyCurrent(true).value.asAmps })
+            powerTracker.addMotors("Shooter Roller", { /*shooterMotor.getSupplyCurrent(true).value.asAmps*/0.0 }, 2) //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
+            powerTracker.addMotors("Hood", { /*hoodMotor.getSupplyCurrent(true).value.asAmps*/0.0 }) //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
         }
 
 
@@ -445,7 +447,7 @@ object Shooter: MechanismBase("Shooter") {
         }
 
         if (zeroHoodButtonEntry.getBoolean(false)) {
-            hoodEncoder.setCANCoderAngle(HOOD_ZERO.degrees)
+//            hoodEncoder.setCANCoderAngle(HOOD_ZERO.degrees) // TODO: PHOENIX 6 2027
             zeroHoodButtonEntry.setBoolean(false)
             println("Zeroed hood")
         }
