@@ -1,25 +1,18 @@
 package frc.team2471.frc2026
 
-import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage
-import com.ctre.phoenix6.controls.MotionMagicVoltage
-import com.ctre.phoenix6.controls.NeutralOut
-import com.ctre.phoenix6.controls.PositionVoltage
-import com.ctre.phoenix6.hardware.CANcoder
-import com.ctre.phoenix6.signals.InvertedValue
 //import com.ctre.phoenix6.signals.MotorAlignmentValue
-import com.ctre.phoenix6.signals.StaticFeedforwardSignValue
 //import edu.wpi.first.wpilibj2.command.Command
 //import edu.wpi.first.wpilibj2.command.SubsystemBase
 //import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine
 import frc.team2471.frc2026.AimUtils.shooterEfficiency
 import frc.team2471.frc2026.AimUtils.toExitVelocity
-import frc.team2471.frc2026.Robot.isCompBot
-import frc.team2471.frc2026.Robot.powerTracker
+import frc.team2471.frc2026.Robot.Companion.isCompBot
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.littletonrobotics.junction.AutoLogOutput
 import org.team2471.frc.lib.commands.MechanismBase
 import org.team2471.frc.lib.commands.periodic
+import org.team2471.frc.lib.commands.use
 import org.team2471.frc.lib.control.LoopLogger
 //import org.team2471.frc.lib.control.commands.finallyRun
 //import org.team2471.frc.lib.control.commands.onlyRunWhileFalse
@@ -27,54 +20,30 @@ import org.team2471.frc.lib.control.LoopLogger
 //import org.team2471.frc.lib.control.commands.parallelCommand
 //import org.team2471.frc.lib.control.commands.runCommand
 //import org.team2471.frc.lib.control.commands.runOnceCommand
-import org.team2471.frc.lib.ctre.addFollower
-import org.team2471.frc.lib.ctre.applyConfiguration
-import org.team2471.frc.lib.ctre.brakeMode
-import org.team2471.frc.lib.ctre.coastMode
-import org.team2471.frc.lib.ctre.currentLimits
-import org.team2471.frc.lib.ctre.d
-import org.team2471.frc.lib.ctre.i
-import org.team2471.frc.lib.ctre.inverted
-import org.team2471.frc.lib.ctre.loggedTalonFX.LoggedTalonFX
-import org.team2471.frc.lib.ctre.magnetSensorOffset
-import org.team2471.frc.lib.ctre.motionMagic
-import org.team2471.frc.lib.ctre.p
-import org.team2471.frc.lib.ctre.remoteCANCoder
-import org.team2471.frc.lib.ctre.s
-import org.team2471.frc.lib.ctre.setCANCoderAngle
 import org.team2471.frc.lib.units.absoluteValue
-import org.team2471.frc.lib.units.amps
-import org.team2471.frc.lib.units.asAmps
 import org.team2471.frc.lib.units.asFeet
-import org.team2471.frc.lib.units.asMeters
 import org.team2471.frc.lib.units.asMetersPerSecond
 import org.team2471.frc.lib.units.asRadiansPerSecond
 import org.team2471.frc.lib.units.asRotation2d
-import org.team2471.frc.lib.units.asRotations
 import org.team2471.frc.lib.units.cos
 import org.team2471.frc.lib.units.degrees
 import org.team2471.frc.lib.units.degreesPerSecond
 import org.team2471.frc.lib.units.inches
-import org.team2471.frc.lib.units.radians
-import org.team2471.frc.lib.units.rotations
 import org.team2471.frc.lib.units.rotationsPerSecond
 import org.team2471.frc.lib.units.sin
+import org.team2471.frc.lib.util.PowerTracker
 import org.team2471.frc.lib.util.angleTo
-import org.team2471.frc.lib.util.isReal
 import org.team2471.frc.lib.util.isSim
-import org.wpilib.command3.Coroutine
+import org.wpilib.command3.Scheduler
 import org.wpilib.math.filter.Debouncer
 import org.wpilib.math.geometry.Translation2d
 import org.wpilib.math.geometry.Translation3d
 import org.wpilib.math.interpolation.InterpolatingTreeMap
 import org.wpilib.math.interpolation.Interpolator
 import org.wpilib.math.interpolation.InverseInterpolator
-import org.wpilib.math.system.DCMotor
 import org.wpilib.networktables.NetworkTableInstance
 import org.wpilib.units.measure.Angle
 import org.wpilib.units.measure.AngularVelocity
-import kotlin.math.abs
-import kotlin.math.cos
 
 object Shooter: MechanismBase("Shooter") {
     val table = NetworkTableInstance.getDefault().getTable("Shooter")
@@ -410,21 +379,11 @@ object Shooter: MechanismBase("Shooter") {
 //        }
 
         if (!isSim) {
-            powerTracker.addMotors("Shooter Roller", { /*shooterMotor.getSupplyCurrent(true).value.asAmps*/0.0 }, 2) //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
-            powerTracker.addMotors("Hood", { /*hoodMotor.getSupplyCurrent(true).value.asAmps*/0.0 }) //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
+            PowerTracker.addMotors("Shooter Roller", { /*shooterMotor.getSupplyCurrent(true).value.asAmps*/0.0 }, 2) //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
+            PowerTracker.addMotors("Hood", { /*hoodMotor.getSupplyCurrent(true).value.asAmps*/0.0 }) //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
         }
 
-
-        GlobalScope.launch {
-            org.team2471.frc.lib.coroutines.periodic(0.01) {
-//                SHOOTER_CUSTOM_I += shooterVelocityError.asRotationsPerSecond * 0.02 * shooterI
-//                val requestedVoltage = shooterController.updateVoltage(shooterVelocitySetpoint.asRotationsPerSecond, shooterVelocity.asRotationsPerSecond).coerceIn(0.0, 13.0)
-//                shooterMotor.setControl(VoltageOut(requestedVoltage))
-            }
-        }
     }
-
-
 
     override fun periodic() {
         LoopLogger.record("b4 Shooter periodic")
@@ -456,7 +415,7 @@ object Shooter: MechanismBase("Shooter") {
         LoopLogger.record("Shooter periodic")
     }
 
-    override fun Coroutine.default() {
+    override fun default() = use("Default",this) {
         periodic {
             if ((doAutoShoot && !Drive.cameraDisconnected) && Drive.useAprilTags && AimUtils.isAimingAtGoal) {
                 if (FieldManager.inScoringZone && !FieldManager.inNoShootArea /*&& AimUtils.distanceToTarget < 13.0.feet*/ && FieldManager.shouldShoot) {

@@ -42,7 +42,7 @@ object Autonomous: Autonomi() {
 //            addOption("Drive Translation SysId ALL", Drive.sysIDTranslationAll())
 //            addOption("Drive Rotation SysId ALL", Drive.sysIDRotationAll())
 //            addOption("Drive Steer SysId ALL", Drive.sysIDSteerAll())
-            addOption("Set Angle Offsets", Drive.setAngleOffsets())
+//            addOption("Set Angle Offsets", Drive.setAngleOffsets())
 //            addOption("JoystickTest", joystickTest())
 //            addOption("Drive Slip Current Test", Drive.slipCurrentTest())
 //            addOption("Drive L/R Static FF Test", Drive.leftRightStaticFFTest())
@@ -57,16 +57,17 @@ object Autonomous: Autonomi() {
 //            addOption("Intake Deploy Test", intakeDeployTest())
 //            addOption("Intake Roller Test", intakeRollerTest())
         }
+    override val autos: List<AutoCommand> = listOf()
 
     /** Autonomous commands */
 
-//    private fun eightFootStraight(): Command {
-//        return Drive.driveAlongChoreoPath(paths["eightFoot"]!!, resetOdometry = true)
-//    }
-//
-//    private fun squarePathTest(): Command {
-//        return Drive.driveAlongChoreoPath(paths["square"]!!, resetOdometry = true)
-//    }
+    private fun eightFootStraight(): Command {
+        return Drive.driveAlongChoreoPath(paths["eightFoot"]!!, resetOdometry = true)
+    }
+
+    private fun squarePathTest(): Command {
+        return Drive.driveAlongChoreoPath(paths["square"]!!, resetOdometry = true)
+    }
 
 //    private fun doubleSwipe(doSideToSideFlip: Boolean): Command {
 //        val path = paths["LeftSideDoubleSwipe"]!!.sideToSideFlip(doSideToSideFlip)

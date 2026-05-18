@@ -12,14 +12,17 @@ import org.team2471.frc.lib.control.MeanCommandXboxController
 import org.team2471.frc.lib.math.deadband
 import org.team2471.frc.lib.math.normalize
 import org.team2471.frc.lib.units.degrees
+import org.wpilib.command3.Scheduler
 import org.wpilib.driverstation.Alert
 import org.wpilib.driverstation.GenericHID
 import org.wpilib.driverstation.RobotState
 import org.wpilib.math.filter.Debouncer
 import org.wpilib.math.geometry.Translation2d
 import org.wpilib.networktables.NetworkTableInstance
+import org.wpilib.opmode.PeriodicOpMode
+import org.wpilib.opmode.Teleop
 
-object OI: MechanismBase("OI") {
+object OI {
     private val table = NetworkTableInstance.getDefault().getTable("OI")
 
     val rotationMultiplierEntry = table.getEntry("Rotation Multiplier")
@@ -93,13 +96,38 @@ object OI: MechanismBase("OI") {
         if (!rotationMultiplierEntry.exists()) rotationMultiplierEntry.setDouble(rotationMultiplier)
         rotationMultiplierEntry.setPersistent()
 
-        // Zero Gyro
+        Scheduler.getDefault().addPeriodic {
+            //        LoopLogger.record("b4 OI piodc")
+//        driverNotConnectedAlert.set(driverDebouncer.calculate(!driverController.isConnected))
+//        operatorNotConnectedAlert.set(operatorDebouncer.calculate(!operatorController.isConnected))
+//
+//
+//        if (Intake.intakeState == Intake.IntakeState.INTAKING && RobotState.isTeleopEnabled()) {
+//            driverController.setRumble(GenericHID.RumbleType.RIGHT_RUMBLE, 0.013)
+//        } else {
+//            driverController.setRumble(GenericHID.RumbleType.RIGHT_RUMBLE, 0.0)
+//        }
+//
+//        LoopLogger.record("OI piodc")
+        }
+    }
+
+
+    @Teleop(name = "Teleop")
+    class TeleopMode: PeriodicOpMode() {
+
+
+        init {
+            println("TeleopMode constructor")
+
+
+            // Zero Gyro
 //        driverController.back().onTrue({
 //                println("zero gyro")
 //                Drive.zeroGyro()
 //            }.toCommand(Drive).ignoringDisable(true))
 
-        // Reset Odometry Position
+            // Reset Odometry Position
 //        driverController.start().onTrue( {
 //            Drive.pose = Pose2d(Translation2d(3.0, 3.0), Drive.heading)
 //        }.toCommand(Drive).ignoringDisable(true))
@@ -151,29 +179,39 @@ object OI: MechanismBase("OI") {
 //            Intake.deploySetpoint = Intake.DEPLOY_POSE
 //        })
 
-        (driverController.povDown().and(driverController.y())).onTrue(Intake.homeDeploy())
+            (driverController.povDown().and(driverController.y())).onTrue(Intake.homeDeploy())
 //        (driverController.povDown().and(driverController.leftBumper())).onTrue(runOnceCommand { Intake.deepStow() })
 
-        driverController.povLeft().whileTrue(Turret.staticAimAtTarget())
+            driverController.povLeft().whileTrue(Turret.staticAimAtTarget())
 //        driverController.povRight().whileTrue(FieldManager.disableAutoHoodRetractionCommand())
 
 //        driverController.povUp().onTrue(runOnceCommand { Turret.offset -= 2.0.degrees})
 //        driverController.povDown().and(driverController.y().negate()).and(driverController.leftBumper().negate()).onTrue(runOnceCommand { Turret.offset += 2.0.degrees})
-        println("finished OI init")
+        }
     }
 
-    override fun periodic() {
-        LoopLogger.record("b4 OI piodc")
-        driverNotConnectedAlert.set(driverDebouncer.calculate(!driverController.isConnected))
-        operatorNotConnectedAlert.set(operatorDebouncer.calculate(!operatorController.isConnected))
+    @org.wpilib.opmode.Autonomous(name = "AutoModeOne")
+    class AutoModeOne: PeriodicOpMode() {
+
+        init {
+            println("AutoModeOne constructor")
 
 
-        if (Intake.intakeState == Intake.IntakeState.INTAKING && RobotState.isTeleopEnabled()) {
-            driverController.setRumble(GenericHID.RumbleType.RIGHT_RUMBLE, 0.013)
-        } else {
-            driverController.setRumble(GenericHID.RumbleType.RIGHT_RUMBLE, 0.0)
         }
 
-        LoopLogger.record("OI piodc")
+        override fun disabledPeriodic() {
+
+        }
+
+        override fun start() {
+            println("AutoModeOne start")
+        }
+
+
+        override fun end() {
+            println("AutoModeOne end")
+        }
+
+
     }
 }

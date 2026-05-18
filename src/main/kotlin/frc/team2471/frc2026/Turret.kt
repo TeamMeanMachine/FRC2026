@@ -8,7 +8,6 @@ import com.ctre.phoenix6.signals.FeedbackSensorSourceValue
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue
 //import edu.wpi.first.wpilibj2.command.Command
 //import edu.wpi.first.wpilibj2.command.SubsystemBase
-import frc.team2471.frc2026.Robot.powerTracker
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.littletonrobotics.junction.AutoLogOutput
@@ -52,6 +51,7 @@ import org.team2471.frc.lib.units.asFeet
 import org.team2471.frc.lib.units.asMeters
 import org.team2471.frc.lib.units.degreesPerSecond
 import org.team2471.frc.lib.units.rotationsPerSecond
+import org.team2471.frc.lib.util.PowerTracker
 import org.team2471.frc.lib.util.isSim
 import org.wpilib.command3.Command
 import org.wpilib.command3.Coroutine
@@ -338,7 +338,7 @@ object Turret: MechanismBase("Turret") {
 //        turretMotor.addFollower(Falcons.TURRET_1)
 
         if (!isSim) {
-            powerTracker.addMotors("Turret", { /*turretMotor.getSupplyCurrent(true).value.asAmps*/0.0 }, 2) //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
+            PowerTracker.addMotors("Turret", { /*turretMotor.getSupplyCurrent(true).value.asAmps*/0.0 }, 2) //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
         }
 
 
@@ -421,7 +421,7 @@ object Turret: MechanismBase("Turret") {
         LoopLogger.record("turret periodic")
     }
 
-    override fun Coroutine.default() {
+    override fun default() = defaultCommand {
         periodic {
             await(aimAtTarget())
         }

@@ -6,7 +6,6 @@ import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC
 import com.ctre.phoenix6.hardware.TalonFX
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue
 //import edu.wpi.first.wpilibj2.command.SubsystemBase
-import frc.team2471.frc2026.Robot.powerTracker
 import org.littletonrobotics.junction.AutoLogOutput
 import org.team2471.frc.lib.commands.MechanismBase
 import org.team2471.frc.lib.control.LoopLogger
@@ -22,6 +21,7 @@ import org.team2471.frc.lib.math.linearMap
 import org.team2471.frc.lib.units.amps
 import org.team2471.frc.lib.units.asAmps
 import org.team2471.frc.lib.units.degreesPerSecond
+import org.team2471.frc.lib.util.PowerTracker
 import org.team2471.frc.lib.util.isSim
 import org.wpilib.networktables.NetworkTableInstance
 import org.wpilib.system.Timer
@@ -191,13 +191,13 @@ object Spindexer: MechanismBase("Spindexer") {
 //        }
 
         if (!isSim) {
-            powerTracker.addMotors("Dye Rotor Spin", { 0.0 /*spinMotor.getSupplyCurrent(true).value.asAmps*/ }, 2) //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
-            powerTracker.addMotors("Dye Rotor Uptake", { 0.0/*uptakeMotor.getSupplyCurrent(true).value.asAmps*/ }) //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
-            powerTracker.addMotors("Dye Rotor Sidetake", { 0.0/*sidetakeMotor.getSupplyCurrent(true).value.asAmps*/ }) //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
+            PowerTracker.addMotors("Dye Rotor Spin", { 0.0 /*spinMotor.getSupplyCurrent(true).value.asAmps*/ }, 2) //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
+            PowerTracker.addMotors("Dye Rotor Uptake", { 0.0/*uptakeMotor.getSupplyCurrent(true).value.asAmps*/ }) //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
+            PowerTracker.addMotors("Dye Rotor Sidetake", { 0.0/*sidetakeMotor.getSupplyCurrent(true).value.asAmps*/ }) //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
         }
 
-    }
 
+    }
 
     override fun periodic() {
         LoopLogger.record("b4 spindexer periodic")
@@ -221,12 +221,12 @@ object Spindexer: MechanismBase("Spindexer") {
 //                            ((SPIN_VELOCITY - SPIN_LOWER_VELOCITY) * (stateOnTime - spinSlowdownDelayTime) / spinSlowdownTime) + SPIN_LOWER_VELOCITY
 //                    }
 //                } else {
-                    if (Robot.isAutonomous) {
-                        spinMotorVelocitySetpoint = SPIN_VELOCITY
-                    } else {
-                        spinMotorVelocitySetpoint =
-                            SPIN_VELOCITY * linearMap(0.0, 1.0, 0.40, 1.0, OI.driveRightTrigger.deadband(0.1))
-                    }
+                if (Robot.isAutonomous) {
+                    spinMotorVelocitySetpoint = SPIN_VELOCITY
+                } else {
+                    spinMotorVelocitySetpoint =
+                        SPIN_VELOCITY * linearMap(0.0, 1.0, 0.40, 1.0, OI.driveRightTrigger.deadband(0.1))
+                }
 //                }
                 sidetakeMotorVelocitySetpoint = SIDETAKE_VELOCITY
                 uptakeMotorVelocitySetpoint = UPTAKE_VELOCITY

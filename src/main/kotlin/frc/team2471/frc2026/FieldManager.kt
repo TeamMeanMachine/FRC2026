@@ -3,7 +3,7 @@ package frc.team2471.frc2026
 //import edu.wpi.first.wpilibj2.command.Command
 import frc.team2471.frc2026.FieldManager.reflectAcrossField
 import frc.team2471.frc2026.FieldManager.rotateAroundField
-import frc.team2471.frc2026.Robot.isAutonomous
+import frc.team2471.frc2026.Robot.Companion.isAutonomous
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.littletonrobotics.junction.AutoLogOutput

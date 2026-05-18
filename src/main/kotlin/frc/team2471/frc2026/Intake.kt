@@ -1,27 +1,19 @@
 package frc.team2471.frc2026
 
-import com.ctre.phoenix6.CANBus
-import com.ctre.phoenix6.configs.TalonFXConfiguration
 import com.ctre.phoenix6.controls.DutyCycleOut
-import com.ctre.phoenix6.controls.MotionMagicVoltage
-import com.ctre.phoenix6.controls.NeutralOut
-import com.ctre.phoenix6.controls.PositionTorqueCurrentFOC
 import com.ctre.phoenix6.hardware.TalonFX
 //import com.ctre.phoenix6.signals.MotorAlignmentValue
-import com.ctre.phoenix6.signals.StaticFeedforwardSignValue
 //import edu.wpi.first.wpilibj2.command.Command
 //import edu.wpi.first.wpilibj2.command.SubsystemBase
-import frc.team2471.frc2026.Robot.powerTracker
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.littletonrobotics.junction.AutoLogOutput
-import org.littletonrobotics.junction.Logger
 import org.team2471.frc.lib.commands.MechanismBase
-import org.team2471.frc.lib.commands.parallel
 import org.team2471.frc.lib.commands.periodic
 import org.team2471.frc.lib.commands.use
 import org.team2471.frc.lib.control.CurrentLimits
 import org.team2471.frc.lib.control.LoopLogger
+import org.team2471.frc.lib.util.PowerTracker
 //import org.team2471.frc.lib.control.commands.finallyRun
 //import org.team2471.frc.lib.control.commands.onlyRunWhileFalse
 //import org.team2471.frc.lib.control.commands.onlyRunWhileTrue
@@ -30,24 +22,12 @@ import org.team2471.frc.lib.control.LoopLogger
 //import org.team2471.frc.lib.control.commands.runOnceCommand
 //import org.team2471.frc.lib.control.commands.sequenceCommand
 //import org.team2471.frc.lib.control.commands.waitCommand
-import org.team2471.frc.lib.ctre.addFollower
-import org.team2471.frc.lib.ctre.applyConfiguration
-import org.team2471.frc.lib.ctre.coastMode
-import org.team2471.frc.lib.ctre.currentLimits
-import org.team2471.frc.lib.ctre.d
-import org.team2471.frc.lib.ctre.inverted
-import org.team2471.frc.lib.ctre.modifyConfiguration
-import org.team2471.frc.lib.ctre.motionMagic
-import org.team2471.frc.lib.ctre.p
-import org.team2471.frc.lib.ctre.s
-import org.team2471.frc.lib.units.asVolts
 import org.team2471.frc.lib.util.isSim
 import org.wpilib.command3.Command
 import org.wpilib.command3.Coroutine
 import org.wpilib.hardware.discrete.DigitalInput
 import org.wpilib.networktables.NetworkTableInstance
 import org.wpilib.system.Timer
-import kotlin.math.absoluteValue
 
 object Intake: MechanismBase("Intake") {
     private val table = NetworkTableInstance.getDefault().getTable("Intake")
@@ -308,10 +288,10 @@ object Intake: MechanismBase("Intake") {
 //        }
 
         if (!isSim) {
-            powerTracker.addMotors("Intake Roller", { rollerCurrent }, 2, {/*rollerMotor.supplyVoltage.value.asVolts*/0.0}) //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
-            powerTracker.addMotors("Intake Deploy 0", { deployCurrent0 })
+            PowerTracker.addMotors("Intake Roller", { rollerCurrent }, 2, {/*rollerMotor.supplyVoltage.value.asVolts*/0.0}) //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
+            PowerTracker.addMotors("Intake Deploy 0", { deployCurrent0 })
             if (Robot.isCompBot) {
-                powerTracker.addMotors("Intake Deploy 1", { deployCurrent1 })
+                PowerTracker.addMotors("Intake Deploy 1", { deployCurrent1 })
             }
         }
 
@@ -457,7 +437,7 @@ object Intake: MechanismBase("Intake") {
     }.named("HomeDeploy")
 
 
-    override fun Coroutine.default() {
+    override fun default() = defaultCommand {
         periodic {
             LoopLogger.record("b4 Intake default")
             when (intakeState) {

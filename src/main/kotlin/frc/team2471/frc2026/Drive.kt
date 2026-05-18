@@ -2,23 +2,17 @@ package frc.team2471.frc2026
 
 import com.ctre.phoenix6.swerve.utility.PhoenixPIDController
 //import edu.wpi.first.wpilibj2.command.Command
-import frc.team2471.frc2026.Robot.powerTracker
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.littletonrobotics.junction.AutoLogOutput
 import org.littletonrobotics.junction.Logger
 import org.littletonrobotics.junction.MeanLogger
-import org.team2471.frc.lib.commands.parallel
-import org.team2471.frc.lib.commands.periodic
-import org.team2471.frc.lib.commands.use
 import org.team2471.frc.lib.control.CurrentLimits
 import org.team2471.frc.lib.control.LoopLogger
 //import org.team2471.frc.lib.control.commands.finallyRun
 //import org.team2471.frc.lib.control.commands.runCommand
 import org.team2471.frc.lib.control.rightStickButton
 import org.team2471.frc.lib.ctre.PhoenixUtil
-import org.team2471.frc.lib.ctre.currentLimits
-import org.team2471.frc.lib.ctre.modifyConfiguration
 import org.team2471.frc.lib.localization.PoseLocalizer
 import org.team2471.frc.lib.math.cube
 import org.team2471.frc.lib.math.square
@@ -31,12 +25,12 @@ import org.team2471.frc.lib.units.inchesPerSecond
 import org.team2471.frc.lib.units.metersPerSecondPerSecond
 import org.team2471.frc.lib.units.perSecond
 import org.team2471.frc.lib.units.unWrap
+import org.team2471.frc.lib.util.PowerTracker
 import org.team2471.frc.lib.util.demoSpeed
 import org.team2471.frc.lib.util.isBlueAlliance
 import org.team2471.frc.lib.util.isSim
 import org.team2471.frc.lib.vision.Fiducial
 import org.team2471.frc.lib.vision.QuixVisionCamera
-import org.wpilib.command3.Coroutine
 import org.wpilib.driverstation.RobotState
 import org.wpilib.math.controller.PIDController
 import org.wpilib.math.geometry.Pose2d
@@ -235,7 +229,7 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
         localizer.disableSingleTagCalculation() // for loop times and we dont use it in 2026
 
         if (!isSim) {
-            powerTracker.addMotors("Drive", {
+            PowerTracker.addMotors("Drive", {
                 var tempTotalDriveCurrent = 0.0
                 var tempTotalSteerCurrent = 0.0
 //                io.modules.forEach { //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
@@ -246,7 +240,7 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
                 totalDriveCurrent = tempTotalDriveCurrent
                 tempTotalDriveCurrent
             })
-            powerTracker.addMotors("Steer", { totalSteerCurrent })
+            PowerTracker.addMotors("Steer", { totalSteerCurrent })
         }
 
 
@@ -295,7 +289,7 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
 //            doingBackupGyroReset = true
 //        }
         LoopLogger.record("b4 Drive piodc")
-        super.periodic() // Must call this
+        super.periodic()
         LoopLogger.record("super Drive piodc")
 
         // Update Vision
@@ -353,7 +347,7 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
         LoopLogger.record("Drive pirdc")
     }
 
-    override fun Coroutine.default() {
+    override fun default() = defaultCommand {
         await(joystickDrive())
     }
 
