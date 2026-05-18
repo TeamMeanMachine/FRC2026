@@ -3,6 +3,8 @@ package frc.team2471.frc2026
 //import frc.team2471.frc2026.tests.*
 import org.team2471.frc.lib.autonomous.AutoMaker
 import org.team2471.frc.lib.autonomous.Autonomi
+import org.team2471.frc.lib.autonomous.TestOpMode
+import org.team2471.frc.lib.autonomous.TestRoutine
 import org.team2471.frc.lib.commands.onCancel
 import org.team2471.frc.lib.commands.parallel
 import org.team2471.frc.lib.commands.periodic
@@ -14,11 +16,11 @@ import org.team2471.frc.lib.units.feet
 import org.team2471.frc.lib.units.meters
 import org.team2471.frc.lib.units.seconds
 import org.wpilib.command3.Command
+import org.wpilib.command3.Mechanism
 import org.wpilib.command3.Scheduler
 import org.wpilib.hardware.hal.RobotMode
 import org.wpilib.math.geometry.Pose2d
 import kotlin.math.absoluteValue
-import kotlin.text.get
 
 
 object Autonomous: AutoMaker() {
@@ -31,6 +33,10 @@ object Autonomous: AutoMaker() {
         Autonomi("Double Swipe Left", doubleSwipe(false)),
         Autonomi("Double Swipe Right", doubleSwipe(true)),
         Autonomi("Print for 20 seconds", printFor20Seconds()),
+    )
+
+    override val tests: List<TestRoutine> = listOf(
+        TestRoutine("Drive Set Angle Offsets", Drive.setAngleOffsets(), { disableAllDefaultCommands() }),
     )
 
     /** Supplier that sets the robot's pose. */
@@ -54,7 +60,27 @@ object Autonomous: AutoMaker() {
             Robot.instance.addOpModeFactory({ it.toAutoOpMode() }, RobotMode.AUTONOMOUS, it.name)
             println("Registered ${it.name} as an AutoOpMode")
         }
+        tests.forEach {
+            println("Registering ${it.name} TestOpMode")
+            Robot.instance.addOpModeFactory({ it.toTestOpMode() }, RobotMode.UTILITY, it.name)
+            println("Registered ${it.name} TestOpMode")
+        }
         Robot.instance.publishOpModes()
+    }
+
+    /**
+     * Disables all defaults for all subsystems, except for the [exceptions] provided.
+     *
+     * Designed to be called as an init function of a [TestRoutine]/[TestOpMode].
+     *
+     * If this function is called inside an init of a TestOpMode/Routine, it will disable all default commands only while the OpMode is selected,
+     * afterward it will re-enable them. (This "scoping" feature is a part of Commandsv3/OpModes and is documented in wpilib docs)
+     */
+    private fun disableAllDefaultCommands(vararg exceptions: Mechanism) {
+        Robot.allSubsystems.filterNot { exceptions.contains(it) }.forEach {
+            it.defaultCommand = it.idle()
+        }
+        Scheduler.getDefault().defaultEventLoop.clear()
     }
 
     /** Autonomous commands */

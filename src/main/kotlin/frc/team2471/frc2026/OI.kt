@@ -170,16 +170,18 @@ object OI {
     class TeleopMode: PeriodicOpMode() {
         init {
             println("TeleopMode selected")
+
+            if (demoMode) {
+                println("Demo mode enabled")
+                // Demo mode bindings go here
+            }
+
         }
 
         override fun disabledPeriodic() {}
 
         override fun start() {
             println("Teleop Mode start!")
-            if (demoMode) {
-                println("Demo mode enabled")
-                // Demo mode bindings go here
-            }
         }
 
         override fun periodic() {}
