@@ -9,19 +9,20 @@ import kotlinx.coroutines.launch
 import org.littletonrobotics.junction.AutoLogOutput
 import org.littletonrobotics.junction.LogFileUtil
 import org.littletonrobotics.junction.Logger
-import org.littletonrobotics.junction.MeanLogger
 import org.littletonrobotics.junction.networktables.NT4Publisher
 import org.littletonrobotics.junction.wpilog.WPILOGReader
 import org.littletonrobotics.junction.wpilog.WPILOGWriter
+import org.team2471.frc.lib.commands.onCancel
+import org.team2471.frc.lib.commands.periodic
+import org.team2471.frc.lib.commands.use
 //import org.team2471.frc.lib.control.commands.runCommand
 //import org.team2471.frc.lib.control.commands.runOnceCommand
 //import org.team2471.frc.lib.control.commands.sequenceCommand
 import org.team2471.frc.lib.coroutines.periodic
 import org.team2471.frc.lib.units.*
-import org.team2471.frc.lib.util.RobotMode
+import org.team2471.frc.lib.util.RobotType
 import org.team2471.frc.lib.util.isRedAlliance
-import org.team2471.frc.lib.util.robotMode
-import org.wpilib.driverstation.DriverStation
+import org.team2471.frc.lib.util.robotType
 import org.wpilib.driverstation.MatchState
 import org.wpilib.driverstation.RobotState
 import org.wpilib.math.geometry.Pose2d
@@ -30,9 +31,7 @@ import org.wpilib.networktables.NetworkTableInstance
 import org.wpilib.units.measure.Distance
 import org.wpilib.vision.apriltag.AprilTag
 import org.wpilib.vision.apriltag.AprilTagFieldLayout
-import org.wpilib.vision.apriltag.AprilTagFields
 import kotlin.jvm.optionals.getOrNull
-import kotlin.math.absoluteValue
 import kotlin.math.floor
 import kotlin.math.sign
 
@@ -276,16 +275,16 @@ object FieldManager {
 
     init {
 
-        when (robotMode) {
-            RobotMode.REAL -> { // Running on a real robot, log to a USB stick ("/U/logs")
+        when (robotType) {
+            RobotType.REAL -> { // Running on a real robot, log to a USB stick ("/U/logs")
                 Logger.addDataReceiver(WPILOGWriter())
                 Logger.addDataReceiver(NT4Publisher())
             }
-            RobotMode.SIM -> {
+            RobotType.SIM -> {
 //                Logger.addDataReceiver(NT4Publisher())
 //                Logger.addDataReceiver(WPILOGWriter())
             } // Running a physics simulator, log to NT
-            RobotMode.REPLAY -> { // Replaying a log, set up replay source
+            RobotType.REPLAY -> { // Replaying a log, set up replay source
 //                Robot.setUseTiming(true) // false - simulate as fast as possible, true - simulate in real time (particle filter needs true)
                 val logPath = LogFileUtil.findReplayLog()
                 Logger.setReplaySource(WPILOGReader(logPath))
@@ -324,23 +323,15 @@ object FieldManager {
         }
     }
 
-//    fun disableAutoHoodRetractionCommand(): Command {
-//        var oldValue = autoHoodRetraction
-//        return sequenceCommand(
-//            runOnceCommand {
-//                oldValue = autoHoodRetraction
-//                autoHoodRetraction = false
-//                println("Disabling autoHoodRetraction. oldValue: $oldValue")
-//            },
-//            runCommand {
-//                autoHoodRetraction = false
-//            },
-//            runOnceCommand {
-//                autoHoodRetraction = oldValue
-//                println("Finished disabling autoHoodRetraction. autoHoodRetraction: $autoHoodRetraction")
-//            }
-//        ).withName("AutoHoodRetractionDisableCommand")
-//    }
+    fun disableAutoHoodRetractionCommand() = use {
+        println("Disabling autoHoodRetraction")
+        periodic {
+            autoHoodRetraction = false
+        }
+    }.onCancel {
+        autoHoodRetraction = true
+        println("re-enabled autoHoodRetraction")
+    }
 
     /**
      * Reflects [Translation2d] across the midline of the field. Useful for mirrored field layouts (2023, 2024).

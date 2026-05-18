@@ -6,7 +6,6 @@ package frc.team2471.frc2026
 import com.ctre.phoenix6.SignalLogger
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.Runnable
 import kotlinx.coroutines.launch
 import org.littletonrobotics.junction.LogFileUtil
 import org.littletonrobotics.junction.Logger
@@ -15,23 +14,19 @@ import org.littletonrobotics.junction.networktables.MeanNT4Publisher
 import org.littletonrobotics.junction.wpilog.WPILOGReader
 import org.littletonrobotics.junction.wpilog.WPILOGWriter
 import org.team2471.frc.lib.control.LoopLogger
-import org.team2471.frc.lib.coroutines.periodic
 import org.team2471.frc.lib.ctre.loggedTalonFX.MasterMotor
 import org.team2471.frc.lib.logging.NT4NonFMSPublisher
 import org.team2471.frc.lib.units.asFeet
 import org.team2471.frc.lib.util.PowerTracker
-import org.team2471.frc.lib.util.RobotMode
-import org.team2471.frc.lib.util.robotMode
+import org.team2471.frc.lib.util.RobotType
+import org.team2471.frc.lib.util.robotType
 import org.wpilib.command3.Mechanism
 import org.wpilib.command3.Scheduler
 import org.wpilib.driverstation.RobotState
 import org.wpilib.driverstation.internal.DriverStationBackend
 import org.wpilib.framework.OpModeRobot
 import org.wpilib.framework.RobotBase
-import org.wpilib.opmode.PeriodicOpMode
-import org.wpilib.opmode.Teleop
 import org.wpilib.system.RobotController
-import org.wpilib.system.Timer
 import java.net.NetworkInterface
 
 
@@ -45,22 +40,23 @@ import java.net.NetworkInterface
  * Most things can still function inside a companion object, although makes syntax slightly strange.
  */
 @OptIn(DelicateCoroutinesApi::class)
-class Robot : OpModeRobot() {
+class Robot : OpModeRobot(0.01) {
     init {
+        println("Robot init")
+        instance = this
         // Tells FRC we use Kotlin
-//        HAL.report(tResourceType.kResourceType_Language, tInstances.kLanguage_Kotlin)
 
         // Set up data receivers & replay source
-        when (robotMode) {
-            RobotMode.REAL -> { // Running on a real robot, log to a USB stick ("/U/logs")
+        when (robotType) {
+            RobotType.REAL -> { // Running on a real robot, log to a USB stick ("/U/logs")
                 Logger.addDataReceiver(WPILOGWriter())
                 Logger.addDataReceiver(NT4NonFMSPublisher()) // Only log to NT if FMS is not connected
             }
-            RobotMode.SIM -> {
+            RobotType.SIM -> {
                 MeanLogger.addDataReceiver(MeanNT4Publisher())
 //                MeanLogger.addDataReceiver(WPILOGWriter())
             } // Running a physics simulator, log to NT
-            RobotMode.REPLAY -> { // Replaying a log, set up replay source
+            RobotType.REPLAY -> { // Replaying a log, set up replay source
 //                setUseTiming(true) // false - simulate as fast as possible, true - simulate in real time (particle filter needs true)
                 val logPath = LogFileUtil.findReplayLog()
                 Logger.setReplaySource(WPILOGReader(logPath))
@@ -80,6 +76,9 @@ class Robot : OpModeRobot() {
         allSubsystems.forEach { println("activating subsystem ${it.name}") }
         println("FieldManager thinks the field is ${FieldManager.fieldDimensions.measureX.asFeet} feet big")
         println("OI driverController isConnected: ${OI.driverController.isConnected}")
+        Autonomous.registerAutoOpModes()
+        println("Autonomous paths count: ${Autonomous.paths.size}")
+
 //        println("We see ${Autonomous.paths.size} paths and they are made on the ${if (Drive.choreoPathsStartOnRed) "red" else "blue"} side.")
 
         RobotController.setTimeSource { RobotController.getMonotonicTime() }
@@ -179,13 +178,7 @@ class Robot : OpModeRobot() {
     }
 
     /** This function is called periodically when disabled.  */
-    override fun disabledPeriodic() {
-        if (beforeFirstEnable) {
-            Autonomous.updateSelectedAuto(true)
-        } else {
-            Autonomous.updateSelectedAuto(false)
-        }
-    }
+    override fun disabledPeriodic() {}
 
     /** This function is called once when the robot is first started up in sim.  */
     override fun simulationInit() {}
@@ -201,7 +194,7 @@ class Robot : OpModeRobot() {
 
 private fun getCompBotBoolean(): Boolean {
     var compBot = true
-    if (robotMode == RobotMode.REAL) {
+    if (robotType == RobotType.REAL) {
         val networkInterfaces =  NetworkInterface.getNetworkInterfaces()
         println("retrieving network interfaces")
         for (iFace in networkInterfaces) {

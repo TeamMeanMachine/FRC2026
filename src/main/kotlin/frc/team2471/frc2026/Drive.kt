@@ -1,12 +1,15 @@
 package frc.team2471.frc2026
 
 import com.ctre.phoenix6.swerve.utility.PhoenixPIDController
+import frc.team2471.frc2026.OI.driverController
 //import edu.wpi.first.wpilibj2.command.Command
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import org.littletonrobotics.junction.AutoLogOutput
 import org.littletonrobotics.junction.Logger
 import org.littletonrobotics.junction.MeanLogger
+import org.team2471.frc.lib.commands.onCancel
+import org.team2471.frc.lib.commands.periodic
+import org.team2471.frc.lib.commands.use
 import org.team2471.frc.lib.control.CurrentLimits
 import org.team2471.frc.lib.control.LoopLogger
 //import org.team2471.frc.lib.control.commands.finallyRun
@@ -21,9 +24,11 @@ import org.team2471.frc.lib.units.asMetersPerSecondPerSecond
 import org.team2471.frc.lib.units.degrees
 import org.team2471.frc.lib.units.inches
 import org.team2471.frc.lib.math.DynamicInterpolatingTreeMap
+import org.team2471.frc.lib.units.asRotation2d
 import org.team2471.frc.lib.units.inchesPerSecond
 import org.team2471.frc.lib.units.metersPerSecondPerSecond
 import org.team2471.frc.lib.units.perSecond
+import org.team2471.frc.lib.units.radians
 import org.team2471.frc.lib.units.unWrap
 import org.team2471.frc.lib.util.PowerTracker
 import org.team2471.frc.lib.util.demoSpeed
@@ -31,25 +36,21 @@ import org.team2471.frc.lib.util.isBlueAlliance
 import org.team2471.frc.lib.util.isSim
 import org.team2471.frc.lib.vision.Fiducial
 import org.team2471.frc.lib.vision.QuixVisionCamera
+import org.wpilib.command3.Command
 import org.wpilib.driverstation.RobotState
 import org.wpilib.math.controller.PIDController
 import org.wpilib.math.geometry.Pose2d
-import org.wpilib.math.geometry.Pose3d
 import org.wpilib.math.geometry.Rotation2d
-import org.wpilib.math.geometry.Translation2d
 import org.wpilib.math.interpolation.Interpolator
 import org.wpilib.math.interpolation.InverseInterpolator
 import org.wpilib.math.kinematics.ChassisVelocities
-import org.wpilib.math.linalg.Matrix
-import org.wpilib.math.linalg.VecBuilder
-import org.wpilib.math.numbers.N1
-import org.wpilib.math.numbers.N3
 import org.wpilib.networktables.NetworkTableInstance
 import org.wpilib.system.Timer
 import org.wpilib.units.measure.Angle
+import kotlin.math.atan2
 
 
-object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerConstants.moduleConfigs) {
+object Drive: SwerveDriveSubsystem(DriveConstants.drivetrainConstants, *DriveConstants.moduleConfigs) {
     private val table = NetworkTableInstance.getDefault().getTable("Drive")
 
     private val frontLeftConnectedEntry = table.getEntry("FrontLeftConnected")
@@ -62,24 +63,8 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
     var prevIncreaseDriveCurrent = increaseDriveCurrent
 
     val useAprilTagsEntry = table.getEntry("UseAprilTags")
-//    val useBackupGyroEntry = table.getEntry("Use Backup Gyro").apply {
-//        this.setBoolean(useBackupGyro)
-//    }
+
     val useAprilTags: Boolean get() = useAprilTagsEntry.getBoolean(true)
-//    val useBackupGyro: Boolean get() = useBackupGyroEntry.getBoolean(false)
-//    var prevUseBackupGyro = false
-//
-//    val backupPigeon = Pigeon2(38, CANBus())
-//    @get:AutoLogOutput(key = "BackupGyro/rawHeading")
-//    val backupPigeonRawHeading get() = backupPigeon.yaw.value
-//    @get:AutoLogOutput(key = "BackupGyro/heading")
-//    val backupPigeonHeading get() = backupPigeonRawHeading - backupPigeonHeadingOffset
-//    @get:AutoLogOutput(key = "BackupGyro/headingOffset")
-//    var backupPigeonHeadingOffset = 0.0.degrees
-//    @get:AutoLogOutput(key = "BackupGyro/isConnected")
-//    val backupPigeonIsConnected get() = backupPigeon.isConnected
-//
-//    var doingBackupGyroReset = true
 
 
     // To reset position use this, also add other pose sources that need reset here.
@@ -96,25 +81,8 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
         set(value) {
 //            println("resting heading to ${value.degrees}")
             resetRotation(value)
-//            backupPigeonHeadingOffset = backupPigeonRawHeading - value.measure
-
-//            val useBackupGyro = useBackupGyro
-//            if (!useBackupGyro) {
-                localizer.resetRotation(value) // Not needed and redundant but may prevent some heading bugs
-                Turret.setTurretOffset(value.measure)
-//            }
-//            if (doingBackupGyroReset || prevUseBackupGyro != useBackupGyro) {
-//                localizer.resetRotation(value) // Not needed and redundant but may prevent some heading bugs
-//                Turret.setTurretOffset(value.measure)
-//                prevUseBackupGyro = useBackupGyro
-//            }
-//            val tempQuestPose = tempQuestPose
-//            if (tempQuestPose != null) {
-//                quest.setPose(tempQuestPose)
-//                this.tempQuestPose = null
-//            } else {
-//                quest.setPose(Pose3d(questPose.translation, Rotation3d(value)).transformBy(robotToQuestTransformMeters))
-//            }
+            localizer.resetRotation(value) // Not needed and redundant but may prevent some heading bugs
+            Turret.setTurretOffset(value.measure)
             resetPoseTime = Timer.getMonotonicTimestamp()
         }
 
@@ -133,62 +101,14 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
 //        PhotonVisionCamera("BackRight", Transform3d(Translation3d(-13.7.inches.asMeters, -10.7.inches.asMeters, 21.0.inches.asMeters), Rotation3d(0.0, -25.0.degrees.asRadians, -130.0.degrees.asRadians)), arrayOf(PipelineConfig())),
     )
 
-    val cameraDisconnected: Boolean
-        get() {
-            cameras.forEach {
-                if (!it.isConnected) return true
-            }
-            return false
-        }
-//        get() = cameras[0].isConnected && cameras[1].isConnected && cameras[2].isConnected && cameras[3].isConnected
-
+    val cameraDisconnected: Boolean get() = cameras.any { !it.isConnected }
 
     val headingHistory: DynamicInterpolatingTreeMap<Double, Double> = DynamicInterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble(), 75)
 
-    private var tempQuestPose: Pose3d? = null
     private var resetPoseTime = 0.0
-
-//    val quest = QuestNav()
-
-    var simulateQuest = true
-//    @get:AutoLogOutput(key = "Drive/Quest/isConnected")
-//    val questConnected: Boolean
-//        get() = if (isReal) quest.isConnected else simulateQuest
-//    @get:AutoLogOutput(key = "Drive/Quest/isTracking")
-//    val questTracking: Boolean
-//        get() = if (isReal) quest.isTracking else simulateQuest
-//    @get:AutoLogOutput(key = "Drive/Quest/isTrackingMaybe")
-    var questTrackingMaybe: Boolean = false
-//    val robotToQuestTransformMeters = Transform3d(-12.5.inches.asMeters, -12.5.inches.asMeters, 12.5.inches.asMeters, Rotation3d(90.0.degrees, 0.0.degrees, 180.0.degrees))
-
-    var questPose: Pose3d = Pose3d()
-        private set
-
-    val DRIVE_STD_DEVS: Matrix<N3?, N1?> = VecBuilder.fill(0.1, 0.1, 0.05)
-
-    // Trust down to 2 cm in XY and 2 degrees in rotational. Units in meters and radians.
-    val QUEST_STD_DEVS: Matrix<N3?, N1?> = VecBuilder.fill(0.025, 0.025, 99999.9)
 
     // TODO: Check heading accuracy
     val localizer: PoseLocalizer = PoseLocalizer(Fiducial.constructFiducialList(FieldManager.allAprilTags), cameras)
-
-    @get:AutoLogOutput(key = "Drive/Drive Velocity Vector")
-    val velocityVector: Translation2d
-        get() = localizer.pose.translation + velocity
-
-    var prevLocalizerTranslation = localizer.pose.translation
-
-    @get:AutoLogOutput(key = "Drive/Localizer Velocity Vector")
-    var localizerVelocityVector: Translation2d = localizer.pose.translation
-
-    @get:AutoLogOutput(key = "Drive/Gyro Velocity Vector")
-    val gyroVelocityVector: Translation2d
-        get() = gyroVelocity +  localizer.pose.translation
-
-    var gyroVelocity: Translation2d = localizer.pose.translation
-
-    private val translationRateTimer = Timer()
-    private var prevTranslation = Translation2d()
 
     // Drive Feedback controllers
     override val autoPilot = createAPObject(Double.POSITIVE_INFINITY.inchesPerSecond, 100.0.metersPerSecondPerSecond, 2.0.metersPerSecondPerSecond.perSecond, 0.5.inches, 1.0.degrees)
@@ -206,7 +126,8 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
 
     override val isDisabledSupplier: () -> Boolean = { Robot.isDisabled }
 
-    override val choreoPathsStartOnRed: Boolean = false // false=made on the blue side, true=made on the red side
+    /** false = paths made on the blue side, true = paths made on the red side */
+    override val choreoPathsStartOnRed: Boolean = false
 
     init {
         println("inside Drive init")
@@ -217,13 +138,9 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
         // MUST start inside the field on bootup for accurate heading measurements due to a PoseLocalizer bug.
         pose = Pose2d(3.0, 3.0, heading)
 
-//        io.setStateStdDevs(DRIVE_STD_DEVS) //TODO: UNCOMMENT WHEN PHOENIX 6 2027 RELEASES
-
-//        backupPigeon.applyConfiguration()
-
 //        zeroGyro()
 
-        println("max acceleration ${TunerConstants.kMaxAcceleration.asMetersPerSecondPerSecond}")
+        println("max acceleration ${DriveConstants.kMaxAcceleration.asMetersPerSecondPerSecond}")
 
         localizer.trackAllTags()
         localizer.disableSingleTagCalculation() // for loop times and we dont use it in 2026
@@ -253,41 +170,15 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
         if (RobotState.isTeleopEnabled()) {
             if (increaseDriveCurrent != prevIncreaseDriveCurrent) {
                 if (increaseDriveCurrent) {
-                    setDriveCurrentLimits(TunerConstants.driveMaxCurrentLimits)
+                    setDriveCurrentLimits(DriveConstants.driveMaxCurrentLimits)
                 } else {
-                    setDriveCurrentLimits(TunerConstants.driveTeleCurrentLimits)
+                    setDriveCurrentLimits(DriveConstants.driveTeleCurrentLimits)
                 }
 
                 prevIncreaseDriveCurrent = increaseDriveCurrent
             }
         }
-        // Apply quest measurements
-//        if (questConnected && questTracking && tempQuestPose == null) {
-//            if (isReal) {
-//                quest.allUnreadPoseFrames.forEach {
-//                    questTrackingMaybe = it.isTracking
-//                    if (resetPoseTime < it.dataTimestamp && it.isTracking) {
-//                        val pose = it.questPose3d.transformBy(robotToQuestTransformMeters.inverse())
-//                        val ctreTimestamp = Utils.fpgaToCurrentTime(it.dataTimestamp)
-//
-//                        Logger.recordOutput("Drive/Quest/DataTimestamp", it.dataTimestamp)
-//                        Logger.recordOutput("Drive/Quest/CtreTimestamp", ctreTimestamp)
-//                        addVisionMeasurement(pose.toPose2d(), ctreTimestamp, QUEST_STD_DEVS)
-//                        questPose = pose
-//                    }
-//                }
-//            } else {
-//                // Simulate quest data
-//                addVisionMeasurement(pose, stateTimestamp, QUEST_STD_DEVS)
-//                questPose = Pose3d(pose.x, pose.y, robotToQuestTransformMeters.z, robotToQuestTransformMeters.rotation)
-//            }
-//        }
-//        LoopLogger.record("b4 backup gyro")
-//        if (!gyroConnected && useBackupGyro && backupPigeonIsConnected) {
-//            doingBackupGyroReset = false
-//            heading = backupPigeonHeading.asRotation2d
-//            doingBackupGyroReset = true
-//        }
+
         LoopLogger.record("b4 Drive piodc")
         super.periodic()
         LoopLogger.record("super Drive piodc")
@@ -312,16 +203,8 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
         // Create an odom measurement with a timestamp converted from phoenix time to fpga time.
         val poseMeasurement = PoseLocalizer.OdometryMeasurement(pose, PhoenixUtil.currentToFpgaTime(stateTimestamp))
         // Publish the latest camera data to NT and also update pose from swerve odometry measurements.
-        localizer.update(poseMeasurement, cameras.map { it.latestMeasurement }, speeds)
+        localizer.update(poseMeasurement, cameras.map { it.latestMeasurement }, chassisVelocities)
         LoopLogger.record("Drive localizer")
-
-//        localizerVelocityVector = localizer.pose.translation + (localizer.pose.translation - prevLocalizerTranslation) * 50.0
-//        prevLocalizerTranslation = localizer.pose.translation
-//
-//        gyroVelocity += Translation2d(gyroAccelerationX.asMetersPerSecondPerSecond, gyroAccelerationY.asMetersPerSecondPerSecond) * 0.2
-//
-////        quest.commandPeriodic()
-//        LoopLogger.record("Drive quest periodic")
 
         headingHistory.put(Timer.getMonotonicTimestamp(), heading.degrees)
         LoopLogger.record("Recorded HeadingHistory")
@@ -335,7 +218,6 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
         LoopLogger.record("Cameras isConnected publish")
 
         // Log all the poses for debugging
-        MeanLogger.recordOutput("Drive/Quest/questPose", questPose)
         MeanLogger.recordOutput("Swerve/Odometry", localizer.odometryPose)
         MeanLogger.recordOutput("Swerve/InterpolatedOdometry", localizer.interpolatedOdometryPose)
         MeanLogger.recordOutput("Swerve/InterpolatedPose", localizer.interpolatedPose)
@@ -386,21 +268,29 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
     }
 
     var inSnakeMode = false
-//    fun snakeMode(): Command = runCommand(Drive) {
-//        inSnakeMode = true
-//        if (OI.rawDriveTranslation.norm > 0.1) {
-//            driveAtAngle(
-//                atan2(
-//                    driverController.leftY,
-//                    -driverController.leftX
-//                ).radians.asRotation2d - Rotation2d(90.0.degrees)
-//            )
-//        } else {
-//            driveVelocity(getChassisSpeedsFromJoystick().apply { omegaRadiansPerSecond = 0.0 })
-//        }
-//    }.finallyRun {
-//        inSnakeMode = false
-//    }
+    fun snakeMode(): Command = use(Drive) {
+        periodic {
+            println("snake mode")
+            inSnakeMode = true
+            if (OI.rawDriveTranslation.norm > 0.1) {
+                driveAtAngle(
+                    atan2(
+                        driverController.leftY,
+                        -driverController.leftX
+                    ).radians.asRotation2d - Rotation2d(90.0.degrees)
+                )
+            } else {
+                driveVelocity(getChassisSpeedsFromJoystick().apply { omega = 0.0 })
+            }
+        }
+    }.onCancel {
+        inSnakeMode = false
+    }
+
+    fun zeroGyroCommand() = use {
+        println("zero gyro command")
+        zeroGyro()
+    }
 
     fun resetOdometryToAbsolute() {
         println("resetting odometry to localizer pose")

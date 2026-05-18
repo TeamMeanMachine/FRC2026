@@ -1,6 +1,8 @@
 package frc.team2471.frc2026
 
-import org.team2471.frc.lib.commands.MechanismBase
+import org.team2471.frc.lib.commands.onCancel
+import org.team2471.frc.lib.commands.periodic
+import org.team2471.frc.lib.commands.use
 //import edu.wpi.first.wpilibj2.command.SubsystemBase
 import org.team2471.frc.lib.control.LoopLogger
 import org.team2471.frc.lib.control.MeanCommandXboxController
@@ -12,11 +14,11 @@ import org.team2471.frc.lib.control.MeanCommandXboxController
 import org.team2471.frc.lib.math.deadband
 import org.team2471.frc.lib.math.normalize
 import org.team2471.frc.lib.units.degrees
+import org.team2471.frc.lib.util.demoMode
 import org.wpilib.command3.Scheduler
 import org.wpilib.driverstation.Alert
-import org.wpilib.driverstation.GenericHID
-import org.wpilib.driverstation.RobotState
 import org.wpilib.math.filter.Debouncer
+import org.wpilib.math.geometry.Pose2d
 import org.wpilib.math.geometry.Translation2d
 import org.wpilib.networktables.NetworkTableInstance
 import org.wpilib.opmode.PeriodicOpMode
@@ -96,122 +98,94 @@ object OI {
         if (!rotationMultiplierEntry.exists()) rotationMultiplierEntry.setDouble(rotationMultiplier)
         rotationMultiplierEntry.setPersistent()
 
+        /** DEFAULT JOYSTICK BINDINGS. (Will be active by default in every OpMode unless overridden) */
+
+
+        driverController.back().onTrue(Drive.zeroGyroCommand()) // Zero Gyro
+        driverController.start().onTrue(use { Drive.pose = Pose2d(Translation2d(3.0, 3.0), Drive.heading) }) // Reset Odometry Position
+
+        (driverController.y().and(driverController.povDown().negate())).onTrue(Intake.home())
+
+        driverController.rightTrigger(0.1)
+            .or(driverController.rightBumper())
+            .or(driverController.rightStick())
+            .whileTrue(Shooter.shootOrRamp())
+
+        driverController.leftBumper().and(driverController.povDown().negate()).whileTrue(use {
+            periodic {
+                Intake.deploy()
+                Intake.intakeState = Intake.IntakeState.INTAKING
+            }
+        }.onCancel {
+            Intake.intakeState = Intake.IntakeState.OFF
+        })
+
+        driverController.leftStick().onTrue(use {
+            if (Intake.isDeployed) {
+                Intake.stow()
+            } else {
+                Intake.deploy()
+            }
+        })
+
+        driverController.a().whileTrue(
+            Drive.snakeMode()
+        )
+        driverController.x().whileTrue(use(Drive) {
+            periodic {
+                Drive.xPose()
+            }
+        })
+
+        driverController.a().onTrue(use {
+            Intake.deploySetpoint = Intake.DEEP_STOW_POSE
+        })
+        driverController.x().onTrue(use {
+            Intake.deploySetpoint = Intake.STOW_POSE
+        })
+        driverController.b().onTrue(use {
+            Intake.deploySetpoint = Intake.DEPLOY_POSE
+        })
+
+        (driverController.povDown().and(driverController.y())).onTrue(Intake.homeDeploy())
+        (driverController.povDown().and(driverController.leftBumper())).onTrue(use { Intake.deepStow() })
+
+        driverController.povLeft().whileTrue(Turret.staticAimAtTarget())
+        driverController.povRight().whileTrue(FieldManager.disableAutoHoodRetractionCommand())
+
+        driverController.povUp().onTrue(use { Turret.offset -= 2.0.degrees})
+        driverController.povDown().and(driverController.y().negate()).and(driverController.leftBumper().negate()).onTrue(use { Turret.offset += 2.0.degrees})
+
+
+
         Scheduler.getDefault().addPeriodic {
-            //        LoopLogger.record("b4 OI piodc")
-//        driverNotConnectedAlert.set(driverDebouncer.calculate(!driverController.isConnected))
-//        operatorNotConnectedAlert.set(operatorDebouncer.calculate(!operatorController.isConnected))
-//
-//
-//        if (Intake.intakeState == Intake.IntakeState.INTAKING && RobotState.isTeleopEnabled()) {
-//            driverController.setRumble(GenericHID.RumbleType.RIGHT_RUMBLE, 0.013)
-//        } else {
-//            driverController.setRumble(GenericHID.RumbleType.RIGHT_RUMBLE, 0.0)
-//        }
-//
-//        LoopLogger.record("OI piodc")
+            LoopLogger.record("b4 OI piodc")
+            driverNotConnectedAlert.set(driverDebouncer.calculate(!driverController.isConnected))
+            operatorNotConnectedAlert.set(operatorDebouncer.calculate(!operatorController.isConnected))
+            LoopLogger.record("OI piodc")
         }
     }
 
-
-    @Teleop(name = "Teleop")
+    @Teleop(name = "Country Roads!")
     class TeleopMode: PeriodicOpMode() {
-
-
         init {
-            println("TeleopMode constructor")
-
-
-            // Zero Gyro
-//        driverController.back().onTrue({
-//                println("zero gyro")
-//                Drive.zeroGyro()
-//            }.toCommand(Drive).ignoringDisable(true))
-
-            // Reset Odometry Position
-//        driverController.start().onTrue( {
-//            Drive.pose = Pose2d(Translation2d(3.0, 3.0), Drive.heading)
-//        }.toCommand(Drive).ignoringDisable(true))
-
-//        (driverController.y().and(driverController.povDown().negate())).onTrue(Intake.home())
-
-//        driverController.rightTrigger(0.1)
-//            .or(driverController.rightBumper())
-//            .or(driverController.rightStick())
-//            .whileTrue(
-//            parallelCommand(
-//                Shooter.shootOrRamp(),
-////                Intake.pulse().onlyRunWhileTrue { driverController.rightTriggerAxis > 0.75 }.repeatedly()
-//            ).ignoringDisable(true)
-//        )
-
-//        driverController.leftBumper().and(driverController.povDown().negate()).whileTrue(runCommand {
-//            Intake.deploy()
-////            if (!Intake.goingToSetpoint) {
-//                Intake.intakeState = Intake.IntakeState.INTAKING
-////            }
-//        }.finallyRun {
-////            Intake.stow()
-//            Intake.intakeState = Intake.IntakeState.OFF
-//        })
-
-//        driverController.leftStick().onTrue(runOnceCommand {
-//            if (Intake.isDeployed) {
-//                Intake.stow()
-//            } else {
-//                Intake.deploy()
-//            }
-//        })
-
-//        driverController.a().whileTrue(
-//            Drive.snakeMode()
-//        )
-//        driverController.x().whileTrue(runCommand(Drive) {
-//            Drive.xPose()
-//        })
-
-//        driverController.a().onTrue(runOnceCommand {
-//            Intake.deploySetpoint = Intake.DEEP_STOW_POSE
-//        })
-//        driverController.x().onTrue(runOnceCommand {
-//            Intake.deploySetpoint = Intake.STOW_POSE
-//        })
-//        driverController.b().onTrue(runOnceCommand {
-//            Intake.deploySetpoint = Intake.DEPLOY_POSE
-//        })
-
-            (driverController.povDown().and(driverController.y())).onTrue(Intake.homeDeploy())
-//        (driverController.povDown().and(driverController.leftBumper())).onTrue(runOnceCommand { Intake.deepStow() })
-
-            driverController.povLeft().whileTrue(Turret.staticAimAtTarget())
-//        driverController.povRight().whileTrue(FieldManager.disableAutoHoodRetractionCommand())
-
-//        driverController.povUp().onTrue(runOnceCommand { Turret.offset -= 2.0.degrees})
-//        driverController.povDown().and(driverController.y().negate()).and(driverController.leftBumper().negate()).onTrue(runOnceCommand { Turret.offset += 2.0.degrees})
-        }
-    }
-
-    @org.wpilib.opmode.Autonomous(name = "AutoModeOne")
-    class AutoModeOne: PeriodicOpMode() {
-
-        init {
-            println("AutoModeOne constructor")
-
-
+            println("TeleopMode selected")
         }
 
-        override fun disabledPeriodic() {
-
-        }
+        override fun disabledPeriodic() {}
 
         override fun start() {
-            println("AutoModeOne start")
+            println("Teleop Mode start!")
+            if (demoMode) {
+                println("Demo mode enabled")
+                // Demo mode bindings go here
+            }
         }
 
+        override fun periodic() {}
 
         override fun end() {
-            println("AutoModeOne end")
+            println("Teleop Mode end!")
         }
-
-
     }
 }

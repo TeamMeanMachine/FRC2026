@@ -1,164 +1,159 @@
 package frc.team2471.frc2026
 
 //import frc.team2471.frc2026.tests.*
-import org.littletonrobotics.junction.networktables.LoggedDashboardChooser
-import org.team2471.frc.lib.control.Autonomi
+import org.team2471.frc.lib.autonomous.AutoMaker
+import org.team2471.frc.lib.autonomous.Autonomi
+import org.team2471.frc.lib.commands.onCancel
+import org.team2471.frc.lib.commands.parallel
+import org.team2471.frc.lib.commands.periodic
+import org.team2471.frc.lib.commands.periodicTimeout
+import org.team2471.frc.lib.commands.use
+import org.team2471.frc.lib.commands.useUnnamed
+import org.team2471.frc.lib.math.round
 import org.team2471.frc.lib.units.feet
 import org.team2471.frc.lib.units.meters
+import org.team2471.frc.lib.units.seconds
 import org.wpilib.command3.Command
+import org.wpilib.command3.Scheduler
+import org.wpilib.hardware.hal.RobotMode
 import org.wpilib.math.geometry.Pose2d
-import org.wpilib.smartdashboard.SendableChooser
 import kotlin.math.absoluteValue
+import kotlin.text.get
 
 
-object Autonomous: Autonomi() {
+object Autonomous: AutoMaker() {
 
-//    val paths: MutableMap<String, Trajectory<SwerveSample>> = findChoreoPaths()  <-- already inside Autonomi
+//    val paths: MutableMap<String, Trajectory<SwerveSample>> = findChoreoPaths()  <-- already inside AutoMaker
 
-    /** Supplier that sets the robot's pose. Used inside [setDrivePositionToAutoStartPose] */
+    override val autos: List<Autonomi> = listOf(
+        Autonomi("Eight Foot Straight", eightFootStraight()),
+        Autonomi("Square Path Test", squarePathTest()),
+        Autonomi("Double Swipe Left", doubleSwipe(false)),
+        Autonomi("Double Swipe Right", doubleSwipe(true)),
+        Autonomi("Print for 20 seconds", printFor20Seconds()),
+    )
+
+    /** Supplier that sets the robot's pose. */
     override val drivePoseSetter: (Pose2d) -> Unit = { Drive.pose = it }
 
     /** Warmup function for speeding up auto loop times. Runs when selected auto changes. */
     override val warmupFunction: () -> Unit = {
         println("scheduling auto warmup")
-//        Robot.commandScheduler.schedule(warmupDriveAlongPath())
+        Scheduler.getDefault().schedule(warmupDriveAlongPath())
         println("finished scheduling auto warmup")
     }
 
-    /** Chooser for selecting autonomous commands */
-    override val autoChooser: SendableChooser<AutoCommand> =
-        SendableChooser<AutoCommand>().apply {
-//            addOption("8 Foot Straight", AutoCommand(eightFootStraight()))
-//            addOption("6x6 Square", AutoCommand(squarePathTest()))
-//            addOption("Double Swipe Left", AutoCommand(doubleSwipe(false), { paths["LeftSideDoubleSwipe"]!!.sideToSideFlip(false).getInitialPose(Drive.flipChoreoPaths).get() }))
-//            addOption("Double Swipe Right", AutoCommand(doubleSwipe(true), { paths["LeftSideDoubleSwipe"]!!.sideToSideFlip(true).getInitialPose(Drive.flipChoreoPaths).get() }))
-//            addOption("Just Shoot", AutoCommand(justShoot()))
-        }
 
-    /** Chooser for test commands */
-    override val testChooser: SendableChooser<Command> =
-        SendableChooser<Command>().apply {
-            // Set up SysId routines and test command options
-//            addOption("Drive Translation SysId ALL", Drive.sysIDTranslationAll())
-//            addOption("Drive Rotation SysId ALL", Drive.sysIDRotationAll())
-//            addOption("Drive Steer SysId ALL", Drive.sysIDSteerAll())
-//            addOption("Set Angle Offsets", Drive.setAngleOffsets())
-//            addOption("JoystickTest", joystickTest())
-//            addOption("Drive Slip Current Test", Drive.slipCurrentTest())
-//            addOption("Drive L/R Static FF Test", Drive.leftRightStaticFFTest())
-//            addOption("Drive Velocity Volt Test", Drive.velocityVoltTest())
-//            addOption("Quest offset Test", Drive.questOffsetTest())
-//            addOption("Turret Encoder Zero", zeroTurretEncoders())
-//            addOption("Shooter Curve Tuning", shooterCurveTuning())
-//            addOption("Full System Test", fullSystemTest())
-//            addOption("Turret Test", turretTest())
-//            addOption("Spindexer Test", spindexerTest())
-//            addOption("Shooter Test", shooterTest())
-//            addOption("Intake Deploy Test", intakeDeployTest())
-//            addOption("Intake Roller Test", intakeRollerTest())
+    init {
+        println("Autonomous init")
+    }
+
+    fun registerAutoOpModes() {
+        autos.forEach {
+            println("Registering ${it.name} as an AutoOpMode")
+            Robot.instance.addOpModeFactory({ it.toAutoOpMode() }, RobotMode.AUTONOMOUS, it.name)
+            println("Registered ${it.name} as an AutoOpMode")
         }
-    override val autos: List<AutoCommand> = listOf()
+        Robot.instance.publishOpModes()
+    }
 
     /** Autonomous commands */
 
-    private fun eightFootStraight(): Command {
-        return Drive.driveAlongChoreoPath(paths["eightFoot"]!!, resetOdometry = true)
+    private fun printFor20Seconds() = use(Drive) {
+        println("starting printFor20Seconds")
+        periodicTimeout(20.0) {
+            println("dt time: ${it.round(2)}")
+        }
+        println("finished")
     }
 
-    private fun squarePathTest(): Command {
-        return Drive.driveAlongChoreoPath(paths["square"]!!, resetOdometry = true)
+    private fun eightFootStraight() = use(Drive) {
+        await(Drive.driveAlongChoreoPath(paths["eightFoot"]!!, resetOdometry = true))
     }
 
-//    private fun doubleSwipe(doSideToSideFlip: Boolean): Command {
-//        val path = paths["LeftSideDoubleSwipe"]!!.sideToSideFlip(doSideToSideFlip)
-//        var pathPercentage = 0.0
-//        return parallelCommand(
-//            sequenceCommand(
-//                parallelCommand(
-//                    Drive.driveAlongChoreoPath(path.getSplit(0).get(), resetOdometry = false),
-//                    runOnceCommand {
-//                        Turret.lookForwardOverride = true
-//                    }
-//                ),
-//                parallelCommand(
-//                    Drive.driveAlongChoreoPath(path.getSplit(1).get(), resetOdometry = false, poseSupplier = Drive.localizer::pose, exitSupplier = { percent, error -> pathPercentage = percent; Turret.lookForwardOverride = percent < 0.75; percent >= 1.0 }),
-//                    sequenceCommand(
-//                        waitUntilCommand { pathPercentage > 0.8 },
-//                        runOnceCommand {
-//                            Spindexer.disableReversingAuto = true
-//                        },
-//                        waitUntilCommand { pathPercentage > 0.9 },
-//                        parallelCommand(
-//                            Shooter.shoot(true),
-//                            sequenceCommand(
-//                                runOnceCommand {
-//                                    Intake.intakeState = Intake.IntakeState.OFF
-//                                    Spindexer.disableReversingAuto = false
-//                                },
-//                                Intake.pulse().withTimeout(1.0).finallyRun {
-//                                    Intake.deploy()
-//                                }
-//                            )
-//                        ).withTimeout(3.25).finallyRun { pathPercentage = 0.0 }
-//                    )
-//                ),
-//                parallelCommand(
-//                    runOnceCommand {
-//                        Intake.deploy()
-//                        Intake.intakeState = Intake.IntakeState.INTAKING
-//                    },
-//                    Drive.driveAlongChoreoPath(path.getSplit(2).get(), resetOdometry = false, poseSupplier = Drive.localizer::pose, exitSupplier = { percent, error -> pathPercentage = percent; Turret.lookForwardOverride = percent > 0.1 && percent < 0.75; percent >= 1.0 && error.translation.norm.meters < 0.5.feet  }),
-//                    sequenceCommand(
-//                        waitUntilCommand { pathPercentage > 0.85 },
-//                        runOnceCommand {
-//                            Spindexer.disableReversingAuto = true
-//                        },
-//                        waitUntilCommand { pathPercentage > 0.95 },
-//                        parallelCommand(
-//                            Shooter.shoot(true),
-//                            sequenceCommand(
-//                                runOnceCommand {
-//                                    Intake.intakeState = Intake.IntakeState.OFF
-//                                    Spindexer.disableReversingAuto = false
-//                                },
-//                                Intake.pulse()
-//                            )
-//                        ).withTimeout(5.5)
-//                    )
-//                ),
-//                parallelCommand(
-//                    Drive.driveAlongChoreoPath(path.getSplit(3).get(), resetOdometry = false, poseSupplier = Drive.localizer::pose),
-//                    runOnceCommand {
-//                        Turret.lookForwardOverride = false
-//                        Intake.deploy()
-//                        pathPercentage = 0.0
-//                        Intake.disableSpringProtection = false
-//                    }
-//                )
-//            ),
-//            sequenceCommand(
-//                waitUntilCommand { Intake.finishedHoming }.finallyRun {
-//                    Intake.disableSpringProtection = true
-//                    Intake.deploy()
-//                    Intake.intakeState = Intake.IntakeState.INTAKING
-//                    println("Intake finished homing. Running Intake")
-//                }.withName("Intake homing"),
-//                parallelCommand(
-//                    waitUntilCommand { Intake.deployMotor0Error.absoluteValue < Intake.FLEX_THRESHOLD && Intake.deployMotor1Error.absoluteValue < Intake.FLEX_THRESHOLD }.finallyRun {
-//                        Intake.disableSpringProtection = false
-//                    },
-//                    runCommand {
-//                        Shooter.rampUpLoop()
-//                    }.withName("Shooter ramp up loop").finallyRun {
-//                        Turret.lookForwardOverride = false
-//                        Intake.deploy()
-//                        pathPercentage = 0.0
-//                    }
-//                )
-//
-//            )
-//        )
-//    }
+    private fun squarePathTest() = use(Drive) {
+        await(Drive.driveAlongChoreoPath(paths["square"]!!, resetOdometry = true))
+    }
+
+    private fun doubleSwipe(doSideToSideFlip: Boolean) = use {
+        val path = paths["LeftSideDoubleSwipe"]!!//.sideToSideFlip(doSideToSideFlip)
+        var pathPercentage = 0.0
+        parallel({
+
+            Turret.lookForwardOverride = true
+            // Beginning Intake Path
+            await(Drive.driveAlongChoreoPath(path.getSplit(0).get(), resetOdometry = false))
+
+            // Rest of intake path going back
+            parallel({
+                await(Drive.driveAlongChoreoPath(path.getSplit(1).get(), resetOdometry = false, poseSupplier = Drive.localizer::pose, exitSupplier = { percent, error -> pathPercentage = percent; Turret.lookForwardOverride = percent < 0.75; percent >= 1.0 }))
+            }, {
+                waitUntil { pathPercentage > 0.8 }
+                // Disable spindexer reversing a little early
+                Spindexer.disableReversingAuto = true
+                waitUntil { pathPercentage > 0.9 }
+                // start shooting slightly early
+                parallel({
+                    await(Shooter.shoot().withTimeout(3.25.seconds))
+                }, {
+                    Intake.intakeState = Intake.IntakeState.OFF
+                    Spindexer.disableReversingAuto = false
+                    await(Intake.pulse().withTimeout(1.0.seconds))
+                    Intake.deploy()
+                })
+                pathPercentage = 0.0
+            })
+
+            // Next Intake Path out and back
+            parallel({
+                await(Drive.driveAlongChoreoPath(path.getSplit(2).get(), resetOdometry = false, poseSupplier = Drive.localizer::pose, exitSupplier = { percent, error -> pathPercentage = percent; Turret.lookForwardOverride = percent > 0.1 && percent < 0.75; percent >= 1.0 && error.translation.norm.meters < 0.5.feet  }))
+            }, {
+                Intake.deploy()
+                Intake.intakeState = Intake.IntakeState.INTAKING
+
+                waitUntil { pathPercentage > 0.85 }
+                // Disable spindexer reversing a little early
+                Spindexer.disableReversingAuto = true
+                waitUntil { pathPercentage > 0.95 }
+                // Start shooting early
+                parallel({
+                    await(Shooter.shoot(true).withTimeout(5.5.seconds))
+                }, {
+                    Intake.intakeState = Intake.IntakeState.OFF
+                    Spindexer.disableReversingAuto = false
+                    await(Intake.pulse().withTimeout(5.5.seconds))
+                })
+            })
+            // End of shooting, sprint out to middle
+            Turret.lookForwardOverride = false
+            Intake.deploy()
+            pathPercentage = 0.0
+            Intake.disableSpringProtection = false
+            await(Drive.driveAlongChoreoPath(path.getSplit(3).get(), resetOdometry = false, poseSupplier = Drive.localizer::pose))
+        }, {
+            // Wait until intake is done homing
+            waitUntil { Intake.finishedHoming }
+            // Deploy and run intake
+            Intake.deploy()
+            Intake.intakeState = Intake.IntakeState.INTAKING
+            println("Intake finished homing. Running Intake")
+
+            parallel({
+                // Wait until intake is out to enable spring protetion
+                waitUntil { Intake.deployMotor0Error.absoluteValue < Intake.FLEX_THRESHOLD && Intake.deployMotor1Error.absoluteValue < Intake.FLEX_THRESHOLD }
+                Intake.disableSpringProtection = false
+            }, {
+                // Ramp up shooter always
+                periodic {
+                    Shooter.rampUpLoop()
+                }
+            })
+        })
+    }.onCancel {
+        Turret.lookForwardOverride = false
+        Intake.deploy()
+    }
+
 //
 //    private fun doubleSwipeOG(doSideToSideFlip: Boolean): Command {
 //        val path = paths["LeftSideDoubleSwipe"]!!.sideToSideFlip(doSideToSideFlip)
@@ -221,8 +216,9 @@ object Autonomous: Autonomi() {
 //        )
 //    }
 
-    fun warmupDriveAlongPath(): Command {
-        val warmupPath = paths["LeftSideDoubleSwipe"]!!//.sideToSideFlip(true) //TODO: UNCOMMENT WHEN 2027 CHOREO
-        return Drive.driveAlongChoreoPath(warmupPath.getSplit(0).get(), exitSupplier = { percent, error -> percent >= 1.0 || Robot.isEnabled})//.ignoringDisable(true)
-    }
+    fun warmupDriveAlongPath() = useUnnamed(Drive) {
+//        val warmupPath = paths["eightFoot"]!!//.sideToSideFlip(true) //TODO: UNCOMMENT WHEN 2027 CHOREO
+//        await(Drive.driveAlongChoreoPath(warmupPath.getSplit(0).get(), exitSupplier = { percent, error -> percent >= 1.0 || Robot.isEnabled}))
+        println("Warmup DAL")
+    }.withPriority(Command.LOWEST_PRIORITY + 1).named("Warmup Drive Along Path")
 }

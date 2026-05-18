@@ -7,13 +7,14 @@ package frc.team2471.frc2026
 import frc.team2471.frc2026.AimUtils.shooterEfficiency
 import frc.team2471.frc2026.AimUtils.toExitVelocity
 import frc.team2471.frc2026.Robot.Companion.isCompBot
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import org.littletonrobotics.junction.AutoLogOutput
 import org.team2471.frc.lib.commands.MechanismBase
+import org.team2471.frc.lib.commands.onCancel
+import org.team2471.frc.lib.commands.parallel
 import org.team2471.frc.lib.commands.periodic
 import org.team2471.frc.lib.commands.use
 import org.team2471.frc.lib.control.LoopLogger
+import org.team2471.frc.lib.control.rightStickButton
 //import org.team2471.frc.lib.control.commands.finallyRun
 //import org.team2471.frc.lib.control.commands.onlyRunWhileFalse
 //import org.team2471.frc.lib.control.commands.onlyRunWhileTrue
@@ -34,7 +35,6 @@ import org.team2471.frc.lib.units.sin
 import org.team2471.frc.lib.util.PowerTracker
 import org.team2471.frc.lib.util.angleTo
 import org.team2471.frc.lib.util.isSim
-import org.wpilib.command3.Scheduler
 import org.wpilib.math.filter.Debouncer
 import org.wpilib.math.geometry.Translation2d
 import org.wpilib.math.geometry.Translation3d
@@ -441,36 +441,38 @@ object Shooter: MechanismBase("Shooter") {
         }
     }
 
+    fun shootOrRamp() = use(this) {
+        parallel({
+            periodic {
+                rampUpLoop()
+            }
+        }, {
+            periodic {
+                if (OI.driverController.rightTriggerAxis >= 0.1 || OI.driverController.rightStickButton) {
+                    shootLoop()
+                } else {
+                    isShooting = false
+                    Spindexer.currentState = Spindexer.State.OFF
+                    hoodAngleSetpoint = hoodAngleSetpoint.coerceAtMost(HOOD_UNDER_TRENCH_MAX_ANGLE)
+                }
+            }
+        })
+    }.onCancel {
+        isShooting = false
+        Spindexer.currentState = Spindexer.State.OFF
+        hoodAngleSetpoint = hoodAngleSetpoint.coerceAtMost(HOOD_UNDER_TRENCH_MAX_ANGLE)
+    }
 
-//    fun shootOrRamp(): Command {
-//        return parallelCommand(
-//            runCommand(Shooter) {
-//                rampUpLoop()
-//            },
-//            runCommand {
-//                shootLoop()
-//            }.onlyRunWhileTrue { OI.driverController.rightTriggerAxis >= 0.1 || OI.driverController.rightStickButton }.repeatedly(),
-//            runCommand {
-//                isShooting = false
-//                Spindexer.currentState = Spindexer.State.OFF
-//                hoodAngleSetpoint = hoodAngleSetpoint.coerceAtMost(HOOD_UNDER_TRENCH_MAX_ANGLE)//HOOD_STOW_SETPOINT.degrees
-//            }.onlyRunWhileFalse { OI.driverController.rightTriggerAxis >= 0.1 || OI.driverController.rightStickButton }.repeatedly()
-//        ).finallyRun {
-//            isShooting = false
-//            Spindexer.currentState = Spindexer.State.OFF
-//            hoodAngleSetpoint = hoodAngleSetpoint.coerceAtMost(HOOD_UNDER_TRENCH_MAX_ANGLE)//HOOD_STOW_SETPOINT.degrees
-//        }
-//    }
-
-
-//    fun shoot(ignoreRampUp: Boolean = false): Command = runCommand(Shooter) {
-//        shootLoop(ignoreRampUp)
-//        rampUpLoop()
-//    }.finallyRun {
-//        isShooting = false
-//        Spindexer.currentState = Spindexer.State.OFF
-//        hoodAngleSetpoint = HOOD_ZERO.degrees
-//    }
+    fun shoot(ignoreRampUp: Boolean = false) = use(this) {
+        periodic {
+            shootLoop(ignoreRampUp)
+            rampUpLoop()
+        }
+    }.onCancel {
+        isShooting = false
+        Spindexer.currentState = Spindexer.State.OFF
+        hoodAngleSetpoint = HOOD_ZERO.degrees
+    }
 
     fun rampUpLoop() {
         shooterVelocitySetpoint = AimUtils.getShooterRPS()

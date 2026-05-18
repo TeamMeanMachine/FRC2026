@@ -9,10 +9,12 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.littletonrobotics.junction.AutoLogOutput
 import org.team2471.frc.lib.commands.MechanismBase
+import org.team2471.frc.lib.commands.onCancel
 import org.team2471.frc.lib.commands.periodic
 import org.team2471.frc.lib.commands.use
 import org.team2471.frc.lib.control.CurrentLimits
 import org.team2471.frc.lib.control.LoopLogger
+import org.team2471.frc.lib.units.seconds
 import org.team2471.frc.lib.util.PowerTracker
 //import org.team2471.frc.lib.control.commands.finallyRun
 //import org.team2471.frc.lib.control.commands.onlyRunWhileFalse
@@ -24,7 +26,6 @@ import org.team2471.frc.lib.util.PowerTracker
 //import org.team2471.frc.lib.control.commands.waitCommand
 import org.team2471.frc.lib.util.isSim
 import org.wpilib.command3.Command
-import org.wpilib.command3.Coroutine
 import org.wpilib.hardware.discrete.DigitalInput
 import org.wpilib.networktables.NetworkTableInstance
 import org.wpilib.system.Timer
@@ -420,21 +421,27 @@ object Intake: MechanismBase("Intake") {
         motor.setPosition(DEPLOY_POSE + 0.5)
     }
 
+    fun pulse() = use(this) {
+        periodic {
+            if (Robot.isAutonomous || OI.driverController.rightTriggerAxis > 0.75) {
+                stow()
+                wait(0.25.seconds)
+                deploy()
+                wait(0.25.seconds)
+            } else {
+                stop()
+            }
+        }
+        stow()
+    }.onCancel {
+        stow()
+    }
 
-//    fun pulse(): Command = sequenceCommand(
-//        runOnceCommand { stow() },
-//        waitCommand(0.25),
-//        runOnceCommand { deploy() },
-//        waitCommand(0.25),
-//    ).repeatedly().onlyRunWhileTrue { Robot.isAutonomous || OI.driverController.rightTriggerAxis > 0.75 }.finallyRun {
-//        stow()
-//    }
 
-
-    fun homeDeploy(): Command = run {
+    fun homeDeploy(): Command = use(this) {
 //        deployMotor0.setPosition(deploySetpoint) // TODO: PHOENIX 6 2027
 //        if (Robot.isCompBot) deployMotor1.setPosition(deploySetpoint)
-    }.named("HomeDeploy")
+    }
 
 
     override fun default() = defaultCommand {

@@ -1,52 +1,30 @@
 package frc.team2471.frc2026
 
-import com.ctre.phoenix6.controls.NeutralOut
-import com.ctre.phoenix6.controls.PositionVoltage
-import com.ctre.phoenix6.hardware.CANcoder
-import com.ctre.phoenix6.hardware.Pigeon2
-import com.ctre.phoenix6.signals.FeedbackSensorSourceValue
-import com.ctre.phoenix6.signals.StaticFeedforwardSignValue
 //import edu.wpi.first.wpilibj2.command.Command
 //import edu.wpi.first.wpilibj2.command.SubsystemBase
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.littletonrobotics.junction.AutoLogOutput
-import org.littletonrobotics.junction.Logger
 import org.littletonrobotics.junction.MeanLogger
 import org.team2471.frc.lib.commands.MechanismBase
 import org.team2471.frc.lib.commands.periodic
+import org.team2471.frc.lib.commands.use
 import org.team2471.frc.lib.control.LoopLogger
 //import org.team2471.frc.lib.control.commands.onlyRunWhileFalse
-import org.team2471.frc.lib.ctre.PhoenixUtil
-import org.team2471.frc.lib.ctre.addFollower
-import org.team2471.frc.lib.ctre.applyConfiguration
-import org.team2471.frc.lib.ctre.currentLimits
-import org.team2471.frc.lib.ctre.d
-import org.team2471.frc.lib.ctre.inverted
-import org.team2471.frc.lib.ctre.loggedTalonFX.LoggedTalonFX
-import org.team2471.frc.lib.ctre.p
-import org.team2471.frc.lib.ctre.s
 import org.team2471.frc.lib.math.toPose2d
 import org.team2471.frc.lib.units.absoluteValue
 import org.team2471.frc.lib.units.asDegrees
-import org.team2471.frc.lib.units.asInches
 import org.team2471.frc.lib.units.asRotation2d
 import org.team2471.frc.lib.units.asRotations
 import org.team2471.frc.lib.units.degrees
 import org.team2471.frc.lib.units.inches
 import org.team2471.frc.lib.units.meters
 import org.team2471.frc.lib.units.radians
-import org.team2471.frc.lib.units.rotations
-import org.team2471.frc.lib.units.sin
 import org.team2471.frc.lib.units.unWrap
 import org.team2471.frc.lib.units.wrap
 import org.team2471.frc.lib.util.angleTo
 import org.team2471.frc.lib.util.isReal
-import kotlin.math.abs
 import org.team2471.frc.lib.coroutines.periodic
-import org.team2471.frc.lib.ctre.alternateFeedbackSensor
-import org.team2471.frc.lib.ctre.brakeMode
-import org.team2471.frc.lib.units.asAmps
 import org.team2471.frc.lib.units.asFeet
 import org.team2471.frc.lib.units.asMeters
 import org.team2471.frc.lib.units.degreesPerSecond
@@ -54,9 +32,7 @@ import org.team2471.frc.lib.units.rotationsPerSecond
 import org.team2471.frc.lib.util.PowerTracker
 import org.team2471.frc.lib.util.isSim
 import org.wpilib.command3.Command
-import org.wpilib.command3.Coroutine
 import org.wpilib.math.geometry.Translation2d
-import org.wpilib.math.system.DCMotor
 import org.wpilib.networktables.NetworkTableInstance
 import org.wpilib.units.measure.Angle
 import org.wpilib.units.measure.AngularVelocity
@@ -186,7 +162,7 @@ object Turret: MechanismBase("Turret") {
 
     @get:AutoLogOutput(key = "Turret/turretFeedforward")
     val turretFeedforward: Double
-        get() = -Drive.speeds.omega.radians.asRotations * 3.0
+        get() = -Drive.chassisVelocities.omega.radians.asRotations * 3.0
 
     @get:AutoLogOutput(key = "Turret/isTurretWrapping")
     var isTurretWrapping = false
@@ -422,12 +398,12 @@ object Turret: MechanismBase("Turret") {
     }
 
     override fun default() = defaultCommand {
-        periodic {
+        this.periodic {
             await(aimAtTarget())
         }
     }
 
-    fun aimAtTarget(): Command = run {
+    fun aimAtTarget(): Command = use("AimAtTarget", this) {
         if (lookForwardOverride) {
             if (Robot.isEnabled) {
                 fieldCentricSetpoint = Drive.heading.measure
@@ -438,15 +414,16 @@ object Turret: MechanismBase("Turret") {
                 fieldCentricSetpoint = aimingAngle
             }
         }
-    }.named("AimAtTarget")//.onlyRunWhileFalse { Robot.isTestEnabled && Drive.useAprilTags }
+    }
 
-    fun staticAimAtTarget(): Command = run {
+    fun staticAimAtTarget(): Command = use(this) {
         fieldCentricSetpoint = AimUtils.staticShotPos.angleTo(AimUtils.aimTarget)
-    }.named("StaticAimAtTarget")
+    }
 
     fun setTurretOffset(robotHeading: Angle) {
         tempHeadingResetAngle = robotHeading
     }
+
     fun zeroTurretMotor() {
         turretMotorRotorPositionOffset = fusedEncoderAngle - rawTurretMotorRotorAngle
         println("Zeroing turret motor")
