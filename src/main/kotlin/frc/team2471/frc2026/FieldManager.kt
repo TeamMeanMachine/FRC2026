@@ -26,6 +26,7 @@ import org.team2471.frc.lib.control.commands.sequenceCommand
 import org.team2471.frc.lib.coroutines.periodic
 import org.team2471.frc.lib.units.*
 import org.team2471.frc.lib.util.RobotMode
+import org.team2471.frc.lib.util.angleTo
 import org.team2471.frc.lib.util.demoMode
 import org.team2471.frc.lib.util.isRedAlliance
 import org.team2471.frc.lib.util.robotMode
@@ -168,6 +169,13 @@ object FieldManager {
 
     val distanceFromMiddleToScore = fieldCenter.x.asFeet.feet - lowerRedTrenchPosition.x.feet - 5.0.feet
 
+    val passOverNet: Boolean get() {
+        val angleToPassPoint = passPose.angleTo(Drive.localizer.pose.translation)
+        val angleToNet1 = passPose.angleTo(goalPose + Translation2d(0.6.meters, 0.0.meters))
+        val angleToNet2 = passPose.angleTo(goalPose + Translation2d(-0.6.meters, 0.0.meters))
+
+        return angleToPassPoint in angleToNet1..angleToNet2 || angleToPassPoint in angleToNet2..angleToNet1
+    }
 
     @get:AutoLogOutput(key = "FieldManager/In Scoring Zone")
     val inScoringZone: Boolean

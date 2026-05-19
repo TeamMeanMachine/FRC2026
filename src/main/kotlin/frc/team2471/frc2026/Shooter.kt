@@ -175,8 +175,28 @@ object Shooter: SubsystemBase("Shooter") {
             put(15.0, 45.0)
             put(20.0, 45.0)
         }
+    }
+
+    // feet, rot/s (of the wheel not the motor) (in an ideal condition. need to divide by SHOOTER_EFFICIENCY)
+    val overNetSpeedCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
+        put(5.0, 25.0)
+        put(15.0, 30.988)
+        put(25.0, 40.362)
+        put(35.0, 70.839)
+        put(45.0, 80.88)
+    }
+    // feet, degrees
+    val overNetAngleCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
+        put(5.0, 45.0)
+        put(15.0, 45.0)
+        put(25.0, 45.0)
+        put(35.0, 45.0)
+        put(45.0, 45.0)
+        put(55.0, 45.0)
 
     }
+
+
 
     val floorTimeCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
         if (isCompBot) {
@@ -193,6 +213,19 @@ object Shooter: SubsystemBase("Shooter") {
             put(20.0, 0.982)
         }
     }
+
+    val overNetTimeCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
+        put(5.0, 0.64)
+        put(15.0, 1.03)
+        put(25.0, 1.32)
+        put(35.0, 1.57)
+        put(45.0, 1.8)
+        put(55.0, 2.01)
+    }
+
+    val passSpeedCurve: InterpolatingTreeMap<Double, Double> get() = if (!FieldManager.passOverNet) floorSpeedCurve else overNetSpeedCurve
+    val passAngleCurve: InterpolatingTreeMap<Double, Double> get() = if (!FieldManager.passOverNet) floorAngleCurve else overNetAngleCurve
+    val passTimeCurve: InterpolatingTreeMap<Double, Double> get() = if (!FieldManager.passOverNet) floorTimeCurve else overNetTimeCurve
 
     val shootingTestSpeedEntry = table.getEntry("Shooter Shooting Speed")
     val shootingTestAngleEntry = table.getEntry("Shooter Shooting Angle")
@@ -307,7 +340,7 @@ object Shooter: SubsystemBase("Shooter") {
     val hoodErrorDistance get() = abs(AimUtils.distanceToTarget.asFeet * sin(hoodMotor.closedLoopError.valueAsDouble.radians))
 
     @get:AutoLogOutput(key = "Shooter/Velocity error distance")
-    val velocityErrorDistance get() = abs((if (AimUtils.isAimingAtGoal) AimUtils.MEASURED_SHOT_AIRTIME * cos(hubAngleCurve.get(AimUtils.distanceToTarget.asFeet)) else AimUtils.PASS_AIRTIME * cos(floorAngleCurve.get(AimUtils.distanceToTarget.asFeet))) * shooterMotor.closedLoopError.valueAsDouble * WHEEL_DIAMETER.asMeters * Math.PI * 0.5)
+    val velocityErrorDistance get() = abs((if (AimUtils.isAimingAtGoal) AimUtils.MEASURED_SHOT_AIRTIME * cos(hubAngleCurve.get(AimUtils.distanceToTarget.asFeet)) else AimUtils.PASS_AIRTIME * cos(passAngleCurve.get(AimUtils.distanceToTarget.asFeet))) * shooterMotor.closedLoopError.valueAsDouble * WHEEL_DIAMETER.asMeters * Math.PI * 0.5)
 
 //    @get:AutoLogOutput(key = "Shooter/Requested voltage")
 //    var requestedVoltage = 0.0
@@ -554,7 +587,7 @@ object Shooter: SubsystemBase("Shooter") {
                     if (AimUtils.isAimingAtGoal || demoMode)
                         BALL_ANGLE_AT_HOOD_ZERO - hubAngleCurve.get(AimUtils.distanceToTarget.asFeet)
                     else
-                        BALL_ANGLE_AT_HOOD_ZERO - floorAngleCurve.get(AimUtils.distanceToTarget.asFeet)
+                        BALL_ANGLE_AT_HOOD_ZERO - passAngleCurve.get(AimUtils.distanceToTarget.asFeet)
                 else
                     BALL_ANGLE_AT_HOOD_ZERO - demoShootingAngle
             ).degrees
@@ -571,7 +604,7 @@ object Shooter: SubsystemBase("Shooter") {
 
     fun shootSimulatedFuel() {
         val exitVelocity = (AimUtils.getShooterRPS() * SHOOTER_GEAR_RATIO * AimUtils.shooterEfficiency).toExitVelocity().asMetersPerSecond
-        val exitAngle = if (AimUtils.isAimingAtGoal) hubAngleCurve.get(AimUtils.distanceToTarget.asFeet).degrees else floorAngleCurve.get(AimUtils.distanceToTarget.asFeet).degrees
+        val exitAngle = if (AimUtils.isAimingAtGoal) hubAngleCurve.get(AimUtils.distanceToTarget.asFeet).degrees else passAngleCurve.get(AimUtils.distanceToTarget.asFeet).degrees
         val angleToTarget = Turret.turretTranslation.angleTo(AimUtils.aimTarget)
         val velocity2d = Translation2d(exitVelocity * exitAngle.cos(), 0.0).rotateBy(angleToTarget.asRotation2d)
         val turretVelocity = Translation2d(Turret.turretOffsetFromCenter.x * Drive.gyroYawRate.asRadiansPerSecond, Turret.turretOffsetFromCenter.y * Drive.gyroYawRate.asRadiansPerSecond).rotateBy(Drive.heading) + Drive.velocity

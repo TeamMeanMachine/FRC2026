@@ -87,7 +87,7 @@ object AimUtils {
             return if (isAimingAtGoal) {
                 FieldManager.goalPose - calculateAimTargetOffset(FieldManager.goalPose, Shooter.hubTimeCurve)
             } else {
-                FieldManager.passPose - calculateAimTargetOffset(FieldManager.passPose, Shooter.floorTimeCurve)
+                FieldManager.passPose - calculateAimTargetOffset(FieldManager.passPose, Shooter.passTimeCurve)
             }
         }
 
@@ -106,6 +106,7 @@ object AimUtils {
                 }
             }
 
+
     // Calculates how fast the shooter should spin to make a shot.
     fun getShooterRPS(): AngularVelocity {
         return if (!Drive.useAprilTags) {
@@ -113,7 +114,7 @@ object AimUtils {
 //        } else if (Robot.isAutonomous) {
 //            (if (isAimingAtGoal) hubSpeedCurve.get(distanceToTarget.asFeet) else hubSpeedCurve.get(11.0)).rotationsPerSecond
         } else {
-            (if (isAimingAtGoal || FieldManager.shouldRamp || demoMode) hubSpeedCurve.get(distanceToTarget.asFeet) else floorSpeedCurve.get(distanceToTarget.asFeet)).rotationsPerSecond
+            (if (isAimingAtGoal || FieldManager.shouldRamp || demoMode) hubSpeedCurve.get(distanceToTarget.asFeet) else Shooter.passSpeedCurve.get(distanceToTarget.asFeet)).rotationsPerSecond
         } / SHOOTER_GEAR_RATIO / shooterEfficiency
     }
 
