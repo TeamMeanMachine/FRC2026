@@ -31,7 +31,7 @@ object Falcons {
 
 
     const val INTAKE_DEPLOY_0 = 21
-    const val INTAKE_DEPLOY_1 = 20
+    val INTAKE_DEPLOY_1 = if (Robot.isCompBot) 20 else -1 // Setting an ID to -1 for CTRE CAN devices will create a "dummy" device that doesn't error but doesn't control anything
     const val INTAKE_ROLLER_0 = 14
     const val INTAKE_ROLLER_1 = 13
 
