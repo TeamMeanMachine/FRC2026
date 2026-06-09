@@ -180,18 +180,18 @@ object Shooter: SubsystemBase("Shooter") {
 
     // feet, rot/s (of the wheel not the motor) (in an ideal condition. need to divide by SHOOTER_EFFICIENCY)
     val overNetSpeedCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
-        put(5.0, 25.0)
-        put(15.0, 30.988)
-        put(25.0, 40.362)
-        put(35.0, 70.839)
-        put(45.0, 80.88)
+        put(5.0, 35.0)
+        put(15.0, 20.988)
+        put(25.0, 50.362)
+        put(35.0, 80.839)
+        put(45.0, 90.88)
     }
     // feet, degrees
     val overNetAngleCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
-        put(5.0, 45.0)
-        put(15.0, 45.0)
-        put(25.0, 45.0)
-        put(35.0, 45.0)
+        put(5.0, 15.0)
+        put(15.0, 25.0)
+        put(25.0, 30.0)
+        put(35.0, 35.0)
         put(45.0, 45.0)
         put(55.0, 45.0)
 

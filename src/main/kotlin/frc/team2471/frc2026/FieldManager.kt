@@ -24,6 +24,7 @@ import org.team2471.frc.lib.control.commands.runCommand
 import org.team2471.frc.lib.control.commands.runOnceCommand
 import org.team2471.frc.lib.control.commands.sequenceCommand
 import org.team2471.frc.lib.coroutines.periodic
+import org.team2471.frc.lib.math.toPose2d
 import org.team2471.frc.lib.units.*
 import org.team2471.frc.lib.util.RobotMode
 import org.team2471.frc.lib.util.angleTo
@@ -146,15 +147,21 @@ object FieldManager {
     val goalPose: Translation2d
         get () = if (isRedAlliance) redGoalPose else blueGoalPose
 
+    @get:AutoLogOutput(key = "FieldManager/Pass Pose")
+    val loggedPassPose get() = passPose.toPose2d()
+
     val passPose: Translation2d
         get() {
             var pose = if (Robot.isTeleop) Translation2d(4.0, 2.0) else Translation2d(2.0, 1.25)
 
             if (isRedAlliance) {
-                pose = Translation2d(fieldLength.asMeters - pose.x, pose.y)
+                pose = Translation2d(fieldLength.asMeters - pose.x, fieldWidth.asMeters - pose.y)
+            } else {
+                pose = Translation2d(pose.x, pose.y)
             }
 
-            if (Drive.localizer.pose.y.meters > fieldHalfWidth) {
+            // meters
+            if (Drive.localizer.pose.translation.getDistance(pose) > 7.0 && (yRelativeToCenter.asMeters.sign != pose.y.sign * if (isRedAlliance) 1.0 else -1.0)) {
                 pose = Translation2d(pose.x, fieldWidth.asMeters - pose.y)
             }
 
@@ -169,10 +176,12 @@ object FieldManager {
 
     val distanceFromMiddleToScore = fieldCenter.x.asFeet.feet - lowerRedTrenchPosition.x.feet - 5.0.feet
 
+    @get:AutoLogOutput(key = "FieldManager/Pass Over Net")
     val passOverNet: Boolean get() {
         val angleToPassPoint = passPose.angleTo(Drive.localizer.pose.translation)
-        val angleToNet1 = passPose.angleTo(goalPose + Translation2d(0.6.meters, 0.0.meters))
-        val angleToNet2 = passPose.angleTo(goalPose + Translation2d(-0.6.meters, 0.0.meters))
+        val xOffset = if (isRedAlliance) -0.5.meters else 0.5.meters
+        val angleToNet1 = passPose.angleTo(goalPose + Translation2d(xOffset, 0.8.meters))
+        val angleToNet2 = passPose.angleTo(goalPose + Translation2d(xOffset, -0.8.meters))
 
         return angleToPassPoint in angleToNet1..angleToNet2 || angleToPassPoint in angleToNet2..angleToNet1
     }
