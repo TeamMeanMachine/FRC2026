@@ -6,13 +6,13 @@ import org.team2471.frc.lib.commands.use
 //import edu.wpi.first.wpilibj2.command.SubsystemBase
 import org.team2471.frc.lib.control.LoopLogger
 import org.team2471.frc.lib.control.MeanCommandXboxController
+import org.team2471.frc.lib.math.applyDeadband
 //import org.team2471.frc.lib.control.commands.finallyRun
 //import org.team2471.frc.lib.control.commands.parallelCommand
 //import org.team2471.frc.lib.control.commands.runCommand
 //import org.team2471.frc.lib.control.commands.runOnceCommand
 //import org.team2471.frc.lib.control.commands.toCommand
 import org.team2471.frc.lib.math.deadband
-import org.team2471.frc.lib.math.normalize
 import org.team2471.frc.lib.units.degrees
 import org.team2471.frc.lib.util.demoMode
 import org.wpilib.command3.Scheduler
@@ -36,21 +36,19 @@ object OI {
     val deadbandDriver = 0.08
     val deadbandOperator = 0.1
 
-    val driveTranslationX: Double
-        get() = driverController.leftY.deadband(deadbandDriver)
+    val rawDriveTranslationX: Double
+        get() = driverController.leftY
 
-    val driveTranslationY: Double
-        get() = driverController.leftX.deadband(deadbandDriver)
+    val rawDriveTranslationY: Double
+        get() = driverController.leftX
 
-    val rawDriveTranslation: Translation2d
+    val driveTranslation: Translation2d
         get() {
-            val translation = Translation2d(driveTranslationX, driveTranslationY)
-            return if (translation.norm > 1.0) {
-                translation.normalize()
-            } else {
-                translation
-            }
+            return Translation2d(rawDriveTranslationX, rawDriveTranslationY).applyDeadband(deadbandDriver)
         }
+
+    val driveTranslationX: Double get() = driveTranslation.x
+    val driveTranslationY: Double get() = driveTranslation.y
 
     val driveRotation: Double
         get() = -driverController.rightX.deadband(deadbandDriver) * rotationMultiplier

@@ -1,8 +1,6 @@
 package frc.team2471.frc2026
 
 import com.ctre.phoenix6.swerve.utility.PhoenixPIDController
-import frc.team2471.frc2026.OI.driverController
-//import edu.wpi.first.wpilibj2.command.Command
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.littletonrobotics.junction.Logger
@@ -12,8 +10,6 @@ import org.team2471.frc.lib.commands.periodic
 import org.team2471.frc.lib.commands.use
 import org.team2471.frc.lib.control.CurrentLimits
 import org.team2471.frc.lib.control.LoopLogger
-//import org.team2471.frc.lib.control.commands.finallyRun
-//import org.team2471.frc.lib.control.commands.runCommand
 import org.team2471.frc.lib.control.rightStickButton
 import org.team2471.frc.lib.ctre.PhoenixUtil
 import org.team2471.frc.lib.localization.PoseLocalizer
@@ -254,7 +250,7 @@ object Drive: SwerveDriveSubsystem(DriveConstants.drivetrainConstants, *DriveCon
      * Returns [ChassisSpeeds] with a percentage power from the driver controller.
      */
     override fun getJoystickPercentageVelocity(): ChassisVelocities {
-        val rawJoystick = OI.rawDriveTranslation
+        val rawJoystick = OI.driveTranslation
         // Square drive input and apply demoSpeed
         val power = rawJoystick.norm.square() * demoSpeed * if ((Shooter.isShooting || OI.driverController.rightStickButton) && FieldManager.inScoringZone) 0.3 else if (inSnakeMode) 0.8 else 1.0
         // Apply modified power to joystick vector and flip depending on alliance
@@ -272,11 +268,12 @@ object Drive: SwerveDriveSubsystem(DriveConstants.drivetrainConstants, *DriveCon
         periodic {
             println("snake mode")
             inSnakeMode = true
-            if (OI.rawDriveTranslation.norm > 0.1) {
+            val driveTranslation = OI.driveTranslation
+            if (driveTranslation.norm > 0.1) {
                 driveAtAngle(
                     atan2(
-                        driverController.leftY,
-                        -driverController.leftX
+                        driveTranslation.x,
+                        -driveTranslation.y
                     ).radians.asRotation2d - Rotation2d(90.0.degrees)
                 )
             } else {
