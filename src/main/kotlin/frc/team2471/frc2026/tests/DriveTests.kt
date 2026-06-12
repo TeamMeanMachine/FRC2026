@@ -14,7 +14,7 @@ import org.team2471.frc.lib.units.degrees
 import org.team2471.frc.lib.units.degreesPerSecond
 import org.team2471.frc.lib.units.feetPerSecond
 import org.team2471.frc.lib.units.meters
-import org.littletonrobotics.junction.Logger
+//import org.littletonrobotics.junction.Logger
 import org.team2471.frc.lib.units.absoluteValue
 import org.team2471.frc.lib.units.asDegrees
 import org.team2471.frc.lib.units.asMeters

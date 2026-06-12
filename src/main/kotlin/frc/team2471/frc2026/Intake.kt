@@ -7,7 +7,7 @@ import com.ctre.phoenix6.hardware.TalonFX
 //import edu.wpi.first.wpilibj2.command.SubsystemBase
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import org.littletonrobotics.junction.AutoLogOutput
+//import org.littletonrobotics.junction.AutoLogOutput
 import org.team2471.frc.lib.commands.MechanismBase
 import org.team2471.frc.lib.commands.onCancel
 import org.team2471.frc.lib.commands.periodic
@@ -58,20 +58,20 @@ object Intake: MechanismBase("Intake") {
     val stopSensor0 = DigitalInput(DigitalSensors.INTAKE_STOP_SENSOR_0)
     val stopSensor1 = DigitalInput(DigitalSensors.INTAKE_STOP_SENSOR_1)
 
-    @get:AutoLogOutput(key = "Intake/Intake state")
+//    @get:AutoLogOutput(key = "Intake/Intake state") TODO
     var intakeState: IntakeState = IntakeState.OFF
     var prevIntakeState = intakeState
 
-    @get:AutoLogOutput(key = "Intake/Hit Hard Stop 0")
+//    @get:AutoLogOutput(key = "Intake/Hit Hard Stop 0") TODO
     val hitHardStop0 get() = !stopSensor0.get()
 
-    @get:AutoLogOutput(key = "Intake/Hit Hard Stop 1")
+//    @get:AutoLogOutput(key = "Intake/Hit Hard Stop 1") TODO
     val hitHardStop1 get() = !stopSensor1.get()
 
-    @get:AutoLogOutput(key = "Intake/Roller Motor Temp")
+//    @get:AutoLogOutput(key = "Intake/Roller Motor Temp") TODO
     val rollerTemp get() = 0.0//rollerMotor.deviceTemp.valueAsDouble //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
 
-    @get:AutoLogOutput(key = "Intake/Velocity Setpoint")
+//    @get:AutoLogOutput(key = "Intake/Velocity Setpoint") TODO
     var velocitySetpoint: Double = 0.0
         set(value) {
             field = value.coerceIn(-100.0, 100.0)
@@ -86,7 +86,7 @@ object Intake: MechanismBase("Intake") {
 
     const val REACHED_SETPOINT_THRESHOLD = 0.05
 
-    @get:AutoLogOutput(key = "Intake/Deploy Setpoint")
+//    @get:AutoLogOutput(key = "Intake/Deploy Setpoint") TODO
     var deploySetpoint: Double = 0.0
         set(value) {
             field = value
@@ -169,44 +169,44 @@ object Intake: MechanismBase("Intake") {
             }
         }
 
-    @get:AutoLogOutput(key = "Intake/Roller Velocity")
+//    @get:AutoLogOutput(key = "Intake/Roller Velocity") TODO
     val rollerVelocity: Double
         get() = 0.0//rollerMotor.velocity.valueAsDouble //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
 
-    @get:AutoLogOutput(key = "Intake/Roller Current")
+//    @get:AutoLogOutput(key = "Intake/Roller Current") TODO
     val rollerCurrent: Double
         get() = 0.0//rollerMotor.supplyCurrent.valueAsDouble //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
 
-    @get:AutoLogOutput(key = "Intake/Deploy0 Current")
+//    @get:AutoLogOutput(key = "Intake/Deploy0 Current") TODO
     val deployCurrent0: Double
         get() = 0.0//deployMotor0.supplyCurrent.valueAsDouble //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
 
-    @get:AutoLogOutput(key = "Intake/Deploy1 Current")
+//    @get:AutoLogOutput(key = "Intake/Deploy1 Current") TODO
     val deployCurrent1: Double
         get() = 0.0//deployMotor1.supplyCurrent.valueAsDouble //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
 
-    @get:AutoLogOutput(key = "Intake/Deploy0 Velocity")
+//    @get:AutoLogOutput(key = "Intake/Deploy0 Velocity") TODO
     val deployVelocity0: Double
         get() = 0.0//deployMotor0.velocity.valueAsDouble //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
 
-    @get:AutoLogOutput(key = "Intake/Deploy1 Velocity")
+//    @get:AutoLogOutput(key = "Intake/Deploy1 Velocity") TODO
     val deployVelocity1: Double
         get() = 0.0//deployMotor1.velocity.valueAsDouble //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
 
-    @get:AutoLogOutput(key = "Intake/Deploy Motor Position")
+//    @get:AutoLogOutput(key = "Intake/Deploy Motor Position") TODO
     val deployMotor0Position: Double
         get() = 0.0//deployMotor0.position.valueAsDouble //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
 
-    @get:AutoLogOutput(key = "Intake/Deploy Motor Follower Position")
+//    @get:AutoLogOutput(key = "Intake/Deploy Motor Follower Position") TODO
     val deployMotor1Position: Double
         get() = 0.0//if (Robot.isCompBot) deployMotor1.position.valueAsDouble else 0.0 //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
 
 
-    @get:AutoLogOutput(key = "Intake/Deploy Motor Error")
+//    @get:AutoLogOutput(key = "Intake/Deploy Motor Error") TODO
     val deployMotor0Error: Double
         get() = deployMotor0Position - deploySetpoint//deployMotor.closedLoopError.valueAsDouble
 
-    @get:AutoLogOutput(key = "Intake/Deploy Motor Follower Error")
+//    @get:AutoLogOutput(key = "Intake/Deploy Motor Follower Error") TODO
     val deployMotor1Error: Double
         get() = deployMotor1Position - deploySetpoint//deployMotor.closedLoopError.valueAsDouble
 
@@ -215,15 +215,15 @@ object Intake: MechanismBase("Intake") {
     var isDeployed: Boolean = false
     var disableSpringProtection = false
 
-    @get:AutoLogOutput(key = "Intake/goingToSetpoint0")
+//    @get:AutoLogOutput(key = "Intake/goingToSetpoint0") TODO
     var goingToSetpoint0: Boolean = false
 
-    @get:AutoLogOutput(key = "Intake/goingToSetpoint1")
+//    @get:AutoLogOutput(key = "Intake/goingToSetpoint1") TODO
     var goingToSetpoint1: Boolean = false
 
-    @get:AutoLogOutput(key = "Intake/reachedSetpoint0")
+//    @get:AutoLogOutput(key = "Intake/reachedSetpoint0") TODO
     var reachedSetpoint0: Boolean = false
-    @get:AutoLogOutput(key = "Intake/reachedSetpoint1")
+//    @get:AutoLogOutput(key = "Intake/reachedSetpoint1") TODO
     var reachedSetpoint1: Boolean = false
 
 

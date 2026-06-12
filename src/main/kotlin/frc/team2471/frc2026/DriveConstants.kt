@@ -27,7 +27,7 @@ import org.wpilib.units.measure.LinearVelocity
 // https://v6.docs.ctr-electronics.com/en/stable/docs/tuner/tuner-swerve/index.html
 object DriveConstants {
     val driveMotor = DCMotor.getKrakenX60Foc(1)!!
-//    val steerMotor = DCMotor.getKrakenX44(1)!!
+    val steerMotor = DCMotor.getKrakenX44(1)!!
 
     private val driveGearRatio = if (Robot.isCompBot) 7.125 else 6.746031746031747
     private val steerGearRatio = if (Robot.isCompBot) 18.75 else 21.428571428571427

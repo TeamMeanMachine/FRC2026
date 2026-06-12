@@ -6,12 +6,12 @@ import frc.team2471.frc2026.FieldManager.rotateAroundField
 import frc.team2471.frc2026.Robot.Companion.isAutonomous
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import org.littletonrobotics.junction.AutoLogOutput
-import org.littletonrobotics.junction.LogFileUtil
-import org.littletonrobotics.junction.Logger
-import org.littletonrobotics.junction.networktables.NT4Publisher
-import org.littletonrobotics.junction.wpilog.WPILOGReader
-import org.littletonrobotics.junction.wpilog.WPILOGWriter
+//import org.littletonrobotics.junction.AutoLogOutput
+//import org.littletonrobotics.junction.LogFileUtil
+//import org.littletonrobotics.junction.Logger
+//import org.littletonrobotics.junction.networktables.NT4Publisher
+//import org.littletonrobotics.junction.wpilog.WPILOGReader
+//import org.littletonrobotics.junction.wpilog.WPILOGWriter
 import org.team2471.frc.lib.commands.onCancel
 import org.team2471.frc.lib.commands.periodic
 import org.team2471.frc.lib.commands.use
@@ -89,7 +89,7 @@ object FieldManager {
 //
 //    val trenchPositions: Array<Translation2d> = arrayOf(lowerBlueTrenchPosition, lowerRedTrenchPosition, upperRedTrenchPosition, upperBlueTrenchPosition)
 
-    @get:AutoLogOutput(key = "FieldManager/In Trench Area")
+//    @get:AutoLogOutput(key = "FieldManager/In Trench Area") TODO
     val inTrenchArea: Boolean
         get () {
 //            for (pose in trenchPositions) {
@@ -106,7 +106,7 @@ object FieldManager {
             return false
         }
 
-    @get:AutoLogOutput(key = "FieldManager/In Tower Area")
+//    @get:AutoLogOutput(key = "FieldManager/In Tower Area") TODO
     val inTowerArea: Boolean
         get() {
             val yRelativeToTower: Distance = (Drive.localizer.pose.y.meters - (fieldCenter.y.meters + 11.46.inches * xRelativeToCenter.asInches.sign))
@@ -118,16 +118,16 @@ object FieldManager {
             return false
         }
 
-    @get:AutoLogOutput(key = "FieldManager/In Opposing Alliance Zone")
+//    @get:AutoLogOutput(key = "FieldManager/In Opposing Alliance Zone") TODO
     val inOpposingAllianceZone: Boolean
         get () = false/*xRelativeToCenter.absoluteValue() > distanceFromMiddleToScore
                 && if (isRedAlliance) xRelativeToCenter < 0.0.meters else xRelativeToCenter > 0.0.meters*/
 
-    @get:AutoLogOutput(key = "FieldManager/In No Pass Area")
+//    @get:AutoLogOutput(key = "FieldManager/In No Pass Area") TODO
     val inOpposingNoPassArea: Boolean
         get() = if (!Drive.useAprilTags) false else inOpposingAllianceZone && yRelativeToCenter.absoluteValue() < 3.0.feet
 
-    @get:AutoLogOutput(key = "FieldManager/In No Shoot Area")
+//    @get:AutoLogOutput(key = "FieldManager/In No Shoot Area") TODO
     val inNoShootArea: Boolean
         get() = ((autoHoodRetraction && Drive.useAprilTags) && (inTowerArea || inTrenchArea)) || inOpposingNoPassArea
 
@@ -143,7 +143,7 @@ object FieldManager {
 //    val redGoalPose = (allAprilTags[3].pose.toPose2d().translation + allAprilTags[9].pose.toPose2d().translation)/2.0
 //    val blueGoalPose = (allAprilTags[0].pose.toPose2d().translation + allAprilTags[0].pose.toPose2d().translation)/2.0
 
-    @get:AutoLogOutput(key = "FieldManager/Goal Pose")
+//    @get:AutoLogOutput(key = "FieldManager/Goal Pose") TODO
     val goalPose: Translation2d
         get () = Translation2d()//if (isRedAlliance) redGoalPose else blueGoalPose //TODO: FIX
 
@@ -171,7 +171,7 @@ object FieldManager {
 //    val distanceFromMiddleToScore = fieldCenter.x.feet - lowerRedTrenchPosition.x.feet - 5.0.feet
 
 
-    @get:AutoLogOutput(key = "FieldManager/In Scoring Zone")
+//    @get:AutoLogOutput(key = "FieldManager/In Scoring Zone") TODO
     val inScoringZone: Boolean
         get () = true/*xRelativeToCenter.absoluteValue() > distanceFromMiddleToScore
                 && if (isRedAlliance) xRelativeToCenter > 0.0.meters else xRelativeToCenter < 0.0.meters*/
@@ -179,15 +179,15 @@ object FieldManager {
     const val HUB_PROCESSING_TIME = 1.0
     const val RAMP_TIME = 3.0
 
-    @get:AutoLogOutput(key = "FieldManager/rawGameData")
+//    @get:AutoLogOutput(key = "FieldManager/rawGameData") TODO
     val rawGameData: String
         get() = MatchState.getGameData().getOrNull() ?: ""
 
-    @get:AutoLogOutput(key = "FieldManager/gameData")
+//    @get:AutoLogOutput(key = "FieldManager/gameData") TODO
     val gameData: String
         get() = null/*overrideAutoWinner.get()*/ ?: rawGameData
 
-    @get:AutoLogOutput(key = "FieldManager/redWonAuto")
+//    @get:AutoLogOutput(key = "FieldManager/redWonAuto") TODO
     val redWonAuto: Boolean
         get() = when (gameData) {
             "R" -> true
@@ -200,13 +200,13 @@ object FieldManager {
     val blueWonAuto: Boolean
         get () = !redWonAuto
 
-    @get:AutoLogOutput(key = "FieldManager/weWonAuto")
+//    @get:AutoLogOutput(key = "FieldManager/weWonAuto") TODO
     val weWonAuto: Boolean
         get () = redWonAuto == isRedAlliance
 
     val weWonAutoEntry = table.getEntry("We Won Auto")
 
-    @get:AutoLogOutput(key = "FieldManager/matchTime")
+//    @get:AutoLogOutput(key = "FieldManager/matchTime") TODO
     val matchTime: Double
         get() = MatchState.getMatchTime()
 
@@ -228,7 +228,7 @@ object FieldManager {
     val shouldShootEndTimes = arrayOf(105.0, 80.0, 55.0, 30.0)
 
     // this is offset by shoot time. for shooting /O\
-    @get:AutoLogOutput(key = "FieldManager/shouldShoot")
+//    @get:AutoLogOutput(key = "FieldManager/shouldShoot") TODO
     val shouldShoot: Boolean
         get () {
             if (!doShiftTiming) {
@@ -244,7 +244,7 @@ object FieldManager {
             }
         }
 
-    @get:AutoLogOutput(key = "FieldManager/shouldRamp")
+//    @get:AutoLogOutput(key = "FieldManager/shouldRamp") TODO
     val shouldRamp: Boolean
         get () {
             if (!doShiftTiming || matchTime < 0.0) {
@@ -260,7 +260,7 @@ object FieldManager {
             }
         }
 
-    @get:AutoLogOutput(key = "FieldManager/hubIsActive")
+//    @get:AutoLogOutput(key = "FieldManager/hubIsActive") TODO
     val hubIsActive: Boolean
         get () {
             if (matchTime !in 30.0..130.0 || isAutonomous) {
@@ -277,8 +277,8 @@ object FieldManager {
 
         when (robotType) {
             RobotType.REAL -> { // Running on a real robot, log to a USB stick ("/U/logs")
-                Logger.addDataReceiver(WPILOGWriter())
-                Logger.addDataReceiver(NT4Publisher())
+//                Logger.addDataReceiver(WPILOGWriter()) TODO
+//                Logger.addDataReceiver(NT4Publisher())
             }
             RobotType.SIM -> {
 //                Logger.addDataReceiver(NT4Publisher())
@@ -286,9 +286,9 @@ object FieldManager {
             } // Running a physics simulator, log to NT
             RobotType.REPLAY -> { // Replaying a log, set up replay source
 //                Robot.setUseTiming(true) // false - simulate as fast as possible, true - simulate in real time (particle filter needs true)
-                val logPath = LogFileUtil.findReplayLog()
-                Logger.setReplaySource(WPILOGReader(logPath))
-                Logger.addDataReceiver(WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim")))
+//                val logPath = LogFileUtil.findReplayLog() TODO
+//                Logger.setReplaySource(WPILOGReader(logPath))
+//                Logger.addDataReceiver(WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim")))
             }
         }
 

@@ -3,7 +3,7 @@ package frc.team2471.frc2026
 import com.ctre.phoenix6.swerve.utility.PhoenixPIDController
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import org.littletonrobotics.junction.Logger
+//import org.littletonrobotics.junction.Logger
 import org.littletonrobotics.junction.MeanLogger
 import org.team2471.frc.lib.commands.onCancel
 import org.team2471.frc.lib.commands.periodic
@@ -107,7 +107,7 @@ object Drive: SwerveDriveSubsystem(DriveConstants.drivetrainConstants, *DriveCon
     val localizer: PoseLocalizer = PoseLocalizer(Fiducial.constructFiducialList(FieldManager.allAprilTags), cameras)
 
     // Drive Feedback controllers
-    override val autoPilot = createAPObject(Double.POSITIVE_INFINITY.inchesPerSecond, 100.0.metersPerSecondPerSecond, 2.0.metersPerSecondPerSecond.perSecond, 0.5.inches, 1.0.degrees)
+//    override val autoPilot = createAPObject(Double.POSITIVE_INFINITY.inchesPerSecond, 100.0.metersPerSecondPerSecond, 2.0.metersPerSecondPerSecond.perSecond, 0.5.inches, 1.0.degrees) TODO
     val fastAutoPilot = createAPObject(Double.POSITIVE_INFINITY.inchesPerSecond, 100.0.metersPerSecondPerSecond, 5.0.metersPerSecondPerSecond.perSecond, 0.5.inches, 1.0.degrees)
     val slowAutoPilot = createAPObject(Double.POSITIVE_INFINITY.inchesPerSecond, 100.0.metersPerSecondPerSecond, 0.5.metersPerSecondPerSecond.perSecond, 0.25.inches, 1.0.degrees)
 
@@ -208,7 +208,7 @@ object Drive: SwerveDriveSubsystem(DriveConstants.drivetrainConstants, *DriveCon
         if (cameras.isNotEmpty()) {
             cameras.forEach {
                 table.getEntry("Cameras/${it.cameraName} isConnected").setBoolean(it.isConnected)
-                Logger.recordOutput("Drive/Cameras/${it.cameraName} isConnected", it.isConnected)
+//                Logger.recordOutput("Drive/Cameras/${it.cameraName} isConnected", it.isConnected) TODO
             }
         }
         LoopLogger.record("Cameras isConnected publish")

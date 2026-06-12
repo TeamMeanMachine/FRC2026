@@ -3,14 +3,14 @@ import groovy.json.JsonSlurper
 
 plugins {
     id "java"
+    id "idea"
     id "org.wpilib.GradleRIO" version "2027.0.0-alpha-6"
     id 'org.jetbrains.kotlin.jvm' version '2.3.21'
-//    id "org.jetbrains.kotlin.kapt" version "2.3.21"
+    id "org.jetbrains.kotlin.kapt" version "2.3.21"
 }
-
-
-java {
-}
+// Force the global WPILib provider to load vendors out of meanlib,
+// must still have the url in 'repositories' though
+wpi.vendor.loadFrom(project(":meanlib"))
 
 def ROBOT_MAIN_CLASS = "frc.team2471.frc2026.Main"
 
@@ -46,20 +46,10 @@ deploy {
     }
 }
 
-def deployArtifact = deploy.targets.systemcore.artifacts.wpilibJava
-
-// Set to true to use debug for JNI.
-wpi.java.debugJni = false
-
-// Defining my dependencies. In this case, WPILib (+ friends), and vendor libraries.
-// Also defines JUnit 5.
 dependencies {
     implementation(project(":meanlib"))
 
-
     annotationProcessor wpi.java.deps.wpilibAnnotations()
-    implementation wpi.java.deps.wpilib()
-    implementation wpi.java.vendor.java()
 
     systemcoreDebug wpi.java.deps.wpilibJniDebug(wpi.platforms.systemcore)
     systemcoreDebug wpi.java.vendor.jniDebug(wpi.platforms.systemcore)
@@ -69,35 +59,35 @@ dependencies {
 
     nativeDebug wpi.java.deps.wpilibJniDebug(wpi.platforms.desktop)
     nativeDebug wpi.java.vendor.jniDebug(wpi.platforms.desktop)
+
+    simulationRelease wpi.java.deps.wpilibJniRelease(wpi.platforms.desktop)
+    simulationRelease wpi.java.vendor.jniRelease(wpi.platforms.desktop)
+    simulationRelease wpi.sim.enableRelease()
+
     simulationDebug wpi.sim.enableDebug()
 
     nativeRelease wpi.java.deps.wpilibJniRelease(wpi.platforms.desktop)
     nativeRelease wpi.java.vendor.jniRelease(wpi.platforms.desktop)
-    simulationRelease wpi.sim.enableRelease()
-
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0"
-
-    testImplementation "org.junit.jupiter:junit-jupiter:5.10.1"
-    testRuntimeOnly "org.junit.platform:junit-platform-launcher"
-
-    implementation group: 'org.apache.commons', name: 'commons-math3', version: '3.6.1'
-
-    implementation "org.jetbrains.kotlin:kotlin-reflect"
-    implementation "org.jetbrains.kotlin:kotlin-stdlib"
-
-    def akitJson = new JsonSlurper().parseText(new File(projectDir.getAbsolutePath() + "/vendordeps/AdvantageKit.json").text)
-//    kapt "org.littletonrobotics.akit:akit-autolog:$akitJson.version"
-//    kapt "edu.wpi.first.epilogue:epilogue-processor-java:2026.2.2"
-}
-
-test {
-    useJUnitPlatform()
-    systemProperty "junit.jupiter.extensions.autodetection.enabled", "true"
 }
 
 // Simulation configuration (e.g. environment variables).
 wpi.sim.addGui().defaultEnabled = true
 wpi.sim.addDriverstation()
+
+def deployArtifact = deploy.targets.systemcore.artifacts.wpilibJava
+// Configure jar and deploy tasks
+deployArtifact.jarTask = jar
+wpi.java.configureExecutableTasks(jar)
+wpi.java.configureTestTasks(test)
+
+// Set to true to use debug for JNI.
+wpi.java.debugJni = false
+
+
+test {
+    useJUnitPlatform()
+    systemProperty "junit.jupiter.extensions.autodetection.enabled", "true"
+}
 
 // Setting up my Jar File. In this case, adding all libraries into the main jar ('fat jar')
 // in order to make them all available at runtime. Also adding the manifest so WPILib
@@ -110,24 +100,22 @@ jar {
     duplicatesStrategy = DuplicatesStrategy.INCLUDE
 }
 
-// Configure jar and deploy tasks
-deployArtifact.jarTask = jar
-wpi.java.configureExecutableTasks(jar)
-wpi.java.configureTestTasks(test)
+// Automatically download library documentation from libraries
+idea {
+    module {
+        downloadJavadoc = true
+        downloadSources = true
+    }
+}
+
+repositories {
+    mavenCentral()
+}
 
 // Configure string concat to always inline compile
 tasks.withType(JavaCompile) {
     options.compilerArgs.add '-XDstringConcat=inline'
 }
-
-tasks.withType(JavaExec).configureEach {
-    jvmArgs += [
-            "--add-opens=java.base/jdk.internal.vm=ALL-UNNAMED",
-            "--enable-native-access=ALL-UNNAMED",
-            "--add-opens=java.base/java.lang=ALL-UNNAMED"
-    ]
-}
-
 
 tasks.register('printPassCurves', JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
@@ -136,13 +124,6 @@ tasks.register('printPassCurves', JavaExec) {
     systemProperty 'java.library.path', "${projectDir}/build/jni/release"
 }
 
-repositories {
-    mavenCentral()
-    maven {
-        name = "WPILib Development"
-        url = uri("https://frcmaven.wpi.edu/artifactory/development-2027/")
-    }
-}
 kotlin {
     jvmToolchain(25)
 }

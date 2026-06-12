@@ -5,7 +5,7 @@ import frc.team2471.frc2026.AimUtils.FUEL_DRAG_COEFFICIENT
 import frc.team2471.frc2026.AimUtils.FUEL_FRONTAL_AREA
 import frc.team2471.frc2026.AimUtils.FUEL_MASS
 import frc.team2471.frc2026.AimUtils.G
-import org.littletonrobotics.junction.Logger
+//import org.littletonrobotics.junction.Logger
 import org.littletonrobotics.junction.MeanLogger
 import org.team2471.frc.lib.units.asKilograms
 import org.wpilib.math.geometry.Translation3d

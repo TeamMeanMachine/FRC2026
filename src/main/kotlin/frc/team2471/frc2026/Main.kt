@@ -7,15 +7,15 @@ import com.ctre.phoenix6.SignalLogger
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import org.littletonrobotics.junction.LogFileUtil
-import org.littletonrobotics.junction.Logger
+//import org.littletonrobotics.junction.LogFileUtil
+//import org.littletonrobotics.junction.Logger
 import org.littletonrobotics.junction.MeanLogger
 import org.littletonrobotics.junction.networktables.MeanNT4Publisher
-import org.littletonrobotics.junction.wpilog.WPILOGReader
-import org.littletonrobotics.junction.wpilog.WPILOGWriter
+//import org.littletonrobotics.junction.wpilog.WPILOGReader
+//import org.littletonrobotics.junction.wpilog.WPILOGWriter
 import org.team2471.frc.lib.control.LoopLogger
 import org.team2471.frc.lib.ctre.loggedTalonFX.MasterMotor
-import org.team2471.frc.lib.logging.NT4NonFMSPublisher
+//import org.team2471.frc.lib.logging.NT4NonFMSPublisher
 import org.team2471.frc.lib.units.asFeet
 import org.team2471.frc.lib.util.PowerTracker
 import org.team2471.frc.lib.util.RobotType
@@ -49,8 +49,8 @@ class Robot : OpModeRobot(0.01) {
         // Set up data receivers & replay source
         when (robotType) {
             RobotType.REAL -> { // Running on a real robot, log to a USB stick ("/U/logs")
-                Logger.addDataReceiver(WPILOGWriter())
-                Logger.addDataReceiver(NT4NonFMSPublisher()) // Only log to NT if FMS is not connected
+//                Logger.addDataReceiver(WPILOGWriter()) TODO
+//                Logger.addDataReceiver(NT4NonFMSPublisher()) // Only log to NT if FMS is not connected
             }
             RobotType.SIM -> {
                 MeanLogger.addDataReceiver(MeanNT4Publisher())
@@ -58,9 +58,9 @@ class Robot : OpModeRobot(0.01) {
             } // Running a physics simulator, log to NT
             RobotType.REPLAY -> { // Replaying a log, set up replay source
 //                setUseTiming(true) // false - simulate as fast as possible, true - simulate in real time (particle filter needs true)
-                val logPath = LogFileUtil.findReplayLog()
-                Logger.setReplaySource(WPILOGReader(logPath))
-                Logger.addDataReceiver(WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim")))
+//                val logPath = LogFileUtil.findReplayLog() TODO
+//                Logger.setReplaySource(WPILOGReader(logPath))
+//                Logger.addDataReceiver(WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim")))
             }
         }
 

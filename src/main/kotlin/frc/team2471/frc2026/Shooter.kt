@@ -7,7 +7,7 @@ package frc.team2471.frc2026
 import frc.team2471.frc2026.AimUtils.shooterEfficiency
 import frc.team2471.frc2026.AimUtils.toExitVelocity
 import frc.team2471.frc2026.Robot.Companion.isCompBot
-import org.littletonrobotics.junction.AutoLogOutput
+//import org.littletonrobotics.junction.AutoLogOutput
 import org.team2471.frc.lib.commands.MechanismBase
 import org.team2471.frc.lib.commands.onCancel
 import org.team2471.frc.lib.commands.parallel
@@ -184,7 +184,7 @@ object Shooter: MechanismBase("Shooter") {
     var SHOOTER_CUSTOM_I = 0.0
     val shooterI = 0.0
 
-    @get:AutoLogOutput(key = "Shooter/Shooter Angular Velocity Setpoint")
+//    @get:AutoLogOutput(key = "Shooter/Shooter Angular Velocity Setpoint") TODO
     var shooterVelocitySetpoint: AngularVelocity = 0.0.rotationsPerSecond
         set(value) {
             field = value.coerceAtLeast(0.0.rotationsPerSecond)// / SHOOTER_GEAR_RATIO
@@ -199,19 +199,19 @@ object Shooter: MechanismBase("Shooter") {
             }
         }
 
-    @get:AutoLogOutput(key = "Shooter/Shooter Motor closedLoopReference")
+//    @get:AutoLogOutput(key = "Shooter/Shooter Motor closedLoopReference") TODO
     val shooterMotorReference
         get() = 0.0//shooterMotor.closedLoopReference.valueAsDouble // TODO: PHOENIX 6 2027
 
-    @get:AutoLogOutput(key = "Shooter/ShooterCurve Angular Velocity Setpoint")
+//    @get:AutoLogOutput(key = "Shooter/ShooterCurve Angular Velocity Setpoint") TODO
     val shooterCurveVelocitySetpoint: AngularVelocity
         get() = shooterVelocitySetpoint * SHOOTER_GEAR_RATIO * shooterEfficiency
 
-    @get:AutoLogOutput(key = "Shooter/Hood Feedforward")
+//    @get:AutoLogOutput(key = "Shooter/Hood Feedforward") TODO
     val hoodFeedforward: Double get() = 0.2//hoodAngle.cos() * 0.2
 
     // ball trajectory angle
-    @get:AutoLogOutput(key = "Shooter/Hood Angle Setpoint")
+//    @get:AutoLogOutput(key = "Shooter/Hood Angle Setpoint") TODO
     var hoodAngleSetpoint: Angle = hoodAngle
         set(value) {
             if (isCompBot) {
@@ -228,27 +228,27 @@ object Shooter: MechanismBase("Shooter") {
 
         }
 
-    @get:AutoLogOutput(key = "Shooter/Hood Angle")
+//    @get:AutoLogOutput(key = "Shooter/Hood Angle") TODO
     val hoodAngle: Angle get() = 0.0.degrees//hoodMotor.position.valueAsDouble.rotations //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
 
-    @get:AutoLogOutput(key = "Shooter/Hood Encoder Angle")
+//    @get:AutoLogOutput(key = "Shooter/Hood Encoder Angle") TODO
     val hoodEncoderAngle: Angle get() = 0.0.degrees//hoodEncoder.position.value //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
 
-    @get:AutoLogOutput(key = "Shooter/Shooter Angular Velocity")
+//    @get:AutoLogOutput(key = "Shooter/Shooter Angular Velocity") TODO
     val shooterVelocity: AngularVelocity
         get() = 0.0.degreesPerSecond//shooterMotor.velocity.valueAsDouble.rotationsPerSecond //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
 
     val shooterVelocityError: AngularVelocity
         get() = shooterVelocitySetpoint - shooterVelocity
 
-    @get:AutoLogOutput(key = "Shooter/Shooter Current")
+//    @get:AutoLogOutput(key = "Shooter/Shooter Current") TODO
     val shooterCurrent: Double get() = 0.0//shooterMotor.supplyCurrent.valueAsDouble //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
-    @get:AutoLogOutput(key = "Shooter/Shooter Motor Supply Voltage")
+//    @get:AutoLogOutput(key = "Shooter/Shooter Motor Supply Voltage") TODO
     val shooterSupplyVoltage: Double get() = 0.0//shooterMotor.supplyVoltage.valueAsDouble //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
-    @get:AutoLogOutput(key = "Shooter/Shooter Motor Voltage")
+//    @get:AutoLogOutput(key = "Shooter/Shooter Motor Voltage") TODO
     val shooterMotorVoltage: Double get() = 0.0//shooterMotor.motorVoltage.valueAsDouble //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
 
-    @get:AutoLogOutput(key = "Shooter/Hood Current")
+//    @get:AutoLogOutput(key = "Shooter/Hood Current") TODO
     val hoodCurrent: Double get() = 0.0//hoodMotor.supplyCurrent.valueAsDouble //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
 
     // degrees
@@ -257,10 +257,10 @@ object Shooter: MechanismBase("Shooter") {
 
     const val BALL_ANGLE_AT_HOOD_ZERO = 90.0
 
-    @get:AutoLogOutput(key = "Shooter/Hood error distance")
+//    @get:AutoLogOutput(key = "Shooter/Hood error distance") TODO
     val hoodErrorDistance get() = 0.0//abs(AimUtils.distanceToTarget.asFeet * sin(hoodMotor.closedLoopError.valueAsDouble.radians)) // TODO: PHOENIX 6 2027
 
-    @get:AutoLogOutput(key = "Shooter/Velocity error distance")
+//    @get:AutoLogOutput(key = "Shooter/Velocity error distance") TODO
     val velocityErrorDistance get() = 0.0//abs((if (AimUtils.isAimingAtGoal) AimUtils.MEASURED_SHOT_AIRTIME * cos(hubAngleCurve.get(AimUtils.distanceToTarget.asFeet)) else AimUtils.PASS_AIRTIME * cos(floorAngleCurve.get(AimUtils.distanceToTarget.asFeet))) * shooterMotor.closedLoopError.valueAsDouble * WHEEL_DIAMETER.asMeters * Math.PI * 0.5) // TODO: PHOENIX 6 2027
 
 //    @get:AutoLogOutput(key = "Shooter/Requested voltage")
@@ -272,18 +272,18 @@ object Shooter: MechanismBase("Shooter") {
     var fuel2: MutableList<FuelSim> = mutableListOf()
 
 
-    @get:AutoLogOutput(key = "Shooter/raw ramped up")
+//    @get:AutoLogOutput(key = "Shooter/raw ramped up") TODO
     val rawRampedUp: Boolean get() = (shooterVelocity - shooterVelocitySetpoint).absoluteValue() < 2.0.rotationsPerSecond
 
     var rampedUpDebouncer = Debouncer(0.1, Debouncer.DebounceType.kFalling)
 
-    @get:AutoLogOutput(key = "Shooter/Ramped up")
+//    @get:AutoLogOutput(key = "Shooter/Ramped up") TODO
     val rampedUp: Boolean get() = rampedUpDebouncer.calculate(rawRampedUp)
 
-    @get:AutoLogOutput(key = "Shooter/Ramped up")
+//    @get:AutoLogOutput(key = "Shooter/Ramped up") TODO
     val rampedUpPassing: Boolean get() = (shooterVelocity - shooterVelocitySetpoint).absoluteValue() < 15.0.rotationsPerSecond
 
-    @get:AutoLogOutput(key = "Shooter/isShooting")
+//    @get:AutoLogOutput(key = "Shooter/isShooting") TODO
     var isShooting = false
     var i = 0
 
