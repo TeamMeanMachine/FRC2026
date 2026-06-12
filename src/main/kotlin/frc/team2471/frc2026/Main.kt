@@ -13,6 +13,8 @@ import org.littletonrobotics.junction.MeanLogger
 import org.littletonrobotics.junction.networktables.MeanNT4Publisher
 //import org.littletonrobotics.junction.wpilog.WPILOGReader
 //import org.littletonrobotics.junction.wpilog.WPILOGWriter
+import org.team2471.frc.lib.autonomous.TestOpMode
+import org.team2471.frc.lib.autonomous.TestRoutine
 import org.team2471.frc.lib.control.LoopLogger
 import org.team2471.frc.lib.ctre.loggedTalonFX.MasterMotor
 //import org.team2471.frc.lib.logging.NT4NonFMSPublisher
@@ -92,21 +94,20 @@ class Robot : OpModeRobot(0.01) {
 
         lateinit var instance: Robot
 
-        @get:JvmName("RobotIsEnabled")
         val isEnabled get() = RobotState.isEnabled()
-        @get:JvmName("RobotIsAutonomous")
-        val isAutonomous get() = RobotState.isAutonomous()
-        @get:JvmName("RobotIsDisabled")
         val isDisabled get() = RobotState.isDisabled()
-        @get:JvmName("RobotIsAutonomousEnabled")
+        val isTeleop get() = RobotState.isTeleop()
+        val isTeleopEnabled get() = RobotState.isTeleopEnabled()
+        val isAutonomous get() = RobotState.isAutonomous()
         val isAutonomousEnabled get() = RobotState.isAutonomousEnabled()
+        val isUtility get() = RobotState.isUtility()
+        val isUtilityEnabled get() = RobotState.isUtilityEnabled()
+        val isDSAttached get() = RobotState.isDSAttached()
+        val isFMSAttached get() = RobotState.isFMSAttached()
+        val isEStopped get() = RobotState.isEStopped()
 
         var beforeFirstEnable = true
             private set
-        var beforeFirstEnableAsync = true
-            private set
-
-        private var wasDisabled = true
 
         // Subsystems:
         // MUST define an individual variable for all subsystems inside this class or else @AutoLogOutput will not work -2025
@@ -121,6 +122,19 @@ class Robot : OpModeRobot(0.01) {
 
         var allSubsystems = arrayOf<Mechanism>(drive, intake, shooter, turret, spindexer)
 
+        /**
+         * Disables all defaults for all subsystems, except for the [exceptions] provided.
+         *
+         * Designed to be called as an init function of a [TestRoutine]/[TestOpMode].
+         *
+         * If this function is called inside an init of a TestOpMode/Routine, it will disable all default commands only while the OpMode is selected,
+         * afterward it will re-enable them. (This "scoping" feature is a part of Commandsv3/OpModes and is documented in wpilib docs)
+         */
+        fun disableAllDefaultCommands(vararg exceptions: Mechanism) {
+            allSubsystems.filterNot { exceptions.contains(it) }.forEach {
+                it.defaultCommand = it.idle()
+            }
+        }
     }
 
     /** This function is called periodically during all modes.  */
@@ -128,16 +142,6 @@ class Robot : OpModeRobot(0.01) {
         MeanLogger.periodicBeforeUser()
         LoopLogger.reset()
         LoopLogger.record("after LL reset")
-
-        if (isEnabled) {
-            if (wasDisabled) {
-                beforeFirstEnable = false
-                wasDisabled = false
-            }
-        } else {
-            wasDisabled = true
-        }
-
 
         LoopLogger.record("b4 Scheduler")
 
@@ -170,11 +174,15 @@ class Robot : OpModeRobot(0.01) {
         MeanLogger.periodicAfterUser(0.1.toLong(), 0.1.toLong())
     }
 
-
-
     /** This function is called once when the robot is disabled.  */
     override fun disabledInit() {
         Drive.coastMode()
+        beforeFirstEnable = false
+    }
+
+    /** Function called when the robot is disabled. Similar to enableInit */
+    override fun disabledExit() {
+        println("Robot disabled")
     }
 
     /** This function is called periodically when disabled.  */
@@ -182,6 +190,11 @@ class Robot : OpModeRobot(0.01) {
 
     /** This function is called once when the robot is first started up in sim.  */
     override fun simulationInit() {}
+
+    /** This function is called when the driver station connects.  */
+    override fun driverStationConnected() {
+        println("DS connected yay! ฅ^•ﻌ•^ฅ")
+    }
 
     /** This function is called periodically whilst in simulation.  */
     @OptIn(DelicateCoroutinesApi::class)
