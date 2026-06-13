@@ -92,7 +92,7 @@ object AimUtils {
         }
 
     val staticShotPos: Translation2d
-        get() = Translation2d() /*if (Drive.heading.measure > 0.0.degrees) { //TODO: FIX
+        get() = if (Drive.heading.measure > 0.0.degrees) {
                 if (isRedAlliance) {
                     FieldManager.upperRedStaticShotPosition
                 } else {
@@ -104,7 +104,7 @@ object AimUtils {
                 } else {
                     FieldManager.lowerBlueStaticShotPosition
                 }
-            }*/
+            }
 
     // Calculates how fast the shooter should spin to make a shot.
     fun getShooterRPS(): AngularVelocity {

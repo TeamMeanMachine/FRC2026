@@ -12,6 +12,8 @@ import org.team2471.frc.lib.control.CurrentLimits
 import org.team2471.frc.lib.control.LoopLogger
 import org.team2471.frc.lib.control.rightStickButton
 import org.team2471.frc.lib.ctre.PhoenixUtil
+import org.team2471.frc.lib.ctre.currentLimits
+import org.team2471.frc.lib.ctre.modifyConfiguration
 import org.team2471.frc.lib.localization.PoseLocalizer
 import org.team2471.frc.lib.math.cube
 import org.team2471.frc.lib.math.square
@@ -26,7 +28,6 @@ import org.team2471.frc.lib.units.metersPerSecondPerSecond
 import org.team2471.frc.lib.units.perSecond
 import org.team2471.frc.lib.units.radians
 import org.team2471.frc.lib.units.unWrap
-import org.team2471.frc.lib.util.PowerTracker
 import org.team2471.frc.lib.util.demoSpeed
 import org.team2471.frc.lib.util.isBlueAlliance
 import org.team2471.frc.lib.util.isSim
@@ -65,7 +66,7 @@ object Drive: SwerveDriveSubsystem(DriveConstants.drivetrainConstants, *DriveCon
 
     // To reset position use this, also add other pose sources that need reset here.
     override var pose: Pose2d
-        get() = Pose2d()//savedState.Pose //TODO: UNCOMMENT WHEN PHOENIX 6 2027 RELEASES
+        get() = savedState.Pose
         set(value) {
 //            tempQuestPose = Pose3d(value).transformBy(robotToQuestTransformMeters)
             resetPose(value)
@@ -141,22 +142,6 @@ object Drive: SwerveDriveSubsystem(DriveConstants.drivetrainConstants, *DriveCon
         localizer.trackAllTags()
         localizer.disableSingleTagCalculation() // for loop times and we dont use it in 2026
 
-        if (!isSim) {
-            PowerTracker.addMotors("Drive", {
-                var tempTotalDriveCurrent = 0.0
-                var tempTotalSteerCurrent = 0.0
-//                io.modules.forEach { //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
-//                    tempTotalDriveCurrent += it.driveMotor.supplyCurrent.valueAsDouble //TODO: UNCOMMENT WHEN PHOENIX 6 2027 RELEASES
-//                    tempTotalSteerCurrent += it.steerMotor.supplyCurrent.valueAsDouble
-//                }
-                totalSteerCurrent = tempTotalSteerCurrent
-                totalDriveCurrent = tempTotalDriveCurrent
-                tempTotalDriveCurrent
-            })
-            PowerTracker.addMotors("Steer", { totalSteerCurrent })
-        }
-
-
         finalInitialization()
     }
 
@@ -197,7 +182,7 @@ object Drive: SwerveDriveSubsystem(DriveConstants.drivetrainConstants, *DriveCon
         localizer.updateWithLatestPoseEstimate()
         LoopLogger.record("Drive updateWithLatestPose")
         // Create an odom measurement with a timestamp converted from phoenix time to fpga time.
-        val poseMeasurement = PoseLocalizer.OdometryMeasurement(pose, PhoenixUtil.currentToFpgaTime(stateTimestamp))
+        val poseMeasurement = PoseLocalizer.OdometryMeasurement(pose, stateTimestamp)
         // Publish the latest camera data to NT and also update pose from swerve odometry measurements.
         localizer.update(poseMeasurement, cameras.map { it.latestMeasurement }, chassisVelocities)
         LoopLogger.record("Drive localizer")
@@ -208,7 +193,7 @@ object Drive: SwerveDriveSubsystem(DriveConstants.drivetrainConstants, *DriveCon
         if (cameras.isNotEmpty()) {
             cameras.forEach {
                 table.getEntry("Cameras/${it.cameraName} isConnected").setBoolean(it.isConnected)
-//                Logger.recordOutput("Drive/Cameras/${it.cameraName} isConnected", it.isConnected) TODO
+//                Logger.recordOutput("Drive/Cameras/${it.cameraName} isConnected", it.isConnected) TODO AKIT
             }
         }
         LoopLogger.record("Cameras isConnected publish")
@@ -234,15 +219,15 @@ object Drive: SwerveDriveSubsystem(DriveConstants.drivetrainConstants, *DriveCon
      */
     fun setDriveCurrentLimits(currentLimits: CurrentLimits) {
         GlobalScope.launch {
-//            io.modules.forEach { //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
-//                it.driveMotor.modifyConfiguration {
-//                    currentLimits(
-//                        currentLimits.continuousLimit,
-//                        currentLimits.peakLimit,
-//                        currentLimits.peakDuration
-//                    )
-//                }
-//            }
+            io.modules.forEach {
+                it.driveMotor.modifyConfiguration {
+                    currentLimits(
+                        currentLimits.continuousLimit,
+                        currentLimits.peakLimit,
+                        currentLimits.peakDuration
+                    )
+                }
+            }
         }
     }
 

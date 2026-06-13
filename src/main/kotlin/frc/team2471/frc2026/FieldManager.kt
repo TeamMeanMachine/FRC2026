@@ -26,20 +26,24 @@ import org.team2471.frc.lib.util.robotType
 import org.wpilib.driverstation.MatchState
 import org.wpilib.driverstation.RobotState
 import org.wpilib.math.geometry.Pose2d
+import org.wpilib.math.geometry.Pose3d
 import org.wpilib.math.geometry.Translation2d
 import org.wpilib.networktables.NetworkTableInstance
+import org.wpilib.system.Filesystem
 import org.wpilib.units.measure.Distance
 import org.wpilib.vision.apriltag.AprilTag
 import org.wpilib.vision.apriltag.AprilTagFieldLayout
+import org.wpilib.vision.apriltag.AprilTagFields
 import kotlin.jvm.optionals.getOrNull
+import kotlin.math.absoluteValue
 import kotlin.math.floor
 import kotlin.math.sign
 
 object FieldManager {
     private val table = NetworkTableInstance.getDefault().getTable("FieldManager")
 
-    val aprilTagFieldLayout: AprilTagFieldLayout = AprilTagFieldLayout(mutableListOf<AprilTag>(), 10.0, 10.0)//AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField) //AprilTagFieldLayout(Filesystem.getDeployDirectory().path + "/2026Field.json") //TODO: FIX FOR 2027
-    val allAprilTags: List<AprilTag> = listOf()//aprilTagFieldLayout.tags List<AprilTag>
+    val aprilTagFieldLayout: AprilTagFieldLayout = AprilTagFieldLayout(List<AprilTag>(31) { id -> AprilTag(id, Pose3d())}, 10.0, 10.0)//AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField) //AprilTagFieldLayout(Filesystem.getDeployDirectory().path + "/2026Field.json") //TODO: FIX FOR 2027
+    val allAprilTags: List<AprilTag> = aprilTagFieldLayout.tags
 
     // x
     val fieldWidth = aprilTagFieldLayout.fieldWidth.meters
@@ -77,32 +81,32 @@ object FieldManager {
 
 
 
-//    val lowerBlueTrenchPosition = ((allAprilTags[0].pose.toPose2d().translation + allAprilTags[0].pose.toPose2d().translation)/2.0)
-//    val upperBlueTrenchPosition = ((allAprilTags[16].pose.toPose2d().translation + allAprilTags[0].pose.toPose2d().translation)/2.0)
-//    val lowerRedTrenchPosition = ((allAprilTags[0].pose.toPose2d().translation + allAprilTags[11].pose.toPose2d().translation)/2.0)
-//    val upperRedTrenchPosition = ((allAprilTags[5].pose.toPose2d().translation + allAprilTags[6].pose.toPose2d().translation)/2.0)
-//
-//    val lowerBlueStaticShotPosition = lowerBlueTrenchPosition + Translation2d((-24.0).inches.asMeters, (-15.0).inches.asMeters)
-//    val upperBlueStaticShotPosition = upperBlueTrenchPosition + Translation2d((-24.0).inches.asMeters, (15.0).inches.asMeters)
-//    val lowerRedStaticShotPosition = lowerRedTrenchPosition + Translation2d((24.0).inches.asMeters, (-15.0).inches.asMeters)
-//    val upperRedStaticShotPosition = upperRedTrenchPosition + Translation2d((24.0).inches.asMeters, (15.0).inches.asMeters)
-//
-//    val trenchPositions: Array<Translation2d> = arrayOf(lowerBlueTrenchPosition, lowerRedTrenchPosition, upperRedTrenchPosition, upperBlueTrenchPosition)
+    val lowerBlueTrenchPosition = ((allAprilTags[0].pose.toPose2d().translation + allAprilTags[0].pose.toPose2d().translation)/2.0)
+    val upperBlueTrenchPosition = ((allAprilTags[16].pose.toPose2d().translation + allAprilTags[0].pose.toPose2d().translation)/2.0)
+    val lowerRedTrenchPosition = ((allAprilTags[0].pose.toPose2d().translation + allAprilTags[11].pose.toPose2d().translation)/2.0)
+    val upperRedTrenchPosition = ((allAprilTags[5].pose.toPose2d().translation + allAprilTags[6].pose.toPose2d().translation)/2.0)
+
+    val lowerBlueStaticShotPosition = lowerBlueTrenchPosition + Translation2d((-24.0).inches.asMeters, (-15.0).inches.asMeters)
+    val upperBlueStaticShotPosition = upperBlueTrenchPosition + Translation2d((-24.0).inches.asMeters, (15.0).inches.asMeters)
+    val lowerRedStaticShotPosition = lowerRedTrenchPosition + Translation2d((24.0).inches.asMeters, (-15.0).inches.asMeters)
+    val upperRedStaticShotPosition = upperRedTrenchPosition + Translation2d((24.0).inches.asMeters, (15.0).inches.asMeters)
+
+    val trenchPositions: Array<Translation2d> = arrayOf(lowerBlueTrenchPosition, lowerRedTrenchPosition, upperRedTrenchPosition, upperBlueTrenchPosition)
 
 //    @get:AutoLogOutput(key = "FieldManager/In Trench Area") TODO
     val inTrenchArea: Boolean
         get () {
-//            for (pose in trenchPositions) {
-//                val relativePose = pose - Drive.localizer.pose.translation
-//                if (relativePose.y.absoluteValue.meters < (trenchAreaWidth/2.0)) {
-//                    val predictedPose = Drive.localizer.pose.translation + Drive.velocity * Shooter.HOOD_DOWN_TIME
-//                    MeanLogger.recordOutput("Drive/predictedPose", predictedPose)
-//                    val predictedRelativePose = pose - predictedPose
-//                    if ((predictedRelativePose.x.sign != relativePose.x.sign) || (relativePose.x.absoluteValue.meters < (trenchAreaLength/2.0))) {
-//                        return true
-//                    }
-//                }
-//            }
+            for (pose in trenchPositions) {
+                val relativePose = pose - Drive.localizer.pose.translation
+                if (relativePose.y.absoluteValue.meters < (trenchAreaWidth/2.0)) {
+                    val predictedPose = Drive.localizer.pose.translation + Drive.velocity * Shooter.HOOD_DOWN_TIME
+//                    MeanLogger.recordOutput("Drive/predictedPose", predictedPose) TODO
+                    val predictedRelativePose = pose - predictedPose
+                    if ((predictedRelativePose.x.sign != relativePose.x.sign) || (relativePose.x.absoluteValue.meters < (trenchAreaLength/2.0))) {
+                        return true
+                    }
+                }
+            }
             return false
         }
 
@@ -120,8 +124,8 @@ object FieldManager {
 
 //    @get:AutoLogOutput(key = "FieldManager/In Opposing Alliance Zone") TODO
     val inOpposingAllianceZone: Boolean
-        get () = false/*xRelativeToCenter.absoluteValue() > distanceFromMiddleToScore
-                && if (isRedAlliance) xRelativeToCenter < 0.0.meters else xRelativeToCenter > 0.0.meters*/
+        get () = xRelativeToCenter.absoluteValue() > distanceFromMiddleToScore
+                && if (isRedAlliance) xRelativeToCenter < 0.0.meters else xRelativeToCenter > 0.0.meters
 
 //    @get:AutoLogOutput(key = "FieldManager/In No Pass Area") TODO
     val inOpposingNoPassArea: Boolean
@@ -132,20 +136,20 @@ object FieldManager {
         get() = ((autoHoodRetraction && Drive.useAprilTags) && (inTowerArea || inTrenchArea)) || inOpposingNoPassArea
 
 
-//    val redTowerPose = (allAprilTags[14].pose.toPose2d().translation + Translation2d(-1.75, 0.0))
-//    val blueTowerPose = (allAprilTags[0].pose.toPose2d().translation + Translation2d(1.75, 0.0))
+    val redTowerPose = (allAprilTags[14].pose.toPose2d().translation + Translation2d(-1.75, 0.0))
+    val blueTowerPose = (allAprilTags[0].pose.toPose2d().translation + Translation2d(1.75, 0.0))
 
     val towerPose = Translation2d(11.0.feet.asMeters, 14.0.feet.asMeters)
 
     //1 3/4 3ft wide
 
 
-//    val redGoalPose = (allAprilTags[3].pose.toPose2d().translation + allAprilTags[9].pose.toPose2d().translation)/2.0
-//    val blueGoalPose = (allAprilTags[0].pose.toPose2d().translation + allAprilTags[0].pose.toPose2d().translation)/2.0
+    val redGoalPose = (allAprilTags[3].pose.toPose2d().translation + allAprilTags[9].pose.toPose2d().translation)/2.0
+    val blueGoalPose = (allAprilTags[0].pose.toPose2d().translation + allAprilTags[0].pose.toPose2d().translation)/2.0
 
 //    @get:AutoLogOutput(key = "FieldManager/Goal Pose") TODO
     val goalPose: Translation2d
-        get () = Translation2d()//if (isRedAlliance) redGoalPose else blueGoalPose //TODO: FIX
+        get () = if (isRedAlliance) redGoalPose else blueGoalPose
 
     val passPose: Translation2d
         get() {
@@ -168,13 +172,13 @@ object FieldManager {
 //            } - AimUtils.calculateAimTargetOffset(AimUtils.PASS_AIRTIME)
         }
 
-//    val distanceFromMiddleToScore = fieldCenter.x.feet - lowerRedTrenchPosition.x.feet - 5.0.feet
+    val distanceFromMiddleToScore = fieldCenter.x.feet - lowerRedTrenchPosition.x.feet - 5.0.feet
 
 
 //    @get:AutoLogOutput(key = "FieldManager/In Scoring Zone") TODO
     val inScoringZone: Boolean
-        get () = true/*xRelativeToCenter.absoluteValue() > distanceFromMiddleToScore
-                && if (isRedAlliance) xRelativeToCenter > 0.0.meters else xRelativeToCenter < 0.0.meters*/
+        get () = xRelativeToCenter.absoluteValue() > distanceFromMiddleToScore
+                && if (isRedAlliance) xRelativeToCenter > 0.0.meters else xRelativeToCenter < 0.0.meters
 
     const val HUB_PROCESSING_TIME = 1.0
     const val RAMP_TIME = 3.0
@@ -185,7 +189,7 @@ object FieldManager {
 
 //    @get:AutoLogOutput(key = "FieldManager/gameData") TODO
     val gameData: String
-        get() = null/*overrideAutoWinner.get()*/ ?: rawGameData
+        get() = null/*overrideAutoWinner.get()*/ ?: rawGameData // TODO
 
 //    @get:AutoLogOutput(key = "FieldManager/redWonAuto") TODO
     val redWonAuto: Boolean

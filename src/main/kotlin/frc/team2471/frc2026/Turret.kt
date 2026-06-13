@@ -1,16 +1,18 @@
 package frc.team2471.frc2026
 
-//import edu.wpi.first.wpilibj2.command.Command
-//import edu.wpi.first.wpilibj2.command.SubsystemBase
+import com.ctre.phoenix6.controls.NeutralOut
+import com.ctre.phoenix6.controls.PositionVoltage
+import com.ctre.phoenix6.hardware.CANcoder
+import com.ctre.phoenix6.hardware.Pigeon2
+import com.ctre.phoenix6.signals.FeedbackSensorSourceValue
+import com.ctre.phoenix6.signals.StaticFeedforwardSignValue
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-//import org.littletonrobotics.junction.AutoLogOutput
 import org.littletonrobotics.junction.MeanLogger
 import org.team2471.frc.lib.commands.MechanismBase
 import org.team2471.frc.lib.commands.periodic
 import org.team2471.frc.lib.commands.use
 import org.team2471.frc.lib.control.LoopLogger
-//import org.team2471.frc.lib.control.commands.onlyRunWhileFalse
 import org.team2471.frc.lib.math.toPose2d
 import org.team2471.frc.lib.units.absoluteValue
 import org.team2471.frc.lib.units.asDegrees
@@ -25,18 +27,32 @@ import org.team2471.frc.lib.units.wrap
 import org.team2471.frc.lib.util.angleTo
 import org.team2471.frc.lib.util.isReal
 import org.team2471.frc.lib.coroutines.periodic
+import org.team2471.frc.lib.ctre.PhoenixUtil
+import org.team2471.frc.lib.ctre.addFollower
+import org.team2471.frc.lib.ctre.alternateFeedbackSensor
+import org.team2471.frc.lib.ctre.applyConfiguration
+import org.team2471.frc.lib.ctre.brakeMode
+import org.team2471.frc.lib.ctre.currentLimits
+import org.team2471.frc.lib.ctre.d
+import org.team2471.frc.lib.ctre.inverted
+import org.team2471.frc.lib.ctre.loggedTalonFX.LoggedTalonFX
+import org.team2471.frc.lib.ctre.p
+import org.team2471.frc.lib.ctre.s
+import org.team2471.frc.lib.energy.BatteryLogger
 import org.team2471.frc.lib.units.asFeet
+import org.team2471.frc.lib.units.asInches
 import org.team2471.frc.lib.units.asMeters
-import org.team2471.frc.lib.units.degreesPerSecond
+import org.team2471.frc.lib.units.rotations
 import org.team2471.frc.lib.units.rotationsPerSecond
-import org.team2471.frc.lib.util.PowerTracker
-import org.team2471.frc.lib.util.isSim
+import org.team2471.frc.lib.units.sin
 import org.wpilib.command3.Command
 import org.wpilib.math.geometry.Translation2d
+import org.wpilib.math.system.DCMotor
 import org.wpilib.networktables.NetworkTableInstance
 import org.wpilib.units.measure.Angle
 import org.wpilib.units.measure.AngularVelocity
 import kotlin.math.IEEErem
+import kotlin.math.abs
 import kotlin.math.absoluteValue
 
 object Turret: MechanismBase("Turret") {
@@ -52,10 +68,10 @@ object Turret: MechanismBase("Turret") {
     val fusedEncoderAngleEntry = table.getEntry("Fused Encoder Angle")
     val turetFeedforwardFactorEntry = table.getEntry("Feedforward Factor")
 
-//    val turretMotor = LoggedTalonFX(Falcons.TURRET_0, CANivores.TURRET_CAN) // TODO: PHOENIX 6 2027
-//    val turretEncoder1 = CANcoder(CANCoders.TURRET_0, CANivores.TURRET_CAN)
-//    val turretEncoder2 = CANcoder(CANCoders.TURRET_1, CANivores.TURRET_CAN)
-//    val turretPigeon = Pigeon2(CANSensors.TURRET_PIGEON, CANivores.TURRET_CAN)
+    val turretMotor = LoggedTalonFX(Falcons.TURRET_0, CANivores.TURRET_CAN)
+    val turretEncoder1 = CANcoder(CANCoders.TURRET_0, CANivores.TURRET_CAN)
+    val turretEncoder2 = CANcoder(CANCoders.TURRET_1, CANivores.TURRET_CAN)
+    val turretPigeon = Pigeon2(CANSensors.TURRET_PIGEON, CANivores.TURRET_CAN)
 
     val TURRET_TOP_LIMIT = if (Robot.isCompBot) 190.0.degrees else 270.0.degrees
     val TURRET_BOTTOM_LIMIT = if (Robot.isCompBot) -190.0.degrees else -270.0.degrees
@@ -76,7 +92,7 @@ object Turret: MechanismBase("Turret") {
     var offset: Angle = 0.0.degrees
 
 //    @get:AutoLogOutput(key = "Turret/rawTurretMotorRotorAngle") TODO
-    val rawTurretMotorRotorAngle: Angle get() = 0.0.degrees//turretMotor.rotorPosition.valueAsDouble.rotations * motorGearRatio //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
+    val rawTurretMotorRotorAngle: Angle get() = turretMotor.rotorPosition.valueAsDouble.rotations * motorGearRatio
 
 //    @get:AutoLogOutput(key = "Turret/turretMotorRotorAngleOffset") TODO
     var turretMotorRotorPositionOffset: Angle = 0.0.degrees
@@ -90,12 +106,12 @@ object Turret: MechanismBase("Turret") {
         get() = ((turretMotorRotorAngle + turretZeroPositionOnRobot) + Drive.headingAngleUnwrapped)
 
 //    @get:AutoLogOutput(key = "Turret/turretMotorVoltage") TODO
-    val turretMotorVoltage: Double get() = 0.0//turretMotor.motorVoltage.valueAsDouble //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
+    val turretMotorVoltage: Double get() = turretMotor.motorVoltage.valueAsDouble
 
 //    @get:AutoLogOutput(key = "Turret/rawEncoder1AbsolutePosition") TODO
-    val rawEncoder1AbsolutePosition: Angle get() = 0.0.degrees//turretEncoder1.absolutePosition.value //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
+    val rawEncoder1AbsolutePosition: Angle get() = turretEncoder1.absolutePosition.value
 //    @get:AutoLogOutput(key = "Turret/rawEncoder2AbsolutePosition") TODO
-    val rawEncoder2AbsolutePosition: Angle get() = 0.0.degrees//turretEncoder2.absolutePosition.value //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
+    val rawEncoder2AbsolutePosition: Angle get() = turretEncoder2.absolutePosition.value
 
 //    @get:AutoLogOutput(key = "Turret/encoder1AbsolutePosition") TODO
     val encoder1AbsolutePosition: Angle get() = (rawEncoder1AbsolutePosition - encoder1OffsetEntry.getDouble(ENCODER_1_DEFAULT_OFFSET).degrees).wrap()
@@ -149,9 +165,9 @@ object Turret: MechanismBase("Turret") {
 //    @get:AutoLogOutput(key = "Turret/fieldCentricAngle") TODO
     val fieldCentricAngle: Angle
         get() = if (isReal) {
-            0.0.degrees//turretMotor.position.value //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
+            turretMotor.position.value
         } else {
-            0.0.degrees//turretMotor.position.value + Drive.heading.measure //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
+            turretMotor.position.value + Drive.heading.measure
         }
 
 //    @get:AutoLogOutput(key = "Turret/fieldCentricAngleWrapped")  TODO
@@ -196,9 +212,9 @@ object Turret: MechanismBase("Turret") {
                 isTurretWrapping = (field - turretMotorFieldCentricAngle).absoluteValue() > 180.0.degrees
 
                 if (disableTurret) {
-//                    turretMotor.setControl(NeutralOut()) // TODO: PHOENIX 6 2027
+                    turretMotor.setControl(NeutralOut())
                 } else if (useTurretGyro) { // Use field-centric gyro
-//                    turretMotor.setControl(PositionVoltage(field.asRotations).withFeedForward(turretFeedforward)) // TODO: PHOENIX 6 2027
+                    turretMotor.setControl(PositionVoltage(field.asRotations).withFeedForward(turretFeedforward))
                 } else { // Use robot-centric motor
                     val fieldCentricTurretRotorAngle = fieldCentricTurretMotorRotorAngle
                     val noGyroError = (value.unWrap(fieldCentricTurretRotorAngle) - fieldCentricTurretRotorAngle)
@@ -206,11 +222,11 @@ object Turret: MechanismBase("Turret") {
                     val robotCentricNoGyroSetpointWrapped = robotCentricNoGyroSetpoint.asDegrees.IEEErem(TURRET_TOP_LIMIT.asDegrees.absoluteValue + TURRET_BOTTOM_LIMIT.asDegrees.absoluteValue).degrees
                     println("Turret Gyro Disconnect ${robotCentricNoGyroSetpointWrapped.asDegrees}")
                     MeanLogger.recordOutput("Turret/testMotorCentricSetpointDeg", robotCentricNoGyroSetpointWrapped.asDegrees)
-//                    turretMotor.setControl(PositionVoltage(robotCentricNoGyroSetpointWrapped.asRotations).withFeedForward(turretFeedforward)) // TODO: PHOENIX 6 2027
+                    turretMotor.setControl(PositionVoltage(robotCentricNoGyroSetpointWrapped.asRotations).withFeedForward(turretFeedforward))
                 }
             } else {
                 field = value.unWrap(fieldCentricAngle)
-//                turretMotor.setControl(PositionVoltage((field - Drive.heading.measure).asRotations)) // TODO: PHOENIX 6 2027
+                turretMotor.setControl(PositionVoltage((field - Drive.heading.measure).asRotations))
             }
         }
 
@@ -219,15 +235,15 @@ object Turret: MechanismBase("Turret") {
         get() = fieldCentricSetpoint - fieldCentricAngle
 //    @get:AutoLogOutput(key = "Turret/turretSetpointErrorMotor") TODO
     val turretSetpointErrorMotor: Angle
-        get() = 0.0.degrees//turretMotor.closedLoopError.valueAsDouble.rotations// TODO: PHOENIX 6 2027
+        get() = turretMotor.closedLoopError.valueAsDouble.rotations
 
 //    @get:AutoLogOutput(key = "Turret/turretVelocity") TODO
     val turretVelocity: AngularVelocity
-        get() = 0.0.degreesPerSecond//turretMotor.rotorVelocity.value //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
+        get() = turretMotor.rotorVelocity.value
 
 //    @get:AutoLogOutput(key = "Turret/turretCurrent") TODO
     val turretCurrent: Double
-        get() = 0.0//turretMotor.supplyCurrent.valueAsDouble //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
+        get() = turretMotor.supplyCurrent.valueAsDouble
 
     val disableTurret: Boolean
         get() = disableTurretEntry.getBoolean(false)
@@ -240,12 +256,12 @@ object Turret: MechanismBase("Turret") {
 
 
 //    @get:AutoLogOutput(key = "Turret/Turret error distance") TODO
-    val turretErrorDistance get() = 0.0.inches//abs(sin(turretMotor.closedLoopError.valueAsDouble.rotations) * AimUtils.distanceToTarget.asInches).inches // TODO: PHOENIX 6 2027
+    val turretErrorDistance get() = abs(sin(turretMotor.closedLoopError.valueAsDouble.rotations) * AimUtils.distanceToTarget.asInches).inches
 
     var tempHeadingResetAngle: Angle? = null
 
-    val turretPigeonIsConnected get() = false//turretPigeon.isConnected && isReal// TODO: PHOENIX 6 2027
-    val turretPigeonLatency get() = 0.0//turretPigeon.yaw.timestamp.latency //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
+    val turretPigeonIsConnected get() = turretPigeon.isConnected && isReal
+    val turretPigeonLatency get() = turretPigeon.yaw.timestamp.latency
 
 //    @get:AutoLogOutput(key = "Turret/Look Forward Override") TODO
     var lookForwardOverride = false
@@ -260,63 +276,58 @@ object Turret: MechanismBase("Turret") {
         if (!turetFeedforwardFactorEntry.exists()) turetFeedforwardFactorEntry.setDouble(turretFeedforwardFactor); turetFeedforwardFactorEntry.setPersistent()
         if (!disableTurretEntry.exists()) disableTurretEntry.setBoolean(disableTurret); disableTurretEntry.setPersistent()
 
-//        turretEncoder1.applyConfiguration { // TODO: PHOENIX 6 2027
-//            if (Robot.isCompBot) {
-//                inverted(false)
-//            } else {
-//                inverted(false)
-//            }
-//        }
-//        turretEncoder2.applyConfiguration {
-//            if (Robot.isCompBot) {
-//                inverted(true)
-//            } else {
-//                inverted(false)
-//            }
-//        }
-//
-//        turretPigeon.applyConfiguration {
-//            MountPose.MountPoseYaw = 0.0
-//            MountPose.MountPosePitch = 0.0
-//            MountPose.MountPoseRoll = if (Robot.isCompBot) 0.0 else -90.0
-//        }
-//
-//        turretMotor.configSim(DCMotor.getKrakenX60(1), 0.01)
-//
-//        turretMotor.applyConfiguration {
-//            currentLimits(20.0, 20.0, 1.0)
-//            inverted(false)
-//            brakeMode()
-//            if (isReal) {
-//                if (Robot.isCompBot) {
-//                    s(0.1, StaticFeedforwardSignValue.UseClosedLoopSign)
-//                    p(55.0)
-////                    p(25.0)
-//                    d(0.0)
-//                } else {
-//                    s(0.2, StaticFeedforwardSignValue.UseClosedLoopSign)
-//                    p(50.0)
-//                    d(0.0)
-//                }
-//            } else {
-//                s(0.13, StaticFeedforwardSignValue.UseClosedLoopSign)
-//                p(500.0)
-//                d(25.0)
-//            }
-//
-////            motionMagic(0.2, 12.2)
-//            if (useTurretGyro) {
-////                alternateFeedbackSensor(turretPigeon.deviceID, FeedbackSensorSourceValue.RemotePigeon2_Yaw, motorGearRatio)
-//            }
-//
-//            ClosedLoopGeneral.ContinuousWrap = false
-//        }
-//        turretMotor.addFollower(Falcons.TURRET_1)
-
-        if (!isSim) {
-            PowerTracker.addMotors("Turret", { /*turretMotor.getSupplyCurrent(true).value.asAmps*/0.0 }, 2) //TODO: UNCOMMENT WHEN 2027 PHOENIX 6
+        turretEncoder1.applyConfiguration {
+            if (Robot.isCompBot) {
+                inverted(false)
+            } else {
+                inverted(false)
+            }
+        }
+        turretEncoder2.applyConfiguration {
+            if (Robot.isCompBot) {
+                inverted(true)
+            } else {
+                inverted(false)
+            }
         }
 
+        turretPigeon.applyConfiguration {
+            MountPose.MountPoseYaw = 0.0
+            MountPose.MountPosePitch = 0.0
+            MountPose.MountPoseRoll = if (Robot.isCompBot) 0.0 else -90.0
+        }
+
+        turretMotor.configSim(DCMotor.getKrakenX60(1), 0.01)
+
+        turretMotor.applyConfiguration {
+            currentLimits(20.0, 20.0, 1.0)
+            inverted(false)
+            brakeMode()
+            if (isReal) {
+                if (Robot.isCompBot) {
+                    s(0.1, StaticFeedforwardSignValue.UseClosedLoopSign)
+                    p(55.0)
+//                    p(25.0)
+                    d(0.0)
+                } else {
+                    s(0.2, StaticFeedforwardSignValue.UseClosedLoopSign)
+                    p(50.0)
+                    d(0.0)
+                }
+            } else {
+                s(0.13, StaticFeedforwardSignValue.UseClosedLoopSign)
+                p(500.0)
+                d(25.0)
+            }
+
+//            motionMagic(0.2, 12.2)
+            if (useTurretGyro) {
+                alternateFeedbackSensor(turretPigeon.deviceID, FeedbackSensorSourceValue.RemotePigeon2Yaw, motorGearRatio)
+            }
+
+            ClosedLoopGeneral.ContinuousWrap = false
+        }
+        turretMotor.addFollower(Falcons.TURRET_1)
 
 //        turretMotor.setPosition(fusedEncoderAngle)
         setTurretOffset(Drive.heading.measure)
@@ -327,9 +338,9 @@ object Turret: MechanismBase("Turret") {
                 if (Robot.isDisabled) {
                     fieldCentricSetpoint = fieldCentricAngle
                 } else {
-//                    if (turretMotor.controlMode.value in PhoenixUtil.positionControlModes) { // TODO: PHOENIX 6 2027
-//                        fieldCentricSetpoint = fieldCentricSetpoint
-//                    }
+                    if (turretMotor.controlMode.value in PhoenixUtil.positionControlModes) {
+                        fieldCentricSetpoint = fieldCentricSetpoint
+                    }
                 }
             }
         }
@@ -346,7 +357,7 @@ object Turret: MechanismBase("Turret") {
 //                            println("setting turret pigeon yaw to motor angle")
 //                        println("Detected Error. Trying to change gyro angle from ${fieldCentricAngle.asDegrees.round(3)} to ${fieldCentricTurretMotorRotorAngle.unWrap(fieldCentricAngle).asDegrees.round(3)}")
 
-//                            turretPigeon.setYaw(fieldCentricTurretMotorRotorAngle.unWrap(fieldCentricAngle).asDegrees) // TODO: PHOENIX 6 2027 <- just this line
+                            turretPigeon.setYaw(fieldCentricTurretMotorRotorAngle.unWrap(fieldCentricAngle).asDegrees)
 //                            println("finished setting turret pigeon yaw, status ok: ${status.isOK}")
 //                            resettingGyro = false
                         }
@@ -360,7 +371,7 @@ object Turret: MechanismBase("Turret") {
                     if (isReal) {
                         GlobalScope.launch {
 //                        println("setting turret pigeon yaw")
-//                            turretPigeon.setYaw(fieldCentricFusedEncoderAngle.unWrap(fieldCentricAngle).asDegrees) // TODO: PHOENIX 6 2027 <- just this line
+                            turretPigeon.setYaw(fieldCentricFusedEncoderAngle.unWrap(fieldCentricAngle).asDegrees)
 //                        println("finished setting turret pigeon yaw")
                         }
                     }
@@ -393,6 +404,8 @@ object Turret: MechanismBase("Turret") {
         if (!Robot.isEnabled) {
             fusedEncoderAngleEntry.setDouble(fusedEncoderAngle.asDegrees)
         }
+
+        BatteryLogger.recordCurrent("Turret", turretMotor.supplyCurrent.value * 2.0)
 
         LoopLogger.record("turret periodic")
     }

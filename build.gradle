@@ -9,7 +9,6 @@ plugins {
     id "org.jetbrains.kotlin.kapt" version "2.3.21"
 }
 // Force the global WPILib provider to load vendors out of meanlib,
-// must still have the url in 'repositories' though
 wpi.vendor.loadFrom(project(":meanlib"))
 
 def ROBOT_MAIN_CLASS = "frc.team2471.frc2026.Main"

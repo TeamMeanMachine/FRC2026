@@ -1,25 +1,18 @@
 @file:JvmName("Main") // set the compiled Java class name to "Main" rather than "MainKt"
 package frc.team2471.frc2026
 
-//import edu.wpi.first.hal.FRCNetComm.tInstances
-//import edu.wpi.first.hal.FRCNetComm.tResourceType
 import com.ctre.phoenix6.SignalLogger
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-//import org.littletonrobotics.junction.LogFileUtil
-//import org.littletonrobotics.junction.Logger
 import org.littletonrobotics.junction.MeanLogger
 import org.littletonrobotics.junction.networktables.MeanNT4Publisher
-//import org.littletonrobotics.junction.wpilog.WPILOGReader
-//import org.littletonrobotics.junction.wpilog.WPILOGWriter
 import org.team2471.frc.lib.autonomous.TestOpMode
 import org.team2471.frc.lib.autonomous.TestRoutine
 import org.team2471.frc.lib.control.LoopLogger
 import org.team2471.frc.lib.ctre.loggedTalonFX.MasterMotor
-//import org.team2471.frc.lib.logging.NT4NonFMSPublisher
+import org.team2471.frc.lib.energy.BatteryLogger
 import org.team2471.frc.lib.units.asFeet
-import org.team2471.frc.lib.util.PowerTracker
 import org.team2471.frc.lib.util.RobotType
 import org.team2471.frc.lib.util.robotType
 import org.wpilib.command3.Mechanism
@@ -167,7 +160,7 @@ class Robot : OpModeRobot(0.01) {
 
         LoopLogger.record("after Scheduler")
 
-        PowerTracker.logData()
+        BatteryLogger.logData()
         LoopLogger.record("after powerTracker update")
 
         LoopLogger.record("Robot periodic()")
