@@ -1,13 +1,11 @@
 package frc.team2471.frc2026
 
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import org.team2471.frc.lib.commands.onCancel
 import org.team2471.frc.lib.commands.periodic
 import org.team2471.frc.lib.commands.use
 //import edu.wpi.first.wpilibj2.command.SubsystemBase
 import org.team2471.frc.lib.control.LoopLogger
-import org.team2471.frc.lib.control.MeanCommandXboxController
+import org.team2471.frc.lib.control.isConnected
 import org.team2471.frc.lib.math.applyDeadband
 //import org.team2471.frc.lib.control.commands.finallyRun
 //import org.team2471.frc.lib.control.commands.parallelCommand
@@ -18,6 +16,7 @@ import org.team2471.frc.lib.math.deadband
 import org.team2471.frc.lib.units.degrees
 import org.team2471.frc.lib.util.demoMode
 import org.wpilib.command3.Scheduler
+import org.wpilib.command3.button.CommandXboxController
 import org.wpilib.driverstation.Alert
 import org.wpilib.math.filter.Debouncer
 import org.wpilib.math.geometry.Pose2d
@@ -32,8 +31,8 @@ object OI {
     val rotationMultiplierEntry = table.getEntry("Rotation Multiplier")
     val rotationMultiplier = rotationMultiplierEntry.getDouble(0.8)
 
-    val driverController = MeanCommandXboxController(0, false)
-    val operatorController = MeanCommandXboxController(1)
+    val driverController = CommandXboxController(0)
+    val operatorController = CommandXboxController(1)
 
     val deadbandDriver = 0.08
     val deadbandOperator = 0.1
@@ -56,19 +55,19 @@ object OI {
         get() = -driverController.rightX.deadband(deadbandDriver) * rotationMultiplier
 
     val driveLeftTrigger: Double
-        get() = driverController.leftTriggerAxis
+        get() = driverController.leftTrigger
 
     val driveLeftTriggerFullPress: Boolean
-        get() = driverController.leftTriggerAxis > 0.95
+        get() = driverController.leftTrigger > 0.95
 
     val driveRightTrigger: Double
-        get() = driverController.rightTriggerAxis
+        get() = driverController.rightTrigger
 
     val driveRightTriggerFullPress: Boolean
-        get() = driverController.rightTriggerAxis > 0.95
+        get() = driverController.rightTrigger > 0.95
 
     val operatorLeftTrigger: Double
-        get() = operatorController.leftTriggerAxis
+        get() = operatorController.leftTrigger
 
     val operatorLeftY: Double
         get() = operatorController.leftY.deadband(deadbandOperator)
@@ -77,7 +76,7 @@ object OI {
         get() = operatorController.leftX.deadband(deadbandOperator)
 
     val operatorRightTrigger: Double
-        get() = operatorController.rightTriggerAxis
+        get() = operatorController.rightTrigger
 
     val operatorRightX: Double
         get() = operatorController.rightX.deadband(deadbandOperator)
@@ -101,18 +100,18 @@ object OI {
         /** DEFAULT JOYSTICK BINDINGS. (Will be active by default in every OpMode unless overridden) */
 
 
-        driverController.back().onTrue(Drive.zeroGyroCommand()) // Zero Gyro
-        driverController.start().onTrue(use { Drive.pose = Pose2d(Translation2d(3.0, 3.0), Drive.heading) }) // Reset Odometry Position
+        driverController.menu().onTrue(Drive.zeroGyroCommand()) // Zero Gyro
+        driverController.view().onTrue(use { Drive.pose = Pose2d(Translation2d(3.0, 3.0), Drive.heading) }) // Reset Odometry Position
 
-        (driverController.y().and(driverController.povDown().negate())).onTrue(Intake.home())
+        (driverController.y().and(driverController.dpadDown().negate())).onTrue(Intake.home())
 
         driverController.rightTrigger(0.1)
             .or(driverController.rightBumper())
             .or(driverController.rightStick())
             .whileTrue(Shooter.shootOrRamp())
 
-        driverController.leftBumper().and(driverController.povDown().negate()).whileTrue(use {
-            periodic {
+        driverController.leftBumper().and(driverController.dpadDown().negate()).whileTrue(use {
+            this.periodic {
                 Intake.deploy()
                 Intake.intakeState = Intake.IntakeState.INTAKING
             }
@@ -132,7 +131,7 @@ object OI {
             Drive.snakeMode()
         )
         driverController.x().whileTrue(use(Drive) {
-            periodic {
+            this.periodic {
                 Drive.xPose()
             }
         })
@@ -147,14 +146,14 @@ object OI {
             Intake.deploySetpoint = Intake.DEPLOY_POSE
         })
 
-        (driverController.povDown().and(driverController.y())).onTrue(Intake.homeDeploy())
-        (driverController.povDown().and(driverController.leftBumper())).onTrue(use { Intake.deepStow() })
+        (driverController.dpadDown().and(driverController.y())).onTrue(Intake.homeDeploy())
+        (driverController.dpadDown().and(driverController.leftBumper())).onTrue(use { Intake.deepStow() })
 
-        driverController.povLeft().whileTrue(Turret.staticAimAtTarget())
-        driverController.povRight().whileTrue(FieldManager.disableAutoHoodRetractionCommand())
+        driverController.dpadLeft().whileTrue(Turret.staticAimAtTarget())
+        driverController.dpadRight().whileTrue(FieldManager.disableAutoHoodRetractionCommand())
 
-        driverController.povUp().onTrue(use { Turret.offset -= 2.0.degrees})
-        driverController.povDown().and(driverController.y().negate()).and(driverController.leftBumper().negate()).onTrue(use { Turret.offset += 2.0.degrees})
+        driverController.dpadUp().onTrue(use { Turret.offset -= 2.0.degrees})
+        driverController.dpadDown().and(driverController.y().negate()).and(driverController.leftBumper().negate()).onTrue(use { Turret.offset += 2.0.degrees})
 
 
 

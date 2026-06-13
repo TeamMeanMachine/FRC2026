@@ -8,9 +8,11 @@ import com.ctre.phoenix6.signals.FeedbackSensorSourceValue
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import org.littletonrobotics.junction.AutoLogOutput
 import org.littletonrobotics.junction.MeanLogger
 import org.team2471.frc.lib.commands.MechanismBase
 import org.team2471.frc.lib.commands.periodic
+import org.team2471.frc.lib.commands.setDefaultCommand
 import org.team2471.frc.lib.commands.use
 import org.team2471.frc.lib.control.LoopLogger
 import org.team2471.frc.lib.math.toPose2d
@@ -88,38 +90,38 @@ object Turret: MechanismBase("Turret") {
 
     val motorGearRatio = if (Robot.isCompBot) 30.0/230.0 * 11.0/46.0 else 30.0/200.0 * 11.0/46.0
 
-//    @AutoLogOutput(key = "Turret/offset") TODO
+    @AutoLogOutput(key = "Turret/offset")
     var offset: Angle = 0.0.degrees
 
-//    @get:AutoLogOutput(key = "Turret/rawTurretMotorRotorAngle") TODO
+    @get:AutoLogOutput(key = "Turret/rawTurretMotorRotorAngle")
     val rawTurretMotorRotorAngle: Angle get() = turretMotor.rotorPosition.valueAsDouble.rotations * motorGearRatio
 
-//    @get:AutoLogOutput(key = "Turret/turretMotorRotorAngleOffset") TODO
+    @get:AutoLogOutput(key = "Turret/turretMotorRotorAngleOffset")
     var turretMotorRotorPositionOffset: Angle = 0.0.degrees
 
-//    @get:AutoLogOutput(key = "Turret/turretMotorRotorAngle") TODO
+    @get:AutoLogOutput(key = "Turret/turretMotorRotorAngle")
     val turretMotorRotorAngle: Angle
         get() = rawTurretMotorRotorAngle + turretMotorRotorPositionOffset
 
-//    @get:AutoLogOutput(key = "Turret/fieldCentricTurretMotorRotorAngle") TODO
+    @get:AutoLogOutput(key = "Turret/fieldCentricTurretMotorRotorAngle")
     val fieldCentricTurretMotorRotorAngle: Angle
         get() = ((turretMotorRotorAngle + turretZeroPositionOnRobot) + Drive.headingAngleUnwrapped)
 
-//    @get:AutoLogOutput(key = "Turret/turretMotorVoltage") TODO
+    @get:AutoLogOutput(key = "Turret/turretMotorVoltage")
     val turretMotorVoltage: Double get() = turretMotor.motorVoltage.valueAsDouble
 
-//    @get:AutoLogOutput(key = "Turret/rawEncoder1AbsolutePosition") TODO
+    @get:AutoLogOutput(key = "Turret/rawEncoder1AbsolutePosition")
     val rawEncoder1AbsolutePosition: Angle get() = turretEncoder1.absolutePosition.value
-//    @get:AutoLogOutput(key = "Turret/rawEncoder2AbsolutePosition") TODO
+    @get:AutoLogOutput(key = "Turret/rawEncoder2AbsolutePosition")
     val rawEncoder2AbsolutePosition: Angle get() = turretEncoder2.absolutePosition.value
 
-//    @get:AutoLogOutput(key = "Turret/encoder1AbsolutePosition") TODO
+    @get:AutoLogOutput(key = "Turret/encoder1AbsolutePosition")
     val encoder1AbsolutePosition: Angle get() = (rawEncoder1AbsolutePosition - encoder1OffsetEntry.getDouble(ENCODER_1_DEFAULT_OFFSET).degrees).wrap()
-//    @get:AutoLogOutput(key = "Turret/encoder2AbsolutePosition") TODO
+    @get:AutoLogOutput(key = "Turret/encoder2AbsolutePosition")
     val encoder2AbsolutePosition: Angle get() = (rawEncoder2AbsolutePosition - encoder2OffsetEntry.getDouble(ENCODER_2_DEFAULT_OFFSET).degrees).wrap()
 
     // unwraps encoder 1 angle using encoder 2 angle
-//    @get:AutoLogOutput(key = "Turret/fusedEncoderAngle")  TODO
+    @get:AutoLogOutput(key = "Turret/fusedEncoderAngle")
     val fusedEncoderAngle: Angle
         get() {
             // generate a list of all possible angles based off of encoder 1
@@ -158,11 +160,11 @@ object Turret: MechanismBase("Turret") {
 
             return bestAngle + offset
         }
-//    @get:AutoLogOutput(key = "Turret/FieldCentricFusedEncoderAngle") TODO
+    @get:AutoLogOutput(key = "Turret/FieldCentricFusedEncoderAngle")
     val fieldCentricFusedEncoderAngle: Angle
         get() = ((fusedEncoderAngle + turretZeroPositionOnRobot) + Drive.heading.measure).wrap()
 
-//    @get:AutoLogOutput(key = "Turret/fieldCentricAngle") TODO
+    @get:AutoLogOutput(key = "Turret/fieldCentricAngle")
     val fieldCentricAngle: Angle
         get() = if (isReal) {
             turretMotor.position.value
@@ -170,23 +172,23 @@ object Turret: MechanismBase("Turret") {
             turretMotor.position.value + Drive.heading.measure
         }
 
-//    @get:AutoLogOutput(key = "Turret/fieldCentricAngleWrapped")  TODO
+    @get:AutoLogOutput(key = "Turret/fieldCentricAngleWrapped")
     val fieldCentricAngleWrapped: Angle get() = fieldCentricAngle.wrap()
 
     val turretFeedforwardFactor: Double
         get() = turetFeedforwardFactorEntry.getDouble(3.0)
 
-//    @get:AutoLogOutput(key = "Turret/turretFeedforward") TODO
+    @get:AutoLogOutput(key = "Turret/turretFeedforward")
     val turretFeedforward: Double
         get() = -Drive.chassisVelocities.omega.radians.asRotations * 3.0
 
-//    @get:AutoLogOutput(key = "Turret/isTurretWrapping") TODO
+    @get:AutoLogOutput(key = "Turret/isTurretWrapping")
     var isTurretWrapping = false
 
     val useTurretGyro
         get() = true//(turretPigeonIsConnected && turretMotor.fault_RemoteSensorDataInvalid.value) || true
 
-//    @get:AutoLogOutput(key = "Turret/fieldCentricSetpoint") TODO
+    @get:AutoLogOutput(key = "Turret/fieldCentricSetpoint")
     var fieldCentricSetpoint: Angle = fieldCentricAngle
         set(value) {
             if (isReal) {
@@ -230,18 +232,18 @@ object Turret: MechanismBase("Turret") {
             }
         }
 
-//    @get:AutoLogOutput(key = "Turret/turretSetpointError") TODO
+    @get:AutoLogOutput(key = "Turret/turretSetpointError")
     val turretSetpointError: Angle
         get() = fieldCentricSetpoint - fieldCentricAngle
-//    @get:AutoLogOutput(key = "Turret/turretSetpointErrorMotor") TODO
+    @get:AutoLogOutput(key = "Turret/turretSetpointErrorMotor")
     val turretSetpointErrorMotor: Angle
         get() = turretMotor.closedLoopError.valueAsDouble.rotations
 
-//    @get:AutoLogOutput(key = "Turret/turretVelocity") TODO
+    @get:AutoLogOutput(key = "Turret/turretVelocity")
     val turretVelocity: AngularVelocity
         get() = turretMotor.rotorVelocity.value
 
-//    @get:AutoLogOutput(key = "Turret/turretCurrent") TODO
+    @get:AutoLogOutput(key = "Turret/turretCurrent")
     val turretCurrent: Double
         get() = turretMotor.supplyCurrent.valueAsDouble
 
@@ -255,7 +257,7 @@ object Turret: MechanismBase("Turret") {
         get() = Drive.localizer.pose.translation + turretOffsetFromCenter.rotateBy(Drive.heading)
 
 
-//    @get:AutoLogOutput(key = "Turret/Turret error distance") TODO
+    @get:AutoLogOutput(key = "Turret/Turret error distance")
     val turretErrorDistance get() = abs(sin(turretMotor.closedLoopError.valueAsDouble.rotations) * AimUtils.distanceToTarget.asInches).inches
 
     var tempHeadingResetAngle: Angle? = null
@@ -263,7 +265,7 @@ object Turret: MechanismBase("Turret") {
     val turretPigeonIsConnected get() = turretPigeon.isConnected && isReal
     val turretPigeonLatency get() = turretPigeon.yaw.timestamp.latency
 
-//    @get:AutoLogOutput(key = "Turret/Look Forward Override") TODO
+    @get:AutoLogOutput(key = "Turret/Look Forward Override")
     var lookForwardOverride = false
 
 //    @get:AutoLogOutput(key = "Turret/Resetting Gyro")
@@ -410,7 +412,7 @@ object Turret: MechanismBase("Turret") {
         LoopLogger.record("turret periodic")
     }
 
-    override fun default() = defaultCommand {
+    override fun default() = setDefaultCommand {
         this.periodic {
             await(aimAtTarget())
         }

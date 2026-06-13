@@ -13,6 +13,10 @@ wpi.vendor.loadFrom(project(":meanlib"))
 
 def ROBOT_MAIN_CLASS = "frc.team2471.frc2026.Main"
 
+wpi.maven.useLocal = false
+wpi.maven.useDevelopment = true
+wpi.versions.wpilibVersion = '2027.0.0-alpha-6-39-g3f0d7bc2c'
+
 // Define my targets (SystemCore) and artifacts (deployable files)
 // This is added by GradleRIO's backing project DeployUtils.
 deploy {
@@ -67,6 +71,9 @@ dependencies {
 
     nativeRelease wpi.java.deps.wpilibJniRelease(wpi.platforms.desktop)
     nativeRelease wpi.java.vendor.jniRelease(wpi.platforms.desktop)
+
+    def akitJson = new JsonSlurper().parseText(new File(projectDir.getAbsolutePath() + "/meanlib/vendordeps/AdvantageKit.json").text)
+    kapt "org.littletonrobotics.akit:akit-autolog:$akitJson.version"
 }
 
 // Simulation configuration (e.g. environment variables).

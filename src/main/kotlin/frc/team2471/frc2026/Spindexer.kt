@@ -6,6 +6,7 @@ import com.ctre.phoenix6.controls.NeutralOut
 import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC
 import com.ctre.phoenix6.hardware.TalonFX
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue
+import org.littletonrobotics.junction.AutoLogOutput
 import org.team2471.frc.lib.commands.MechanismBase
 import org.team2471.frc.lib.control.LoopLogger
 import org.team2471.frc.lib.ctre.addFollower
@@ -33,7 +34,7 @@ object Spindexer: MechanismBase("Spindexer") {
     val sidetakeMotor = TalonFX(Falcons.SIDETAKE, CANBus.systemcore(1))
     val uptakeMotor = TalonFX(Falcons.UPTAKE, CANBus.systemcore(1))
 
-//    @get:AutoLogOutput(key = "Spindexer/Current State") TODO
+    @get:AutoLogOutput(key = "Spindexer/Current State")
     var currentState = State.OFF
 
     val spinVelocityEntry = table.getEntry("Spin Velocity")
@@ -66,25 +67,25 @@ object Spindexer: MechanismBase("Spindexer") {
     val doSpinSlowdown: Boolean get() = doSpinSlowdownEntry.getBoolean(false)
     val doSineSpinSlowdown: Boolean get() = doSineSpinSlowdownEntry.getBoolean(false)
 
-//    @get:AutoLogOutput(key = "Spindexer/Spin Velocity") TODO
+    @get:AutoLogOutput(key = "Spindexer/Spin Velocity")
     val spinVelocity: AngularVelocity get() = spinMotor.velocity.value
-//    @get:AutoLogOutput(key = "Spindexer/Uptake Velocity") TODO
+    @get:AutoLogOutput(key = "Spindexer/Uptake Velocity")
     val uptakeVelocity: AngularVelocity get() = uptakeMotor.velocity.value
-//    @get:AutoLogOutput(key = "Spindexer/Sidetake Velocity") TODO
+    @get:AutoLogOutput(key = "Spindexer/Sidetake Velocity")
     val sidetakeVelocity: AngularVelocity get() = sidetakeMotor.velocity.value
 
-//    @get:AutoLogOutput(key = "Spindexer/Spindexer Current")  TODO
+    @get:AutoLogOutput(key = "Spindexer/Spindexer Current")
     val spindexerCurrent: Current get() = spinMotor.supplyCurrent.value
-//    @get:AutoLogOutput(key = "Spindexer/Uptake Current") TODO
+    @get:AutoLogOutput(key = "Spindexer/Uptake Current")
     val uptakeCurrent: Current get() = uptakeMotor.supplyCurrent.value
-//    @get:AutoLogOutput(key = "Spindexer/Sidetake Current") TODO
+    @get:AutoLogOutput(key = "Spindexer/Sidetake Current")
     val sidetakeCurrent: Current get() = sidetakeMotor.supplyCurrent.value
 
-//    @get:AutoLogOutput(key = "Spindexer/Spindexer TorqueCurrent") TODO
+    @get:AutoLogOutput(key = "Spindexer/Spindexer TorqueCurrent")
     val spindexerTorqueCurrent: Current get() = spinMotor.torqueCurrent.value
-//    @get:AutoLogOutput(key = "Spindexer/Uptake TorqueCurrent") TODO
+    @get:AutoLogOutput(key = "Spindexer/Uptake TorqueCurrent")
     val uptakeTorqueCurrent: Current get() = uptakeMotor.torqueCurrent.value
-//    @get:AutoLogOutput(key = "Spindexer/Sidetake TorqueCurrent") TODO
+    @get:AutoLogOutput(key = "Spindexer/Sidetake TorqueCurrent")
     val sidetakeTorqueCurrent: Current get() = sidetakeMotor.torqueCurrent.value
 
     private val spinMotorControl = MotionMagicVelocityTorqueCurrentFOC(0.0)
@@ -92,7 +93,7 @@ object Spindexer: MechanismBase("Spindexer") {
     private val uptakeMotorControl = VelocityTorqueCurrentFOC(0.0)
 
 
-//    @get:AutoLogOutput(key = "Spindexer/spinMotorVelocitySetpoint") TODO
+    @get:AutoLogOutput(key = "Spindexer/spinMotorVelocitySetpoint")
     var spinMotorVelocitySetpoint: Double = 0.0
         set(value) {
             spinMotor.setControl(
@@ -101,7 +102,7 @@ object Spindexer: MechanismBase("Spindexer") {
             field = value
         }
 
-//    @get:AutoLogOutput(key = "Spindexer/sidetakeMotorVelocitySetpoint") TODO
+    @get:AutoLogOutput(key = "Spindexer/sidetakeMotorVelocitySetpoint")
     var sidetakeMotorVelocitySetpoint: Double = 0.0
         set(value) {
             sidetakeMotor.setControl(
@@ -110,7 +111,7 @@ object Spindexer: MechanismBase("Spindexer") {
             field = value
         }
 
-//    @get:AutoLogOutput(key = "Spindexer/uptakeMotorVelocitySetpoint") TODO
+    @get:AutoLogOutput(key = "Spindexer/uptakeMotorVelocitySetpoint")
     var uptakeMotorVelocitySetpoint: Double = 0.0
         set(value) {
             uptakeMotor.setControl(
@@ -120,7 +121,7 @@ object Spindexer: MechanismBase("Spindexer") {
         }
 
     val stateOnTimer = Timer()
-//    @get:AutoLogOutput(key = "Spindexer/stateOnTime")  TODO
+    @get:AutoLogOutput(key = "Spindexer/stateOnTime")
     val stateOnTime: Double get() = stateOnTimer.get()
 
     var disableReversingAuto = false

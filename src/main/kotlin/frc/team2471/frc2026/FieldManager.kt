@@ -6,6 +6,8 @@ import frc.team2471.frc2026.FieldManager.rotateAroundField
 import frc.team2471.frc2026.Robot.Companion.isAutonomous
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import org.littletonrobotics.junction.AutoLogOutput
+import org.littletonrobotics.junction.MeanLogger
 //import org.littletonrobotics.junction.AutoLogOutput
 //import org.littletonrobotics.junction.LogFileUtil
 //import org.littletonrobotics.junction.Logger
@@ -29,7 +31,6 @@ import org.wpilib.math.geometry.Pose2d
 import org.wpilib.math.geometry.Pose3d
 import org.wpilib.math.geometry.Translation2d
 import org.wpilib.networktables.NetworkTableInstance
-import org.wpilib.system.Filesystem
 import org.wpilib.units.measure.Distance
 import org.wpilib.vision.apriltag.AprilTag
 import org.wpilib.vision.apriltag.AprilTagFieldLayout
@@ -93,14 +94,14 @@ object FieldManager {
 
     val trenchPositions: Array<Translation2d> = arrayOf(lowerBlueTrenchPosition, lowerRedTrenchPosition, upperRedTrenchPosition, upperBlueTrenchPosition)
 
-//    @get:AutoLogOutput(key = "FieldManager/In Trench Area") TODO
+    @get:AutoLogOutput(key = "FieldManager/In Trench Area")
     val inTrenchArea: Boolean
         get () {
             for (pose in trenchPositions) {
                 val relativePose = pose - Drive.localizer.pose.translation
                 if (relativePose.y.absoluteValue.meters < (trenchAreaWidth/2.0)) {
                     val predictedPose = Drive.localizer.pose.translation + Drive.velocity * Shooter.HOOD_DOWN_TIME
-//                    MeanLogger.recordOutput("Drive/predictedPose", predictedPose) TODO
+                    MeanLogger.recordOutput("Drive/predictedPose", predictedPose)
                     val predictedRelativePose = pose - predictedPose
                     if ((predictedRelativePose.x.sign != relativePose.x.sign) || (relativePose.x.absoluteValue.meters < (trenchAreaLength/2.0))) {
                         return true
@@ -110,7 +111,7 @@ object FieldManager {
             return false
         }
 
-//    @get:AutoLogOutput(key = "FieldManager/In Tower Area") TODO
+    @get:AutoLogOutput(key = "FieldManager/In Tower Area")
     val inTowerArea: Boolean
         get() {
             val yRelativeToTower: Distance = (Drive.localizer.pose.y.meters - (fieldCenter.y.meters + 11.46.inches * xRelativeToCenter.asInches.sign))
@@ -122,16 +123,16 @@ object FieldManager {
             return false
         }
 
-//    @get:AutoLogOutput(key = "FieldManager/In Opposing Alliance Zone") TODO
+    @get:AutoLogOutput(key = "FieldManager/In Opposing Alliance Zone")
     val inOpposingAllianceZone: Boolean
         get () = xRelativeToCenter.absoluteValue() > distanceFromMiddleToScore
                 && if (isRedAlliance) xRelativeToCenter < 0.0.meters else xRelativeToCenter > 0.0.meters
 
-//    @get:AutoLogOutput(key = "FieldManager/In No Pass Area") TODO
+    @get:AutoLogOutput(key = "FieldManager/In No Pass Area")
     val inOpposingNoPassArea: Boolean
         get() = if (!Drive.useAprilTags) false else inOpposingAllianceZone && yRelativeToCenter.absoluteValue() < 3.0.feet
 
-//    @get:AutoLogOutput(key = "FieldManager/In No Shoot Area") TODO
+    @get:AutoLogOutput(key = "FieldManager/In No Shoot Area")
     val inNoShootArea: Boolean
         get() = ((autoHoodRetraction && Drive.useAprilTags) && (inTowerArea || inTrenchArea)) || inOpposingNoPassArea
 
@@ -147,7 +148,7 @@ object FieldManager {
     val redGoalPose = (allAprilTags[3].pose.toPose2d().translation + allAprilTags[9].pose.toPose2d().translation)/2.0
     val blueGoalPose = (allAprilTags[0].pose.toPose2d().translation + allAprilTags[0].pose.toPose2d().translation)/2.0
 
-//    @get:AutoLogOutput(key = "FieldManager/Goal Pose") TODO
+    @get:AutoLogOutput(key = "FieldManager/Goal Pose")
     val goalPose: Translation2d
         get () = if (isRedAlliance) redGoalPose else blueGoalPose
 
@@ -175,7 +176,7 @@ object FieldManager {
     val distanceFromMiddleToScore = fieldCenter.x.feet - lowerRedTrenchPosition.x.feet - 5.0.feet
 
 
-//    @get:AutoLogOutput(key = "FieldManager/In Scoring Zone") TODO
+    @get:AutoLogOutput(key = "FieldManager/In Scoring Zone")
     val inScoringZone: Boolean
         get () = xRelativeToCenter.absoluteValue() > distanceFromMiddleToScore
                 && if (isRedAlliance) xRelativeToCenter > 0.0.meters else xRelativeToCenter < 0.0.meters
@@ -183,15 +184,15 @@ object FieldManager {
     const val HUB_PROCESSING_TIME = 1.0
     const val RAMP_TIME = 3.0
 
-//    @get:AutoLogOutput(key = "FieldManager/rawGameData") TODO
+    @get:AutoLogOutput(key = "FieldManager/rawGameData")
     val rawGameData: String
         get() = MatchState.getGameData().getOrNull() ?: ""
 
-//    @get:AutoLogOutput(key = "FieldManager/gameData") TODO
+    @get:AutoLogOutput(key = "FieldManager/gameData")
     val gameData: String
         get() = null/*overrideAutoWinner.get()*/ ?: rawGameData // TODO
 
-//    @get:AutoLogOutput(key = "FieldManager/redWonAuto") TODO
+    @get:AutoLogOutput(key = "FieldManager/redWonAuto")
     val redWonAuto: Boolean
         get() = when (gameData) {
             "R" -> true
@@ -204,13 +205,13 @@ object FieldManager {
     val blueWonAuto: Boolean
         get () = !redWonAuto
 
-//    @get:AutoLogOutput(key = "FieldManager/weWonAuto") TODO
+    @get:AutoLogOutput(key = "FieldManager/weWonAuto")
     val weWonAuto: Boolean
         get () = redWonAuto == isRedAlliance
 
     val weWonAutoEntry = table.getEntry("We Won Auto")
 
-//    @get:AutoLogOutput(key = "FieldManager/matchTime") TODO
+    @get:AutoLogOutput(key = "FieldManager/matchTime")
     val matchTime: Double
         get() = MatchState.getMatchTime()
 
@@ -232,7 +233,7 @@ object FieldManager {
     val shouldShootEndTimes = arrayOf(105.0, 80.0, 55.0, 30.0)
 
     // this is offset by shoot time. for shooting /O\
-//    @get:AutoLogOutput(key = "FieldManager/shouldShoot") TODO
+    @get:AutoLogOutput(key = "FieldManager/shouldShoot")
     val shouldShoot: Boolean
         get () {
             if (!doShiftTiming) {
@@ -248,7 +249,7 @@ object FieldManager {
             }
         }
 
-//    @get:AutoLogOutput(key = "FieldManager/shouldRamp") TODO
+    @get:AutoLogOutput(key = "FieldManager/shouldRamp")
     val shouldRamp: Boolean
         get () {
             if (!doShiftTiming || matchTime < 0.0) {
@@ -264,7 +265,7 @@ object FieldManager {
             }
         }
 
-//    @get:AutoLogOutput(key = "FieldManager/hubIsActive") TODO
+    @get:AutoLogOutput(key = "FieldManager/hubIsActive")
     val hubIsActive: Boolean
         get () {
             if (matchTime !in 30.0..130.0 || isAutonomous) {
@@ -329,7 +330,7 @@ object FieldManager {
 
     fun disableAutoHoodRetractionCommand() = use {
         println("Disabling autoHoodRetraction")
-        periodic {
+        this.periodic {
             autoHoodRetraction = false
         }
     }.onCancel {

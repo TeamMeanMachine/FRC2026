@@ -54,12 +54,10 @@ object Autonomous: Autonomi() {
 
     fun registerAutoOpModes() {
         autos.forEach {
-            println("Registering ${it.name} as an AutoOpMode")
             Robot.instance.addOpModeFactory({ it.toAutoOpMode() }, RobotMode.AUTONOMOUS, it.name)
             println("Registered ${it.name} as an AutoOpMode")
         }
         tests.forEach {
-            println("Registering ${it.name} TestOpMode")
             Robot.instance.addOpModeFactory({ it.toTestOpMode() }, RobotMode.UTILITY, it.name)
             println("Registered ${it.name} TestOpMode")
         }
@@ -153,7 +151,7 @@ object Autonomous: Autonomi() {
                 Intake.disableSpringProtection = false
             }, {
                 // Ramp up shooter always
-                periodic {
+                this.periodic {
                     Shooter.rampUpLoop()
                 }
             })

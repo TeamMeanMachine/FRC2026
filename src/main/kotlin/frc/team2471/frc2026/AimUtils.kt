@@ -3,6 +3,7 @@ package frc.team2471.frc2026
 import frc.team2471.frc2026.Shooter.SHOOTER_GEAR_RATIO
 import frc.team2471.frc2026.Shooter.floorSpeedCurve
 import frc.team2471.frc2026.Shooter.hubSpeedCurve
+import org.littletonrobotics.junction.AutoLogOutput
 //import org.littletonrobotics.junction.AutoLogOutput
 import org.team2471.frc.lib.math.round
 import org.team2471.frc.lib.units.asDegrees
@@ -77,7 +78,7 @@ object AimUtils {
     }
 
 
-//    @get:AutoLogOutput(key = "aim target") TODO
+    @get:AutoLogOutput(key = "aim target")
     val aimTarget: Translation2d
         get() {
             if (!Drive.useAprilTags) {

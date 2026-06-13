@@ -10,6 +10,7 @@ import org.littletonrobotics.junction.networktables.MeanNT4Publisher
 import org.team2471.frc.lib.autonomous.TestOpMode
 import org.team2471.frc.lib.autonomous.TestRoutine
 import org.team2471.frc.lib.control.LoopLogger
+import org.team2471.frc.lib.control.isConnected
 import org.team2471.frc.lib.ctre.loggedTalonFX.MasterMotor
 import org.team2471.frc.lib.energy.BatteryLogger
 import org.team2471.frc.lib.units.asFeet

@@ -1,20 +1,13 @@
 package frc.team2471.frc2026.tests
 
-//import edu.wpi.first.wpilibj2.command.Command
-//import edu.wpi.first.wpilibj2.command.Commands
 import frc.team2471.frc2026.OI
 import frc.team2471.frc2026.Drive
-//import org.team2471.frc.lib.control.commands.beforeRun
-//import org.team2471.frc.lib.control.commands.beforeWait
-import org.team2471.frc.lib.control.dPad
-//import org.team2471.frc.lib.control.commands.runCommand
 import org.team2471.frc.lib.units.asFeet
 import org.team2471.frc.lib.units.asRotation2d
 import org.team2471.frc.lib.units.degrees
 import org.team2471.frc.lib.units.degreesPerSecond
 import org.team2471.frc.lib.units.feetPerSecond
 import org.team2471.frc.lib.units.meters
-//import org.littletonrobotics.junction.Logger
 import org.team2471.frc.lib.units.absoluteValue
 import org.team2471.frc.lib.units.asDegrees
 import org.team2471.frc.lib.units.asMeters

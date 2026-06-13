@@ -1,17 +1,18 @@
 package frc.team2471.frc2026
 
 import com.ctre.phoenix6.swerve.utility.PhoenixPIDController
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 //import org.littletonrobotics.junction.Logger
 import org.littletonrobotics.junction.MeanLogger
 import org.team2471.frc.lib.commands.onCancel
 import org.team2471.frc.lib.commands.periodic
+import org.team2471.frc.lib.commands.setDefaultCommand
 import org.team2471.frc.lib.commands.use
 import org.team2471.frc.lib.control.CurrentLimits
 import org.team2471.frc.lib.control.LoopLogger
 import org.team2471.frc.lib.control.rightStickButton
-import org.team2471.frc.lib.ctre.PhoenixUtil
 import org.team2471.frc.lib.ctre.currentLimits
 import org.team2471.frc.lib.ctre.modifyConfiguration
 import org.team2471.frc.lib.localization.PoseLocalizer
@@ -22,6 +23,8 @@ import org.team2471.frc.lib.units.asMetersPerSecondPerSecond
 import org.team2471.frc.lib.units.degrees
 import org.team2471.frc.lib.units.inches
 import org.team2471.frc.lib.math.DynamicInterpolatingTreeMap
+import org.team2471.frc.lib.units.asMeters
+import org.team2471.frc.lib.units.asRadians
 import org.team2471.frc.lib.units.asRotation2d
 import org.team2471.frc.lib.units.inchesPerSecond
 import org.team2471.frc.lib.units.metersPerSecondPerSecond
@@ -30,14 +33,18 @@ import org.team2471.frc.lib.units.radians
 import org.team2471.frc.lib.units.unWrap
 import org.team2471.frc.lib.util.demoSpeed
 import org.team2471.frc.lib.util.isBlueAlliance
-import org.team2471.frc.lib.util.isSim
 import org.team2471.frc.lib.vision.Fiducial
+import org.team2471.frc.lib.vision.PipelineConfig
 import org.team2471.frc.lib.vision.QuixVisionCamera
+import org.team2471.frc.lib.vision.photonVision.PhotonVisionCamera
 import org.wpilib.command3.Command
 import org.wpilib.driverstation.RobotState
 import org.wpilib.math.controller.PIDController
 import org.wpilib.math.geometry.Pose2d
 import org.wpilib.math.geometry.Rotation2d
+import org.wpilib.math.geometry.Rotation3d
+import org.wpilib.math.geometry.Transform3d
+import org.wpilib.math.geometry.Translation3d
 import org.wpilib.math.interpolation.Interpolator
 import org.wpilib.math.interpolation.InverseInterpolator
 import org.wpilib.math.kinematics.ChassisVelocities
@@ -142,6 +149,10 @@ object Drive: SwerveDriveSubsystem(DriveConstants.drivetrainConstants, *DriveCon
         localizer.trackAllTags()
         localizer.disableSingleTagCalculation() // for loop times and we dont use it in 2026
 
+        setDefaultCommand {
+            await(joystickDrive())
+        }
+
         finalInitialization()
     }
 
@@ -210,16 +221,13 @@ object Drive: SwerveDriveSubsystem(DriveConstants.drivetrainConstants, *DriveCon
         LoopLogger.record("Drive pirdc")
     }
 
-    override fun default() = defaultCommand {
-        await(joystickDrive())
-    }
-
     /**
      * Sets all drive motor current limits to be the passed in [currentLimits].
      */
+    @OptIn(DelicateCoroutinesApi::class)
     fun setDriveCurrentLimits(currentLimits: CurrentLimits) {
         GlobalScope.launch {
-            io.modules.forEach {
+            modules.forEach {
                 it.driveMotor.modifyConfiguration {
                     currentLimits(
                         currentLimits.continuousLimit,
@@ -250,7 +258,7 @@ object Drive: SwerveDriveSubsystem(DriveConstants.drivetrainConstants, *DriveCon
 
     var inSnakeMode = false
     fun snakeMode(): Command = use(Drive) {
-        periodic {
+        this.periodic {
             println("snake mode")
             inSnakeMode = true
             val driveTranslation = OI.driveTranslation
@@ -269,7 +277,7 @@ object Drive: SwerveDriveSubsystem(DriveConstants.drivetrainConstants, *DriveCon
         inSnakeMode = false
     }
 
-    fun zeroGyroCommand() = use {
+    fun zeroGyroCommand() = use(Drive) {
         println("zero gyro command")
         zeroGyro()
     }

@@ -10,10 +10,12 @@ import com.ctre.phoenix6.hardware.TalonFX
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import org.littletonrobotics.junction.AutoLogOutput
 import org.team2471.frc.lib.commands.MechanismBase
 import org.team2471.frc.lib.commands.onCancel
 import org.team2471.frc.lib.commands.parallel
 import org.team2471.frc.lib.commands.periodic
+import org.team2471.frc.lib.commands.setDefaultCommand
 import org.team2471.frc.lib.commands.use
 import org.team2471.frc.lib.control.CurrentLimits
 import org.team2471.frc.lib.control.LoopLogger
@@ -64,20 +66,20 @@ object Intake: MechanismBase("Intake") {
     val stopSensor0 = DigitalInput(DigitalSensors.INTAKE_STOP_SENSOR_0)
     val stopSensor1 = DigitalInput(DigitalSensors.INTAKE_STOP_SENSOR_1)
 
-//    @get:AutoLogOutput(key = "Intake/Intake state") TODO
+    @get:AutoLogOutput(key = "Intake/Intake state")
     var intakeState: IntakeState = IntakeState.OFF
     var prevIntakeState = intakeState
 
-//    @get:AutoLogOutput(key = "Intake/Hit Hard Stop 0") TODO
+    @get:AutoLogOutput(key = "Intake/Hit Hard Stop 0")
     val hitHardStop0 get() = !stopSensor0.get()
 
-//    @get:AutoLogOutput(key = "Intake/Hit Hard Stop 1") TODO
+    @get:AutoLogOutput(key = "Intake/Hit Hard Stop 1")
     val hitHardStop1 get() = !stopSensor1.get()
 
-//    @get:AutoLogOutput(key = "Intake/Roller Motor Temp") TODO
+    @get:AutoLogOutput(key = "Intake/Roller Motor Temp")
     val rollerTemp get() = rollerMotor.deviceTemp.valueAsDouble
 
-//    @get:AutoLogOutput(key = "Intake/Velocity Setpoint") TODO
+    @get:AutoLogOutput(key = "Intake/Velocity Setpoint")
     var velocitySetpoint: Double = 0.0
         set(value) {
             field = value.coerceIn(-100.0, 100.0)
@@ -92,7 +94,7 @@ object Intake: MechanismBase("Intake") {
 
     const val REACHED_SETPOINT_THRESHOLD = 0.05
 
-//    @get:AutoLogOutput(key = "Intake/Deploy Setpoint") TODO
+    @get:AutoLogOutput(key = "Intake/Deploy Setpoint")
     var deploySetpoint: Double = 0.0
         set(value) {
             field = value
@@ -175,44 +177,44 @@ object Intake: MechanismBase("Intake") {
             }
         }
 
-//    @get:AutoLogOutput(key = "Intake/Roller Velocity") TODO
+    @get:AutoLogOutput(key = "Intake/Roller Velocity")
     val rollerVelocity: Double
         get() = rollerMotor.velocity.valueAsDouble
 
-//    @get:AutoLogOutput(key = "Intake/Roller Current") TODO
+    @get:AutoLogOutput(key = "Intake/Roller Current")
     val rollerCurrent: Double
         get() = rollerMotor.supplyCurrent.valueAsDouble
 
-//    @get:AutoLogOutput(key = "Intake/Deploy0 Current") TODO
+    @get:AutoLogOutput(key = "Intake/Deploy0 Current")
     val deployCurrent0: Double
         get() = deployMotor0.supplyCurrent.valueAsDouble
 
-//    @get:AutoLogOutput(key = "Intake/Deploy1 Current") TODO
+    @get:AutoLogOutput(key = "Intake/Deploy1 Current")
     val deployCurrent1: Double
         get() = deployMotor1.supplyCurrent.valueAsDouble
 
-//    @get:AutoLogOutput(key = "Intake/Deploy0 Velocity") TODO
+    @get:AutoLogOutput(key = "Intake/Deploy0 Velocity")
     val deployVelocity0: Double
         get() = deployMotor0.velocity.valueAsDouble
 
-//    @get:AutoLogOutput(key = "Intake/Deploy1 Velocity") TODO
+    @get:AutoLogOutput(key = "Intake/Deploy1 Velocity")
     val deployVelocity1: Double
         get() = deployMotor1.velocity.valueAsDouble
 
-//    @get:AutoLogOutput(key = "Intake/Deploy Motor Position") TODO
+    @get:AutoLogOutput(key = "Intake/Deploy Motor Position")
     val deployMotor0Position: Double
         get() = deployMotor0.position.valueAsDouble
 
-//    @get:AutoLogOutput(key = "Intake/Deploy Motor Follower Position") TODO
+    @get:AutoLogOutput(key = "Intake/Deploy Motor Follower Position")
     val deployMotor1Position: Double
         get() = if (Robot.isCompBot) deployMotor1.position.valueAsDouble else 0.0
 
 
-//    @get:AutoLogOutput(key = "Intake/Deploy Motor Error") TODO
+    @get:AutoLogOutput(key = "Intake/Deploy Motor Error")
     val deployMotor0Error: Double
         get() = deployMotor0Position - deploySetpoint//deployMotor.closedLoopError.valueAsDouble
 
-//    @get:AutoLogOutput(key = "Intake/Deploy Motor Follower Error") TODO
+    @get:AutoLogOutput(key = "Intake/Deploy Motor Follower Error")
     val deployMotor1Error: Double
         get() = deployMotor1Position - deploySetpoint//deployMotor.closedLoopError.valueAsDouble
 
@@ -221,15 +223,15 @@ object Intake: MechanismBase("Intake") {
     var isDeployed: Boolean = false
     var disableSpringProtection = false
 
-//    @get:AutoLogOutput(key = "Intake/goingToSetpoint0") TODO
+    @get:AutoLogOutput(key = "Intake/goingToSetpoint0")
     var goingToSetpoint0: Boolean = false
 
-//    @get:AutoLogOutput(key = "Intake/goingToSetpoint1") TODO
+    @get:AutoLogOutput(key = "Intake/goingToSetpoint1")
     var goingToSetpoint1: Boolean = false
 
-//    @get:AutoLogOutput(key = "Intake/reachedSetpoint0") TODO
+    @get:AutoLogOutput(key = "Intake/reachedSetpoint0")
     var reachedSetpoint0: Boolean = false
-//    @get:AutoLogOutput(key = "Intake/reachedSetpoint1") TODO
+    @get:AutoLogOutput(key = "Intake/reachedSetpoint1")
     var reachedSetpoint1: Boolean = false
 
 
@@ -297,7 +299,7 @@ object Intake: MechanismBase("Intake") {
 //        this.defaultCommand = use("Intake Default", this) { default()}//default()//.ignoringDisable(true)
 
         this.defaultCommand = use("Intake Default", this) {
-            periodic(0.0) {
+            this.periodic(0.0) {
                 LoopLogger.record("b4 Intake default")
             }
         }
@@ -409,7 +411,7 @@ object Intake: MechanismBase("Intake") {
     private fun homeMotorOut(motor: TalonFX, hitHardStopSupplier: () -> Boolean): Command = use("HomeMotorOut") {
         val timer = Timer()
         timer.start()
-        periodic {
+        this.periodic {
             if ((hitHardStopSupplier.invoke() && timer.get() > 0.5) || timer.get() > 6.0) {
                 stop()
             } else {
@@ -423,8 +425,8 @@ object Intake: MechanismBase("Intake") {
     }
 
     fun pulse() = use(this) {
-        periodic {
-            if (Robot.isAutonomous || OI.driverController.rightTriggerAxis > 0.75) {
+        this.periodic {
+            if (Robot.isAutonomous || OI.driverController.rightTrigger > 0.75) {
                 stow()
                 wait(0.25.seconds)
                 deploy()
@@ -445,19 +447,21 @@ object Intake: MechanismBase("Intake") {
     }
 
 
-    override fun default() = defaultCommand {
-        periodic {
+    override fun default() = setDefaultCommand {
+        this.periodic {
             LoopLogger.record("b4 Intake default")
             when (intakeState) {
                 IntakeState.OFF -> {
                     velocitySetpoint = 0.0
                 }
+
                 IntakeState.INTAKING -> {
                     velocitySetpoint = if (Robot.isAutonomous) 100.0 else INTAKE_POWER
                     if (!Shooter.isShooting) {
                         Spindexer.currentState = Spindexer.State.AGITATING
                     }
                 }
+
                 IntakeState.SPITTING -> {
                     velocitySetpoint = -INTAKE_POWER
                 }
@@ -470,16 +474,16 @@ object Intake: MechanismBase("Intake") {
             }
             prevIntakeState = intakeState
 
-//        if (goingToSetpoint0 && deployMotor0Error.absoluteValue < FLEX_THRESHOLD) {
-//            goingToSetpoint0 = false
-//        }
+    //        if (goingToSetpoint0 && deployMotor0Error.absoluteValue < FLEX_THRESHOLD) {
+    //            goingToSetpoint0 = false
+    //        }
 
-//        if (Robot.isCompBot && goingToSetpoint1 && deployMotor1Error.absoluteValue < FLEX_THRESHOLD) {
-//            goingToSetpoint1 = false
-//        }
+    //        if (Robot.isCompBot && goingToSetpoint1 && deployMotor1Error.absoluteValue < FLEX_THRESHOLD) {
+    //            goingToSetpoint1 = false
+    //        }
 
 
-//        LoopLogger.record("Intake default b4 controlMode")
+    //        LoopLogger.record("Intake default b4 controlMode")
 
 
             LoopLogger.record("Intake default")
