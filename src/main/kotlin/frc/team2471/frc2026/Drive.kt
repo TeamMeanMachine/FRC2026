@@ -1,7 +1,5 @@
 package frc.team2471.frc2026
 
-import com.ctre.phoenix6.CANBus
-import com.ctre.phoenix6.hardware.Pigeon2
 import com.ctre.phoenix6.swerve.utility.PhoenixPIDController
 import edu.wpi.first.math.Matrix
 import edu.wpi.first.math.VecBuilder
@@ -24,7 +22,6 @@ import edu.wpi.first.wpilibj.Timer
 import edu.wpi.first.wpilibj2.command.Command
 import frc.team2471.frc2026.OI.driveLeftTriggerFullPress
 import frc.team2471.frc2026.OI.driverController
-import frc.team2471.frc2026.Robot.powerTracker
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.littletonrobotics.junction.AutoLogOutput
@@ -35,7 +32,6 @@ import org.team2471.frc.lib.control.commands.finallyRun
 import org.team2471.frc.lib.control.commands.runCommand
 import org.team2471.frc.lib.control.rightStickButton
 import org.team2471.frc.lib.ctre.PhoenixUtil
-import org.team2471.frc.lib.ctre.applyConfiguration
 import org.team2471.frc.lib.ctre.currentLimits
 import org.team2471.frc.lib.ctre.modifyConfiguration
 import org.team2471.frc.lib.localization.PoseLocalizer
@@ -57,7 +53,6 @@ import org.team2471.frc.lib.units.unWrap
 import org.team2471.frc.lib.util.demoMode
 import org.team2471.frc.lib.util.demoSpeed
 import org.team2471.frc.lib.util.isBlueAlliance
-import org.team2471.frc.lib.util.isSim
 import org.team2471.frc.lib.vision.Fiducial
 import org.team2471.frc.lib.vision.PipelineConfig
 import org.team2471.frc.lib.vision.QuixVisionCamera
@@ -243,21 +238,6 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
 
         localizer.trackAllTags()
         localizer.disableSingleTagCalculation() // for loop times and we dont use it in 2026
-
-        if (!isSim) {
-            powerTracker.addMotors("Drive", {
-                var tempTotalDriveCurrent = 0.0
-                var tempTotalSteerCurrent = 0.0
-                modules.forEach {
-                    tempTotalDriveCurrent += it.driveMotor.supplyCurrent.valueAsDouble
-                    tempTotalSteerCurrent += it.steerMotor.supplyCurrent.valueAsDouble
-                }
-                totalSteerCurrent = tempTotalSteerCurrent
-                totalDriveCurrent = tempTotalDriveCurrent
-                tempTotalDriveCurrent
-            })
-            powerTracker.addMotors("Steer", { totalSteerCurrent })
-        }
 
 
         finalInitialization()

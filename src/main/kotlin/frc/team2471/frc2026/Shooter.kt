@@ -7,7 +7,6 @@ import com.ctre.phoenix6.controls.NeutralOut
 import com.ctre.phoenix6.controls.PositionVoltage
 import com.ctre.phoenix6.controls.VoltageOut
 import com.ctre.phoenix6.hardware.CANcoder
-import com.ctre.phoenix6.hardware.TalonFX
 import com.ctre.phoenix6.signals.InvertedValue
 import com.ctre.phoenix6.signals.MotorAlignmentValue
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue
@@ -29,7 +28,6 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine
 import frc.team2471.frc2026.AimUtils.shooterEfficiency
 import frc.team2471.frc2026.AimUtils.toExitVelocity
 import frc.team2471.frc2026.Robot.isCompBot
-import frc.team2471.frc2026.Robot.powerTracker
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.littletonrobotics.junction.AutoLogOutput
@@ -41,7 +39,6 @@ import org.team2471.frc.lib.control.commands.onlyRunWhileFalse
 import org.team2471.frc.lib.control.commands.onlyRunWhileTrue
 import org.team2471.frc.lib.control.commands.parallelCommand
 import org.team2471.frc.lib.control.commands.runCommand
-import org.team2471.frc.lib.control.commands.runOnceCommand
 import org.team2471.frc.lib.control.rightStickButton
 import org.team2471.frc.lib.ctre.addFollower
 import org.team2471.frc.lib.ctre.applyConfiguration
@@ -58,8 +55,8 @@ import org.team2471.frc.lib.ctre.p
 import org.team2471.frc.lib.ctre.remoteCANCoder
 import org.team2471.frc.lib.ctre.s
 import org.team2471.frc.lib.ctre.setCANCoderAngle
+import org.team2471.frc.lib.energy.BatteryLogger
 import org.team2471.frc.lib.units.absoluteValue
-import org.team2471.frc.lib.units.asAmps
 import org.team2471.frc.lib.units.asFeet
 import org.team2471.frc.lib.units.asMeters
 import org.team2471.frc.lib.units.asMetersPerSecond
@@ -78,7 +75,6 @@ import org.team2471.frc.lib.units.volts
 import org.team2471.frc.lib.units.voltsPerSecond
 import org.team2471.frc.lib.util.angleTo
 import org.team2471.frc.lib.util.demoMode
-import org.team2471.frc.lib.util.demoSpeed
 import org.team2471.frc.lib.util.isReal
 import org.team2471.frc.lib.util.isSim
 import kotlin.math.abs
@@ -461,11 +457,6 @@ object Shooter: SubsystemBase("Shooter") {
 //            }
         }
 
-        if (!isSim) {
-            powerTracker.addMotors("Shooter Roller", { shooterMotor.getSupplyCurrent(true).value.asAmps }, 2)
-            powerTracker.addMotors("Hood", { hoodMotor.getSupplyCurrent(true).value.asAmps })
-        }
-
 
         GlobalScope.launch {
             org.team2471.frc.lib.coroutines.periodic(0.01) {
@@ -503,6 +494,9 @@ object Shooter: SubsystemBase("Shooter") {
             zeroHoodButtonEntry.setBoolean(false)
             println("Zeroed hood")
         }
+
+        BatteryLogger.recordCurrent("Shooter Roller", shooterMotor.supplyCurrent.value * 2.0)
+        BatteryLogger.recordCurrent("Hood", hoodMotor.supplyCurrent.value)
 
 //        shooterMotor.setControl(VoltageOut(shooterController.updateVoltage(shooterAngularVelocitySetpoint.asRotationsPerSecond, shooterAngularVelocity.asRotationsPerSecond)))
         LoopLogger.record("Shooter periodic")

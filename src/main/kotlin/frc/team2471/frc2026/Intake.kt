@@ -14,7 +14,6 @@ import edu.wpi.first.wpilibj.DigitalInput
 import edu.wpi.first.wpilibj.Timer
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.SubsystemBase
-import frc.team2471.frc2026.Robot.powerTracker
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.littletonrobotics.junction.AutoLogOutput
@@ -38,8 +37,8 @@ import org.team2471.frc.lib.ctre.modifyConfiguration
 import org.team2471.frc.lib.ctre.motionMagic
 import org.team2471.frc.lib.ctre.p
 import org.team2471.frc.lib.ctre.s
-import org.team2471.frc.lib.units.asVolts
-import org.team2471.frc.lib.util.isSim
+import org.team2471.frc.lib.energy.BatteryLogger
+import org.team2471.frc.lib.units.amps
 import kotlin.math.absoluteValue
 
 object Intake: SubsystemBase("Intake") {
@@ -300,13 +299,6 @@ object Intake: SubsystemBase("Intake") {
             rollerMotor.addFollower(rollerMotorFollower)
         }
 
-        if (!isSim) {
-            powerTracker.addMotors("Intake Roller", { rollerCurrent }, 2, {rollerMotor.supplyVoltage.value.asVolts})
-            powerTracker.addMotors("Intake Deploy 0", { deployCurrent0 })
-            if (Robot.isCompBot) {
-                powerTracker.addMotors("Intake Deploy 1", { deployCurrent1 })
-            }
-        }
 
         this.defaultCommand = default().ignoringDisable(true)
 
@@ -330,6 +322,9 @@ object Intake: SubsystemBase("Intake") {
             }
             prevMaxForwardTorque = maxForwardTorque
         }
+
+        BatteryLogger.recordCurrent("Intake Deploy", (deployCurrent0 + deployCurrent1).amps)
+        BatteryLogger.recordCurrent("Intake Rollers", rollerCurrent.amps * 2.0)
     }
 
     fun deploy() {

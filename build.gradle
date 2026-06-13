@@ -3,11 +3,13 @@ import groovy.json.JsonSlurper
 
 plugins {
     id "java"
-    id "edu.wpi.first.GradleRIO" version "2026.2.1"
-    id "org.jetbrains.kotlin.jvm" version "2.2.0"
-    id "org.jetbrains.kotlin.kapt" version "2.2.0"
     id "idea"
+    id "edu.wpi.first.GradleRIO" version "2026.2.1"
+    id "org.jetbrains.kotlin.jvm" version "2.3.21"
+    id "org.jetbrains.kotlin.kapt" version "2.3.21"
 }
+// Force the global WPILib provider to load vendors out of meanlib,
+wpi.vendor.loadFrom(project(":meanlib"))
 
 java {
 }
@@ -74,16 +76,15 @@ wpi.java.debugJni = false
 def includeDesktopSupport = true
 
 // Configuration for AdvantageKit
-task(replayWatch, type: JavaExec) {
-    mainClass = "org.littletonrobotics.junction.ReplayWatch"
-    classpath = sourceSets.main.runtimeClasspath
-}
+//task(replayWatch, type: JavaExec) {
+//    mainClass = "org.littletonrobotics.junction.ReplayWatch"
+//    classpath = sourceSets.main.runtimeClasspath
+//}
 
 // Defining my dependencies. In this case, WPILib (+ friends), and vendor libraries.
 // Also defines JUnit 4.
 dependencies {
     implementation(project(":meanlib"))
-
 
     annotationProcessor wpi.java.deps.wpilibAnnotations()
     implementation wpi.java.deps.wpilib()
@@ -113,7 +114,7 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-reflect"
     implementation "org.jetbrains.kotlin:kotlin-stdlib"
 
-    def akitJson = new JsonSlurper().parseText(new File(projectDir.getAbsolutePath() + "/vendordeps/AdvantageKit.json").text)
+    def akitJson = new JsonSlurper().parseText(new File(projectDir.getAbsolutePath() + "/meanlib/vendordeps/AdvantageKit.json").text)
     kapt "org.littletonrobotics.akit:akit-autolog:$akitJson.version"
 //    kapt "edu.wpi.first.epilogue:epilogue-processor-java:2026.2.2"
 }
@@ -143,21 +144,12 @@ jar {
     duplicatesStrategy = DuplicatesStrategy.INCLUDE
 }
 
-def copyVendordeps = {
-    subprojects {
-        def vendordepsDir = file("$projectDir/vendordeps")
-        if (vendordepsDir.exists()) {
-            rootProject.copy {
-                from vendordepsDir
-                into "${rootProject.projectDir}/vendordeps"
-                include '*.json'
-            }
-        }
+// Automatically download library documentation from libraries
+idea {
+    module {
+        downloadJavadoc = true
+        downloadSources = true
     }
-}
-
-gradle.projectsEvaluated {
-    copyVendordeps()
 }
 
 tasks.matching { it.name == "build" }.all {

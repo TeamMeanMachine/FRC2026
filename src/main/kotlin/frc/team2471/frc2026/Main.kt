@@ -8,7 +8,6 @@ import edu.wpi.first.hal.HAL
 import edu.wpi.first.wpilibj.DriverStation
 import edu.wpi.first.wpilibj.IterativeRobotBase
 import edu.wpi.first.wpilibj.RobotBase
-import edu.wpi.first.wpilibj.Timer
 import edu.wpi.first.wpilibj.Watchdog
 import edu.wpi.first.wpilibj2.command.CommandScheduler
 import edu.wpi.first.wpilibj2.command.Commands
@@ -23,12 +22,9 @@ import org.littletonrobotics.junction.networktables.NT4Publisher
 import org.littletonrobotics.junction.wpilog.WPILOGReader
 import org.littletonrobotics.junction.wpilog.WPILOGWriter
 import org.team2471.frc.lib.control.LoopLogger
-import org.team2471.frc.lib.coroutines.periodic
-import org.team2471.frc.lib.ctre.currentLimits
 import org.team2471.frc.lib.ctre.loggedTalonFX.MasterMotor
-import org.team2471.frc.lib.ctre.modifyConfiguration
+import org.team2471.frc.lib.energy.BatteryLogger
 import org.team2471.frc.lib.units.asFeet
-import org.team2471.frc.lib.util.PowerTracker
 import org.team2471.frc.lib.logging.NT4NonFMSPublisher
 import org.team2471.frc.lib.util.RobotMode
 import org.team2471.frc.lib.util.robotMode
@@ -73,9 +69,6 @@ object Robot : LoggedRobot() {
     override fun isAutonomous(): Boolean = isAutonomous
     override fun isDisabled(): Boolean = isDisabled
     override fun isAutonomousEnabled(): Boolean = isAutonomousEnabled
-
-    val powerTracker = PowerTracker()
-
 
     // Subsystems:
     // MUST define an individual variable for all subsystems inside this class or else @AutoLogOutput will not work -2025
@@ -156,14 +149,6 @@ object Robot : LoggedRobot() {
                 delay(10.milliseconds)
             }
         }
-
-        GlobalScope.launch {
-            val t = Timer()
-            periodic {
-                powerTracker.update(t.get())
-                t.restart()
-            }
-        }
     }
 
     /** This function is called periodically during all modes.  */
@@ -194,7 +179,7 @@ object Robot : LoggedRobot() {
         }
         LoopLogger.record("after CommandScheduler")
 
-        powerTracker.logData()
+        BatteryLogger.logData()
         LoopLogger.record("after powerTracker update")
 
         // Return to non-RT thread priority (do not modify the first argument)

@@ -10,7 +10,6 @@ import edu.wpi.first.units.measure.AngularVelocity
 import edu.wpi.first.units.measure.Current
 import edu.wpi.first.wpilibj.Timer
 import edu.wpi.first.wpilibj2.command.SubsystemBase
-import frc.team2471.frc2026.Robot.powerTracker
 import org.littletonrobotics.junction.AutoLogOutput
 import org.team2471.frc.lib.control.LoopLogger
 import org.team2471.frc.lib.ctre.addFollower
@@ -20,10 +19,9 @@ import org.team2471.frc.lib.ctre.currentLimits
 import org.team2471.frc.lib.ctre.inverted
 import org.team2471.frc.lib.ctre.p
 import org.team2471.frc.lib.ctre.s
+import org.team2471.frc.lib.energy.BatteryLogger
 import org.team2471.frc.lib.math.deadband
 import org.team2471.frc.lib.math.linearMap
-import org.team2471.frc.lib.units.asAmps
-import org.team2471.frc.lib.util.isSim
 
 object Spindexer: SubsystemBase("Spindexer") {
     val table = NetworkTableInstance.getDefault().getTable("Spindexer")
@@ -186,15 +184,7 @@ object Spindexer: SubsystemBase("Spindexer") {
             p(7.0)
             s(2.0, StaticFeedforwardSignValue.UseVelocitySign)
         }
-
-        if (!isSim) {
-            powerTracker.addMotors("Dye Rotor Spin", { spinMotor.getSupplyCurrent(true).value.asAmps }, 2)
-            powerTracker.addMotors("Dye Rotor Uptake", { uptakeMotor.getSupplyCurrent(true).value.asAmps })
-            powerTracker.addMotors("Dye Rotor Sidetake", { sidetakeMotor.getSupplyCurrent(true).value.asAmps })
-        }
-
     }
-
 
     override fun periodic() {
         LoopLogger.record("b4 spindexer periodic")
@@ -249,6 +239,11 @@ object Spindexer: SubsystemBase("Spindexer") {
 //                stateOnTimer.stop()
             }
         }
+
+        BatteryLogger.recordCurrent("Dye Rotor Spin", spinMotor.supplyCurrent.value * 2.0)
+        BatteryLogger.recordCurrent("Dye Rotor Uptake", uptakeMotor.supplyCurrent.value)
+        BatteryLogger.recordCurrent("Dye Rotor Sidetake", sidetakeMotor.supplyCurrent.value)
+
         LoopLogger.record("spindexer periodic")
     }
 

@@ -15,10 +15,8 @@ import edu.wpi.first.units.measure.AngularVelocity
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.SubsystemBase
 import frc.team2471.frc2026.OI.driveLeftTriggerFullPress
-import frc.team2471.frc2026.Robot.powerTracker
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import org.apache.commons.math3.geometry.euclidean.twod.Vector2D
 import org.littletonrobotics.junction.AutoLogOutput
 import org.littletonrobotics.junction.Logger
 import org.team2471.frc.lib.control.LoopLogger
@@ -52,13 +50,11 @@ import kotlin.math.abs
 import org.team2471.frc.lib.coroutines.periodic
 import org.team2471.frc.lib.ctre.alternateFeedbackSensor
 import org.team2471.frc.lib.ctre.brakeMode
-import org.team2471.frc.lib.ctre.coastMode
-import org.team2471.frc.lib.units.asAmps
+import org.team2471.frc.lib.energy.BatteryLogger
 import org.team2471.frc.lib.units.asFeet
 import org.team2471.frc.lib.units.rotationsPerSecond
 import org.team2471.frc.lib.util.demoMode
 import org.team2471.frc.lib.util.isRedAlliance
-import org.team2471.frc.lib.util.isSim
 import kotlin.collections.toDoubleArray
 import kotlin.math.IEEErem
 import kotlin.math.absoluteValue
@@ -338,11 +334,6 @@ object Turret: SubsystemBase("Turret") {
         }
         turretMotor.addFollower(Falcons.TURRET_1)
 
-        if (!isSim) {
-            powerTracker.addMotors("Turret", { turretMotor.getSupplyCurrent(true).value.asAmps }, 2)
-        }
-
-
 //        turretMotor.setPosition(fusedEncoderAngle)
         setTurretOffset(Drive.heading.measure)
 
@@ -415,6 +406,8 @@ object Turret: SubsystemBase("Turret") {
         if (!Robot.isEnabled) {
             fusedEncoderAngleEntry.setDouble(fusedEncoderAngle.asDegrees)
         }
+
+        BatteryLogger.recordCurrent("Turret", turretMotor.supplyCurrent.value * 2.0)
 
         LoopLogger.record("turret periodic")
     }
