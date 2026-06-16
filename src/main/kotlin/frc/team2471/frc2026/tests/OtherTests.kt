@@ -49,6 +49,17 @@ object PrintPassCurves {
     }
 }
 
+// Prints the pass curves using a gradle task. Needs a main function in a class so I put it here.
+object PrintPassOverHubCurves {
+    @JvmStatic
+    fun main(args: Array<String>) {
+        printShooterCurves(-Turret.turretHeight, 5..55, 2.0, forCompBot = true)
+//        printShooterCurves(-Turret.turretHeight, 5..60 step 10, Pair(10.0, 50.0))
+//        printPassTimes(5..20 step 5, 55.0.rotationsPerSecond)
+    }
+}
+
+
 fun zeroTurretEncoders() = runOnceCommand(Turret) {
     Turret.encoder1OffsetEntry.setDouble(Turret.rawEncoder1AbsolutePosition.asDegrees)
     Turret.encoder2OffsetEntry.setDouble(Turret.rawEncoder2AbsolutePosition.asDegrees)

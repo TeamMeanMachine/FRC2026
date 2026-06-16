@@ -189,6 +189,13 @@ tasks.register('printPassCurves', JavaExec) {
     systemProperty 'java.library.path', "${projectDir}/build/jni/release"
 }
 
+tasks.register('printPassOverHubCurves', JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'frc.team2471.frc2026.tests.PrintPassOverHubCurves'
+
+    systemProperty 'java.library.path', "${projectDir}/build/jni/release"
+}
+
 repositories {
     mavenCentral()
 }

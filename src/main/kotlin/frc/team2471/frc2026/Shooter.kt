@@ -176,21 +176,21 @@ object Shooter: SubsystemBase("Shooter") {
 
     // feet, rot/s (of the wheel not the motor) (in an ideal condition. need to divide by SHOOTER_EFFICIENCY)
     val overNetSpeedCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
-        put(5.0, 35.0)
-        put(15.0, 20.988)
-        put(25.0, 50.362)
-        put(35.0, 80.839)
-        put(45.0, 90.88)
+        put(5.0, 30.662)
+        put(15.0, 32.198)
+        put(25.0, 34.749)
+        put(35.0, 38.526)
+        put(45.0, 42.613)
+        put(55.0, 47.205)
     }
     // feet, degrees
     val overNetAngleCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
-        put(5.0, 15.0)
-        put(15.0, 25.0)
-        put(25.0, 30.0)
-        put(35.0, 35.0)
-        put(45.0, 45.0)
-        put(55.0, 45.0)
-
+        put(5.0, 84.72)
+        put(15.0, 75.244)
+        put(25.0, 66.688)
+        put(35.0, 59.223)
+        put(45.0, 53.216)
+        put(55.0, 48.295)
     }
 
 
@@ -212,12 +212,12 @@ object Shooter: SubsystemBase("Shooter") {
     }
 
     val overNetTimeCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
-        put(5.0, 0.64)
-        put(15.0, 1.03)
-        put(25.0, 1.32)
-        put(35.0, 1.57)
-        put(45.0, 1.8)
-        put(55.0, 2.01)
+        put(5.0, 2.0)
+        put(15.0, 2.0)
+        put(25.0, 2.0)
+        put(35.0, 2.0)
+        put(45.0, 2.0)
+        put(55.0, 2.0)
     }
 
     val passSpeedCurve: InterpolatingTreeMap<Double, Double> get() = if (!FieldManager.passOverNet) floorSpeedCurve else overNetSpeedCurve

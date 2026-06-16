@@ -3,6 +3,7 @@ package frc.team2471.frc2026
 import edu.wpi.first.math.geometry.Pose2d
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.CommandScheduler
+import frc.team2471.frc2026.Drive.runOnce
 import frc.team2471.frc2026.tests.*
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser
 import org.team2471.frc.lib.control.Autonomi
@@ -64,6 +65,7 @@ object Autonomous: Autonomi() {
             addOption("Shooter Test", shooterTest())
             addOption("Intake Deploy Test", intakeDeployTest())
             addOption("Intake Roller Test", intakeRollerTest())
+//            addOption("print over hub curves", runOnce{PrintPassOverHubCurves.main(arrayOf(""))})
         }
 
     /** Autonomous commands */
