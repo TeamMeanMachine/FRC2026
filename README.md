@@ -17,3 +17,6 @@ Code for Team Mean Machine's 2026 robot Sisyphus.
 - CTRE Swerve API
 - Kotlin
 
+Tech Binder, Reveal Video, TBA: https://team2471.org/past-robots/
+
+![Sysyphus.jpeg](Sysyphus.jpeg)
