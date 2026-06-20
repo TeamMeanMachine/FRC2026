@@ -40,7 +40,6 @@ object Spindexer: SubsystemBase("Spindexer") {
     val uptakeVelocityEntry = table.getEntry("Uptake Velocity")
     val agitateVelocityEntry = table.getEntry("Agitate Velocity")
 
-//    val spinSpitVelocityEntry = table.getEntry("Spin Spit Velocity")
     val sidetakeSpitVelocityEntry = table.getEntry("Sidetake Spit Velocity")
     val uptakeSpitVelocityEntry = table.getEntry("Uptake Spit Velocity")
 
@@ -55,7 +54,6 @@ object Spindexer: SubsystemBase("Spindexer") {
     val UPTAKE_VELOCITY: Double get() = uptakeVelocityEntry.getDouble(129.0)
     val AGITATE_VELOCITY: Double get() = agitateVelocityEntry.getDouble(30.0)
 
-//    val SPIN_SPIT_VELOCITY: Double get() = spinSpitVelocityEntry.getDouble(0.0)
     val SIDETAKE_SPIT_VELOCITY: Double get() = sidetakeSpitVelocityEntry.getDouble(-50.0)
     val UPTAKE_SPIT_VELOCITY: Double get() = uptakeSpitVelocityEntry.getDouble(-50.0)
 
@@ -117,10 +115,6 @@ object Spindexer: SubsystemBase("Spindexer") {
             field = value
         }
 
-    val stateOnTimer = Timer()
-    @get:AutoLogOutput(key = "Spindexer/stateOnTime")
-    val stateOnTime: Double get() = stateOnTimer.get()
-
     var disableReversingAuto = false
 
     init {
@@ -130,7 +124,6 @@ object Spindexer: SubsystemBase("Spindexer") {
         if (!uptakeVelocityEntry.exists()) uptakeVelocityEntry.setDouble(UPTAKE_VELOCITY)
         if (!agitateVelocityEntry.exists()) agitateVelocityEntry.setDouble(AGITATE_VELOCITY)
 
-//        if (!spinSpitVelocityEntry.exists()) spinSpitVelocityEntry.setDouble(SPIN_SPIT_VELOCITY)
         if (!sidetakeSpitVelocityEntry.exists()) sidetakeSpitVelocityEntry.setDouble(SIDETAKE_SPIT_VELOCITY)
         if (!uptakeSpitVelocityEntry.exists()) uptakeSpitVelocityEntry.setDouble(UPTAKE_SPIT_VELOCITY)
 
@@ -145,7 +138,6 @@ object Spindexer: SubsystemBase("Spindexer") {
         uptakeVelocityEntry.setPersistent()
         agitateVelocityEntry.setPersistent()
 
-//        spinSpitVelocityEntry.setPersistent()
         sidetakeSpitVelocityEntry.setPersistent()
         uptakeSpitVelocityEntry.setPersistent()
 
@@ -193,39 +185,23 @@ object Spindexer: SubsystemBase("Spindexer") {
                 spinMotorVelocitySetpoint = 0.0
                 sidetakeMotorVelocitySetpoint = 0.0
                 uptakeMotorVelocitySetpoint = 0.0
-//                stateOnTimer.stop()
             }
 
             State.ON -> {
-//                if (doSpinSlowdown && stateOnTime > spinSlowdownDelayTime) {
-//                    if (doSineSpinSlowdown) {
-//                        // Sine periodic slowdown
-//                        spinMotorVelocitySetpoint =
-//                            (cos(2.0 * Math.PI * (stateOnTime - spinSlowdownDelayTime) / spinSlowdownTime) + 1) * 0.5 * (SPIN_VELOCITY - SPIN_LOWER_VELOCITY) + SPIN_LOWER_VELOCITY
-//                    } else {
-//                        // Linear slowdown
-//                        spinMotorVelocitySetpoint =
-//                            ((SPIN_VELOCITY - SPIN_LOWER_VELOCITY) * (stateOnTime - spinSlowdownDelayTime) / spinSlowdownTime) + SPIN_LOWER_VELOCITY
-//                    }
-//                } else {
-                    if (Robot.isAutonomous) {
-                        spinMotorVelocitySetpoint = SPIN_VELOCITY
-                    } else {
-                        spinMotorVelocitySetpoint =
-                            SPIN_VELOCITY * linearMap(0.0, 1.0, 0.40, 1.0, OI.driveRightTrigger.deadband(0.1))
-                    }
-//                }
+                if (Robot.isAutonomous) {
+                    spinMotorVelocitySetpoint = SPIN_VELOCITY
+                } else {
+                    spinMotorVelocitySetpoint =
+                        SPIN_VELOCITY * linearMap(0.0, 1.0, 0.40, 1.0, OI.driveRightTrigger.deadband(0.1))
+                }
                 sidetakeMotorVelocitySetpoint = SIDETAKE_VELOCITY
                 uptakeMotorVelocitySetpoint = UPTAKE_VELOCITY
-
-//                if (!stateOnTimer.isRunning) stateOnTimer.restart()
             }
 
             State.SPITTING -> {
-                spinMotorVelocitySetpoint = 0.0//SPIN_SPIT_VELOCITY
+                spinMotorVelocitySetpoint = 0.0
                 sidetakeMotorVelocitySetpoint = SIDETAKE_SPIT_VELOCITY
                 uptakeMotorVelocitySetpoint = UPTAKE_SPIT_VELOCITY
-//                stateOnTimer.stop()
             }
 
             State.AGITATING -> {
@@ -236,7 +212,6 @@ object Spindexer: SubsystemBase("Spindexer") {
                 }
                 sidetakeMotorVelocitySetpoint = 0.0
                 uptakeMotorVelocitySetpoint = 0.0
-//                stateOnTimer.stop()
             }
         }
 

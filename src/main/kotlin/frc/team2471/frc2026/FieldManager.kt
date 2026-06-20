@@ -289,26 +289,6 @@ object FieldManager {
         }
 
     init {
-
-        when (robotMode) {
-            RobotMode.REAL -> { // Running on a real robot, log to a USB stick ("/U/logs")
-                Logger.addDataReceiver(WPILOGWriter())
-                Logger.addDataReceiver(NT4Publisher())
-            }
-            RobotMode.SIM -> {
-                Logger.addDataReceiver(NT4Publisher())
-                Logger.addDataReceiver(WPILOGWriter())
-            } // Running a physics simulator, log to NT
-            RobotMode.REPLAY -> { // Replaying a log, set up replay source
-                Robot.setUseTiming(true) // false - simulate as fast as possible, true - simulate in real time (particle filter needs true)
-                val logPath = LogFileUtil.findReplayLog()
-                Logger.setReplaySource(WPILOGReader(logPath))
-                Logger.addDataReceiver(WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim")))
-            }
-        }
-
-        Logger.start()
-
         doShiftTimingEntry.setBoolean(true)
         autoHoodRetractionEntry.setBoolean(true)
 

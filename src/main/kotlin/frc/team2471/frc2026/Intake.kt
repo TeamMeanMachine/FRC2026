@@ -93,10 +93,6 @@ object Intake: SubsystemBase("Intake") {
             }
         }
 
-//    var lastReachedSetpoint = 0.0
-//
-//    const val REACHED_SETPOINT_THRESHOLD = 0.05
-
     @get:AutoLogOutput(key = "Intake/Deploy Setpoint")
     var deploySetpoint: Double = 0.0
         set(value) {
@@ -113,70 +109,6 @@ object Intake: SubsystemBase("Intake") {
                         deployMotor1.setControl(PositionTorqueCurrentFOC(field))
                     }
                 }
-
-
-//                if (lastReachedSetpoint != value) {
-//                    reachedSetpoint0 = false
-//                    reachedSetpoint1 = false
-//                    lastReachedSetpoint = value
-//                }
-//
-//                if (Robot.isCompBot) {
-//                    if (deployMotor0Error.absoluteValue < REACHED_SETPOINT_THRESHOLD && deployVelocity0.absoluteValue < 0.2) {
-//                        reachedSetpoint0 = true
-//                    }
-//                    if (deployMotor1Error.absoluteValue < REACHED_SETPOINT_THRESHOLD && deployVelocity1.absoluteValue < 0.2) {
-//                        reachedSetpoint1 = true
-//                    }
-//                } else {
-//                    if (deployMotor0Error.absoluteValue < 0.5) {
-//                        reachedSetpoint0 = true
-//                        reachedSetpoint1 = true
-//                    }
-//                }
-//
-//
-//                if (reachedSetpoint0 && reachedSetpoint1) {
-//                    // Relies on the optimization thing where it won't evaluate the statements after the or if the first statement returns true, to prevent accessing deployMotor1 stuff when it doesn't exist
-//                    if (!Robot.isCompBot || (deployMotor0Position - deployMotor1Position).absoluteValue < FLEX_THRESHOLD) {
-//                        if (deployMotor0Error < -0.7) {
-//                            deployMotor0.setControl(TorqueCurrentFOC(21.0))
-//                        } else {
-//                            deployMotor1.setControl(NeutralOut())
-////                            if (deployMotor0Error.absoluteValue < 0.3) {
-////                                deployMotor0.setControl(NeutralOut())
-////                            } else {
-////                                deployMotor0.setControl(MotionMagicVoltage(field))
-////                            }
-//                        }
-//
-//                        if (Robot.isCompBot) {
-//                            if (deployMotor1Error < -0.7) {
-//                                deployMotor1.setControl(TorqueCurrentFOC(21.0))
-//                            } else {
-//                                deployMotor1.setControl(NeutralOut())
-////                                if (deployMotor1Error.absoluteValue < 0.3) {
-////                                    deployMotor1.setControl(NeutralOut())
-////                                } else {
-////                                    deployMotor1.setControl(MotionMagicVoltage(field))
-////                                }
-//                            }
-//                        }
-//                    } else {
-//                        if (deployMotor0Position > deployMotor1Position) {
-//                            deployMotor0.setControl(MotionMagicVoltage(deployMotor1Position))
-//                            deployMotor1.setControl(TorqueCurrentFOC(21.0))
-//                        } else {
-//                            deployMotor1.setControl(MotionMagicVoltage(deployMotor0Position))
-//                            deployMotor0.setControl(TorqueCurrentFOC(21.0))
-//                        }
-//                    }
-//                } else {
-//                    deployMotor0.setControl(MotionMagicVoltage(field))
-//                    if (Robot.isCompBot) {
-//                        deployMotor1.setControl(MotionMagicVoltage(field))
-//                    }
-//                }
             }
         }
 
@@ -226,18 +158,6 @@ object Intake: SubsystemBase("Intake") {
     var isDeployed: Boolean = false
     var disableSpringProtection = false
 
-    @get:AutoLogOutput(key = "Intake/goingToSetpoint0")
-    var goingToSetpoint0: Boolean = false
-
-    @get:AutoLogOutput(key = "Intake/goingToSetpoint1")
-    var goingToSetpoint1: Boolean = false
-
-    @get:AutoLogOutput(key = "Intake/reachedSetpoint0")
-    var reachedSetpoint0: Boolean = false
-    @get:AutoLogOutput(key = "Intake/reachedSetpoint1")
-    var reachedSetpoint1: Boolean = false
-
-
     const val FLEX_THRESHOLD = 3.0
 
     val autoCurrentLimits = CurrentLimits(20.0, 30.0, 1.0)
@@ -262,14 +182,8 @@ object Intake: SubsystemBase("Intake") {
         val deployConfig = TalonFXConfiguration().apply {
             currentLimits(5.0, 25.0, 0.25)
             coastMode()
-//            if (Robot.isCompBot) {
-                p(1.5, 1)
-                s(0.25, StaticFeedforwardSignValue.UseClosedLoopSign, 1)
-//
-//            } else {
-//                p(1.5)
-//                s(0.25, StaticFeedforwardSignValue.UseClosedLoopSign)
-//            }
+            p(1.5, 1)
+            s(0.25, StaticFeedforwardSignValue.UseClosedLoopSign, 1)
             p(50.0)
             d(3.0)
 
@@ -289,8 +203,6 @@ object Intake: SubsystemBase("Intake") {
 
         rollerMotor.applyConfiguration {
             currentLimits(autoCurrentLimits.peakLimit, autoCurrentLimits.continuousLimit, autoCurrentLimits.peakDuration)
-//            p(7.0)
-//            s(10.0, StaticFeedforwardSignValue.UseVelocitySign)
             coastMode()
         }
         if (Robot.isCompBot) {
@@ -328,26 +240,16 @@ object Intake: SubsystemBase("Intake") {
     }
 
     fun deploy() {
-//        if (deployMotor0Error.absoluteValue > FLEX_THRESHOLD) {
-//            goingToSetpoint0 = true
-//        }
-//        if (Robot.isCompBot && deployMotor1Error.absoluteValue > FLEX_THRESHOLD) {
-//            goingToSetpoint1 = true
-//        }
         deploySetpoint = DEPLOY_POSE
         isDeployed = true
     }
 
     fun stow() {
-//        goingToSetpoint0 = true
-//        if (Robot.isCompBot) goingToSetpoint1 = true
         deploySetpoint = STOW_POSE
         isDeployed = false
     }
 
     fun deepStow() {
-//        goingToSetpoint0 = true
-//        if (Robot.isCompBot) goingToSetpoint1 = true
         deploySetpoint = DEEP_STOW_POSE
         isDeployed = false
     }
@@ -453,18 +355,6 @@ object Intake: SubsystemBase("Intake") {
             Spindexer.currentState = Spindexer.State.OFF
         }
         prevIntakeState = intakeState
-
-//        if (goingToSetpoint0 && deployMotor0Error.absoluteValue < FLEX_THRESHOLD) {
-//            goingToSetpoint0 = false
-//        }
-
-//        if (Robot.isCompBot && goingToSetpoint1 && deployMotor1Error.absoluteValue < FLEX_THRESHOLD) {
-//            goingToSetpoint1 = false
-//        }
-
-
-//        LoopLogger.record("Intake default b4 controlMode")
-
 
         LoopLogger.record("Intake default")
     }

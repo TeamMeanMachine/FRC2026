@@ -222,29 +222,10 @@ object Robot : LoggedRobot() {
             wasAutonomous = false
             println("Was autonomous")
             Drive.setDriveCurrentLimits(TunerConstants.driveTeleCurrentLimits)
-//            Intake.rollerMotor.modifyConfiguration {
-//                currentLimits(
-//                    Intake.teleopCurrentLimits.continuousLimit,
-//                    Intake.teleopCurrentLimits.peakLimit,
-//                    Intake.teleopCurrentLimits.peakDuration
-//                )
-//            }
         }
         if (wasTeleop) {
             wasTeleop = false
             println("Was teleop")
-//            Drive.modules.forEach {
-//                GlobalScope.launch {
-//                    it.driveMotor.modifyConfiguration {
-//                        CurrentLimits.apply {
-//                            SupplyCurrentLimit = TunerConstants.driveAutoLowerLimit
-//                            SupplyCurrentLowerLimit = TunerConstants.driveAutoLowerLimit
-//                            SupplyCurrentLowerTime = TunerConstants.driveAutoLowerLimit
-//                            SupplyCurrentLimitEnable = false
-//                        }
-//                    }
-//                }
-//            }
         }
     }
 
@@ -259,9 +240,6 @@ object Robot : LoggedRobot() {
 
     /** This function is called once when auto is enabled.  */
     override fun autonomousInit() {
-//        enabledTimer.restart()
-//        println("Autonomous init $timeSinceEnabled")
-//        Autonomous.setDrivePositionToAutoStartPose()
 //        println("scheduling auto command $timeSinceEnabled")
         commandScheduler.schedule(Autonomous.autonomousCommand ?: Commands.runOnce({ println("THE AUTONOMOUS COMMAND IS NULL") }))
         wasAutonomous = true

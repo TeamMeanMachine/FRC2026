@@ -257,15 +257,12 @@ object Shooter: SubsystemBase("Shooter") {
     // seconds
     const val HOOD_DOWN_TIME = 0.75
 
-    var SHOOTER_CUSTOM_I = 0.0
-    val shooterI = 0.0
-
     @get:AutoLogOutput(key = "Shooter/Shooter Angular Velocity Setpoint")
     var shooterVelocitySetpoint: AngularVelocity = 0.0.rotationsPerSecond
         set(value) {
             field = value.coerceAtLeast(0.0.rotationsPerSecond)// / SHOOTER_GEAR_RATIO
             if (field > 0.0.rotationsPerSecond) {
-                shooterMotor.setControl(MotionMagicVelocityVoltage(field).withFeedForward(SHOOTER_CUSTOM_I))
+                shooterMotor.setControl(MotionMagicVelocityVoltage(field))
             } else {
                 if (Robot.isCompBot) {
                     shooterMotor.setControl(NeutralOut())
@@ -339,11 +336,6 @@ object Shooter: SubsystemBase("Shooter") {
     @get:AutoLogOutput(key = "Shooter/Velocity error distance")
     val velocityErrorDistance get() = abs((if (AimUtils.isAimingAtGoal) AimUtils.MEASURED_SHOT_AIRTIME * cos(hubAngleCurve.get(AimUtils.distanceToTarget.asFeet)) else AimUtils.PASS_AIRTIME * cos(passAngleCurve.get(AimUtils.distanceToTarget.asFeet))) * shooterMotor.closedLoopError.valueAsDouble * WHEEL_DIAMETER.asMeters * Math.PI * 0.5)
 
-//    @get:AutoLogOutput(key = "Shooter/Requested voltage")
-//    var requestedVoltage = 0.0
-
-//    val shooterController = PDVelocityController(0.001, 0.0, 0.1, true)
-
     var fuel: MutableList<FuelSim> = mutableListOf()
     var fuel2: MutableList<FuelSim> = mutableListOf()
 
@@ -402,23 +394,15 @@ object Shooter: SubsystemBase("Shooter") {
                 i(0.0)
             }
 
-//            d(0.0)
-//            s(0.0, StaticFeedforwardSignValue.UseVelocitySign)
-
-
             if (isCompBot) {
                 MotionMagic.MotionMagicAcceleration = 120.0
             } else {
                 MotionMagic.MotionMagicAcceleration = 25.0
             }
-            //Bang bang torque
-//            p(99999999.9)
-//            TorqueCurrent.PeakForwardTorqueCurrent = 40.0
-//            TorqueCurrent.PeakReverseTorqueCurrent = 0.0
         }
         shooterMotor.addFollower(shooterMotorFollower, MotorAlignmentValue.Opposed)
 
-        if (Robot.isCompBot) {
+        if (isCompBot) {
             hoodEncoder.applyConfiguration {
                 inverted(true)
                 magnetSensorOffset(0.046630859)
@@ -446,24 +430,10 @@ object Shooter: SubsystemBase("Shooter") {
                 d(4.0)
             }
 
-            if (!Robot.isCompBot) {
+            if (!isCompBot) {
                 motionMagic(0.75, 5.0)
             }
-
-//            if (Robot.isCompBot) {
-//                Feedback.SensorToMechanismRatio = 85.5
-//            } else {
-                remoteCANCoder(hoodEncoder.deviceID, if (Robot.isCompBot) 85.5 else 9.64285714285714)
-//            }
-        }
-
-
-        GlobalScope.launch {
-            org.team2471.frc.lib.coroutines.periodic(0.01) {
-//                SHOOTER_CUSTOM_I += shooterVelocityError.asRotationsPerSecond * 0.02 * shooterI
-//                val requestedVoltage = shooterController.updateVoltage(shooterVelocitySetpoint.asRotationsPerSecond, shooterVelocity.asRotationsPerSecond).coerceIn(0.0, 13.0)
-//                shooterMotor.setControl(VoltageOut(requestedVoltage))
-            }
+            remoteCANCoder(hoodEncoder.deviceID, if (Robot.isCompBot) 85.5 else 9.64285714285714)
         }
     }
 
@@ -498,7 +468,6 @@ object Shooter: SubsystemBase("Shooter") {
         BatteryLogger.recordCurrent("Shooter Roller", shooterMotor.supplyCurrent.value * 2.0)
         BatteryLogger.recordCurrent("Hood", hoodMotor.supplyCurrent.value)
 
-//        shooterMotor.setControl(VoltageOut(shooterController.updateVoltage(shooterAngularVelocitySetpoint.asRotationsPerSecond, shooterAngularVelocity.asRotationsPerSecond)))
         LoopLogger.record("Shooter periodic")
     }
 

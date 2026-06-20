@@ -189,7 +189,7 @@ object Turret: SubsystemBase("Turret") {
     var isTurretWrapping = false
 
     val useTurretGyro
-        get() = true//(turretPigeonIsConnected && turretMotor.fault_RemoteSensorDataInvalid.value) || true
+        get() = true//(turretPigeonIsConnected && turretMotor.fault_RemoteSensorDataInvalid.value)
 
     @get:AutoLogOutput(key = "Turret/fieldCentricSetpoint")
     var fieldCentricSetpoint: Angle = fieldCentricAngle
@@ -312,7 +312,6 @@ object Turret: SubsystemBase("Turret") {
                 if (Robot.isCompBot) {
                     s(0.1, StaticFeedforwardSignValue.UseClosedLoopSign)
                     p(55.0)
-//                    p(25.0)
                     d(0.0)
                 } else {
                     s(0.2, StaticFeedforwardSignValue.UseClosedLoopSign)
@@ -334,7 +333,6 @@ object Turret: SubsystemBase("Turret") {
         }
         turretMotor.addFollower(Falcons.TURRET_1)
 
-//        turretMotor.setPosition(fusedEncoderAngle)
         setTurretOffset(Drive.heading.measure)
 
         //Loop that updates setpoint for constantly updating wrap limits and feedforward
@@ -355,17 +353,10 @@ object Turret: SubsystemBase("Turret") {
             periodic {
 
                 if ((fieldCentricAngle - fieldCentricTurretMotorRotorAngle.unWrap(fieldCentricAngle)).absoluteValue() > 1.0.degrees && turretVelocity.absoluteValue() < 3.0.rotationsPerSecond) {
-//                    if (!resettingGyro) {
-//                        resettingGyro = true
-                        GlobalScope.launch {
-//                            println("setting turret pigeon yaw to motor angle")
-//                        println("Detected Error. Trying to change gyro angle from ${fieldCentricAngle.asDegrees.round(3)} to ${fieldCentricTurretMotorRotorAngle.unWrap(fieldCentricAngle).asDegrees.round(3)}")
-
-                            turretPigeon.setYaw(fieldCentricTurretMotorRotorAngle.unWrap(fieldCentricAngle))
-//                            println("finished setting turret pigeon yaw, status ok: ${status.isOK}")
-//                            resettingGyro = false
-                        }
-//                    }
+                    GlobalScope.launch {
+                        // This spams a lot. Its kinda bad to do this. But its okkk
+                        turretPigeon.setYaw(fieldCentricTurretMotorRotorAngle.unWrap(fieldCentricAngle))
+                    }
                 }
 
                 val tempResetAngle = tempHeadingResetAngle

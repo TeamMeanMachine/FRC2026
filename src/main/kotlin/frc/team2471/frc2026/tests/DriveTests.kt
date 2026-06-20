@@ -242,44 +242,44 @@ fun Drive.slipCurrentTest(): Command {
     }
 }
 
-fun Drive.questOffsetTest(): Command {
-    val allPoints = mutableListOf<Pair<Angle, Pose2d>>()
-    return run {
-        val questPose = questPose
-        println(questPose)
-        allPoints.add(Pair(questPose.rotation.toRotation2d().measure, questPose.toPose2d()))
-        Drive.driveVelocity(ChassisSpeeds(0.0.feetPerSecond, 0.0.feetPerSecond, 18.0.degreesPerSecond))
-    }.withTimeout(40.0).andThen(runOnce {
-        val radiusGuesses = mutableListOf<Distance>()
-        allPoints.forEachIndexed { index, firstPair ->
-            val secondPair = allPoints.getOrNull(index + 1)
-            if (secondPair != null) {
-                val distance = firstPair.second.translation.getDistance(secondPair.second.translation).meters
-                val dTheta = firstPair.first - secondPair.first
-                println("dTheta${dTheta.asDegrees}")
-                val result = distance/sin(dTheta)
-                println("radius ${result.asFeet}")
-                if (!result.asMeters.isNaN() && !result.asMeters.isInfinite()) {
-                    radiusGuesses.add(result)
-                }
-            }
-        }
-
-        radiusGuesses.removeFirst()
-        radiusGuesses.removeFirst()
-        radiusGuesses.removeFirst()
-        radiusGuesses.removeFirst()
-        radiusGuesses.removeFirst()
-
-
-
-        var averageRadius = 0.0.meters
-        radiusGuesses.forEach {
-            averageRadius += (it / radiusGuesses.size.toDouble()).absoluteValue()
-        }
-
-        println("Radius: ${averageRadius.asFeet} RadiusCalculatons: ${radiusGuesses.size}")
-        val questTransform = Translation2d(averageRadius.asMeters, Drive.heading)
-        println("quest transform: (±${questTransform.x.meters.asFeet}, ±${questTransform.y.meters.asFeet}) feet")
-    }.beforeWait(2.0))
-}
+//fun Drive.questOffsetTest(): Command {
+//    val allPoints = mutableListOf<Pair<Angle, Pose2d>>()
+//    return run {
+//        val questPose = questPose
+//        println(questPose)
+//        allPoints.add(Pair(questPose.rotation.toRotation2d().measure, questPose.toPose2d()))
+//        Drive.driveVelocity(ChassisSpeeds(0.0.feetPerSecond, 0.0.feetPerSecond, 18.0.degreesPerSecond))
+//    }.withTimeout(40.0).andThen(runOnce {
+//        val radiusGuesses = mutableListOf<Distance>()
+//        allPoints.forEachIndexed { index, firstPair ->
+//            val secondPair = allPoints.getOrNull(index + 1)
+//            if (secondPair != null) {
+//                val distance = firstPair.second.translation.getDistance(secondPair.second.translation).meters
+//                val dTheta = firstPair.first - secondPair.first
+//                println("dTheta${dTheta.asDegrees}")
+//                val result = distance/sin(dTheta)
+//                println("radius ${result.asFeet}")
+//                if (!result.asMeters.isNaN() && !result.asMeters.isInfinite()) {
+//                    radiusGuesses.add(result)
+//                }
+//            }
+//        }
+//
+//        radiusGuesses.removeFirst()
+//        radiusGuesses.removeFirst()
+//        radiusGuesses.removeFirst()
+//        radiusGuesses.removeFirst()
+//        radiusGuesses.removeFirst()
+//
+//
+//
+//        var averageRadius = 0.0.meters
+//        radiusGuesses.forEach {
+//            averageRadius += (it / radiusGuesses.size.toDouble()).absoluteValue()
+//        }
+//
+//        println("Radius: ${averageRadius.asFeet} RadiusCalculatons: ${radiusGuesses.size}")
+//        val questTransform = Translation2d(averageRadius.asMeters, Drive.heading)
+//        println("quest transform: (±${questTransform.x.meters.asFeet}, ±${questTransform.y.meters.asFeet}) feet")
+//    }.beforeWait(2.0))
+//}

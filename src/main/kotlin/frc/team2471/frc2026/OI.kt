@@ -127,11 +127,8 @@ object OI: SubsystemBase("OI") {
 
         driverController.leftBumper().and(driverController.povDown().negate()).whileTrue(runCommand {
             Intake.deploy()
-//            if (!Intake.goingToSetpoint) {
-                Intake.intakeState = Intake.IntakeState.INTAKING
-//            }
+            Intake.intakeState = Intake.IntakeState.INTAKING
         }.finallyRun {
-//            Intake.stow()
             Intake.intakeState = Intake.IntakeState.OFF
         })
 

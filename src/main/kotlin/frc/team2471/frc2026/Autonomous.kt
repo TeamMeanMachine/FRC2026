@@ -56,7 +56,7 @@ object Autonomous: Autonomi() {
             addOption("Drive Slip Current Test", Drive.slipCurrentTest())
             addOption("Drive L/R Static FF Test", Drive.leftRightStaticFFTest())
             addOption("Drive Velocity Volt Test", Drive.velocityVoltTest())
-            addOption("Quest offset Test", Drive.questOffsetTest())
+//            addOption("Quest offset Test", Drive.questOffsetTest())
             addOption("Turret Encoder Zero", zeroTurretEncoders())
             addOption("Shooter Curve Tuning", shooterCurveTuning())
             addOption("Full System Test", fullSystemTest())
@@ -169,7 +169,7 @@ object Autonomous: Autonomi() {
         )
     }
 
-    private fun doubleSwipeOG(doSideToSideFlip: Boolean): Command {
+    private fun doubleSwipeOld(doSideToSideFlip: Boolean): Command {
         val path = paths["LeftSideDoubleSwipe"]!!.sideToSideFlip(doSideToSideFlip)
         return parallelCommand(
             sequenceCommand(
