@@ -8,7 +8,7 @@ plugins {
     id "org.jetbrains.kotlin.jvm" version "2.3.21"
     id "org.jetbrains.kotlin.kapt" version "2.3.21"
 }
-// Force the global WPILib provider to load vendors out of meanlib,
+// Tell the global WPILib provider to load vendors out of meanlib also
 wpi.vendor.loadFrom(project(":meanlib"))
 
 java {
@@ -149,18 +149,6 @@ idea {
     module {
         downloadJavadoc = true
         downloadSources = true
-    }
-}
-
-tasks.matching { it.name == "build" }.all {
-    doFirst {
-        copyVendordeps()
-    }
-}
-
-tasks.matching { it.name == "deploy" }.all {
-    doFirst {
-        copyVendordeps()
     }
 }
 

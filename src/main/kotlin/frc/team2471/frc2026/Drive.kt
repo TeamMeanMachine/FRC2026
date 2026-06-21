@@ -22,9 +22,9 @@ import edu.wpi.first.wpilibj.Timer
 import edu.wpi.first.wpilibj2.command.Command
 import frc.team2471.frc2026.OI.driveLeftTriggerFullPress
 import frc.team2471.frc2026.OI.driverController
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import org.littletonrobotics.junction.AutoLogOutput
 import org.littletonrobotics.junction.Logger
 import org.team2471.frc.lib.control.CurrentLimits
 import org.team2471.frc.lib.control.LoopLogger
@@ -63,10 +63,6 @@ import kotlin.math.atan2
 object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerConstants.moduleConfigs) {
     private val table = NetworkTableInstance.getDefault().getTable("Drive")
 
-    private val frontLeftConnectedEntry = table.getEntry("FrontLeftConnected")
-    private val frontRightConnectedEntry = table.getEntry("FrontRightConnected")
-    private val backLeftConnectedEntry = table.getEntry("BackLeftConnected")
-    private val backRightConnectedEntry = table.getEntry("BackRightConnected")
     val useAprilTagsEntry = table.getEntry("UseAprilTags")
     val increaseDriveCurrentEntry = table.getEntry("IncreaseDriveCurrent")
 
@@ -91,6 +87,8 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
             Turret.setTurretOffset(value.measure)
             resetPoseTime = Timer.getFPGATimestamp()
         }
+
+    override val useMapleSim: Boolean = true
 
     var headingAngleUnwrapped: Angle = heading.measure
         get() = heading.measure.unWrap(field)
@@ -190,14 +188,6 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
         }
         LoopLogger.record("Drive camera updateInputs")
 
-
-        frontLeftConnectedEntry.setBoolean(cameras[0].isConnected)
-        frontRightConnectedEntry.setBoolean(cameras[1].isConnected)
-        backLeftConnectedEntry.setBoolean(cameras[2].isConnected)
-        backRightConnectedEntry.setBoolean(cameras[3].isConnected)
-
-        LoopLogger.record("Camera Connected Publisher")
-
         // Update poses with processed particle filter estimates.
         localizer.updateWithLatestPoseEstimate()
         LoopLogger.record("Drive updateWithLatestPose")
@@ -232,6 +222,7 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
     /**
      * Sets all drive motor current limits to be the passed in [currentLimits].
      */
+    @OptIn(DelicateCoroutinesApi::class)
     fun setDriveCurrentLimits(currentLimits: CurrentLimits) {
         GlobalScope.launch {
             Drive.modules.forEach {
