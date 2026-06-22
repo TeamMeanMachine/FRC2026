@@ -181,6 +181,8 @@ object Robot : LoggedRobot() {
 
         BatteryLogger.logData()
         LoopLogger.record("after powerTracker update")
+        MasterMotor.periodic()
+        LoopLogger.record("after Motor logging")
 
         // Return to non-RT thread priority (do not modify the first argument)
 //         Threads.setCurrentThreadPriority(false, 10);
@@ -273,7 +275,6 @@ object Robot : LoggedRobot() {
     @OptIn(DelicateCoroutinesApi::class)
     override fun simulationPeriodic() {
         GlobalScope.launch {
-            MasterMotor.simPeriodic()
         }
     }
 
