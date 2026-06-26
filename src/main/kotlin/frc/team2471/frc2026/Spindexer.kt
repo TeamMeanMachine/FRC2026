@@ -190,7 +190,7 @@ object Spindexer: MechanismBase("Spindexer") {
     }
 
     override fun periodic() {
-        LoopLogger.record("b4 spindexer periodic")
+        LoopLogger.record("Spindexer periodic")
         when (currentState) {
             State.OFF -> {
                 spinMotorVelocitySetpoint = 0.0
@@ -247,7 +247,7 @@ object Spindexer: MechanismBase("Spindexer") {
         BatteryLogger.recordCurrent("Dye Rotor Uptake", uptakeMotor.supplyCurrent.value)
         BatteryLogger.recordCurrent("Dye Rotor Sidetake", sidetakeMotor.supplyCurrent.value)
 
-        LoopLogger.record("spindexer periodic")
+        LoopLogger.record("Spindexer periodic")
     }
 
 

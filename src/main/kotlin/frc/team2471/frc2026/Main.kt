@@ -139,15 +139,16 @@ class Robot : OpModeRobot(0.01) {
     /** This function is called periodically during all modes.  */
     override fun robotPeriodic() {
         LoopLogger.reset()
-        LoopLogger.record("after LL reset")
+        LoopLogger.record("Robot periodic()")
 
-        LoopLogger.record("b4 Scheduler")
 
+        LoopLogger.record("Scheduler")
         // Runs the Scheduler.  This is responsible for polling buttons, adding newly scheduled
         // commands, running already-scheduled commands, removing finished or interrupted commands,
         // and running subsystem periodic() methods.  This must be called from the robot's periodic
         // block in order for anything in the Command-based framework to work.
         scheduler.run()
+        LoopLogger.record("Scheduler")
 
         Logger.recordOutput("Scheduler/scheduler", scheduler)
 
@@ -163,10 +164,10 @@ class Robot : OpModeRobot(0.01) {
         Logger.recordOutput("Scheduler/totalRuntime", scheduler.lastRuntimeMs() / 1000.0)
 
 
-        LoopLogger.record("after Scheduler")
 
+        LoopLogger.record("BatteryLogger update")
         BatteryLogger.logData()
-        LoopLogger.record("after powerTracker update")
+        LoopLogger.record("BatteryLogger update")
 
         LoopLogger.record("Robot periodic()")
     }

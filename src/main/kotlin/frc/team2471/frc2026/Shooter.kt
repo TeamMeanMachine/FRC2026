@@ -398,7 +398,7 @@ object Shooter: MechanismBase("Shooter") {
     }
 
     override fun periodic() {
-        LoopLogger.record("b4 Shooter periodic")
+        LoopLogger.record("Shooter periodic")
         if (isSim) {
             if (isShooting) {
                 if (i > 3) {
