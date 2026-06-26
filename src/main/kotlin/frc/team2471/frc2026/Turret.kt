@@ -9,7 +9,7 @@ import com.ctre.phoenix6.signals.StaticFeedforwardSignValue
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.littletonrobotics.junction.AutoLogOutput
-import org.littletonrobotics.junction.MeanLogger
+import org.littletonrobotics.junction.Logger
 import org.team2471.frc.lib.commands.MechanismBase
 import org.team2471.frc.lib.commands.periodic
 import org.team2471.frc.lib.commands.setDefaultCommand
@@ -223,7 +223,7 @@ object Turret: MechanismBase("Turret") {
                     val robotCentricNoGyroSetpoint = (turretMotorRotorAngle + noGyroError)
                     val robotCentricNoGyroSetpointWrapped = robotCentricNoGyroSetpoint.asDegrees.IEEErem(TURRET_TOP_LIMIT.asDegrees.absoluteValue + TURRET_BOTTOM_LIMIT.asDegrees.absoluteValue).degrees
                     println("Turret Gyro Disconnect ${robotCentricNoGyroSetpointWrapped.asDegrees}")
-                    MeanLogger.recordOutput("Turret/testMotorCentricSetpointDeg", robotCentricNoGyroSetpointWrapped.asDegrees)
+                    Logger.recordOutput("Turret/testMotorCentricSetpointDeg", robotCentricNoGyroSetpointWrapped.asDegrees)
                     turretMotor.setControl(PositionVoltage(robotCentricNoGyroSetpointWrapped.asRotations).withFeedForward(turretFeedforward))
                 }
             } else {
@@ -391,11 +391,11 @@ object Turret: MechanismBase("Turret") {
         val turretTranslation = turretTranslation
         val turretPigeonConnected = turretPigeonIsConnected
 //        Logger.recordOutput("aim target", aimTarget.toPose2d())
-        MeanLogger.recordOutput("Turret/turret setpoint pose", turretTranslation.toPose2d(fieldCentricSetpoint.asRotation2d))
-        MeanLogger.recordOutput("Turret/turret pose", turretTranslation.toPose2d(fieldCentricAngle.asRotation2d))
-        MeanLogger.recordOutput("Turret/distToGoalFeet", aimTarget.getDistance(Drive.localizer.pose.translation).meters.asFeet)
-        MeanLogger.recordOutput("Turret/turretPigeonLatency", turretPigeonLatency)
-        MeanLogger.recordOutput("Turret/turretPigeonIsConnected", turretPigeonConnected)
+        Logger.recordOutput("Turret/turret setpoint pose", turretTranslation.toPose2d(fieldCentricSetpoint.asRotation2d))
+        Logger.recordOutput("Turret/turret pose", turretTranslation.toPose2d(fieldCentricAngle.asRotation2d))
+        Logger.recordOutput("Turret/distToGoalFeet", aimTarget.getDistance(Drive.localizer.pose.translation).meters.asFeet)
+        Logger.recordOutput("Turret/turretPigeonLatency", turretPigeonLatency)
+        Logger.recordOutput("Turret/turretPigeonIsConnected", turretPigeonConnected)
         turretPigeonIsConnectedEntry.setBoolean(turretPigeonConnected)
         LoopLogger.record("turret logging")
 

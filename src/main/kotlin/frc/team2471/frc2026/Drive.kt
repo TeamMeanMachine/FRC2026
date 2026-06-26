@@ -4,8 +4,7 @@ import com.ctre.phoenix6.swerve.utility.PhoenixPIDController
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-//import org.littletonrobotics.junction.Logger
-import org.littletonrobotics.junction.MeanLogger
+import org.littletonrobotics.junction.Logger
 import org.team2471.frc.lib.commands.onCancel
 import org.team2471.frc.lib.commands.periodic
 import org.team2471.frc.lib.commands.setDefaultCommand
@@ -23,8 +22,6 @@ import org.team2471.frc.lib.units.asMetersPerSecondPerSecond
 import org.team2471.frc.lib.units.degrees
 import org.team2471.frc.lib.units.inches
 import org.team2471.frc.lib.math.DynamicInterpolatingTreeMap
-import org.team2471.frc.lib.units.asMeters
-import org.team2471.frc.lib.units.asRadians
 import org.team2471.frc.lib.units.asRotation2d
 import org.team2471.frc.lib.units.inchesPerSecond
 import org.team2471.frc.lib.units.metersPerSecondPerSecond
@@ -34,17 +31,12 @@ import org.team2471.frc.lib.units.unWrap
 import org.team2471.frc.lib.util.demoSpeed
 import org.team2471.frc.lib.util.isBlueAlliance
 import org.team2471.frc.lib.vision.Fiducial
-import org.team2471.frc.lib.vision.PipelineConfig
 import org.team2471.frc.lib.vision.QuixVisionCamera
-import org.team2471.frc.lib.vision.photonVision.PhotonVisionCamera
 import org.wpilib.command3.Command
 import org.wpilib.driverstation.RobotState
 import org.wpilib.math.controller.PIDController
 import org.wpilib.math.geometry.Pose2d
 import org.wpilib.math.geometry.Rotation2d
-import org.wpilib.math.geometry.Rotation3d
-import org.wpilib.math.geometry.Transform3d
-import org.wpilib.math.geometry.Translation3d
 import org.wpilib.math.interpolation.Interpolator
 import org.wpilib.math.interpolation.InverseInterpolator
 import org.wpilib.math.kinematics.ChassisVelocities
@@ -204,18 +196,18 @@ object Drive: SwerveDriveSubsystem(DriveConstants.drivetrainConstants, *DriveCon
         if (cameras.isNotEmpty()) {
             cameras.forEach {
                 table.getEntry("Cameras/${it.cameraName} isConnected").setBoolean(it.isConnected)
-//                Logger.recordOutput("Drive/Cameras/${it.cameraName} isConnected", it.isConnected) TODO AKIT
+                Logger.recordOutput("Drive/Cameras/${it.cameraName} isConnected", it.isConnected)
             }
         }
         LoopLogger.record("Cameras isConnected publish")
 
         // Log all the poses for debugging
-        MeanLogger.recordOutput("Swerve/Odometry", localizer.odometryPose)
-        MeanLogger.recordOutput("Swerve/InterpolatedOdometry", localizer.interpolatedOdometryPose)
-        MeanLogger.recordOutput("Swerve/InterpolatedPose", localizer.interpolatedPose)
-        MeanLogger.recordOutput("Swerve/Localizer Raw", localizer.rawPose)
-        MeanLogger.recordOutput("Swerve/Localizer", localizer.pose)
-        MeanLogger.recordOutput("Swerve/SingleTagPose", localizer.singleTagPose)
+        Logger.recordOutput("Swerve/Odometry", localizer.odometryPose)
+        Logger.recordOutput("Swerve/InterpolatedOdometry", localizer.interpolatedOdometryPose)
+        Logger.recordOutput("Swerve/InterpolatedPose", localizer.interpolatedPose)
+        Logger.recordOutput("Swerve/Localizer Raw", localizer.rawPose)
+        Logger.recordOutput("Swerve/Localizer", localizer.pose)
+        Logger.recordOutput("Swerve/SingleTagPose", localizer.singleTagPose)
 
 
         LoopLogger.record("Drive pirdc")

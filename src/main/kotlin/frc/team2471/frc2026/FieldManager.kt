@@ -1,25 +1,19 @@
 package frc.team2471.frc2026
 
-//import edu.wpi.first.wpilibj2.command.Command
 import frc.team2471.frc2026.FieldManager.reflectAcrossField
 import frc.team2471.frc2026.FieldManager.rotateAroundField
 import frc.team2471.frc2026.Robot.Companion.isAutonomous
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.littletonrobotics.junction.AutoLogOutput
-import org.littletonrobotics.junction.MeanLogger
-//import org.littletonrobotics.junction.AutoLogOutput
-//import org.littletonrobotics.junction.LogFileUtil
-//import org.littletonrobotics.junction.Logger
-//import org.littletonrobotics.junction.networktables.NT4Publisher
-//import org.littletonrobotics.junction.wpilog.WPILOGReader
-//import org.littletonrobotics.junction.wpilog.WPILOGWriter
+import org.littletonrobotics.junction.LogFileUtil
+import org.littletonrobotics.junction.Logger
+import org.littletonrobotics.junction.networktables.NT4Publisher
+import org.littletonrobotics.junction.wpilog.WPILOGReader
+import org.littletonrobotics.junction.wpilog.WPILOGWriter
 import org.team2471.frc.lib.commands.onCancel
 import org.team2471.frc.lib.commands.periodic
 import org.team2471.frc.lib.commands.use
-//import org.team2471.frc.lib.control.commands.runCommand
-//import org.team2471.frc.lib.control.commands.runOnceCommand
-//import org.team2471.frc.lib.control.commands.sequenceCommand
 import org.team2471.frc.lib.coroutines.periodic
 import org.team2471.frc.lib.units.*
 import org.team2471.frc.lib.util.RobotType
@@ -34,7 +28,6 @@ import org.wpilib.networktables.NetworkTableInstance
 import org.wpilib.units.measure.Distance
 import org.wpilib.vision.apriltag.AprilTag
 import org.wpilib.vision.apriltag.AprilTagFieldLayout
-import org.wpilib.vision.apriltag.AprilTagFields
 import kotlin.jvm.optionals.getOrNull
 import kotlin.math.absoluteValue
 import kotlin.math.floor
@@ -101,7 +94,7 @@ object FieldManager {
                 val relativePose = pose - Drive.localizer.pose.translation
                 if (relativePose.y.absoluteValue.meters < (trenchAreaWidth/2.0)) {
                     val predictedPose = Drive.localizer.pose.translation + Drive.velocity * Shooter.HOOD_DOWN_TIME
-                    MeanLogger.recordOutput("Drive/predictedPose", predictedPose)
+                    Logger.recordOutput("Drive/predictedPose", predictedPose)
                     val predictedRelativePose = pose - predictedPose
                     if ((predictedRelativePose.x.sign != relativePose.x.sign) || (relativePose.x.absoluteValue.meters < (trenchAreaLength/2.0))) {
                         return true
@@ -282,18 +275,18 @@ object FieldManager {
 
         when (robotType) {
             RobotType.REAL -> { // Running on a real robot, log to a USB stick ("/U/logs")
-//                Logger.addDataReceiver(WPILOGWriter()) TODO
-//                Logger.addDataReceiver(NT4Publisher())
+                Logger.addDataReceiver(WPILOGWriter())
+                Logger.addDataReceiver(NT4Publisher())
             }
             RobotType.SIM -> {
-//                Logger.addDataReceiver(NT4Publisher())
-//                Logger.addDataReceiver(WPILOGWriter())
+                Logger.addDataReceiver(NT4Publisher())
+                Logger.addDataReceiver(WPILOGWriter())
             } // Running a physics simulator, log to NT
             RobotType.REPLAY -> { // Replaying a log, set up replay source
-//                Robot.setUseTiming(true) // false - simulate as fast as possible, true - simulate in real time (particle filter needs true)
-//                val logPath = LogFileUtil.findReplayLog() TODO
-//                Logger.setReplaySource(WPILOGReader(logPath))
-//                Logger.addDataReceiver(WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim")))
+//                Robot.instance.setUseTiming(true) // false - simulate as fast as possible, true - simulate in real time (particle filter needs true)
+                val logPath = LogFileUtil.findReplayLog()
+                Logger.setReplaySource(WPILOGReader(logPath))
+                Logger.addDataReceiver(WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim")))
             }
         }
 

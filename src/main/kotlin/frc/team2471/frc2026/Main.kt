@@ -5,24 +5,29 @@ import com.ctre.phoenix6.SignalLogger
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import org.littletonrobotics.junction.MeanLogger
-import org.littletonrobotics.junction.networktables.MeanNT4Publisher
+import org.littletonrobotics.junction.LogFileUtil
+import org.littletonrobotics.junction.LoggedRobot
+import org.littletonrobotics.junction.Logger
+import org.littletonrobotics.junction.networktables.NT4Publisher
+import org.littletonrobotics.junction.wpilog.WPILOGReader
+import org.littletonrobotics.junction.wpilog.WPILOGWriter
 import org.team2471.frc.lib.autonomous.TestOpMode
 import org.team2471.frc.lib.autonomous.TestRoutine
 import org.team2471.frc.lib.control.LoopLogger
 import org.team2471.frc.lib.control.isConnected
 import org.team2471.frc.lib.ctre.loggedTalonFX.MasterMotor
 import org.team2471.frc.lib.energy.BatteryLogger
+import org.team2471.frc.lib.logging.NT4NonFMSPublisher
 import org.team2471.frc.lib.units.asFeet
 import org.team2471.frc.lib.util.RobotType
 import org.team2471.frc.lib.util.robotType
 import org.wpilib.command3.Mechanism
 import org.wpilib.command3.Scheduler
+import org.wpilib.driverstation.DriverStationDisplay
 import org.wpilib.driverstation.RobotState
 import org.wpilib.driverstation.internal.DriverStationBackend
 import org.wpilib.framework.OpModeRobot
 import org.wpilib.framework.RobotBase
-import org.wpilib.system.RobotController
 import java.net.NetworkInterface
 
 
@@ -45,18 +50,18 @@ class Robot : OpModeRobot(0.01) {
         // Set up data receivers & replay source
         when (robotType) {
             RobotType.REAL -> { // Running on a real robot, log to a USB stick ("/U/logs")
-//                Logger.addDataReceiver(WPILOGWriter()) TODO
-//                Logger.addDataReceiver(NT4NonFMSPublisher()) // Only log to NT if FMS is not connected
+                Logger.addDataReceiver(WPILOGWriter())
+                Logger.addDataReceiver(NT4NonFMSPublisher()) // Only log to NT if FMS is not connected
             }
             RobotType.SIM -> {
-                MeanLogger.addDataReceiver(MeanNT4Publisher())
-//                MeanLogger.addDataReceiver(WPILOGWriter())
+                Logger.addDataReceiver(NT4Publisher())
+                Logger.addDataReceiver(WPILOGWriter())
             } // Running a physics simulator, log to NT
             RobotType.REPLAY -> { // Replaying a log, set up replay source
 //                setUseTiming(true) // false - simulate as fast as possible, true - simulate in real time (particle filter needs true)
-//                val logPath = LogFileUtil.findReplayLog() TODO
-//                Logger.setReplaySource(WPILOGReader(logPath))
-//                Logger.addDataReceiver(WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim")))
+                val logPath = LogFileUtil.findReplayLog()
+                Logger.setReplaySource(WPILOGReader(logPath))
+                Logger.addDataReceiver(WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim")))
             }
         }
 
@@ -67,7 +72,9 @@ class Robot : OpModeRobot(0.01) {
         SignalLogger.stop()
 
         // Start AdvantageKit logger
-        MeanLogger.start()
+
+
+        val dummyRobot = DummyRobot()
         // Call all subsystems, make sure their init's run
         allSubsystems.forEach { println("activating subsystem ${it.name}") }
         println("FieldManager thinks the field is ${FieldManager.fieldDimensions.measureX.asFeet} feet big")
@@ -76,8 +83,6 @@ class Robot : OpModeRobot(0.01) {
         println("Autonomous paths count: ${Autonomous.paths.size}")
 
 //        println("We see ${Autonomous.paths.size} paths and they are made on the ${if (Drive.choreoPathsStartOnRed) "red" else "blue"} side.")
-
-        RobotController.setTimeSource { RobotController.getMonotonicTime() }
 
         println("Finished Robot init")
     }
@@ -133,7 +138,6 @@ class Robot : OpModeRobot(0.01) {
 
     /** This function is called periodically during all modes.  */
     override fun robotPeriodic() {
-        MeanLogger.periodicBeforeUser()
         LoopLogger.reset()
         LoopLogger.record("after LL reset")
 
@@ -145,18 +149,18 @@ class Robot : OpModeRobot(0.01) {
         // block in order for anything in the Command-based framework to work.
         scheduler.run()
 
-        MeanLogger.recordOutput("Scheduler/scheduler", scheduler)
+        Logger.recordOutput("Scheduler/scheduler", scheduler)
 
         var allCommandsRuntime = 0.0
         scheduler.runningCommands.forEach {
             val runtimeS = scheduler.lastCommandRuntimeMs(it) / 1000.0
             allCommandsRuntime += runtimeS
             if (runtimeS >= 0.0) {
-                MeanLogger.recordOutput("Scheduler/CommandRuntime/${it.name()}", runtimeS)
+                Logger.recordOutput("Scheduler/CommandRuntime/${it.name()}", runtimeS)
             }
         }
-        MeanLogger.recordOutput("Scheduler/CommandRuntime/ALL", allCommandsRuntime)
-        MeanLogger.recordOutput("Scheduler/totalRuntime", scheduler.lastRuntimeMs() / 1000.0)
+        Logger.recordOutput("Scheduler/CommandRuntime/ALL", allCommandsRuntime)
+        Logger.recordOutput("Scheduler/totalRuntime", scheduler.lastRuntimeMs() / 1000.0)
 
 
         LoopLogger.record("after Scheduler")
@@ -165,7 +169,6 @@ class Robot : OpModeRobot(0.01) {
         LoopLogger.record("after powerTracker update")
 
         LoopLogger.record("Robot periodic()")
-        MeanLogger.periodicAfterUser(0.1.toLong(), 0.1.toLong())
     }
 
     /** This function is called once when the robot is disabled.  */
@@ -222,6 +225,11 @@ private fun getCompBotBoolean(): Boolean {
     return compBot
 }
 
+class DummyRobot: LoggedRobot() {
+    init {
+        Logger.start()
+    }
+}
 
 
 

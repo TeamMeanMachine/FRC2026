@@ -300,7 +300,8 @@ object Intake: MechanismBase("Intake") {
 
         this.defaultCommand = use("Intake Default", this) {
             this.periodic(0.0) {
-                LoopLogger.record("b4 Intake default")
+                LoopLogger.record("Intake default")
+                LoopLogger.record("Intake default")
             }
         }
 
@@ -313,6 +314,7 @@ object Intake: MechanismBase("Intake") {
     }
 
     override fun periodic() {
+        LoopLogger.record("Intake periodic")
         if (maxForwardTorque != prevMaxForwardTorque) {
             GlobalScope.launch {
                 deployMotor0.modifyConfiguration {
@@ -327,6 +329,7 @@ object Intake: MechanismBase("Intake") {
 
         BatteryLogger.recordCurrent("Intake Deploy", (deployCurrent0 + deployCurrent1).amps)
         BatteryLogger.recordCurrent("Intake Rollers", rollerCurrent.amps * 2.0)
+        LoopLogger.record("Intake periodic")
     }
 
     fun deploy() {
