@@ -180,8 +180,8 @@ object FieldManager {
     val passOverNet: Boolean get() {
         val angleToPassPoint = passPose.angleTo(Drive.localizer.pose.translation)
         val xOffset = if (isRedAlliance) -0.5.meters else 0.5.meters
-        val angleToNet1 = passPose.angleTo(goalPose + Translation2d(xOffset, 0.8.meters))
-        val angleToNet2 = passPose.angleTo(goalPose + Translation2d(xOffset, -0.8.meters))
+        val angleToNet1 = passPose.angleTo(goalPose + Translation2d(xOffset, 1.0.meters))
+        val angleToNet2 = passPose.angleTo(goalPose + Translation2d(xOffset, -1.0.meters))
 
         return angleToPassPoint in angleToNet1..angleToNet2 || angleToPassPoint in angleToNet2..angleToNet1
     }
