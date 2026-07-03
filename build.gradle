@@ -8,7 +8,7 @@ plugins {
     id 'org.jetbrains.kotlin.jvm' version '2.3.21'
     id "org.jetbrains.kotlin.kapt" version "2.3.21"
 }
-// Force the global WPILib provider to load vendors out of meanlib,
+// Tell the global WPILib provider to load vendor libraries from meanlib, in addition to the current project
 wpi.vendor.loadFrom(project(":meanlib"))
 
 def ROBOT_MAIN_CLASS = "frc.team2471.frc2026.Main"
@@ -52,7 +52,7 @@ deploy {
 dependencies {
     implementation(project(":meanlib"))
 
-    annotationProcessor wpi.java.deps.wpilibAnnotations()
+    kapt wpi.java.deps.wpilibAnnotations()
 
     systemcoreDebug wpi.java.deps.wpilibJniDebug(wpi.platforms.systemcore)
     systemcoreDebug wpi.java.vendor.jniDebug(wpi.platforms.systemcore)
