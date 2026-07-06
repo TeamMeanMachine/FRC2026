@@ -8,6 +8,7 @@ import kotlinx.coroutines.launch
 import org.littletonrobotics.junction.AutoLogOutput
 import org.littletonrobotics.junction.LogFileUtil
 import org.littletonrobotics.junction.Logger
+import org.littletonrobotics.junction.networktables.LoggedDashboardChooser
 import org.littletonrobotics.junction.networktables.NT4Publisher
 import org.littletonrobotics.junction.wpilog.WPILOGReader
 import org.littletonrobotics.junction.wpilog.WPILOGWriter
@@ -15,6 +16,7 @@ import org.team2471.frc.lib.commands.onCancel
 import org.team2471.frc.lib.commands.periodic
 import org.team2471.frc.lib.commands.use
 import org.team2471.frc.lib.coroutines.periodic
+import org.team2471.frc.lib.logging.SimpleLogger
 import org.team2471.frc.lib.units.*
 import org.team2471.frc.lib.util.RobotType
 import org.team2471.frc.lib.util.isRedAlliance
@@ -55,12 +57,12 @@ object FieldManager {
     val blueHubTags = allAprilTags.filter { it.ID in 18..21 || it.ID in 24..27 }
     val hubTags = redHubTags + blueHubTags
 
-//    val overrideAutoWinner: LoggedDashboardChooser<String?> =
-//        LoggedDashboardChooser<String?>("Override Auto Winner").apply {
-//            addDefaultOption("No Override", null)
-//            addOption("Red", "R")
-//            addOption("Blue", "B")
-//        }
+    val overrideAutoWinner: LoggedDashboardChooser<String?> =
+        LoggedDashboardChooser<String?>("Override Auto Winner").apply {
+            addDefaultOption("No Override", null)
+            addOption("Red", "R")
+            addOption("Blue", "B")
+        }
 
     val trenchAreaWidth = 50.0.inches
     val trenchAreaLength = 27.0.inches
@@ -94,7 +96,7 @@ object FieldManager {
                 val relativePose = pose - Drive.localizer.pose.translation
                 if (relativePose.y.absoluteValue.meters < (trenchAreaWidth/2.0)) {
                     val predictedPose = Drive.localizer.pose.translation + Drive.velocity * Shooter.HOOD_DOWN_TIME
-                    Logger.recordOutput("Drive/predictedPose", predictedPose)
+                    SimpleLogger.recordOutput("Drive/predictedPose", predictedPose)
                     val predictedRelativePose = pose - predictedPose
                     if ((predictedRelativePose.x.sign != relativePose.x.sign) || (relativePose.x.absoluteValue.meters < (trenchAreaLength/2.0))) {
                         return true
@@ -183,7 +185,7 @@ object FieldManager {
 
     @get:AutoLogOutput(key = "FieldManager/gameData")
     val gameData: String
-        get() = null/*overrideAutoWinner.get()*/ ?: rawGameData // TODO
+        get() = overrideAutoWinner.get() ?: rawGameData
 
     @get:AutoLogOutput(key = "FieldManager/redWonAuto")
     val redWonAuto: Boolean

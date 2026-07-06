@@ -242,6 +242,7 @@ object Intake: MechanismBase("Intake") {
 
 
     init {
+        println("Intake initialization")
         if (!deployPoseEntry.exists()) deployPoseEntry.setDouble(DEPLOY_POSE)
         if (!stowPoseEntry.exists()) stowPoseEntry.setDouble(STOW_POSE)
         if (!deepStowPoseEntry.exists()) deepStowPoseEntry.setDouble(DEEP_STOW_POSE)

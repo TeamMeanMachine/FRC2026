@@ -23,7 +23,6 @@ import org.team2471.frc.lib.util.RobotType
 import org.team2471.frc.lib.util.robotType
 import org.wpilib.command3.Mechanism
 import org.wpilib.command3.Scheduler
-import org.wpilib.driverstation.DriverStationDisplay
 import org.wpilib.driverstation.RobotState
 import org.wpilib.driverstation.internal.DriverStationBackend
 import org.wpilib.framework.OpModeRobot
@@ -72,9 +71,9 @@ class Robot : OpModeRobot(0.01) {
         SignalLogger.stop()
 
         // Start AdvantageKit logger
+//        Logger.start()
 
 
-        val dummyRobot = DummyRobot()
         // Call all subsystems, make sure their init's run
         allSubsystems.forEach { println("activating subsystem ${it.name}") }
         println("FieldManager thinks the field is ${FieldManager.fieldDimensions.measureX.asFeet} feet big")
@@ -224,12 +223,6 @@ private fun getCompBotBoolean(): Boolean {
     } else { println("Not real so I am compbot") }
     println("I am compbot = $compBot")
     return compBot
-}
-
-class DummyRobot: LoggedRobot() {
-    init {
-        Logger.start()
-    }
 }
 
 

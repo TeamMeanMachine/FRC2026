@@ -127,6 +127,7 @@ object Spindexer: MechanismBase("Spindexer") {
     var disableReversingAuto = false
 
     init {
+        println("Spindexer initialization")
         if (!spinVelocityEntry.exists()) spinVelocityEntry.setDouble(SPIN_VELOCITY)
         if (!spinLowerVelocityEntry.exists()) spinLowerVelocityEntry.setDouble(SPIN_LOWER_VELOCITY)
         if (!sidetakeVelocityEntry.exists()) sidetakeVelocityEntry.setDouble(SIDETAKE_VELOCITY)

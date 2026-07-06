@@ -41,6 +41,7 @@ import org.team2471.frc.lib.ctre.loggedTalonFX.LoggedTalonFX
 import org.team2471.frc.lib.ctre.p
 import org.team2471.frc.lib.ctre.s
 import org.team2471.frc.lib.energy.BatteryLogger
+import org.team2471.frc.lib.logging.SimpleLogger
 import org.team2471.frc.lib.units.asFeet
 import org.team2471.frc.lib.units.asInches
 import org.team2471.frc.lib.units.asMeters
@@ -223,7 +224,7 @@ object Turret: MechanismBase("Turret") {
                     val robotCentricNoGyroSetpoint = (turretMotorRotorAngle + noGyroError)
                     val robotCentricNoGyroSetpointWrapped = robotCentricNoGyroSetpoint.asDegrees.IEEErem(TURRET_TOP_LIMIT.asDegrees.absoluteValue + TURRET_BOTTOM_LIMIT.asDegrees.absoluteValue).degrees
                     println("Turret Gyro Disconnect ${robotCentricNoGyroSetpointWrapped.asDegrees}")
-                    Logger.recordOutput("Turret/testMotorCentricSetpointDeg", robotCentricNoGyroSetpointWrapped.asDegrees)
+                    SimpleLogger.recordOutput("Turret/testMotorCentricSetpointDeg", robotCentricNoGyroSetpointWrapped.asDegrees)
                     turretMotor.setControl(PositionVoltage(robotCentricNoGyroSetpointWrapped.asRotations).withFeedForward(turretFeedforward))
                 }
             } else {
@@ -272,7 +273,7 @@ object Turret: MechanismBase("Turret") {
 //    var resettingGyro = false
 
     init {
-        println("Turret init")
+        println("Turret initialization")
         if (!encoder1OffsetEntry.exists()) encoder1OffsetEntry.setDouble(ENCODER_1_DEFAULT_OFFSET); encoder1OffsetEntry.setPersistent()
         if (!encoder2OffsetEntry.exists()) encoder2OffsetEntry.setDouble(ENCODER_2_DEFAULT_OFFSET); encoder2OffsetEntry.setPersistent()
         if (!turetFeedforwardFactorEntry.exists()) turetFeedforwardFactorEntry.setDouble(turretFeedforwardFactor); turetFeedforwardFactorEntry.setPersistent()
@@ -391,11 +392,11 @@ object Turret: MechanismBase("Turret") {
         val turretTranslation = turretTranslation
         val turretPigeonConnected = turretPigeonIsConnected
 //        Logger.recordOutput("aim target", aimTarget.toPose2d())
-        Logger.recordOutput("Turret/turret setpoint pose", turretTranslation.toPose2d(fieldCentricSetpoint.asRotation2d))
-        Logger.recordOutput("Turret/turret pose", turretTranslation.toPose2d(fieldCentricAngle.asRotation2d))
-        Logger.recordOutput("Turret/distToGoalFeet", aimTarget.getDistance(Drive.localizer.pose.translation).meters.asFeet)
-        Logger.recordOutput("Turret/turretPigeonLatency", turretPigeonLatency)
-        Logger.recordOutput("Turret/turretPigeonIsConnected", turretPigeonConnected)
+        SimpleLogger.recordOutput("Turret/turret setpoint pose", turretTranslation.toPose2d(fieldCentricSetpoint.asRotation2d))
+        SimpleLogger.recordOutput("Turret/turret pose", turretTranslation.toPose2d(fieldCentricAngle.asRotation2d))
+        SimpleLogger.recordOutput("Turret/distToGoalFeet", aimTarget.getDistance(Drive.localizer.pose.translation).meters.asFeet)
+        SimpleLogger.recordOutput("Turret/turretPigeonLatency", turretPigeonLatency)
+        SimpleLogger.recordOutput("Turret/turretPigeonIsConnected", turretPigeonConnected)
         turretPigeonIsConnectedEntry.setBoolean(turretPigeonConnected)
         LoopLogger.record("turret logging")
 

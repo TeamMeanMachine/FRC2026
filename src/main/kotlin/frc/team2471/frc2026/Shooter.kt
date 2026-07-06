@@ -306,6 +306,7 @@ object Shooter: MechanismBase("Shooter") {
     var i = 0
 
     init {
+        println("Shooter initialization")
         shooterMotor.configSim(DCMotor.getKrakenX60(2), 0.1)
         hoodMotor.configSim(DCMotor.getKrakenX60(1), 0.005)
 

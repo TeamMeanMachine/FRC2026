@@ -4,7 +4,6 @@ import com.ctre.phoenix6.swerve.utility.PhoenixPIDController
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import org.littletonrobotics.junction.Logger
 import org.team2471.frc.lib.commands.onCancel
 import org.team2471.frc.lib.commands.periodic
 import org.team2471.frc.lib.commands.setDefaultCommand
@@ -15,6 +14,7 @@ import org.team2471.frc.lib.control.rightStickButton
 import org.team2471.frc.lib.ctre.currentLimits
 import org.team2471.frc.lib.ctre.modifyConfiguration
 import org.team2471.frc.lib.localization.PoseLocalizer
+import org.team2471.frc.lib.logging.SimpleLogger
 import org.team2471.frc.lib.math.cube
 import org.team2471.frc.lib.math.square
 import org.team2471.frc.lib.swerve.SwerveDriveSubsystem
@@ -37,6 +37,7 @@ import org.wpilib.driverstation.RobotState
 import org.wpilib.math.controller.PIDController
 import org.wpilib.math.geometry.Pose2d
 import org.wpilib.math.geometry.Rotation2d
+import org.wpilib.math.geometry.Translation2d
 import org.wpilib.math.interpolation.Interpolator
 import org.wpilib.math.interpolation.InverseInterpolator
 import org.wpilib.math.kinematics.ChassisVelocities
@@ -67,7 +68,6 @@ object Drive: SwerveDriveSubsystem(DriveConstants.drivetrainConstants, *DriveCon
     override var pose: Pose2d
         get() = savedState.Pose
         set(value) {
-//            tempQuestPose = Pose3d(value).transformBy(robotToQuestTransformMeters)
             resetPose(value)
             localizer.resetPose(value) // Possibly not needed, but good for a quick response.
         }
@@ -107,7 +107,7 @@ object Drive: SwerveDriveSubsystem(DriveConstants.drivetrainConstants, *DriveCon
     val localizer: PoseLocalizer = PoseLocalizer(Fiducial.constructFiducialList(FieldManager.allAprilTags), cameras)
 
     // Drive Feedback controllers
-//    override val autoPilot = createAPObject(Double.POSITIVE_INFINITY.inchesPerSecond, 100.0.metersPerSecondPerSecond, 2.0.metersPerSecondPerSecond.perSecond, 0.5.inches, 1.0.degrees) TODO
+    override val autoPilot = createAPObject(Double.POSITIVE_INFINITY.inchesPerSecond, 100.0.metersPerSecondPerSecond, 2.0.metersPerSecondPerSecond.perSecond, 0.5.inches, 1.0.degrees)
     val fastAutoPilot = createAPObject(Double.POSITIVE_INFINITY.inchesPerSecond, 100.0.metersPerSecondPerSecond, 5.0.metersPerSecondPerSecond.perSecond, 0.5.inches, 1.0.degrees)
     val slowAutoPilot = createAPObject(Double.POSITIVE_INFINITY.inchesPerSecond, 100.0.metersPerSecondPerSecond, 0.5.metersPerSecondPerSecond.perSecond, 0.25.inches, 1.0.degrees)
 
@@ -125,16 +125,16 @@ object Drive: SwerveDriveSubsystem(DriveConstants.drivetrainConstants, *DriveCon
     /** false = paths made on the blue side, true = paths made on the red side */
     override val choreoPathsStartOnRed: Boolean = false
 
+    override var centerOfRotation: Translation2d = Translation2d(0.0.inches, 0.0.inches)
+
     init {
-        println("inside Drive init")
+        println("Drive initialization")
 
         useAprilTagsEntry.setBoolean(true)
         increaseDriveCurrentEntry.setBoolean(false)
 
-        // MUST start inside the field on bootup for accurate heading measurements due to a PoseLocalizer bug.
+        // MUST start inside the field on bootup for accurate heading measurements due to a Particle Filter bug.
         pose = Pose2d(3.0, 3.0, heading)
-
-//        zeroGyro()
 
         println("max acceleration ${DriveConstants.kMaxAcceleration.asMetersPerSecondPerSecond}")
 
@@ -142,7 +142,7 @@ object Drive: SwerveDriveSubsystem(DriveConstants.drivetrainConstants, *DriveCon
         localizer.disableSingleTagCalculation() // for loop times and we dont use it in 2026
 
         setDefaultCommand {
-            await(joystickDrive())
+            await(joystickPercentageDrive())
         }
 
         finalInitialization()
@@ -174,10 +174,10 @@ object Drive: SwerveDriveSubsystem(DriveConstants.drivetrainConstants, *DriveCon
         LoopLogger.record("Drive camera updateInputs")
 
 
-//        frontLeftConnectedEntry.setBoolean(cameras[0].isConnected)
-//        frontRightConnectedEntry.setBoolean(cameras[1].isConnected)
-//        backLeftConnectedEntry.setBoolean(cameras[2].isConnected)
-//        backRightConnectedEntry.setBoolean(cameras[3].isConnected)
+        frontLeftConnectedEntry.setBoolean(cameras.getOrNull(0)?.isConnected ?: false)
+        frontRightConnectedEntry.setBoolean(cameras.getOrNull(1)?.isConnected ?: false)
+        backLeftConnectedEntry.setBoolean(cameras.getOrNull(2)?.isConnected ?: false)
+        backRightConnectedEntry.setBoolean(cameras.getOrNull(3)?.isConnected ?: false)
 
         LoopLogger.record("Camera Connected Publisher")
 
@@ -196,18 +196,18 @@ object Drive: SwerveDriveSubsystem(DriveConstants.drivetrainConstants, *DriveCon
         if (cameras.isNotEmpty()) {
             cameras.forEach {
                 table.getEntry("Cameras/${it.cameraName} isConnected").setBoolean(it.isConnected)
-                Logger.recordOutput("Drive/Cameras/${it.cameraName} isConnected", it.isConnected)
+                SimpleLogger.recordOutput("Drive/Cameras/${it.cameraName} isConnected", it.isConnected)
             }
         }
         LoopLogger.record("Cameras isConnected publish")
 
         // Log all the poses for debugging
-        Logger.recordOutput("Swerve/Odometry", localizer.odometryPose)
-        Logger.recordOutput("Swerve/InterpolatedOdometry", localizer.interpolatedOdometryPose)
-        Logger.recordOutput("Swerve/InterpolatedPose", localizer.interpolatedPose)
-        Logger.recordOutput("Swerve/Localizer Raw", localizer.rawPose)
-        Logger.recordOutput("Swerve/Localizer", localizer.pose)
-        Logger.recordOutput("Swerve/SingleTagPose", localizer.singleTagPose)
+        SimpleLogger.recordOutput("Swerve/Odometry", localizer.odometryPose)
+        SimpleLogger.recordOutput("Swerve/InterpolatedOdometry", localizer.interpolatedOdometryPose)
+        SimpleLogger.recordOutput("Swerve/InterpolatedPose", localizer.interpolatedPose)
+        SimpleLogger.recordOutput("Swerve/Localizer Raw", localizer.rawPose)
+        SimpleLogger.recordOutput("Swerve/Localizer", localizer.pose)
+        SimpleLogger.recordOutput("Swerve/SingleTagPose", localizer.singleTagPose)
 
 
         LoopLogger.record("Drive pirdc")
@@ -232,9 +232,9 @@ object Drive: SwerveDriveSubsystem(DriveConstants.drivetrainConstants, *DriveCon
     }
 
     /**
-     * Returns [ChassisSpeeds] with a percentage power from the driver controller.
+     * Returns [ChassisVelocities] with a percentage power from the driver controller.
      */
-    override fun getJoystickPercentageVelocity(): ChassisVelocities {
+    override fun getJoystickPercentageSpeed(): ChassisVelocities {
         val rawJoystick = OI.driveTranslation
         // Square drive input and apply demoSpeed
         val power = rawJoystick.norm.square() * demoSpeed * if ((Shooter.isShooting || OI.driverController.rightStickButton) && FieldManager.inScoringZone) 0.3 else if (inSnakeMode) 0.8 else 1.0
@@ -262,18 +262,26 @@ object Drive: SwerveDriveSubsystem(DriveConstants.drivetrainConstants, *DriveCon
                     ).radians.asRotation2d - Rotation2d(90.0.degrees)
                 )
             } else {
-                driveVelocity(getChassisSpeedsFromJoystick().apply { omega = 0.0 })
+                driveVelocity(getChassisVelocitiesFromJoystick().apply { omega = 0.0 })
             }
         }
     }.onCancel {
         inSnakeMode = false
     }
 
+    /** Command to zero robot gyro */
     fun zeroGyroCommand() = use(Drive) {
         println("zero gyro command")
         zeroGyro()
     }
 
+    /** 
+     * Resets swerve odometry ([Drive.pose]) to the vision [PoseLocalizer.pose]. 
+     * 
+     * Useful if you want to use the swerve odometry for quick positioning or path following. 
+     * 
+     * Ex: Traveling somewhere in auto where you know the vision odometry will be unreliable. (human player station in 2025)
+     */
     fun resetOdometryToAbsolute() {
         println("resetting odometry to localizer pose")
         val localizerPose = localizer.pose

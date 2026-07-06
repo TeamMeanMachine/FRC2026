@@ -3,16 +3,11 @@ package frc.team2471.frc2026
 import org.team2471.frc.lib.commands.onCancel
 import org.team2471.frc.lib.commands.periodic
 import org.team2471.frc.lib.commands.use
-//import edu.wpi.first.wpilibj2.command.SubsystemBase
 import org.team2471.frc.lib.control.LoopLogger
 import org.team2471.frc.lib.control.isConnected
 import org.team2471.frc.lib.math.applyDeadband
-//import org.team2471.frc.lib.control.commands.finallyRun
-//import org.team2471.frc.lib.control.commands.parallelCommand
-//import org.team2471.frc.lib.control.commands.runCommand
-//import org.team2471.frc.lib.control.commands.runOnceCommand
-//import org.team2471.frc.lib.control.commands.toCommand
 import org.team2471.frc.lib.math.deadband
+import org.team2471.frc.lib.math.normalize
 import org.team2471.frc.lib.units.degrees
 import org.team2471.frc.lib.util.demoMode
 import org.wpilib.command3.Scheduler
@@ -45,7 +40,12 @@ object OI {
 
     val driveTranslation: Translation2d
         get() {
-            return Translation2d(rawDriveTranslationX, rawDriveTranslationY).applyDeadband(deadbandDriver)
+            val rawTranslation = Translation2d(rawDriveTranslationX, rawDriveTranslationY)
+            return if (rawTranslation.norm > 1.0) {
+                rawTranslation.normalize().applyDeadband(deadbandDriver)
+            } else {
+                rawTranslation.applyDeadband(deadbandDriver)
+            }
         }
 
     val driveTranslationX: Double get() = driveTranslation.x
@@ -92,7 +92,7 @@ object OI {
 
 
     init {
-        println("inside OI init")
+        println("OI initialization")
 
         if (!rotationMultiplierEntry.exists()) rotationMultiplierEntry.setDouble(rotationMultiplier)
         rotationMultiplierEntry.setPersistent()
