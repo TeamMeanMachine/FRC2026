@@ -43,6 +43,7 @@ import org.team2471.frc.lib.units.asRotation2d
 import org.team2471.frc.lib.units.degrees
 import org.team2471.frc.lib.units.inches
 import org.team2471.frc.lib.math.DynamicInterpolatingTreeMap
+import org.team2471.frc.lib.math.normalize
 import org.team2471.frc.lib.units.asMeters
 import org.team2471.frc.lib.units.asRadians
 import org.team2471.frc.lib.units.inchesPerSecond
@@ -58,6 +59,7 @@ import org.team2471.frc.lib.vision.PipelineConfig
 import org.team2471.frc.lib.vision.QuixVisionCamera
 import org.team2471.frc.lib.vision.photonVision.PhotonVisionCamera
 import kotlin.math.atan2
+import kotlin.math.pow
 
 
 object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerConstants.moduleConfigs) {
@@ -244,8 +246,10 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
         val rawJoystick = OI.rawDriveTranslation
         // Square drive input and apply demoSpeed
         val power = rawJoystick.norm.square() * demoSpeed * if ((Shooter.isShooting || OI.driverController.rightStickButton) && FieldManager.inScoringZone) 0.3 else if (inSnakeMode) 0.8 else 1.0
+        // Modify input to center in trench
+        val joystickWithTrenchAlign = (rawJoystick.normalize() + FieldManager.trenchAlignJoystickModifier * rawJoystick.norm.pow(2.0)).normalize()
         // Apply modified power to joystick vector and flip depending on alliance
-        val joystickTranslation = rawJoystick * power * if (isBlueAlliance) -1.0 else 1.0
+        val joystickTranslation = joystickWithTrenchAlign * power * if (isBlueAlliance) -1.0 else 1.0
 
         val rawJoystickRotation = OI.driveRotation
         // Cube rotation input and apply demoSpeed

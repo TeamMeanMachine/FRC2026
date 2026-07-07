@@ -29,6 +29,7 @@ import org.team2471.frc.lib.units.*
 import org.team2471.frc.lib.util.RobotMode
 import org.team2471.frc.lib.util.angleTo
 import org.team2471.frc.lib.util.demoMode
+import org.team2471.frc.lib.util.isBlueAlliance
 import org.team2471.frc.lib.util.isRedAlliance
 import org.team2471.frc.lib.util.robotMode
 import kotlin.math.absoluteValue
@@ -104,6 +105,27 @@ object FieldManager {
                 }
             }
             return false
+        }
+
+    @get:AutoLogOutput(key = "FieldManager/trenchAlignVector")
+    val trenchAlignJoystickModifier: Translation2d
+        get () {
+            val areaWidth = 75.0.inches
+            val areaLength = 200.0.inches
+            val p = 1.5
+            for (pose in trenchPositions) {
+                val relativePose = pose - Drive.localizer.pose.translation
+                if (relativePose.y.absoluteValue.meters < (areaWidth * 0.5)) {
+                    if (relativePose.x.absoluteValue.meters < (areaLength * 0.5)) {
+                        if (relativePose.x.sign == Drive.velocity.x.asMetersPerSecond.sign) {
+                            if (relativePose.y.sign == yRelativeToCenter.asMeters.sign) {
+                                return Translation2d(0.0.inches, relativePose.y.meters) * if (isBlueAlliance) -p else p
+                            }
+                        }
+                    }
+                }
+            }
+            return Translation2d()
         }
 
     @get:AutoLogOutput(key = "FieldManager/In Tower Area")
