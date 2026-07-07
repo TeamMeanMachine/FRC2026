@@ -6,13 +6,14 @@ import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.littletonrobotics.junction.LogFileUtil
-import org.littletonrobotics.junction.LoggedRobot
 import org.littletonrobotics.junction.Logger
 import org.littletonrobotics.junction.networktables.NT4Publisher
 import org.littletonrobotics.junction.wpilog.WPILOGReader
 import org.littletonrobotics.junction.wpilog.WPILOGWriter
 import org.team2471.frc.lib.autonomous.TestOpMode
 import org.team2471.frc.lib.autonomous.TestRoutine
+import org.team2471.frc.lib.commands.MasterMechanism
+import org.team2471.frc.lib.commands.addPeriodic
 import org.team2471.frc.lib.control.LoopLogger
 import org.team2471.frc.lib.control.isConnected
 import org.team2471.frc.lib.ctre.loggedTalonFX.MasterMotor
@@ -69,6 +70,11 @@ class Robot : OpModeRobot(0.01) {
 
         SignalLogger.setPath("")
         SignalLogger.stop()
+
+        MasterMechanism.callbacksToBeAdded.forEach {
+            addPeriodic(it)
+        }
+        MasterMechanism.callbacksToBeAdded.clear()
 
         // Start AdvantageKit logger
 //        Logger.start()

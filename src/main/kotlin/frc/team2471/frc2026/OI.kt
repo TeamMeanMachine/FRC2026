@@ -1,5 +1,6 @@
 package frc.team2471.frc2026
 
+import org.team2471.frc.lib.commands.MasterMechanism
 import org.team2471.frc.lib.commands.onCancel
 import org.team2471.frc.lib.commands.periodic
 import org.team2471.frc.lib.commands.use
@@ -10,7 +11,6 @@ import org.team2471.frc.lib.math.deadband
 import org.team2471.frc.lib.math.normalize
 import org.team2471.frc.lib.units.degrees
 import org.team2471.frc.lib.util.demoMode
-import org.wpilib.command3.Scheduler
 import org.wpilib.command3.button.CommandXboxController
 import org.wpilib.driverstation.Alert
 import org.wpilib.math.filter.Debouncer
@@ -157,7 +157,7 @@ object OI {
 
 
 
-        Scheduler.getDefault().addPeriodic {
+        MasterMechanism.callbacksToBeAdded.add {
             LoopLogger.record("b4 OI piodc")
             driverNotConnectedAlert.set(driverDebouncer.calculate(!driverController.isConnected))
             operatorNotConnectedAlert.set(operatorDebouncer.calculate(!operatorController.isConnected))
