@@ -9,7 +9,6 @@ import com.ctre.phoenix6.signals.InvertedValue
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue
 import frc.team2471.frc2026.AimUtils.shooterEfficiency
 import frc.team2471.frc2026.AimUtils.toExitVelocity
-import frc.team2471.frc2026.Robot.Companion.isCompBot
 import org.littletonrobotics.junction.AutoLogOutput
 import org.team2471.frc.lib.commands.MechanismBase
 import org.team2471.frc.lib.commands.onCancel
@@ -209,7 +208,7 @@ object Shooter: MechanismBase("Shooter") {
             if (field > 0.0.rotationsPerSecond) {
                 shooterMotor.setControl(MotionMagicVelocityVoltage(field).withFeedForward(SHOOTER_CUSTOM_I))
             } else {
-                if (Robot.isCompBot) {
+                if (isCompBot) {
                     shooterMotor.setControl(NeutralOut())
                 } else {
                     shooterMotor.setControl(MotionMagicVoltage(0.0))
@@ -271,7 +270,7 @@ object Shooter: MechanismBase("Shooter") {
 
     // degrees
     const val HOOD_ZERO = 15.0
-    val HOOD_UNDER_TRENCH_MAX_ANGLE = if (Robot.isCompBot) 32.0.degrees else 0.0.degrees
+    val HOOD_UNDER_TRENCH_MAX_ANGLE = if (isCompBot) 32.0.degrees else 0.0.degrees
 
     const val BALL_ANGLE_AT_HOOD_ZERO = 90.0
 
@@ -358,7 +357,7 @@ object Shooter: MechanismBase("Shooter") {
         }
         shooterMotor.addFollower(shooterMotorFollower/*, true*/)
 
-        if (Robot.isCompBot) {
+        if (isCompBot) {
             hoodEncoder.applyConfiguration {
                 inverted(true)
                 magnetSensorOffset(0.046630859)
@@ -386,14 +385,14 @@ object Shooter: MechanismBase("Shooter") {
                 d(4.0)
             }
 
-            if (!Robot.isCompBot) {
+            if (!isCompBot) {
                 motionMagic(0.75, 5.0)
             }
 
 //            if (Robot.isCompBot) {
 //                Feedback.SensorToMechanismRatio = 85.5
 //            } else {
-                remoteCANCoder(hoodEncoder.deviceID, if (Robot.isCompBot) 85.5 else 9.64285714285714)
+                remoteCANCoder(hoodEncoder.deviceID, if (isCompBot) 85.5 else 9.64285714285714)
 //            }
         }
     }

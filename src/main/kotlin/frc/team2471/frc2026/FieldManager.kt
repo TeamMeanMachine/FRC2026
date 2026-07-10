@@ -2,7 +2,6 @@ package frc.team2471.frc2026
 
 import frc.team2471.frc2026.FieldManager.reflectAcrossField
 import frc.team2471.frc2026.FieldManager.rotateAroundField
-import frc.team2471.frc2026.Robot.Companion.isAutonomous
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.littletonrobotics.junction.AutoLogOutput
@@ -234,7 +233,7 @@ object FieldManager {
             if (!doShiftTiming) {
                 return true
             }
-            if (matchTime > 130.0 || matchTime < 30.0 + AimUtils.MEASURED_SHOT_AIRTIME + HUB_PROCESSING_TIME || isAutonomous) {
+            if (matchTime > 130.0 || matchTime < 30.0 + AimUtils.MEASURED_SHOT_AIRTIME + HUB_PROCESSING_TIME || Robot.isAutonomous) {
                 return true
             }
             return if (matchTime in shouldShootEndTimes[1]..shouldShootStartTimes[1] || matchTime in shouldShootEndTimes[3]..shouldShootStartTimes[3])   {
@@ -250,7 +249,7 @@ object FieldManager {
             if (!doShiftTiming || matchTime < 0.0) {
                 return if (Drive.useAprilTags) AimUtils.isAimingAtGoal else false
             }
-            if (matchTime > 130.0 || matchTime < 30.0 + AimUtils.MEASURED_SHOT_AIRTIME + HUB_PROCESSING_TIME + RAMP_TIME || isAutonomous) {
+            if (matchTime > 130.0 || matchTime < 30.0 + AimUtils.MEASURED_SHOT_AIRTIME + HUB_PROCESSING_TIME + RAMP_TIME || Robot.isAutonomous) {
                 return true
             }
             return if (matchTime in shouldShootEndTimes[1]..shouldRampStartTimes[1] || matchTime in shouldShootEndTimes[3]..shouldRampStartTimes[3])   {
@@ -263,7 +262,7 @@ object FieldManager {
     @get:AutoLogOutput(key = "FieldManager/hubIsActive")
     val hubIsActive: Boolean
         get () {
-            if (matchTime !in 30.0..130.0 || isAutonomous) {
+            if (matchTime !in 30.0..130.0 || Robot.isAutonomous) {
                 return true
             }
             return if ((floor((matchTime - 30.0)/25.0)) % 2 == 0.0) {
@@ -311,7 +310,7 @@ object FieldManager {
                 weWonAutoEntry.setBoolean(weWonAuto)
                 hubCountdownEntry.setDouble(if (matchTime > 130.0) matchTime - 130.0 else if (matchTime < 30.0 || (matchTime < 55.0 && weWonAuto)) matchTime else (matchTime - 5) % 25.0)
                 activeHubEntry.setString(
-                    if (isAutonomous || matchTime > 130.0 || matchTime < 30.0) {
+                    if (Robot.isAutonomous || matchTime > 130.0 || matchTime < 30.0) {
                         "Both"
                     } else if (isRedAlliance == hubIsActive) {
                         "Red"

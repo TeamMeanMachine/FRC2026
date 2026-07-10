@@ -76,20 +76,20 @@ object Turret: MechanismBase("Turret") {
     val turretEncoder2 = CANcoder(CANCoders.TURRET_1, CANivores.TURRET_CAN)
     val turretPigeon = Pigeon2(CANSensors.TURRET_PIGEON, CANivores.TURRET_CAN)
 
-    val TURRET_TOP_LIMIT = if (Robot.isCompBot) 190.0.degrees else 270.0.degrees
-    val TURRET_BOTTOM_LIMIT = if (Robot.isCompBot) -190.0.degrees else -270.0.degrees
+    val TURRET_TOP_LIMIT = if (isCompBot) 190.0.degrees else 270.0.degrees
+    val TURRET_BOTTOM_LIMIT = if (isCompBot) -190.0.degrees else -270.0.degrees
     val TURRET_RANGE = TURRET_TOP_LIMIT - TURRET_BOTTOM_LIMIT
-    val TURRET_ENCODER_LIMIT = if (Robot.isCompBot) 600.0.degrees else 720.0.degrees
+    val TURRET_ENCODER_LIMIT = if (isCompBot) 600.0.degrees else 720.0.degrees
 
-    val ENCODER_1_DEFAULT_OFFSET = if (Robot.isCompBot) 164.004 else 43.0664
-    val ENCODER_2_DEFAULT_OFFSET = if (Robot.isCompBot) 144.229 else 76.2
+    val ENCODER_1_DEFAULT_OFFSET = if (isCompBot) 164.004 else 43.0664
+    val ENCODER_2_DEFAULT_OFFSET = if (isCompBot) 144.229 else 76.2
 
-    val encoder1GearRatio = if (Robot.isCompBot) 30.0/230.0 else 30.0/200.0
+    val encoder1GearRatio = if (isCompBot) 30.0/230.0 else 30.0/200.0
     val encoder2GearRatio = encoder1GearRatio * 83.0/32.0
 
-    val turretZeroPositionOnRobot = if (Robot.isCompBot) 0.0.degrees else 90.0.degrees
+    val turretZeroPositionOnRobot = if (isCompBot) 0.0.degrees else 90.0.degrees
 
-    val motorGearRatio = if (Robot.isCompBot) 30.0/230.0 * 11.0/46.0 else 30.0/200.0 * 11.0/46.0
+    val motorGearRatio = if (isCompBot) 30.0/230.0 * 11.0/46.0 else 30.0/200.0 * 11.0/46.0
 
     @AutoLogOutput(key = "Turret/offset")
     var offset: Angle = 0.0.degrees
@@ -280,14 +280,14 @@ object Turret: MechanismBase("Turret") {
         if (!disableTurretEntry.exists()) disableTurretEntry.setBoolean(disableTurret); disableTurretEntry.setPersistent()
 
         turretEncoder1.applyConfiguration {
-            if (Robot.isCompBot) {
+            if (isCompBot) {
                 inverted(false)
             } else {
                 inverted(false)
             }
         }
         turretEncoder2.applyConfiguration {
-            if (Robot.isCompBot) {
+            if (isCompBot) {
                 inverted(true)
             } else {
                 inverted(false)
@@ -297,7 +297,7 @@ object Turret: MechanismBase("Turret") {
         turretPigeon.applyConfiguration {
             MountPose.MountPoseYaw = 0.0
             MountPose.MountPosePitch = 0.0
-            MountPose.MountPoseRoll = if (Robot.isCompBot) 0.0 else -90.0
+            MountPose.MountPoseRoll = if (isCompBot) 0.0 else -90.0
         }
 
         turretMotor.configSim(DCMotor.getKrakenX60(1), 0.01)
@@ -307,7 +307,7 @@ object Turret: MechanismBase("Turret") {
             inverted(false)
             brakeMode()
             if (isReal) {
-                if (Robot.isCompBot) {
+                if (isCompBot) {
                     s(0.1, StaticFeedforwardSignValue.UseClosedLoopSign)
                     p(55.0)
 //                    p(25.0)

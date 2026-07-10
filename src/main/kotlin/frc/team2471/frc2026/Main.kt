@@ -41,10 +41,48 @@ import java.net.NetworkInterface
  * Most things can still function inside a companion object, although makes syntax slightly strange.
  */
 @OptIn(DelicateCoroutinesApi::class)
-class Robot : OpModeRobot(0.01) {
+object Robot : OpModeRobot(0.01) {
+    val scheduler = Scheduler.getDefault()
+
+    @get:JvmName("isRobotEnabled")
+    val isEnabled get() = RobotState.isEnabled()
+    @get:JvmName("isRobotDisabled")
+    val isDisabled get() = RobotState.isDisabled()
+    @get:JvmName("isRobotTeleop")
+    val isTeleop get() = RobotState.isTeleop()
+    @get:JvmName("isRobotTeleopEnabled")
+    val isTeleopEnabled get() = RobotState.isTeleopEnabled()
+    @get:JvmName("isRobotAutonomous")
+    val isAutonomous get() = RobotState.isAutonomous()
+    @get:JvmName("isRobotAutonomousEnabled")
+    val isAutonomousEnabled get() = RobotState.isAutonomousEnabled()
+    @get:JvmName("isRobotUtility")
+    val isUtility get() = RobotState.isUtility()
+    @get:JvmName("isRobotUtilityEnabled")
+    val isUtilityEnabled get() = RobotState.isUtilityEnabled()
+    val isDSAttached get() = RobotState.isDSAttached()
+    val isFMSAttached get() = RobotState.isFMSAttached()
+    val isEStopped get() = RobotState.isEStopped()
+
+    var beforeFirstEnable = true
+        private set
+
+    // Subsystems:
+    // MUST define an individual variable for all subsystems inside this class or else @AutoLogOutput will not work -2025
+    val drive = Drive
+    val oi = OI
+    val shooter = Shooter
+    val intake = Intake
+    val turret = Turret
+    val spindexer = Spindexer
+    val fieldManager = FieldManager
+    val aimUtils = AimUtils
+
+    var allSubsystems = arrayOf<Mechanism>(drive, intake, shooter, turret, spindexer)
+
+
     init {
         println("Robot init")
-        instance = this
         // Tells FRC we use Kotlin
 
         // Set up data receivers & replay source
@@ -90,55 +128,6 @@ class Robot : OpModeRobot(0.01) {
 //        println("We see ${Autonomous.paths.size} paths and they are made on the ${if (Drive.choreoPathsStartOnRed) "red" else "blue"} side.")
 
         println("Finished Robot init")
-    }
-
-    companion object {
-        val isCompBot = getCompBotBoolean()
-        val scheduler = Scheduler.getDefault()
-
-        lateinit var instance: Robot
-
-        val isEnabled get() = RobotState.isEnabled()
-        val isDisabled get() = RobotState.isDisabled()
-        val isTeleop get() = RobotState.isTeleop()
-        val isTeleopEnabled get() = RobotState.isTeleopEnabled()
-        val isAutonomous get() = RobotState.isAutonomous()
-        val isAutonomousEnabled get() = RobotState.isAutonomousEnabled()
-        val isUtility get() = RobotState.isUtility()
-        val isUtilityEnabled get() = RobotState.isUtilityEnabled()
-        val isDSAttached get() = RobotState.isDSAttached()
-        val isFMSAttached get() = RobotState.isFMSAttached()
-        val isEStopped get() = RobotState.isEStopped()
-
-        var beforeFirstEnable = true
-            private set
-
-        // Subsystems:
-        // MUST define an individual variable for all subsystems inside this class or else @AutoLogOutput will not work -2025
-        val drive = Drive
-        val oi = OI
-        val shooter = Shooter
-        val intake = Intake
-        val turret = Turret
-        val spindexer = Spindexer
-        val fieldManager = FieldManager
-        val aimUtils = AimUtils
-
-        var allSubsystems = arrayOf<Mechanism>(drive, intake, shooter, turret, spindexer)
-
-        /**
-         * Disables all defaults for all subsystems, except for the [exceptions] provided.
-         *
-         * Designed to be called as an init function of a [TestRoutine]/[TestOpMode].
-         *
-         * If this function is called inside an init of a TestOpMode/Routine, it will disable all default commands only while the OpMode is selected,
-         * afterward it will re-enable them. (This "scoping" feature is a part of Commandsv3/OpModes and is documented in wpilib docs)
-         */
-        fun disableAllDefaultCommands(vararg exceptions: Mechanism) {
-            allSubsystems.filterNot { exceptions.contains(it) }.forEach {
-                it.defaultCommand = it.idle()
-            }
-        }
     }
 
     /** This function is called periodically during all modes.  */
@@ -206,6 +195,20 @@ class Robot : OpModeRobot(0.01) {
             MasterMotor.simPeriodic()
         }
     }
+
+    /**
+     * Disables all defaults for all subsystems, except for the [exceptions] provided.
+     *
+     * Designed to be called as an init function of a [TestRoutine]/[TestOpMode].
+     *
+     * If this function is called inside an init of a TestOpMode/Routine, it will disable all default commands only while the OpMode is selected,
+     * afterward it will re-enable them. (This "scoping" feature is a part of Commandsv3/OpModes and is documented in wpilib docs)
+     */
+    fun disableAllDefaultCommands(vararg exceptions: Mechanism) {
+        allSubsystems.filterNot { exceptions.contains(it) }.forEach {
+            it.defaultCommand = it.idle()
+        }
+    }
 }
 
 private fun getCompBotBoolean(): Boolean {
@@ -254,4 +257,9 @@ private fun getCompBotBoolean(): Boolean {
  * Rename * Refactoring when renaming the object, it will get changed everywhere
  * including here.)
  */
-fun main() = RobotBase.startRobot(Robot::class.java)
+fun main() = RobotBase.startRobot {
+    Robot
+}
+
+val isCompBot = getCompBotBoolean()
+

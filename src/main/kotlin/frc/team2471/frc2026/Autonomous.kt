@@ -54,14 +54,14 @@ object Autonomous: Autonomi() {
 
     fun registerAutoOpModes() {
         autos.forEach {
-            Robot.instance.addOpModeFactory({ it.toAutoOpMode() }, RobotMode.AUTONOMOUS, it.name)
+            Robot.addOpModeFactory({ it.toAutoOpMode() }, RobotMode.AUTONOMOUS, it.name)
             println("Registered ${it.name} as an AutoOpMode")
         }
         tests.forEach {
-            Robot.instance.addOpModeFactory({ it.toTestOpMode() }, RobotMode.UTILITY, it.name)
+            Robot.addOpModeFactory({ it.toTestOpMode() }, RobotMode.UTILITY, it.name)
             println("Registered ${it.name} TestOpMode")
         }
-        Robot.instance.publishOpModes()
+        Robot.publishOpModes()
     }
 
     /** Autonomous commands */

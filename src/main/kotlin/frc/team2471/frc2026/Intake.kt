@@ -50,17 +50,17 @@ object Intake: MechanismBase("Intake") {
     val maxForwardTorque get() = maxForwardTorqueEntry.getDouble(18.0)
     var prevMaxForwardTorque = maxForwardTorque
 
-    val DEPLOY_POSE get() = deployPoseEntry.getDouble(if (Robot.isCompBot) 29.0 else 25.75)
-    val STOW_POSE get() = stowPoseEntry.getDouble(if (Robot.isCompBot) 2.0 else 2.0)
+    val DEPLOY_POSE get() = deployPoseEntry.getDouble(if (isCompBot) 29.0 else 25.75)
+    val STOW_POSE get() = stowPoseEntry.getDouble(if (isCompBot) 2.0 else 2.0)
     val DEEP_STOW_POSE get() = deepStowPoseEntry.getDouble(0.0)
 
-    val INTAKE_POWER get() = intakePowerEntry.getDouble(if (Robot.isCompBot) 75.0 else 75.0)
-    val HOMING_POWER = if (Robot.isCompBot) 0.1 else 0.15
+    val INTAKE_POWER get() = intakePowerEntry.getDouble(if (isCompBot) 75.0 else 75.0)
+    val HOMING_POWER = if (isCompBot) 0.1 else 0.15
 
     const val HOME_VELOCITY_THRESHOLD = 0.25
 
-    val rollerMotor = TalonFX(Falcons.INTAKE_ROLLER_0, if (Robot.isCompBot) CANivores.INTAKE_CAN else CANBus("rio"))
-    val rollerMotorFollower = TalonFX(Falcons.INTAKE_ROLLER_1, if (Robot.isCompBot) CANivores.INTAKE_CAN else CANBus("rio"))
+    val rollerMotor = TalonFX(Falcons.INTAKE_ROLLER_0, if (isCompBot) CANivores.INTAKE_CAN else CANBus("rio"))
+    val rollerMotorFollower = TalonFX(Falcons.INTAKE_ROLLER_1, if (isCompBot) CANivores.INTAKE_CAN else CANBus("rio"))
     val deployMotor0 = TalonFX(Falcons.INTAKE_DEPLOY_0, CANBus.systemcore(1))
     val deployMotor1 = TalonFX(Falcons.INTAKE_DEPLOY_1, CANBus.systemcore(2))
     val stopSensor0 = DigitalInput(DigitalSensors.INTAKE_STOP_SENSOR_0)
@@ -101,12 +101,12 @@ object Intake: MechanismBase("Intake") {
             if (finishedHoming) {
                 if (disableSpringProtection) {
                     deployMotor0.setControl(MotionMagicVoltage(field).withSlot(1))
-                    if (Robot.isCompBot) {
+                    if (isCompBot) {
                         deployMotor1.setControl(MotionMagicVoltage(field).withSlot(1))
                     }
                 } else {
                     deployMotor0.setControl(PositionTorqueCurrentFOC(field))
-                    if (Robot.isCompBot) {
+                    if (isCompBot) {
                         deployMotor1.setControl(PositionTorqueCurrentFOC(field))
                     }
                 }
@@ -207,7 +207,7 @@ object Intake: MechanismBase("Intake") {
 
     @get:AutoLogOutput(key = "Intake/Deploy Motor Follower Position")
     val deployMotor1Position: Double
-        get() = if (Robot.isCompBot) deployMotor1.position.valueAsDouble else 0.0
+        get() = if (isCompBot) deployMotor1.position.valueAsDouble else 0.0
 
 
     @get:AutoLogOutput(key = "Intake/Deploy Motor Error")
@@ -273,14 +273,14 @@ object Intake: MechanismBase("Intake") {
 
             TorqueCurrent.PeakForwardTorqueCurrent = maxForwardTorque
 
-            if (Robot.isCompBot) motionMagic(200.0, 500.0) else motionMagic(750.0, 1500.0)
+            if (isCompBot) motionMagic(200.0, 500.0) else motionMagic(750.0, 1500.0)
         }
 
 //         Apply config to motors
         deployMotor0.applyConfiguration(deployConfig.apply { inverted(true) })
         deployMotor0.setPosition(0.0)
 
-        if (Robot.isCompBot) {
+        if (isCompBot) {
             deployMotor1.applyConfiguration(deployConfig.apply { inverted(false) })
             deployMotor1.setPosition(0.0)
         }
@@ -291,7 +291,7 @@ object Intake: MechanismBase("Intake") {
 //            s(10.0, StaticFeedforwardSignValue.UseVelocitySign)
             coastMode()
         }
-        if (Robot.isCompBot) {
+        if (isCompBot) {
             rollerMotor.addFollower(rollerMotorFollower/*, false*/)
         } else {
             rollerMotor.addFollower(rollerMotorFollower)
@@ -447,7 +447,7 @@ object Intake: MechanismBase("Intake") {
 
     fun homeDeploy(): Command = use(this) {
         deployMotor0.setPosition(deploySetpoint)
-        if (Robot.isCompBot) deployMotor1.setPosition(deploySetpoint)
+        if (isCompBot) deployMotor1.setPosition(deploySetpoint)
     }
 
 
