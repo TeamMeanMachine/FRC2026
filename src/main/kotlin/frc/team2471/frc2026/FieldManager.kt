@@ -110,9 +110,9 @@ object FieldManager {
     @get:AutoLogOutput(key = "FieldManager/trenchAlignVector")
     val trenchAlignJoystickModifier: Translation2d
         get () {
-            val areaWidth = 75.0.inches
-            val areaLength = 200.0.inches
-            val p = 1.5
+            val areaWidth = 80.0.inches
+            val areaLength = 400.0.inches
+            val p = 2.25
             for (pose in trenchPositions) {
                 val relativePose = pose - Drive.localizer.pose.translation
                 if (relativePose.y.absoluteValue.meters < (areaWidth * 0.5)) {
