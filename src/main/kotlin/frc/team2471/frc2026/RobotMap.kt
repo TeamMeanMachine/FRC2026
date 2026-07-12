@@ -3,6 +3,7 @@
 package frc.team2471.frc2026
 
 import com.ctre.phoenix6.CANBus
+import frc.team2471.frc2026.Robot.isCompBot
 
 object Sparks {
 }

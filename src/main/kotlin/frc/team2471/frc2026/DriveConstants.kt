@@ -9,6 +9,7 @@ import com.ctre.phoenix6.signals.StaticFeedforwardSignValue
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants
 import com.ctre.phoenix6.swerve.SwerveModuleConstants
 import com.ctre.phoenix6.swerve.SwerveModuleConstantsFactory
+import frc.team2471.frc2026.Robot.isCompBot
 import org.team2471.frc.lib.control.CurrentLimits
 import org.team2471.frc.lib.ctre.getMagnetSensorOffset
 import org.team2471.frc.lib.math.round

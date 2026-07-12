@@ -43,6 +43,7 @@ import java.net.NetworkInterface
 @OptIn(DelicateCoroutinesApi::class)
 object Robot : OpModeRobot(0.01) {
     val scheduler = Scheduler.getDefault()
+    val isCompBot = getCompBotBoolean()
 
     @get:JvmName("isRobotEnabled")
     val isEnabled get() = RobotState.isEnabled()
@@ -122,8 +123,6 @@ object Robot : OpModeRobot(0.01) {
         allSubsystems.forEach { println("activating subsystem ${it.name}") }
         println("FieldManager thinks the field is ${FieldManager.fieldDimensions.measureX.asFeet} feet big")
         println("OI driverController isConnected: ${OI.driverController.isConnected}")
-        Autonomous.registerAutoOpModes()
-        println("Autonomous paths count: ${Autonomous.paths.size}")
 
 //        println("We see ${Autonomous.paths.size} paths and they are made on the ${if (Drive.choreoPathsStartOnRed) "red" else "blue"} side.")
 
@@ -260,6 +259,3 @@ private fun getCompBotBoolean(): Boolean {
 fun main() = RobotBase.startRobot {
     Robot
 }
-
-val isCompBot = getCompBotBoolean()
-

@@ -50,9 +50,8 @@ object Autonomous: Autonomi() {
 
     init {
         println("Autonomous init")
-    }
 
-    fun registerAutoOpModes() {
+        // Register Auto OpModes (This adds them to the DS chooser)
         autos.forEach {
             Robot.addOpModeFactory({ it.toAutoOpMode() }, RobotMode.AUTONOMOUS, it.name)
             println("Registered ${it.name} as an AutoOpMode")
@@ -62,6 +61,8 @@ object Autonomous: Autonomi() {
             println("Registered ${it.name} TestOpMode")
         }
         Robot.publishOpModes()
+
+        println("Autonomous path count: ${paths.size}")
     }
 
     /** Autonomous commands */
