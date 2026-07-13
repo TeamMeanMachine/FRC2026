@@ -149,7 +149,7 @@ object Drive: SwerveDriveSubsystem(DriveConstants.drivetrainConstants, *DriveCon
     }
 
     override fun periodic() {
-        LoopLogger.record("Inside Drive periodic")
+        LoopLogger.record("Drive periodic")
 
         if (RobotState.isTeleopEnabled()) {
             if (increaseDriveCurrent != prevIncreaseDriveCurrent) {
@@ -163,7 +163,7 @@ object Drive: SwerveDriveSubsystem(DriveConstants.drivetrainConstants, *DriveCon
             }
         }
 
-        LoopLogger.record("b4 Drive piodc")
+        LoopLogger.record("super Drive piodc")
         super.periodic()
         LoopLogger.record("super Drive piodc")
 
@@ -203,14 +203,12 @@ object Drive: SwerveDriveSubsystem(DriveConstants.drivetrainConstants, *DriveCon
 
         // Log all the poses for debugging
         SimpleLogger.recordOutput("Swerve/Odometry", localizer.odometryPose)
-        SimpleLogger.recordOutput("Swerve/InterpolatedOdometry", localizer.interpolatedOdometryPose)
-        SimpleLogger.recordOutput("Swerve/InterpolatedPose", localizer.interpolatedPose)
         SimpleLogger.recordOutput("Swerve/Localizer Raw", localizer.rawPose)
         SimpleLogger.recordOutput("Swerve/Localizer", localizer.pose)
         SimpleLogger.recordOutput("Swerve/SingleTagPose", localizer.singleTagPose)
 
 
-        LoopLogger.record("Drive pirdc")
+        LoopLogger.record("Drive periodic")
     }
 
     /**

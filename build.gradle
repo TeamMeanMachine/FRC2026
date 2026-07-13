@@ -19,6 +19,9 @@ wpi.vendor.loadFrom(project(":meanlib"))
 // Grab wpilib version from MeanLib
 wpi.versions.wpilibVersion = project(":meanlib").wpi.versions.wpilibVersion
 
+wpi.maven.useLocal = project(":meanlib").wpi.maven.useLocal // Usually false
+wpi.maven.useDevelopment = project(":meanlib").wpi.maven.useDevelopment // Usually false
+
 java {
     sourceCompatibility = JavaVersion.VERSION_25
     targetCompatibility = JavaVersion.VERSION_25
@@ -29,9 +32,6 @@ kotlin {
 }
 
 def ROBOT_MAIN_CLASS = "frc.team2471.frc2026.Main"
-
-wpi.maven.useLocal = false
-wpi.maven.useDevelopment = true
 
 // Define my targets (SystemCore) and artifacts (deployable files)
 // This is added by GradleRIO's backing project DeployUtils.

@@ -388,7 +388,7 @@ object Turret: MechanismBase("Turret") {
     }
 
     override fun periodic() {
-        LoopLogger.record("b4 turret periodic")
+        LoopLogger.record("Turret periodic")
         val aimTarget = AimUtils.aimTarget
         val turretTranslation = turretTranslation
         val turretPigeonConnected = turretPigeonIsConnected
@@ -411,14 +411,10 @@ object Turret: MechanismBase("Turret") {
 
         BatteryLogger.recordCurrent("Turret", turretMotor.supplyCurrent.value * 2.0)
 
-        LoopLogger.record("turret periodic")
+        LoopLogger.record("Turret periodic")
     }
 
-    override fun default() = setDefaultCommand {
-        this.periodic {
-            await(aimAtTarget())
-        }
-    }
+    override fun default() = aimAtTarget()
 
     fun aimAtTarget(): Command = use("AimAtTarget", this) {
         if (lookForwardOverride) {

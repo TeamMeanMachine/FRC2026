@@ -201,7 +201,7 @@ object FieldManager {
 
     @get:AutoLogOutput(key = "FieldManager/weWonAuto")
     val weWonAuto: Boolean
-        get () = redWonAuto == isRedAlliance
+        get() = redWonAuto == isRedAlliance
 
     val weWonAutoEntry = table.getEntry("We Won Auto")
 

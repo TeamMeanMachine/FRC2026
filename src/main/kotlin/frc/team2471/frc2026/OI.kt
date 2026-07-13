@@ -1,6 +1,6 @@
 package frc.team2471.frc2026
 
-import org.team2471.frc.lib.commands.MasterMechanism
+import org.team2471.frc.lib.commands.MechanismBase
 import org.team2471.frc.lib.commands.onCancel
 import org.team2471.frc.lib.commands.periodic
 import org.team2471.frc.lib.commands.use
@@ -20,7 +20,7 @@ import org.wpilib.networktables.NetworkTableInstance
 import org.wpilib.opmode.PeriodicOpMode
 import org.wpilib.opmode.Teleop
 
-object OI {
+object OI: MechanismBase("OI") {
     private val table = NetworkTableInstance.getDefault().getTable("OI")
 
     val rotationMultiplierEntry = table.getEntry("Rotation Multiplier")
@@ -157,13 +157,15 @@ object OI {
 
 
 
-        MasterMechanism.callbacksToBeAdded.add {
-            LoopLogger.record("b4 OI piodc")
-            driverNotConnectedAlert.set(driverDebouncer.calculate(!driverController.isConnected))
-            operatorNotConnectedAlert.set(operatorDebouncer.calculate(!operatorController.isConnected))
-            LoopLogger.record("OI piodc")
-        }
     }
+
+    override fun periodic() {
+        LoopLogger.record("OI periodic")
+        driverNotConnectedAlert.set(driverDebouncer.calculate(!driverController.isConnected))
+        operatorNotConnectedAlert.set(operatorDebouncer.calculate(!operatorController.isConnected))
+        LoopLogger.record("OI periodic")
+    }
+
 
     @Teleop(name = "Country Roads!")
     class TeleopMode: PeriodicOpMode() {

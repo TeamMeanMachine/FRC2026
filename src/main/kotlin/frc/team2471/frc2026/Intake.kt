@@ -454,7 +454,7 @@ object Intake: MechanismBase("Intake") {
 
     override fun default() = setDefaultCommand {
         this.periodic {
-            LoopLogger.record("b4 Intake default")
+            LoopLogger.record("Intake default")
             when (intakeState) {
                 IntakeState.OFF -> {
                     velocitySetpoint = 0.0

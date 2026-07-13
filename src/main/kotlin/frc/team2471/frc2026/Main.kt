@@ -12,8 +12,6 @@ import org.littletonrobotics.junction.wpilog.WPILOGReader
 import org.littletonrobotics.junction.wpilog.WPILOGWriter
 import org.team2471.frc.lib.autonomous.TestOpMode
 import org.team2471.frc.lib.autonomous.TestRoutine
-import org.team2471.frc.lib.commands.MasterMechanism
-import org.team2471.frc.lib.commands.addPeriodic
 import org.team2471.frc.lib.control.LoopLogger
 import org.team2471.frc.lib.control.isConnected
 import org.team2471.frc.lib.ctre.loggedTalonFX.MasterMotor
@@ -21,6 +19,7 @@ import org.team2471.frc.lib.energy.BatteryLogger
 import org.team2471.frc.lib.logging.NT4NonFMSPublisher
 import org.team2471.frc.lib.units.asFeet
 import org.team2471.frc.lib.util.RobotType
+import org.team2471.frc.lib.util.isRedAlliance
 import org.team2471.frc.lib.util.robotType
 import org.wpilib.command3.Mechanism
 import org.wpilib.command3.Scheduler
@@ -28,6 +27,8 @@ import org.wpilib.driverstation.RobotState
 import org.wpilib.driverstation.internal.DriverStationBackend
 import org.wpilib.framework.OpModeRobot
 import org.wpilib.framework.RobotBase
+import org.wpilib.hardware.hal.HAL
+import org.wpilib.system.WPILibVersion
 import java.net.NetworkInterface
 
 
@@ -85,6 +86,8 @@ object Robot : OpModeRobot(0.01) {
     init {
         println("Robot init")
         // Tells FRC we use Kotlin
+        HAL.reportUsage("Language", "Kotlin")
+        println("WPILib Version: ${WPILibVersion.Version}")
 
         // Set up data receivers & replay source
         when (robotType) {
@@ -110,11 +113,6 @@ object Robot : OpModeRobot(0.01) {
         SignalLogger.setPath("")
         SignalLogger.stop()
 
-        MasterMechanism.callbacksToBeAdded.forEach {
-            addPeriodic(it)
-        }
-        MasterMechanism.callbacksToBeAdded.clear()
-
         // Start AdvantageKit logger
 //        Logger.start()
 
@@ -123,8 +121,6 @@ object Robot : OpModeRobot(0.01) {
         allSubsystems.forEach { println("activating subsystem ${it.name}") }
         println("FieldManager thinks the field is ${FieldManager.fieldDimensions.measureX.asFeet} feet big")
         println("OI driverController isConnected: ${OI.driverController.isConnected}")
-
-//        println("We see ${Autonomous.paths.size} paths and they are made on the ${if (Drive.choreoPathsStartOnRed) "red" else "blue"} side.")
 
         println("Finished Robot init")
     }
@@ -190,9 +186,7 @@ object Robot : OpModeRobot(0.01) {
     /** This function is called periodically whilst in simulation.  */
     @OptIn(DelicateCoroutinesApi::class)
     override fun simulationPeriodic() {
-        GlobalScope.launch {
-            MasterMotor.simPeriodic()
-        }
+        MasterMotor.simPeriodic()
     }
 
     /**
@@ -208,34 +202,31 @@ object Robot : OpModeRobot(0.01) {
             it.defaultCommand = it.idle()
         }
     }
-}
 
-private fun getCompBotBoolean(): Boolean {
-    var compBot = true
-    if (robotType == RobotType.REAL) {
-        val networkInterfaces =  NetworkInterface.getNetworkInterfaces()
-        println("retrieving network interfaces")
-        for (iFace in networkInterfaces) {
-            println(iFace.name)
-            if (iFace.name == "eth0") {
-                println("NETWORK NAME--->${iFace.name}<----")
-                var macString = ""
-                for (byteVal in iFace.hardwareAddress){
-                    macString += String.format("%s", byteVal)
+    /** Gets the mac address and uses that to determine if Robot is comp bot or not. (Hardware specific) */
+    private fun getCompBotBoolean(): Boolean {
+        var compBot = true
+        if (robotType == RobotType.REAL) {
+            val networkInterfaces = NetworkInterface.getNetworkInterfaces()
+            println("retrieving network interfaces")
+            for (iFace in networkInterfaces) {
+                println(iFace.name)
+                if (iFace.name == "eth0") {
+                    println("NETWORK NAME--->${iFace.name}<----")
+                    var macString = ""
+                    for (byteVal in iFace.hardwareAddress){
+                        macString += String.format("%s", byteVal)
+                    }
+                    println("FORMATTED---->$macString<-----")
+
+                    compBot = (macString == "0-128475710531") // Change this boolean expression to set comp bot.
                 }
-                println("FORMATTED---->$macString<-----")
-
-                compBot = (macString == "0-128475710531")
             }
-        }
-    } else { println("Not real so I am compbot") }
-    println("I am compbot = $compBot")
-    return compBot
+        } else { println("Not real so I am compbot") }
+        println("I am compbot = $compBot")
+        return compBot
+    }
 }
-
-
-
-
 
 
 /**
