@@ -18,7 +18,7 @@ import org.team2471.frc.lib.commands.periodic
 import org.team2471.frc.lib.commands.setDefaultCommand
 import org.team2471.frc.lib.commands.use
 import org.team2471.frc.lib.control.CurrentLimits
-import org.team2471.frc.lib.control.LoopLogger
+import org.team2471.frc.lib.logging.LoopLogger
 import org.team2471.frc.lib.ctre.addFollower
 import org.team2471.frc.lib.ctre.applyConfiguration
 import org.team2471.frc.lib.ctre.coastMode

@@ -15,7 +15,7 @@ import org.team2471.frc.lib.commands.onCancel
 import org.team2471.frc.lib.commands.parallel
 import org.team2471.frc.lib.commands.periodic
 import org.team2471.frc.lib.commands.use
-import org.team2471.frc.lib.control.LoopLogger
+import org.team2471.frc.lib.logging.LoopLogger
 import org.team2471.frc.lib.control.rightStickButton
 import org.team2471.frc.lib.ctre.addFollower
 import org.team2471.frc.lib.ctre.applyConfiguration

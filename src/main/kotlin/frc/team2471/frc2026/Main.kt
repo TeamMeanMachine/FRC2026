@@ -14,7 +14,7 @@ import org.team2471.frc.lib.autonomous.TestOpMode
 import org.team2471.frc.lib.autonomous.TestRoutine
 import org.team2471.frc.lib.commands.MasterMechanism
 import org.team2471.frc.lib.commands.addPeriodic
-import org.team2471.frc.lib.control.LoopLogger
+import org.team2471.frc.lib.logging.LoopLogger
 import org.team2471.frc.lib.control.isConnected
 import org.team2471.frc.lib.ctre.loggedTalonFX.MasterMotor
 import org.team2471.frc.lib.energy.BatteryLogger

@@ -14,7 +14,7 @@ import org.team2471.frc.lib.commands.MechanismBase
 import org.team2471.frc.lib.commands.periodic
 import org.team2471.frc.lib.commands.setDefaultCommand
 import org.team2471.frc.lib.commands.use
-import org.team2471.frc.lib.control.LoopLogger
+import org.team2471.frc.lib.logging.LoopLogger
 import org.team2471.frc.lib.math.toPose2d
 import org.team2471.frc.lib.units.absoluteValue
 import org.team2471.frc.lib.units.asDegrees

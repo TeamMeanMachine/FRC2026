@@ -4,7 +4,7 @@ import org.team2471.frc.lib.commands.MasterMechanism
 import org.team2471.frc.lib.commands.onCancel
 import org.team2471.frc.lib.commands.periodic
 import org.team2471.frc.lib.commands.use
-import org.team2471.frc.lib.control.LoopLogger
+import org.team2471.frc.lib.logging.LoopLogger
 import org.team2471.frc.lib.control.isConnected
 import org.team2471.frc.lib.math.applyDeadband
 import org.team2471.frc.lib.math.deadband
