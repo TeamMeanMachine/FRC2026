@@ -8,6 +8,7 @@ import com.ctre.phoenix6.controls.NeutralOut
 import com.ctre.phoenix6.controls.PositionTorqueCurrentFOC
 import com.ctre.phoenix6.hardware.TalonFX
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue
+import frc.team2471.frc2026.Robot.isCompBot
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.littletonrobotics.junction.AutoLogOutput
@@ -453,7 +454,7 @@ object Intake: MechanismBase("Intake") {
 
     override fun default() = setDefaultCommand {
         this.periodic {
-            LoopLogger.record("b4 Intake default")
+            LoopLogger.record("Intake default")
             when (intakeState) {
                 IntakeState.OFF -> {
                     velocitySetpoint = 0.0
