@@ -65,6 +65,13 @@ object FieldManager {
             addOption("Blue", "B")
         }
 
+    val preferredPassingSideChooser: LoggedDashboardChooser<String> =
+        LoggedDashboardChooser<String>("Preferred Passing Side").apply {
+            addDefaultOption("None", "none")
+            addOption("Outpost", "o")
+            addOption("Depot", "d")
+        }
+
     val trenchAreaWidth = 50.0.inches
     val trenchAreaLength = 27.0.inches
 
@@ -112,14 +119,13 @@ object FieldManager {
         get () {
             val areaWidth = 80.0.inches
             val areaLength = 400.0.inches
-            val p = 2.25
             for (pose in trenchPositions) {
                 val relativePose = pose - Drive.localizer.pose.translation
                 if (relativePose.y.absoluteValue.meters < (areaWidth * 0.5)) {
                     if (relativePose.x.absoluteValue.meters < (areaLength * 0.5)) {
                         if (relativePose.x.sign == Drive.velocity.x.asMetersPerSecond.sign) {
                             if (relativePose.y.sign == yRelativeToCenter.asMeters.sign) {
-                                return Translation2d(0.0.inches, relativePose.y.meters) * if (isBlueAlliance) -p else p
+                                return Translation2d(0.0.inches, relativePose.y.meters) * if (isBlueAlliance) -trenchAssistStrength else trenchAssistStrength
                             }
                         }
                     }
@@ -183,7 +189,7 @@ object FieldManager {
             }
 
             // meters
-            if (Drive.localizer.pose.translation.getDistance(pose) > 7.0 && (yRelativeToCenter.asMeters.sign != pose.y.sign * if (isRedAlliance) 1.0 else -1.0)) {
+            if ((Drive.localizer.pose.translation.getDistance(pose) > 7.0 && (yRelativeToCenter.asMeters.sign != pose.y.sign * if (isRedAlliance) 1.0 else -1.0))) {
                 pose = Translation2d(pose.x, fieldWidth.asMeters - pose.y)
             }
 
@@ -224,6 +230,10 @@ object FieldManager {
     val gameData: String
         get() = overrideAutoWinner.get() ?: rawGameData
 
+    @get:AutoLogOutput(key = "FieldManager/gameData")
+    val preferredPassingSide: String
+        get() = preferredPassingSideChooser.get()
+
     @get:AutoLogOutput(key = "FieldManager/redWonAuto")
     val redWonAuto: Boolean
         get() = when (gameData) {
@@ -249,6 +259,9 @@ object FieldManager {
 
     val doShiftTimingEntry = table.getEntry("DoShiftTiming")
     val autoHoodRetractionEntry = table.getEntry("AutoHoodRetraction")
+
+    val trenchAssistStrengthEntry = table.getEntry("TrenchAssistStrength")
+    val trenchAssistStrength get() = trenchAssistStrengthEntry.getDouble(2.0)
 
     val hubCountdownEntry = table.getEntry("HubCountdown")
     val activeHubEntry = table.getEntry("ActiveHub")
@@ -313,6 +326,9 @@ object FieldManager {
     init {
         doShiftTimingEntry.setBoolean(true)
         autoHoodRetractionEntry.setBoolean(true)
+
+        trenchAssistStrengthEntry.setDouble(trenchAssistStrength)
+        trenchAssistStrengthEntry.setPersistent()
 
         val apriltagPositions = allAprilTags.map { it.pose }
         Logger.recordOutput("FieldManager/All apriltags", *apriltagPositions.toTypedArray())
