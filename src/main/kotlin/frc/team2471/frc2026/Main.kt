@@ -24,6 +24,7 @@ import org.littletonrobotics.junction.wpilog.WPILOGWriter
 import org.team2471.frc.lib.control.LoopLogger
 import org.team2471.frc.lib.ctre.loggedMotors.MasterMotor
 import org.team2471.frc.lib.energy.BatteryLogger
+import org.team2471.frc.lib.energy.FindAmpsManager
 import org.team2471.frc.lib.units.asFeet
 import org.team2471.frc.lib.logging.NT4NonFMSPublisher
 import org.team2471.frc.lib.util.RobotMode
@@ -170,6 +171,7 @@ object Robot : LoggedRobot() {
             wasDisabled = true
         }
 
+        FindAmpsManager.periodic()
 
         LoopLogger.record("b4 CommandScheduler")
         try {
@@ -183,6 +185,8 @@ object Robot : LoggedRobot() {
         LoopLogger.record("after powerTracker update")
         MasterMotor.periodic()
         LoopLogger.record("after Motor logging")
+        FindAmpsManager.periodicAfterScheduler()
+        LoopLogger.record("after Battery logging")
 
         // Return to non-RT thread priority (do not modify the first argument)
 //         Threads.setCurrentThreadPriority(false, 10);
