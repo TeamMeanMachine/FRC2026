@@ -14,24 +14,18 @@ import frc.team2471.frc2026.Robot.isAutonomous
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.littletonrobotics.junction.AutoLogOutput
-import org.littletonrobotics.junction.LogFileUtil
 import org.littletonrobotics.junction.Logger
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser
-import org.littletonrobotics.junction.networktables.NT4Publisher
-import org.littletonrobotics.junction.wpilog.WPILOGReader
-import org.littletonrobotics.junction.wpilog.WPILOGWriter
 import org.team2471.frc.lib.control.commands.runCommand
 import org.team2471.frc.lib.control.commands.runOnceCommand
 import org.team2471.frc.lib.control.commands.sequenceCommand
 import org.team2471.frc.lib.coroutines.periodic
 import org.team2471.frc.lib.math.toPose2d
 import org.team2471.frc.lib.units.*
-import org.team2471.frc.lib.util.RobotMode
 import org.team2471.frc.lib.util.angleTo
 import org.team2471.frc.lib.util.demoMode
 import org.team2471.frc.lib.util.isBlueAlliance
 import org.team2471.frc.lib.util.isRedAlliance
-import org.team2471.frc.lib.util.robotMode
 import kotlin.math.absoluteValue
 import kotlin.math.floor
 import kotlin.math.sign
@@ -58,18 +52,18 @@ object FieldManager {
     val blueHubTags = allAprilTags.filter { it.ID in 18..21 || it.ID in 24..27 }
     val hubTags = redHubTags + blueHubTags
 
-    val overrideAutoWinner: LoggedDashboardChooser<String?> =
+    val overrideAutoWinnerChooser: LoggedDashboardChooser<String?> =
         LoggedDashboardChooser<String?>("Override Auto Winner").apply {
             addDefaultOption("No Override", null)
             addOption("Red", "R")
             addOption("Blue", "B")
         }
 
-    val preferredPassingSideChooser: LoggedDashboardChooser<String> =
-        LoggedDashboardChooser<String>("Preferred Passing Side").apply {
-            addDefaultOption("None", "none")
-            addOption("Outpost", "o")
-            addOption("Depot", "d")
+    val preferredPassingSideChooser: LoggedDashboardChooser<PassingSide> =
+        LoggedDashboardChooser<PassingSide>("Preferred Passing Side").apply {
+            addDefaultOption("Both", PassingSide.BOTH)
+            addOption("Outpost", PassingSide.OUTPOST)
+            addOption("Depot", PassingSide.DEPOT)
         }
 
     val trenchAreaWidth = 50.0.inches
@@ -118,7 +112,7 @@ object FieldManager {
     val trenchAlignJoystickModifier: Translation2d
         get () {
             val areaWidth = 80.0.inches
-            val areaLength = 400.0.inches
+            val areaLength = 300.0.inches
             for (pose in trenchPositions) {
                 val relativePose = pose - Drive.localizer.pose.translation
                 if (relativePose.y.absoluteValue.meters < (areaWidth * 0.5)) {
@@ -189,7 +183,12 @@ object FieldManager {
             }
 
             // meters
-            if ((Drive.localizer.pose.translation.getDistance(pose) > 7.0 && (yRelativeToCenter.asMeters.sign != pose.y.sign * if (isRedAlliance) 1.0 else -1.0))) {
+            if (
+                if (preferredPassingSide == PassingSide.BOTH)
+                    (Drive.localizer.pose.y.meters > fieldHalfWidth)
+                else
+                    (Drive.localizer.pose.translation.getDistance(pose) > 7.0 && (yRelativeToCenter.asMeters.sign == pose.y.sign * if (isRedAlliance xor (preferredPassingSide == PassingSide.DEPOT)) -1.0 else 1.0))
+                ) {
                 pose = Translation2d(pose.x, fieldWidth.asMeters - pose.y)
             }
 
@@ -228,10 +227,10 @@ object FieldManager {
 
     @get:AutoLogOutput(key = "FieldManager/gameData")
     val gameData: String
-        get() = overrideAutoWinner.get() ?: rawGameData
+        get() = overrideAutoWinnerChooser.get() ?: rawGameData
 
     @get:AutoLogOutput(key = "FieldManager/gameData")
-    val preferredPassingSide: String
+    val preferredPassingSide: PassingSide
         get() = preferredPassingSideChooser.get()
 
     @get:AutoLogOutput(key = "FieldManager/redWonAuto")
@@ -448,4 +447,10 @@ object FieldManager {
      */
     fun Pose2d.onOpposingAllianceSide() = !this.onFriendlyAllianceSide()
 
+
+    enum class PassingSide {
+        BOTH,
+        OUTPOST,
+        DEPOT
+    }
 }
