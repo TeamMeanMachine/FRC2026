@@ -108,8 +108,22 @@ object FieldManager {
             return false
         }
 
-    @get:AutoLogOutput(key = "FieldManager/trenchAlignVector")
-    val trenchAlignJoystickModifier: Translation2d
+
+    @get:AutoLogOutput(key = "FieldManager/trenchAlignRotationModifier")
+    val trenchAlignRotationModifier: Double get() {
+        if (trenchAlignTranslationModifier.norm > 0) {
+            val strength = trenchAssistStrength * 1.1
+            if (Drive.heading.measure > 90.0.degrees || Drive.heading.measure < -90.0.degrees) {
+                return strength * (0.5 - Drive.heading.rotations.absoluteValue) * Drive.heading.rotations.sign
+            } else {
+                return strength * -Drive.heading.rotations
+            }
+        }
+        return 0.0
+    }
+
+    @get:AutoLogOutput(key = "FieldManager/trenchAlignTranslationModifier")
+    val trenchAlignTranslationModifier: Translation2d
         get () {
             val areaWidth = 80.0.inches
             val areaLength = 300.0.inches

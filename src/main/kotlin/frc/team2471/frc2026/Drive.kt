@@ -5,11 +5,9 @@ import edu.wpi.first.math.Matrix
 import edu.wpi.first.math.VecBuilder
 import edu.wpi.first.math.controller.PIDController
 import edu.wpi.first.math.geometry.Pose2d
-import edu.wpi.first.math.geometry.Pose3d
 import edu.wpi.first.math.geometry.Rotation2d
 import edu.wpi.first.math.geometry.Rotation3d
 import edu.wpi.first.math.geometry.Transform3d
-import edu.wpi.first.math.geometry.Translation2d
 import edu.wpi.first.math.geometry.Translation3d
 import edu.wpi.first.math.interpolation.Interpolator
 import edu.wpi.first.math.interpolation.InverseInterpolator
@@ -60,7 +58,6 @@ import org.team2471.frc.lib.vision.QuixVisionCamera
 import org.team2471.frc.lib.vision.photonVision.PhotonVisionCamera
 import kotlin.math.absoluteValue
 import kotlin.math.atan2
-import kotlin.math.pow
 
 
 object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerConstants.moduleConfigs) {
@@ -248,13 +245,13 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
         // Square drive input and apply demoSpeed
         val power = rawJoystick.norm.square() * demoSpeed * if ((Shooter.isShooting || OI.driverController.rightStickButton) && FieldManager.inScoringZone) 0.3 else if (inSnakeMode) 0.8 else 1.0
         // Modify input to center in trench
-        val joystickWithTrenchAlign = (rawJoystick.normalize() + FieldManager.trenchAlignJoystickModifier * rawJoystick.x.absoluteValue).normalize()
+        val joystickWithTrenchAlign = (rawJoystick.normalize() + FieldManager.trenchAlignTranslationModifier * rawJoystick.x.absoluteValue).normalize()
         // Apply modified power to joystick vector and flip depending on alliance
         val joystickTranslation = joystickWithTrenchAlign * power * if (isBlueAlliance) -1.0 else 1.0
 
         val rawJoystickRotation = OI.driveRotation
         // Cube rotation input and apply demoSpeed
-        val omega = if (!(demoMode && driveLeftTriggerFullPress)) rawJoystickRotation.cube() * demoSpeed else 0.0
+        val omega = if (!(demoMode && driveLeftTriggerFullPress)) (rawJoystickRotation.cube() + FieldManager.trenchAlignRotationModifier * rawJoystick.x.absoluteValue) * demoSpeed else 0.0
 
         return ChassisSpeeds(joystickTranslation.x, joystickTranslation.y, omega)
     }
