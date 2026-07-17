@@ -58,6 +58,7 @@ import org.team2471.frc.lib.vision.Fiducial
 import org.team2471.frc.lib.vision.PipelineConfig
 import org.team2471.frc.lib.vision.QuixVisionCamera
 import org.team2471.frc.lib.vision.photonVision.PhotonVisionCamera
+import kotlin.math.absoluteValue
 import kotlin.math.atan2
 import kotlin.math.pow
 
@@ -247,7 +248,7 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
         // Square drive input and apply demoSpeed
         val power = rawJoystick.norm.square() * demoSpeed * if ((Shooter.isShooting || OI.driverController.rightStickButton) && FieldManager.inScoringZone) 0.3 else if (inSnakeMode) 0.8 else 1.0
         // Modify input to center in trench
-        val joystickWithTrenchAlign = (rawJoystick.normalize() + FieldManager.trenchAlignJoystickModifier * rawJoystick.x).normalize()
+        val joystickWithTrenchAlign = (rawJoystick.normalize() + FieldManager.trenchAlignJoystickModifier * rawJoystick.x.absoluteValue).normalize()
         // Apply modified power to joystick vector and flip depending on alliance
         val joystickTranslation = joystickWithTrenchAlign * power * if (isBlueAlliance) -1.0 else 1.0
 

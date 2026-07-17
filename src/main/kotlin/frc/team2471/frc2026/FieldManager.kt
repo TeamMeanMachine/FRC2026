@@ -182,15 +182,17 @@ object FieldManager {
                 pose = Translation2d(pose.x, pose.y)
             }
 
+            // note: xor is used like "invert if" here
+            val flipSide = (yRelativeToCenter.asMeters.sign == 1.0) xor isRedAlliance
+
             val isTooFar = Drive.localizer.pose.translation.getDistance(pose) > 7.0
-            val onOtherSide = (yRelativeToCenter.asMeters.sign == pose.y.sign * if (isRedAlliance xor (preferredPassingSide == PassingSide.DEPOT)) -1.0 else 1.0)
+            val invertSingleSidePassing = (preferredPassingSide == PassingSide.DEPOT)
+            val onOtherSide = flipSide xor invertSingleSidePassing
 
             val passOnBothSides = preferredPassingSide == PassingSide.BOTH
-            val flipSide = (yRelativeToCenter.asMeters.sign == if (isBlueAlliance) 1.0 else -1.0)
 
             // meters
-            if (
-                if (passOnBothSides) flipSide else (isTooFar && onOtherSide)) {
+            if (if (passOnBothSides) flipSide else (isTooFar && onOtherSide) xor invertSingleSidePassing) {
                 pose = Translation2d(pose.x, fieldWidth.asMeters - pose.y)
             }
 
