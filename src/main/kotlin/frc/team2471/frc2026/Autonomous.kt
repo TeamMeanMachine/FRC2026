@@ -2,8 +2,6 @@ package frc.team2471.frc2026
 
 //import frc.team2471.frc2026.tests.*
 import org.team2471.frc.lib.autonomous.Autonomi
-import org.team2471.frc.lib.autonomous.AutoRoutine
-import org.team2471.frc.lib.autonomous.TestRoutine
 import org.team2471.frc.lib.commands.onCancel
 import org.team2471.frc.lib.commands.parallel
 import org.team2471.frc.lib.commands.periodic
@@ -25,7 +23,10 @@ object Autonomous: Autonomi() {
 
 //    val paths: MutableMap<String, Trajectory<SwerveSample>> = findChoreoPaths()  <-- already inside AutoMaker
 
+    /** All auto routines for Autonomous mode. Gets registered as an OpMode. */
     override val autos: List<AutoRoutine> = listOf(
+        // AutoRoutine( Name, Command, { RobotStartingPose }, { DisabledPeriodicLoop } )
+        // AutoRoutine("My Cool Auto", myCoolAutoCommand(), { paths["coolPath"]!!.getInitialPose(Drive.flipChoreoPaths) }, { Drive.driveVelocity(paths["coolPath"]!!.getInitialSample(Drive.flipChoreoPaths).chassisSpeeds) }
         AutoRoutine("Eight Foot Straight", eightFootStraight()),
         AutoRoutine("Square Path Test", squarePathTest()),
         AutoRoutine("Double Swipe Left", doubleSwipe(false)),
@@ -33,7 +34,9 @@ object Autonomous: Autonomi() {
         AutoRoutine("Print for 20 seconds", printFor20Seconds()),
     )
 
+    /** All test routines for Utility mode. Gets registered as an OpMode. */
     override val tests: List<TestRoutine> = listOf(
+        // TestRoutine( Name, Command, { initFunction } )
         TestRoutine("Drive Set Angle Offsets", Drive.setAngleOffsets(), { Robot.disableAllDefaultCommands() }),
     )
 
@@ -51,15 +54,18 @@ object Autonomous: Autonomi() {
     init {
         println("Autonomous init")
 
-        // Register Auto OpModes (This adds them to the DS chooser)
-        autos.forEach {
-            Robot.addOpModeFactory({ it.toAutoOpMode() }, RobotMode.AUTONOMOUS, it.name)
+        // Register Autos.
+        // Converts AutoRoutines to AutoOpModes and registers them to Robot (This makes them show up on the Driver Station)
+        autos.toAutoOpModes().forEach {
+            Robot.addOpModeFactory({ it }, RobotMode.AUTONOMOUS, it.name)
             println("Registered ${it.name} as an AutoOpMode")
         }
-        tests.forEach {
-            Robot.addOpModeFactory({ it.toTestOpMode() }, RobotMode.UTILITY, it.name)
+        // Register Tests/Utility OpModes.
+        tests.toTestOpModes().forEach {
+            Robot.addOpModeFactory({ it }, RobotMode.UTILITY, it.name)
             println("Registered ${it.name} TestOpMode")
         }
+        // Publish cached OpModes to Driver Station.
         Robot.publishOpModes()
 
         println("Autonomous path count: ${paths.size}")

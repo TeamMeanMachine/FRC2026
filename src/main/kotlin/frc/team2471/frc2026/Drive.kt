@@ -120,8 +120,6 @@ object Drive: SwerveDriveSubsystem(DriveConstants.drivetrainConstants, *DriveCon
 
     override val driveAtAnglePIDController = PhoenixPIDController(7.7, 0.0, 0.072)
 
-    override val isDisabledSupplier: () -> Boolean = { Robot.isDisabled }
-
     /** false = paths made on the blue side, true = paths made on the red side */
     override val choreoPathsStartOnRed: Boolean = false
 
@@ -141,9 +139,7 @@ object Drive: SwerveDriveSubsystem(DriveConstants.drivetrainConstants, *DriveCon
         localizer.trackAllTags()
         localizer.disableSingleTagCalculation() // for loop times and we dont use it in 2026
 
-        setDefaultCommand {
-            await(joystickPercentageDrive())
-        }
+        defaultCommand = joystickPercentageDrive()
 
         finalInitialization()
     }
@@ -248,7 +244,7 @@ object Drive: SwerveDriveSubsystem(DriveConstants.drivetrainConstants, *DriveCon
 
     var inSnakeMode = false
     fun snakeMode(): Command = use(Drive) {
-        this.periodic {
+        periodic {
             println("snake mode")
             inSnakeMode = true
             val driveTranslation = OI.driveTranslation
