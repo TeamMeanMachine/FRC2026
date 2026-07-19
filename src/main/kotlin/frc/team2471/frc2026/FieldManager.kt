@@ -13,7 +13,7 @@ import org.littletonrobotics.junction.wpilog.WPILOGReader
 import org.littletonrobotics.junction.wpilog.WPILOGWriter
 import org.team2471.frc.lib.commands.onCancel
 import org.team2471.frc.lib.commands.periodic
-import org.team2471.frc.lib.commands.use
+import org.team2471.frc.lib.commands.command
 import org.team2471.frc.lib.coroutines.periodic
 import org.team2471.frc.lib.logging.SimpleLogger
 import org.team2471.frc.lib.units.*
@@ -322,7 +322,7 @@ object FieldManager {
         }
     }
 
-    fun disableAutoHoodRetractionCommand() = use {
+    fun disableAutoHoodRetractionCommand() = command {
         println("Disabling autoHoodRetraction")
         this.periodic {
             autoHoodRetraction = false

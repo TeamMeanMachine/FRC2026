@@ -3,7 +3,7 @@ package frc.team2471.frc2026
 import org.team2471.frc.lib.commands.MechanismBase
 import org.team2471.frc.lib.commands.onCancel
 import org.team2471.frc.lib.commands.periodic
-import org.team2471.frc.lib.commands.use
+import org.team2471.frc.lib.commands.command
 import org.team2471.frc.lib.logging.LoopLogger
 import org.team2471.frc.lib.control.isConnected
 import org.team2471.frc.lib.math.applyDeadband

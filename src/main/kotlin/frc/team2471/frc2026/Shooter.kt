@@ -15,7 +15,7 @@ import org.team2471.frc.lib.commands.MechanismBase
 import org.team2471.frc.lib.commands.onCancel
 import org.team2471.frc.lib.commands.parallel
 import org.team2471.frc.lib.commands.periodic
-import org.team2471.frc.lib.commands.use
+import org.team2471.frc.lib.commands.command
 import org.team2471.frc.lib.logging.LoopLogger
 import org.team2471.frc.lib.control.rightStickButton
 import org.team2471.frc.lib.ctre.addFollower
@@ -431,7 +431,7 @@ object Shooter: MechanismBase("Shooter") {
         LoopLogger.record("Shooter periodic")
     }
 
-    override fun default() = use("Default",this) {
+    override fun default() = command("Default",this) {
         this.periodic {
             if ((doAutoShoot && !Drive.cameraDisconnected) && Drive.useAprilTags && AimUtils.isAimingAtGoal) {
                 if (FieldManager.inScoringZone && !FieldManager.inNoShootArea /*&& AimUtils.distanceToTarget < 13.0.feet*/ && FieldManager.shouldShoot) {
@@ -457,7 +457,7 @@ object Shooter: MechanismBase("Shooter") {
         }
     }
 
-    fun shootOrRamp() = use(this) {
+    fun shootOrRamp() = command(this) {
         parallel({
             this.periodic {
                 rampUpLoop()
@@ -479,7 +479,7 @@ object Shooter: MechanismBase("Shooter") {
         hoodAngleSetpoint = hoodAngleSetpoint.coerceAtMost(HOOD_UNDER_TRENCH_MAX_ANGLE)
     }
 
-    fun shoot(ignoreRampUp: Boolean = false) = use(this) {
+    fun shoot(ignoreRampUp: Boolean = false) = command(this) {
         this.periodic {
             shootLoop(ignoreRampUp)
             rampUpLoop()

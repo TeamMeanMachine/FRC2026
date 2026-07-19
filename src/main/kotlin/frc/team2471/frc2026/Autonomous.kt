@@ -6,8 +6,8 @@ import org.team2471.frc.lib.commands.onCancel
 import org.team2471.frc.lib.commands.parallel
 import org.team2471.frc.lib.commands.periodic
 import org.team2471.frc.lib.commands.periodicTimeout
-import org.team2471.frc.lib.commands.use
-import org.team2471.frc.lib.commands.useUnnamed
+import org.team2471.frc.lib.commands.command
+import org.team2471.frc.lib.commands.commandUnnamed
 import org.team2471.frc.lib.math.round
 import org.team2471.frc.lib.units.feet
 import org.team2471.frc.lib.units.meters
@@ -73,7 +73,7 @@ object Autonomous: Autonomi() {
 
     /** Autonomous commands */
 
-    private fun printFor20Seconds() = use(Drive) {
+    private fun printFor20Seconds() = command(Drive) {
         println("starting printFor20Seconds")
         periodicTimeout(20.0) {
             println("dt time: ${it.round(2)}")
@@ -81,15 +81,15 @@ object Autonomous: Autonomi() {
         println("finished")
     }
 
-    private fun eightFootStraight() = use(Drive) {
+    private fun eightFootStraight() = command(Drive) {
         await(Drive.driveAlongChoreoPath(paths["eightFoot"]!!, resetOdometry = true))
     }
 
-    private fun squarePathTest() = use(Drive) {
+    private fun squarePathTest() = command(Drive) {
         await(Drive.driveAlongChoreoPath(paths["square"]!!, resetOdometry = true))
     }
 
-    private fun doubleSwipe(doSideToSideFlip: Boolean) = use {
+    private fun doubleSwipe(doSideToSideFlip: Boolean) = command {
         val path = paths["LeftSideDoubleSwipe"]!!//.sideToSideFlip(doSideToSideFlip)
         var pathPercentage = 0.0
         parallel({
@@ -230,7 +230,7 @@ object Autonomous: Autonomi() {
 //        )
 //    }
 
-    fun warmupDriveAlongPath() = useUnnamed(Drive) {
+    fun warmupDriveAlongPath() = commandUnnamed(Drive) {
 //        val warmupPath = paths["eightFoot"]!!//.sideToSideFlip(true) //TODO: UNCOMMENT WHEN 2027 CHOREO
 //        await(Drive.driveAlongChoreoPath(warmupPath.getSplit(0).get(), exitSupplier = { percent, error -> percent >= 1.0 || Robot.isEnabled}))
         println("Warmup DAL")

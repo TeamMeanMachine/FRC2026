@@ -6,8 +6,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.team2471.frc.lib.commands.onCancel
 import org.team2471.frc.lib.commands.periodic
-import org.team2471.frc.lib.commands.setDefaultCommand
-import org.team2471.frc.lib.commands.use
+import org.team2471.frc.lib.commands.command
 import org.team2471.frc.lib.control.CurrentLimits
 import org.team2471.frc.lib.logging.LoopLogger
 import org.team2471.frc.lib.control.rightStickButton
@@ -243,7 +242,7 @@ object Drive: SwerveDriveSubsystem(DriveConstants.drivetrainConstants, *DriveCon
     }
 
     var inSnakeMode = false
-    fun snakeMode(): Command = use(Drive) {
+    fun snakeMode(): Command = command(Drive) {
         periodic {
             println("snake mode")
             inSnakeMode = true
@@ -264,7 +263,7 @@ object Drive: SwerveDriveSubsystem(DriveConstants.drivetrainConstants, *DriveCon
     }
 
     /** Command to zero robot gyro */
-    fun zeroGyroCommand() = use(Drive) {
+    fun zeroGyroCommand() = command(Drive) {
         println("zero gyro command")
         zeroGyro()
     }

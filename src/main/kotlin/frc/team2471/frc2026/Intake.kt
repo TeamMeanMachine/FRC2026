@@ -17,7 +17,7 @@ import org.team2471.frc.lib.commands.onCancel
 import org.team2471.frc.lib.commands.parallel
 import org.team2471.frc.lib.commands.periodic
 import org.team2471.frc.lib.commands.setDefaultCommand
-import org.team2471.frc.lib.commands.use
+import org.team2471.frc.lib.commands.command
 import org.team2471.frc.lib.control.CurrentLimits
 import org.team2471.frc.lib.logging.LoopLogger
 import org.team2471.frc.lib.ctre.addFollower
@@ -300,7 +300,7 @@ object Intake: MechanismBase("Intake") {
 
 //        this.defaultCommand = use("Intake Default", this) { default()}//default()//.ignoringDisable(true)
 
-        this.defaultCommand = use("Intake Default", this) {
+        this.defaultCommand = command("Intake Default", this) {
             this.periodic(0.0) {
                 LoopLogger.record("Intake default")
                 LoopLogger.record("Intake default")
@@ -359,7 +359,7 @@ object Intake: MechanismBase("Intake") {
         isDeployed = false
     }
 
-    fun home(): Command = use("Home", this) {
+    fun home(): Command = command("Home", this) {
         finishedHoming = false
         parallel(
             homeMotorOut(deployMotor0, { deployVelocity0.absoluteValue < HOME_VELOCITY_THRESHOLD && deployVelocity1.absoluteValue < HOME_VELOCITY_THRESHOLD }),
@@ -413,7 +413,7 @@ object Intake: MechanismBase("Intake") {
 //    }
 
     // V3 Commands
-    private fun homeMotorOut(motor: TalonFX, hitHardStopSupplier: () -> Boolean): Command = use("HomeMotorOut") {
+    private fun homeMotorOut(motor: TalonFX, hitHardStopSupplier: () -> Boolean): Command = command("HomeMotorOut") {
         val timer = Timer()
         timer.start()
         this.periodic {
@@ -429,7 +429,7 @@ object Intake: MechanismBase("Intake") {
         motor.setPosition(DEPLOY_POSE + 0.5)
     }
 
-    fun pulse() = use(this) {
+    fun pulse() = command(this) {
         this.periodic {
             if (Robot.isAutonomous || OI.driverController.rightTrigger > 0.75) {
                 stow()
@@ -446,7 +446,7 @@ object Intake: MechanismBase("Intake") {
     }
 
 
-    fun homeDeploy(): Command = use(this) {
+    fun homeDeploy(): Command = command(this) {
         deployMotor0.setPosition(deploySetpoint)
         if (isCompBot) deployMotor1.setPosition(deploySetpoint)
     }

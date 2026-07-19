@@ -10,11 +10,8 @@ import frc.team2471.frc2026.Robot.isCompBot
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.littletonrobotics.junction.AutoLogOutput
-import org.littletonrobotics.junction.Logger
 import org.team2471.frc.lib.commands.MechanismBase
-import org.team2471.frc.lib.commands.periodic
-import org.team2471.frc.lib.commands.setDefaultCommand
-import org.team2471.frc.lib.commands.use
+import org.team2471.frc.lib.commands.command
 import org.team2471.frc.lib.logging.LoopLogger
 import org.team2471.frc.lib.math.toPose2d
 import org.team2471.frc.lib.units.absoluteValue
@@ -416,7 +413,7 @@ object Turret: MechanismBase("Turret") {
 
     override fun default() = aimAtTarget()
 
-    fun aimAtTarget(): Command = use("AimAtTarget", this) {
+    fun aimAtTarget(): Command = command("AimAtTarget", this) {
         if (lookForwardOverride) {
             if (Robot.isEnabled) {
                 fieldCentricSetpoint = Drive.heading.measure
@@ -429,7 +426,7 @@ object Turret: MechanismBase("Turret") {
         }
     }
 
-    fun staticAimAtTarget(): Command = use(this) {
+    fun staticAimAtTarget(): Command = command(this) {
         fieldCentricSetpoint = AimUtils.staticShotPos.angleTo(AimUtils.aimTarget)
     }
 
