@@ -8,6 +8,7 @@ import edu.wpi.first.math.geometry.Pose2d
 import edu.wpi.first.math.geometry.Rotation2d
 import edu.wpi.first.math.geometry.Rotation3d
 import edu.wpi.first.math.geometry.Transform3d
+import edu.wpi.first.math.geometry.Translation2d
 import edu.wpi.first.math.geometry.Translation3d
 import edu.wpi.first.math.interpolation.Interpolator
 import edu.wpi.first.math.interpolation.InverseInterpolator
@@ -15,6 +16,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds
 import edu.wpi.first.math.numbers.N1
 import edu.wpi.first.math.numbers.N3
 import edu.wpi.first.networktables.NetworkTableInstance
+import edu.wpi.first.units.LinearAccelerationUnit
 import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.wpilibj.Timer
 import edu.wpi.first.wpilibj2.command.Command
@@ -23,6 +25,7 @@ import frc.team2471.frc2026.OI.driverController
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import org.littletonrobotics.junction.AutoLogOutput
 import org.littletonrobotics.junction.Logger
 import org.team2471.frc.lib.control.CurrentLimits
 import org.team2471.frc.lib.control.LoopLogger
@@ -42,8 +45,10 @@ import org.team2471.frc.lib.units.degrees
 import org.team2471.frc.lib.units.inches
 import org.team2471.frc.lib.math.DynamicInterpolatingTreeMap
 import org.team2471.frc.lib.math.normalize
+import org.team2471.frc.lib.units.UTranslation2d
 import org.team2471.frc.lib.units.asMeters
 import org.team2471.frc.lib.units.asRadians
+import org.team2471.frc.lib.units.asRadiansPerSecond
 import org.team2471.frc.lib.units.inchesPerSecond
 import org.team2471.frc.lib.units.metersPerSecondPerSecond
 import org.team2471.frc.lib.units.perSecond
@@ -272,6 +277,48 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
     }.finallyRun {
         inSnakeMode = false
     }
+
+    @get:AutoLogOutput(key = "Swerve/WheelsSlipping")
+    val wheelsSlipping: Boolean get() {
+        val moduleRotationComponents = Array(moduleStates.size) {
+            Translation2d(gyroYawRate.asRadiansPerSecond * modulePositions[it].distanceMeters, (45.0 + 90.0 * it).degrees.asRotation2d)
+        }
+
+//        val moduleTranslations = Array(moduleStates.size) { i ->
+//            (Translation2d(moduleStates.get(i).speedMetersPerSecond, moduleStates.get(i).angle) - moduleRotationComponents[i])
+//        }.apply{ sort() }
+
+        val moduleTranslationNorms = Array(moduleStates.size) { i ->
+            (Translation2d(moduleStates.get(i).speedMetersPerSecond, moduleStates.get(i).angle) - moduleRotationComponents[i]).norm
+        }.apply{ sort() }
+
+        val minMaxRatio = moduleTranslationNorms.last() / (moduleTranslationNorms.first() + 0.001) // add fudge to prevent division by 0
+
+        val accelerationDiff = (acceleration - UTranslation2d<LinearAccelerationUnit>(pigeon2.accelerationX.value, pigeon2.accelerationY.value)).norm
+
+//        val mean = moduleErrors.average()
+//        val deviations = moduleErrors.map { it - mean }.toDoubleArray()
+        Logger.recordOutput("Swerve/ModuleTranslationsMinMaxRatio", minMaxRatio)
+        Logger.recordOutput("Swerve/DriveGyroAccelerationDifference", accelerationDiff)
+//        Logger.recordOutput("Swerve/ModuleTranslations/0", moduleTranslations[0])
+//        Logger.recordOutput("Swerve/ModuleTranslations/1", moduleTranslations[1])
+//        Logger.recordOutput("Swerve/ModuleTranslations/2", moduleTranslations[2])
+//        Logger.recordOutput("Swerve/ModuleTranslations/3", moduleTranslations[3])
+
+        val threshold = 15.0
+
+//        val mad = deviations.map { it.absoluteValue }.average()
+
+        return accelerationDiff.asMetersPerSecondPerSecond > threshold
+
+//        deviations.forEach {
+//            if (it > threshold) {
+//                return true
+//            }
+//        }
+//        return false
+    }
+
 
     fun resetOdometryToAbsolute() {
         println("resetting odometry to localizer pose")
