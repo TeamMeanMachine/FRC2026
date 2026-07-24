@@ -92,7 +92,7 @@ object Spindexer: SubsystemBase("Spindexer") {
     var spinMotorVelocitySetpoint: Double = 0.0
         set(value) {
             spinMotor.setControl(
-                if (value == 0.0) NeutralOut() else spinMotorControl.withVelocity(value)//MotionMagicVelocityTorqueCurrentFOC(value)
+                if (value == 0.0 || !Intake.finishedHoming) NeutralOut() else spinMotorControl.withVelocity(value)//MotionMagicVelocityTorqueCurrentFOC(value)
             )
             field = value
         }
