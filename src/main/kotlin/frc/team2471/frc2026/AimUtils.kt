@@ -4,6 +4,7 @@ import frc.team2471.frc2026.Shooter.SHOOTER_GEAR_RATIO
 import frc.team2471.frc2026.Shooter.floorSpeedCurve
 import frc.team2471.frc2026.Shooter.hubSpeedCurve
 import org.littletonrobotics.junction.AutoLogOutput
+import org.team2471.frc.lib.environment.isRedAlliance
 //import org.littletonrobotics.junction.AutoLogOutput
 import org.team2471.frc.lib.math.round
 import org.team2471.frc.lib.units.asDegrees
@@ -26,13 +27,11 @@ import org.team2471.frc.lib.units.metersPerSecond
 import org.team2471.frc.lib.units.radians
 import org.team2471.frc.lib.units.rotationsPerSecond
 import org.team2471.frc.lib.units.sin
-import org.team2471.frc.lib.util.isRedAlliance
 import org.wpilib.driverstation.RobotState
 import org.wpilib.math.geometry.Translation2d
 import org.wpilib.math.geometry.Translation3d
 import org.wpilib.math.interpolation.InterpolatingTreeMap
 import org.wpilib.networktables.NetworkTableInstance
-import org.wpilib.system.RobotController
 import org.wpilib.units.measure.Angle
 import org.wpilib.units.measure.AngularVelocity
 import org.wpilib.units.measure.Distance

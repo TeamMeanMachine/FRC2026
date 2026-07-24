@@ -8,6 +8,8 @@ import com.ctre.phoenix6.hardware.TalonFX
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue
 import org.littletonrobotics.junction.AutoLogOutput
 import org.team2471.frc.lib.commands.MechanismBase
+import org.team2471.frc.lib.commands.addPeriodic
+import org.team2471.frc.lib.commands.command
 import org.team2471.frc.lib.logging.LoopLogger
 import org.team2471.frc.lib.ctre.addFollower
 import org.team2471.frc.lib.ctre.applyConfiguration
@@ -19,8 +21,7 @@ import org.team2471.frc.lib.ctre.s
 import org.team2471.frc.lib.energy.BatteryLogger
 import org.team2471.frc.lib.math.deadband
 import org.team2471.frc.lib.math.linearMap
-import org.team2471.frc.lib.units.asAmps
-import org.team2471.frc.lib.util.isSim
+import org.wpilib.command3.Command
 import org.wpilib.networktables.NetworkTableInstance
 import org.wpilib.system.Timer
 import org.wpilib.units.measure.AngularVelocity
@@ -188,10 +189,16 @@ object Spindexer: MechanismBase("Spindexer") {
             p(7.0)
             s(2.0, StaticFeedforwardSignValue.UseVelocitySign)
         }
+
+        addPeriodic {
+            BatteryLogger.recordCurrent("Dye Rotor Spin", spinMotor.supplyCurrent.value * 2.0)
+            BatteryLogger.recordCurrent("Dye Rotor Uptake", uptakeMotor.supplyCurrent.value)
+            BatteryLogger.recordCurrent("Dye Rotor Sidetake", sidetakeMotor.supplyCurrent.value)
+        }
     }
 
-    override fun periodic() {
-        LoopLogger.record("Spindexer periodic")
+    override fun defaultCommand(): Command = command(this) {
+        LoopLogger.record("Spindexer default")
         when (currentState) {
             State.OFF -> {
                 spinMotorVelocitySetpoint = 0.0
@@ -243,14 +250,8 @@ object Spindexer: MechanismBase("Spindexer") {
 //                stateOnTimer.stop()
             }
         }
-
-        BatteryLogger.recordCurrent("Dye Rotor Spin", spinMotor.supplyCurrent.value * 2.0)
-        BatteryLogger.recordCurrent("Dye Rotor Uptake", uptakeMotor.supplyCurrent.value)
-        BatteryLogger.recordCurrent("Dye Rotor Sidetake", sidetakeMotor.supplyCurrent.value)
-
-        LoopLogger.record("Spindexer periodic")
+        LoopLogger.record("Spindexer default")
     }
-
 
     enum class State {
         OFF,

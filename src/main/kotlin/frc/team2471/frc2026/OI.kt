@@ -1,16 +1,17 @@
 package frc.team2471.frc2026
 
 import org.team2471.frc.lib.commands.MechanismBase
+import org.team2471.frc.lib.commands.addPeriodic
+import org.team2471.frc.lib.commands.command
 import org.team2471.frc.lib.commands.onCancel
 import org.team2471.frc.lib.commands.periodic
-import org.team2471.frc.lib.commands.command
 import org.team2471.frc.lib.logging.LoopLogger
 import org.team2471.frc.lib.control.isConnected
+import org.team2471.frc.lib.environment.demoMode
 import org.team2471.frc.lib.math.applyDeadband
 import org.team2471.frc.lib.math.deadband
 import org.team2471.frc.lib.math.normalize
 import org.team2471.frc.lib.units.degrees
-import org.team2471.frc.lib.util.demoMode
 import org.wpilib.command3.button.CommandXboxController
 import org.wpilib.driverstation.Alert
 import org.wpilib.math.filter.Debouncer
@@ -101,7 +102,7 @@ object OI: MechanismBase("OI") {
 
 
         driverController.menu().onTrue(Drive.zeroGyroCommand()) // Zero Gyro
-        driverController.view().onTrue(use { Drive.pose = Pose2d(Translation2d(3.0, 3.0), Drive.heading) }) // Reset Odometry Position
+        driverController.view().onTrue(command { Drive.pose = Pose2d(Translation2d(3.0, 3.0), Drive.heading) }) // Reset Odometry Position
 
         (driverController.y().and(driverController.dpadDown().negate())).onTrue(Intake.home())
 
@@ -110,8 +111,8 @@ object OI: MechanismBase("OI") {
             .or(driverController.rightStick())
             .whileTrue(Shooter.shootOrRamp())
 
-        driverController.leftBumper().and(driverController.dpadDown().negate()).whileTrue(use {
-            this.periodic {
+        driverController.leftBumper().and(driverController.dpadDown().negate()).whileTrue(command {
+            periodic {
                 Intake.deploy()
                 Intake.intakeState = Intake.IntakeState.INTAKING
             }
@@ -119,7 +120,7 @@ object OI: MechanismBase("OI") {
             Intake.intakeState = Intake.IntakeState.OFF
         })
 
-        driverController.leftStick().onTrue(use {
+        driverController.leftStick().onTrue(command {
             if (Intake.isDeployed) {
                 Intake.stow()
             } else {
@@ -130,42 +131,40 @@ object OI: MechanismBase("OI") {
         driverController.a().whileTrue(
             Drive.snakeMode()
         )
-        driverController.x().whileTrue(use(Drive) {
+        driverController.x().whileTrue(command(Drive) {
             this.periodic {
                 Drive.xPose()
             }
         })
 
-        driverController.a().onTrue(use {
+        driverController.a().onTrue(command {
             Intake.deploySetpoint = Intake.DEEP_STOW_POSE
         })
-        driverController.x().onTrue(use {
+        driverController.x().onTrue(command {
             Intake.deploySetpoint = Intake.STOW_POSE
         })
-        driverController.b().onTrue(use {
+        driverController.b().onTrue(command {
             Intake.deploySetpoint = Intake.DEPLOY_POSE
         })
 
         (driverController.dpadDown().and(driverController.y())).onTrue(Intake.homeDeploy())
-        (driverController.dpadDown().and(driverController.leftBumper())).onTrue(use { Intake.deepStow() })
+        (driverController.dpadDown().and(driverController.leftBumper())).onTrue(command { Intake.deepStow() })
 
         driverController.dpadLeft().whileTrue(Turret.staticAimAtTarget())
         driverController.dpadRight().whileTrue(FieldManager.disableAutoHoodRetractionCommand())
 
-        driverController.dpadUp().onTrue(use { Turret.offset -= 2.0.degrees})
-        driverController.dpadDown().and(driverController.y().negate()).and(driverController.leftBumper().negate()).onTrue(use { Turret.offset += 2.0.degrees})
+        driverController.dpadUp().onTrue(command { Turret.offset -= 2.0.degrees})
+        driverController.dpadDown().and(driverController.y().negate()).and(driverController.leftBumper().negate()).onTrue(command { Turret.offset += 2.0.degrees})
 
 
 
+        addPeriodic {
+            LoopLogger.record("OI periodic")
+            driverNotConnectedAlert.set(driverDebouncer.calculate(!driverController.isConnected))
+            operatorNotConnectedAlert.set(operatorDebouncer.calculate(!operatorController.isConnected))
+            LoopLogger.record("OI periodic")
+        }
     }
-
-    override fun periodic() {
-        LoopLogger.record("OI periodic")
-        driverNotConnectedAlert.set(driverDebouncer.calculate(!driverController.isConnected))
-        operatorNotConnectedAlert.set(operatorDebouncer.calculate(!operatorController.isConnected))
-        LoopLogger.record("OI periodic")
-    }
-
 
     @Teleop(name = "Country Roads!")
     class TeleopMode: PeriodicOpMode() {

@@ -12,6 +12,7 @@ import frc.team2471.frc2026.AimUtils.toExitVelocity
 import frc.team2471.frc2026.Robot.isCompBot
 import org.littletonrobotics.junction.AutoLogOutput
 import org.team2471.frc.lib.commands.MechanismBase
+import org.team2471.frc.lib.commands.addPeriodic
 import org.team2471.frc.lib.commands.onCancel
 import org.team2471.frc.lib.commands.parallel
 import org.team2471.frc.lib.commands.periodic
@@ -34,6 +35,9 @@ import org.team2471.frc.lib.ctre.remoteCANCoder
 import org.team2471.frc.lib.ctre.s
 import org.team2471.frc.lib.ctre.setCANCoderAngle
 import org.team2471.frc.lib.energy.BatteryLogger
+import org.team2471.frc.lib.environment.isReal
+import org.team2471.frc.lib.environment.isSim
+import org.team2471.frc.lib.math.angleTo
 import org.team2471.frc.lib.units.absoluteValue
 import org.team2471.frc.lib.units.asFeet
 import org.team2471.frc.lib.units.asMeters
@@ -48,9 +52,6 @@ import org.team2471.frc.lib.units.radians
 import org.team2471.frc.lib.units.rotations
 import org.team2471.frc.lib.units.rotationsPerSecond
 import org.team2471.frc.lib.units.sin
-import org.team2471.frc.lib.util.angleTo
-import org.team2471.frc.lib.util.isReal
-import org.team2471.frc.lib.util.isSim
 import org.wpilib.math.filter.Debouncer
 import org.wpilib.math.geometry.Translation2d
 import org.wpilib.math.geometry.Translation3d
@@ -396,42 +397,44 @@ object Shooter: MechanismBase("Shooter") {
                 remoteCANCoder(hoodEncoder.deviceID, if (isCompBot) 85.5 else 9.64285714285714)
 //            }
         }
-    }
 
-    override fun periodic() {
-        LoopLogger.record("Shooter periodic")
-        if (isSim) {
-            if (isShooting) {
-                if (i > 3) {
-                    i = 0
-                    shootSimulatedFuel()
-                } else {
-                    i++
+        addPeriodic {
+            LoopLogger.record("Shooter periodic")
+            if (isSim) {
+                if (isShooting) {
+                    if (i > 3) {
+                        i = 0
+                        shootSimulatedFuel()
+                    } else {
+                        i++
+                    }
                 }
+                fuel.forEach { it.update() }
+                logFuel("fuel", *fuel.toTypedArray())
+                fuel.removeFuel()
+
+                fuel2.forEach { it.update() }
+                logFuel("fuel2", *fuel2.toTypedArray())
+                fuel2.removeFuel()
             }
-            fuel.forEach { it.update() }
-            logFuel("fuel", *fuel.toTypedArray())
-            fuel.removeFuel()
 
-            fuel2.forEach { it.update() }
-            logFuel("fuel2", *fuel2.toTypedArray())
-            fuel2.removeFuel()
-        }
+            if (zeroHoodButtonEntry.getBoolean(false)) {
+                hoodEncoder.setCANCoderAngle(HOOD_ZERO.degrees)
+                zeroHoodButtonEntry.setBoolean(false)
+                println("Zeroed hood")
+            }
 
-        if (zeroHoodButtonEntry.getBoolean(false)) {
-            hoodEncoder.setCANCoderAngle(HOOD_ZERO.degrees)
-            zeroHoodButtonEntry.setBoolean(false)
-            println("Zeroed hood")
-        }
-
-        BatteryLogger.recordCurrent("Shooter Roller", shooterMotor.supplyCurrent.value * 2.0)
-        BatteryLogger.recordCurrent("Hood", hoodMotor.supplyCurrent.value)
+            BatteryLogger.recordCurrent("Shooter Roller", shooterMotor.supplyCurrent.value * 2.0)
+            BatteryLogger.recordCurrent("Hood", hoodMotor.supplyCurrent.value)
 
 //        shooterMotor.setControl(VoltageOut(shooterController.updateVoltage(shooterAngularVelocitySetpoint.asRotationsPerSecond, shooterAngularVelocity.asRotationsPerSecond)))
-        LoopLogger.record("Shooter periodic")
+            LoopLogger.record("Shooter periodic")
+
+        }
     }
 
-    override fun default() = command("Default",this) {
+
+    override fun defaultCommand() = command(this) {
         this.periodic {
             if ((doAutoShoot && !Drive.cameraDisconnected) && Drive.useAprilTags && AimUtils.isAimingAtGoal) {
                 if (FieldManager.inScoringZone && !FieldManager.inNoShootArea /*&& AimUtils.distanceToTarget < 13.0.feet*/ && FieldManager.shouldShoot) {

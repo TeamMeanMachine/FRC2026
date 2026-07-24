@@ -13,10 +13,10 @@ import org.team2471.frc.lib.logging.LoopLogger
 import org.team2471.frc.lib.control.isConnected
 import org.team2471.frc.lib.ctre.loggedTalonFX.MasterMotor
 import org.team2471.frc.lib.energy.BatteryLogger
+import org.team2471.frc.lib.environment.RobotType
+import org.team2471.frc.lib.environment.robotType
 import org.team2471.frc.lib.logging.NT4NonFMSPublisher
 import org.team2471.frc.lib.units.asFeet
-import org.team2471.frc.lib.util.RobotType
-import org.team2471.frc.lib.util.robotType
 import org.wpilib.command3.Mechanism
 import org.wpilib.command3.Scheduler
 import org.wpilib.driverstation.RobotState
@@ -159,8 +159,9 @@ object Robot : OpModeRobot(0.01) {
 
     /** This function is called once when the robot is disabled.  */
     override fun disabledInit() {
+        println("Robot init disabled")
         Drive.coastMode()
-        beforeFirstEnable = false
+        beforeFirstEnable = false // disabledInit is called after the robot is enabled. Does not get called
     }
 
     /** Function called when the robot is disabled. Similar to enableInit */

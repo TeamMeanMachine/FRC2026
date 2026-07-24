@@ -13,10 +13,10 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.littletonrobotics.junction.AutoLogOutput
 import org.team2471.frc.lib.commands.MechanismBase
+import org.team2471.frc.lib.commands.addPeriodic
 import org.team2471.frc.lib.commands.onCancel
 import org.team2471.frc.lib.commands.parallel
 import org.team2471.frc.lib.commands.periodic
-import org.team2471.frc.lib.commands.setDefaultCommand
 import org.team2471.frc.lib.commands.command
 import org.team2471.frc.lib.control.CurrentLimits
 import org.team2471.frc.lib.logging.LoopLogger
@@ -298,8 +298,6 @@ object Intake: MechanismBase("Intake") {
             rollerMotor.addFollower(rollerMotorFollower)
         }
 
-//        this.defaultCommand = use("Intake Default", this) { default()}//default()//.ignoringDisable(true)
-
         this.defaultCommand = command("Intake Default", this) {
             this.periodic(0.0) {
                 LoopLogger.record("Intake default")
@@ -308,30 +306,31 @@ object Intake: MechanismBase("Intake") {
         }
 
 
+        addPeriodic {
+            LoopLogger.record("Intake periodic")
+            if (maxForwardTorque != prevMaxForwardTorque) {
+                GlobalScope.launch {
+                    deployMotor0.modifyConfiguration {
+                        TorqueCurrent.PeakForwardTorqueCurrent = maxForwardTorque
+                    }
+                    deployMotor1.modifyConfiguration {
+                        TorqueCurrent.PeakForwardTorqueCurrent = maxForwardTorque
+                    }
+                }
+                prevMaxForwardTorque = maxForwardTorque
+            }
+
+            BatteryLogger.recordCurrent("Intake Deploy", (deployCurrent0 + deployCurrent1).amps)
+            BatteryLogger.recordCurrent("Intake Rollers", rollerCurrent.amps * 2.0)
+            LoopLogger.record("Intake periodic")
+        }
+
+
         GlobalScope.launch {
-            org.team2471.frc.lib.coroutines.periodic {
+            org.team2471.frc.lib.coroutines.periodicSuspend {
                 deploySetpoint = deploySetpoint
             }
         }
-    }
-
-    override fun periodic() {
-        LoopLogger.record("Intake periodic")
-        if (maxForwardTorque != prevMaxForwardTorque) {
-            GlobalScope.launch {
-                deployMotor0.modifyConfiguration {
-                    TorqueCurrent.PeakForwardTorqueCurrent = maxForwardTorque
-                }
-                deployMotor1.modifyConfiguration {
-                    TorqueCurrent.PeakForwardTorqueCurrent = maxForwardTorque
-                }
-            }
-            prevMaxForwardTorque = maxForwardTorque
-        }
-
-        BatteryLogger.recordCurrent("Intake Deploy", (deployCurrent0 + deployCurrent1).amps)
-        BatteryLogger.recordCurrent("Intake Rollers", rollerCurrent.amps * 2.0)
-        LoopLogger.record("Intake periodic")
     }
 
     fun deploy() {
@@ -452,7 +451,7 @@ object Intake: MechanismBase("Intake") {
     }
 
 
-    override fun default() = setDefaultCommand {
+    override fun defaultCommand() = command(this) {
         this.periodic {
             LoopLogger.record("Intake default")
             when (intakeState) {

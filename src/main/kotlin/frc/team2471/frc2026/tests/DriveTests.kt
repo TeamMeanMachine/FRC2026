@@ -12,7 +12,6 @@ import org.team2471.frc.lib.units.absoluteValue
 import org.team2471.frc.lib.units.asDegrees
 import org.team2471.frc.lib.units.asMeters
 import org.team2471.frc.lib.units.sin
-import org.team2471.frc.lib.util.translation
 
 
 //fun joystickTest(): Command {

@@ -12,6 +12,7 @@ import com.ctre.phoenix6.swerve.SwerveModuleConstantsFactory
 import frc.team2471.frc2026.Robot.isCompBot
 import org.team2471.frc.lib.control.CurrentLimits
 import org.team2471.frc.lib.ctre.getMagnetSensorOffset
+import org.team2471.frc.lib.environment.isReal
 import org.team2471.frc.lib.math.round
 import org.team2471.frc.lib.units.asDegrees
 import org.team2471.frc.lib.units.asFeet
@@ -27,7 +28,6 @@ import org.team2471.frc.lib.units.degrees
 import org.team2471.frc.lib.units.metersPerSecondPerSecond
 import org.team2471.frc.lib.units.pounds
 import org.team2471.frc.lib.units.volts
-import org.team2471.frc.lib.util.isReal
 import org.wpilib.driverstation.Alert
 import org.wpilib.math.geometry.Translation2d
 import org.wpilib.math.system.DCMotor
