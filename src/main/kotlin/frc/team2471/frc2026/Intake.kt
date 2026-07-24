@@ -299,7 +299,7 @@ object Intake: MechanismBase("Intake") {
         }
 
         this.defaultCommand = command("Intake Default", this) {
-            this.periodic(0.0) {
+            this.periodic {
                 LoopLogger.record("Intake default")
                 LoopLogger.record("Intake default")
             }
