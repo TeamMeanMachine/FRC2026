@@ -1,5 +1,6 @@
 package frc.team2471.frc2026
 
+import com.ctre.phoenix6.swerve.jni.SwerveJNI
 import com.ctre.phoenix6.swerve.utility.PhoenixPIDController
 import edu.wpi.first.math.Matrix
 import edu.wpi.first.math.VecBuilder
@@ -13,6 +14,7 @@ import edu.wpi.first.math.geometry.Translation3d
 import edu.wpi.first.math.interpolation.Interpolator
 import edu.wpi.first.math.interpolation.InverseInterpolator
 import edu.wpi.first.math.kinematics.ChassisSpeeds
+import edu.wpi.first.math.kinematics.SwerveModuleState
 import edu.wpi.first.math.numbers.N1
 import edu.wpi.first.math.numbers.N3
 import edu.wpi.first.networktables.NetworkTableInstance
@@ -93,7 +95,6 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
             resetPoseTime = Timer.getFPGATimestamp()
         }
 
-    override val useMapleSim: Boolean = true
 
     var headingAngleUnwrapped: Angle = heading.measure
         get() = heading.measure.unWrap(field)
@@ -148,6 +149,8 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
 
     init {
         println("inside Drive init")
+
+        useMapleSim = true
 
         useAprilTagsEntry.setBoolean(true)
         increaseDriveCurrentEntry.setBoolean(false)
@@ -281,42 +284,44 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
     @get:AutoLogOutput(key = "Swerve/WheelsSlipping")
     val wheelsSlipping: Boolean get() {
         val moduleRotationComponents = Array(moduleStates.size) {
-            Translation2d(gyroYawRate.asRadiansPerSecond * modulePositions[it].distanceMeters, (45.0 + 90.0 * it).degrees.asRotation2d)
+            val state = SwerveModuleState()
+            state.speedMetersPerSecond = gyroYawRate.asRadiansPerSecond * moduleLocations[it].norm
+            state.angle = moduleLocations[it].angle + 90.0.degrees.asRotation2d
+            return@Array state
         }
 
-//        val moduleTranslations = Array(moduleStates.size) { i ->
-//            (Translation2d(moduleStates.get(i).speedMetersPerSecond, moduleStates.get(i).angle) - moduleRotationComponents[i])
-//        }.apply{ sort() }
-
         val moduleTranslationNorms = Array(moduleStates.size) { i ->
-            (Translation2d(moduleStates.get(i).speedMetersPerSecond, moduleStates.get(i).angle) - moduleRotationComponents[i]).norm
+            (Translation2d(moduleStates[i].speedMetersPerSecond, moduleStates[i].angle) - Translation2d(moduleRotationComponents[i].speedMetersPerSecond, moduleRotationComponents[i].angle)).norm
         }.apply{ sort() }
 
+        val mad = moduleTranslationNorms.map {(moduleTranslationNorms.average() - it).absoluteValue}.average()
         val minMaxRatio = moduleTranslationNorms.last() / (moduleTranslationNorms.first() + 0.001) // add fudge to prevent division by 0
 
-        val accelerationDiff = (acceleration - UTranslation2d<LinearAccelerationUnit>(pigeon2.accelerationX.value, pigeon2.accelerationY.value)).norm
+        Logger.recordOutput("Swerve/ModuleTranslationNorms/0", moduleTranslationNorms[0])
+        Logger.recordOutput("Swerve/ModuleTranslationNorms/1", moduleTranslationNorms[1])
+        Logger.recordOutput("Swerve/ModuleTranslationNorms/2", moduleTranslationNorms[2])
+        Logger.recordOutput("Swerve/ModuleTranslationNorms/3", moduleTranslationNorms[3])
 
-//        val mean = moduleErrors.average()
-//        val deviations = moduleErrors.map { it - mean }.toDoubleArray()
+        Logger.recordOutput("Swerve/ModuleRotationComponents/0", moduleRotationComponents[0])
+        Logger.recordOutput("Swerve/ModuleRotationComponents/1", moduleRotationComponents[1])
+        Logger.recordOutput("Swerve/ModuleRotationComponents/2", moduleRotationComponents[2])
+        Logger.recordOutput("Swerve/ModuleRotationComponents/3", moduleRotationComponents[3])
+
         Logger.recordOutput("Swerve/ModuleTranslationsMinMaxRatio", minMaxRatio)
+        Logger.recordOutput("Swerve/ModuleTranslationsMAD", mad)
+
+
+        val accelerationDiff = (acceleration - UTranslation2d<LinearAccelerationUnit>(pigeon2.accelerationX.value, pigeon2.accelerationY.value)).norm
         Logger.recordOutput("Swerve/DriveGyroAccelerationDifference", accelerationDiff)
-//        Logger.recordOutput("Swerve/ModuleTranslations/0", moduleTranslations[0])
-//        Logger.recordOutput("Swerve/ModuleTranslations/1", moduleTranslations[1])
-//        Logger.recordOutput("Swerve/ModuleTranslations/2", moduleTranslations[2])
-//        Logger.recordOutput("Swerve/ModuleTranslations/3", moduleTranslations[3])
 
-        val threshold = 15.0
+//        val threshold = 10.0 // acc diff
+//        return accelerationDiff.asMetersPerSecondPerSecond > threshold
 
-//        val mad = deviations.map { it.absoluteValue }.average()
+//        val threshold = 0.09 // mad
+//        return mad > threshold
 
-        return accelerationDiff.asMetersPerSecondPerSecond > threshold
-
-//        deviations.forEach {
-//            if (it > threshold) {
-//                return true
-//            }
-//        }
-//        return false
+        val threshold = 1.2 // ratio
+        return minMaxRatio > threshold
     }
 
 
