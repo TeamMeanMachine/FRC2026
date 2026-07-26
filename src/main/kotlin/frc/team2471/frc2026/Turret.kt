@@ -78,15 +78,16 @@ object Turret: SubsystemBase("Turret") {
     val turretEncoder2 = CANcoder(CANCoders.TURRET_1, CANivores.TURRET_CAN)
     val turretPigeon = Pigeon2(CANSensors.TURRET_PIGEON, CANivores.TURRET_CAN)
 
-    val TURRET_TOP_LIMIT = if (Robot.isCompBot) 200.0.degrees else 270.0.degrees
-    val TURRET_BOTTOM_LIMIT = if (Robot.isCompBot) -200.0.degrees else -270.0.degrees
+    val TURRET_TOP_LIMIT = if (Robot.isCompBot) 185.0.degrees else 270.0.degrees
+    val TURRET_BOTTOM_LIMIT = if (Robot.isCompBot) -185.0.degrees else -270.0.degrees
     val TURRET_RANGE = TURRET_TOP_LIMIT - TURRET_BOTTOM_LIMIT
     val TURRET_ENCODER_LIMIT = if (Robot.isCompBot) 600.0.degrees else 720.0.degrees
 
-    val ENCODER_1_DEFAULT_OFFSET = if (Robot.isCompBot) 86.484375 else 43.0664
-    val ENCODER_2_DEFAULT_OFFSET = if (Robot.isCompBot) 110.56640625 else 76.2
+    val ENCODER_1_DEFAULT_OFFSET = if (Robot.isCompBot) -86.92328125 else 43.0664
+    val ENCODER_2_DEFAULT_OFFSET = if (Robot.isCompBot) -144.05273438 else 76.2
 
     val encoder1GearRatio = if (Robot.isCompBot) 30.0/230.0 else 30.0/200.0
+
     val encoder2GearRatio = encoder1GearRatio * 83.0/32.0
 
     val turretZeroPositionOnRobot = if (Robot.isCompBot) 0.0.degrees else 90.0.degrees
