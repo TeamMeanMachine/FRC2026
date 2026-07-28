@@ -19,6 +19,7 @@ import org.team2471.frc.lib.logging.NT4NonFMSPublisher
 import org.team2471.frc.lib.units.asFeet
 import org.wpilib.command3.Mechanism
 import org.wpilib.command3.Scheduler
+import org.wpilib.driverstation.DriverStationDisplay
 import org.wpilib.driverstation.RobotState
 import org.wpilib.driverstation.internal.DriverStationBackend
 import org.wpilib.framework.OpModeRobot
@@ -84,6 +85,14 @@ object Robot : OpModeRobot(0.01) {
         // Tells FRC we use Kotlin
         HAL.reportUsage("Language", "Kotlin")
         println("WPILib Version: ${WPILibVersion.Version}")
+
+        DriverStationDisplay.addLine(
+            "  ^~^  ,\n" +
+            " ('Y') ) meow\n" +
+            " /   \\/\n" +
+            "(\\|||/) "
+        )
+        DriverStationDisplay.updateLines()
 
         // Set up data receivers & replay source
         when (robotType) {
