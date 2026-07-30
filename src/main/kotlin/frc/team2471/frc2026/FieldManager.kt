@@ -5,7 +5,6 @@ import frc.team2471.frc2026.FieldManager.rotateAroundField
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.littletonrobotics.junction.AutoLogOutput
-import org.littletonrobotics.junction.LogFileUtil
 import org.littletonrobotics.junction.Logger
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser
 import org.littletonrobotics.junction.networktables.NT4Publisher
@@ -19,6 +18,7 @@ import org.team2471.frc.lib.environment.RobotType
 import org.team2471.frc.lib.environment.isRedAlliance
 import org.team2471.frc.lib.environment.robotType
 import org.team2471.frc.lib.logging.SimpleLogger
+import org.team2471.frc.lib.math.toPose2d
 import org.team2471.frc.lib.units.*
 import org.wpilib.driverstation.MatchState
 import org.wpilib.driverstation.RobotState
@@ -56,11 +56,18 @@ object FieldManager {
     val blueHubTags = allAprilTags.filter { it.ID in 18..21 || it.ID in 24..27 }
     val hubTags = redHubTags + blueHubTags
 
-    val overrideAutoWinner: LoggedDashboardChooser<String?> =
+    val overrideAutoWinnerChooser: LoggedDashboardChooser<String?> =
         LoggedDashboardChooser<String?>("Override Auto Winner").apply {
             addDefaultOption("No Override", null)
             addOption("Red", "R")
             addOption("Blue", "B")
+        }
+
+    val preferredPassingSideChooser: LoggedDashboardChooser<PassingSide> =
+        LoggedDashboardChooser<PassingSide>("Preferred Passing Side").apply {
+            addDefaultOption("Both", PassingSide.BOTH)
+            addOption("Outpost", PassingSide.OUTPOST)
+            addOption("Depot", PassingSide.DEPOT)
         }
 
     val trenchAreaWidth = 50.0.inches
@@ -76,8 +83,8 @@ object FieldManager {
 
 
 
-    val lowerBlueTrenchPosition = ((allAprilTags[0].pose.toPose2d().translation + allAprilTags[0].pose.toPose2d().translation)/2.0)
-    val upperBlueTrenchPosition = ((allAprilTags[16].pose.toPose2d().translation + allAprilTags[0].pose.toPose2d().translation)/2.0)
+    val lowerBlueTrenchPosition = ((allAprilTags[21].pose.toPose2d().translation + allAprilTags[22].pose.toPose2d().translation)/2.0)
+    val upperBlueTrenchPosition = ((allAprilTags[16].pose.toPose2d().translation + allAprilTags[27].pose.toPose2d().translation)/2.0)
     val lowerRedTrenchPosition = ((allAprilTags[0].pose.toPose2d().translation + allAprilTags[11].pose.toPose2d().translation)/2.0)
     val upperRedTrenchPosition = ((allAprilTags[5].pose.toPose2d().translation + allAprilTags[6].pose.toPose2d().translation)/2.0)
 
@@ -103,6 +110,40 @@ object FieldManager {
                 }
             }
             return false
+        }
+
+
+    @get:AutoLogOutput(key = "FieldManager/trenchAlignRotationModifier")
+    val trenchAlignRotationModifier: Double get() {
+        if (trenchAlignTranslationModifier.norm > 0) {
+            val strength = trenchAssistStrength * 1.1
+            if (Drive.heading.measure > 90.0.degrees || Drive.heading.measure < -90.0.degrees) {
+                return strength * (0.5 - Drive.heading.rotations.absoluteValue) * Drive.heading.rotations.sign
+            } else {
+                return strength * -Drive.heading.rotations
+            }
+        }
+        return 0.0
+    }
+
+    @get:AutoLogOutput(key = "FieldManager/trenchAlignTranslationModifier")
+    val trenchAlignTranslationModifier: Translation2d
+        get () {
+            val areaWidth = 80.0.inches
+            val areaLength = 300.0.inches
+            for (pose in trenchPositions) {
+                val relativePose = pose - Drive.localizer.pose.translation
+                if (relativePose.y.absoluteValue.meters < (areaWidth * 0.5)) {
+                    if (relativePose.x.absoluteValue.meters < (areaLength * 0.5)) {
+                        if (relativePose.x.sign == Drive.velocity.x.asMetersPerSecond.sign) {
+                            if (relativePose.y.sign == yRelativeToCenter.asMeters.sign) {
+                                return Translation2d(0.0.inches, relativePose.y.meters) * if (isBlueAlliance) -trenchAssistStrength else trenchAssistStrength
+                            }
+                        }
+                    }
+                }
+            }
+            return Translation2d()
         }
 
     @get:AutoLogOutput(key = "FieldManager/In Tower Area")
@@ -132,7 +173,7 @@ object FieldManager {
 
 
     val redTowerPose = (allAprilTags[14].pose.toPose2d().translation + Translation2d(-1.75, 0.0))
-    val blueTowerPose = (allAprilTags[0].pose.toPose2d().translation + Translation2d(1.75, 0.0))
+    val blueTowerPose = (allAprilTags[30].pose.toPose2d().translation + Translation2d(1.75, 0.0))
 
     val towerPose = Translation2d(11.0.feet.asMeters, 14.0.feet.asMeters)
 
@@ -140,21 +181,36 @@ object FieldManager {
 
 
     val redGoalPose = (allAprilTags[3].pose.toPose2d().translation + allAprilTags[9].pose.toPose2d().translation)/2.0
-    val blueGoalPose = (allAprilTags[0].pose.toPose2d().translation + allAprilTags[0].pose.toPose2d().translation)/2.0
+    val blueGoalPose = (allAprilTags[19].pose.toPose2d().translation + allAprilTags[25].pose.toPose2d().translation)/2.0
 
     @get:AutoLogOutput(key = "FieldManager/Goal Pose")
     val goalPose: Translation2d
         get () = if (isRedAlliance) redGoalPose else blueGoalPose
+
+    @get:AutoLogOutput(key = "FieldManager/Pass Pose")
+    val loggedPassPose get() = passPose.toPose2d()
 
     val passPose: Translation2d
         get() {
             var pose = if (RobotState.isTeleop()) Translation2d(4.0, 2.0) else Translation2d(2.0, 1.25)
 
             if (isRedAlliance) {
-                pose = Translation2d(fieldLength.asMeters - pose.x, pose.y)
+                pose = Translation2d(fieldLength.asMeters - pose.x, fieldWidth.asMeters - pose.y)
+            } else {
+                pose = Translation2d(pose.x, pose.y)
             }
 
-            if (Drive.localizer.pose.y.meters > fieldHalfWidth) {
+            // note: xor is used like "invert if" here
+            val flipSide = (yRelativeToCenter.asMeters.sign == 1.0) xor isRedAlliance
+
+            val isTooFar = Drive.localizer.pose.translation.getDistance(pose) > 7.0
+            val invertSingleSidePassing = (preferredPassingSide == PassingSide.DEPOT)
+            val onOtherSide = flipSide xor invertSingleSidePassing
+
+            val passOnBothSides = preferredPassingSide == PassingSide.BOTH
+
+            // meters
+            if (if (passOnBothSides) flipSide else (isTooFar && onOtherSide) xor invertSingleSidePassing) {
                 pose = Translation2d(pose.x, fieldWidth.asMeters - pose.y)
             }
 
@@ -169,6 +225,15 @@ object FieldManager {
 
     val distanceFromMiddleToScore = fieldCenter.x.feet - lowerRedTrenchPosition.x.feet - 5.0.feet
 
+    @get:AutoLogOutput(key = "FieldManager/Pass Over Net")
+    val passOverNet: Boolean get() {
+        val angleToPassPoint = passPose.angleTo(Drive.localizer.pose.translation)
+        val xOffset = if (isRedAlliance) -0.5.meters else 0.5.meters
+        val angleToNet1 = passPose.angleTo(goalPose + Translation2d(xOffset, 1.0.meters))
+        val angleToNet2 = passPose.angleTo(goalPose + Translation2d(xOffset, -1.0.meters))
+
+        return angleToPassPoint in angleToNet1..angleToNet2 || angleToPassPoint in angleToNet2..angleToNet1
+    }
 
     @get:AutoLogOutput(key = "FieldManager/In Scoring Zone")
     val inScoringZone: Boolean
@@ -184,7 +249,11 @@ object FieldManager {
 
     @get:AutoLogOutput(key = "FieldManager/gameData")
     val gameData: String
-        get() = overrideAutoWinner.get() ?: rawGameData
+        get() = overrideAutoWinnerChooser.get() ?: rawGameData
+
+    @get:AutoLogOutput(key = "FieldManager/gameData")
+    val preferredPassingSide: PassingSide
+        get() = preferredPassingSideChooser.get()
 
     @get:AutoLogOutput(key = "FieldManager/redWonAuto")
     val redWonAuto: Boolean
@@ -212,10 +281,13 @@ object FieldManager {
     val doShiftTimingEntry = table.getEntry("DoShiftTiming")
     val autoHoodRetractionEntry = table.getEntry("AutoHoodRetraction")
 
+    val trenchAssistStrengthEntry = table.getEntry("TrenchAssistStrength")
+    val trenchAssistStrength get() = trenchAssistStrengthEntry.getDouble(2.0)
+
     val hubCountdownEntry = table.getEntry("HubCountdown")
     val activeHubEntry = table.getEntry("ActiveHub")
 
-    val doShiftTiming get() = doShiftTimingEntry.getBoolean(true)
+    val doShiftTiming get() = doShiftTimingEntry.getBoolean(true) && !demoMode
     var autoHoodRetraction
         get() = autoHoodRetractionEntry.getBoolean(true)
         set(value) {
@@ -273,28 +345,11 @@ object FieldManager {
         }
 
     init {
-
-        when (robotType) {
-            RobotType.REAL -> { // Running on a real robot, log to a USB stick ("/U/logs")
-                Logger.addDataReceiver(WPILOGWriter())
-                Logger.addDataReceiver(NT4Publisher())
-            }
-            RobotType.SIM -> {
-                Logger.addDataReceiver(NT4Publisher())
-                Logger.addDataReceiver(WPILOGWriter())
-            } // Running a physics simulator, log to NT
-            RobotType.REPLAY -> { // Replaying a log, set up replay source
-//                Robot.instance.setUseTiming(true) // false - simulate as fast as possible, true - simulate in real time (particle filter needs true)
-                val logPath = LogFileUtil.findReplayLog()
-                Logger.setReplaySource(WPILOGReader(logPath))
-                Logger.addDataReceiver(WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim")))
-            }
-        }
-
-//        Logger.start()
-
         doShiftTimingEntry.setBoolean(true)
         autoHoodRetractionEntry.setBoolean(true)
+
+        trenchAssistStrengthEntry.setDouble(trenchAssistStrength)
+        trenchAssistStrengthEntry.setPersistent()
 
         val apriltagPositions = allAprilTags.map { it.pose }
 //        Logger.recordOutput("FieldManager/All apriltags", *apriltagPositions.toTypedArray())
@@ -406,4 +461,10 @@ object FieldManager {
      */
     fun Pose2d.onOpposingAllianceSide() = !this.onFriendlyAllianceSide()
 
+
+    enum class PassingSide {
+        BOTH,
+        OUTPOST,
+        DEPOT
+    }
 }

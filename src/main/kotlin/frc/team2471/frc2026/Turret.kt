@@ -7,6 +7,7 @@ import com.ctre.phoenix6.hardware.Pigeon2
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue
 import frc.team2471.frc2026.Robot.isCompBot
+import frc.team2471.frc2026.OI.driveLeftTriggerFullPress
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.littletonrobotics.junction.AutoLogOutput
@@ -14,6 +15,15 @@ import org.team2471.frc.lib.commands.MechanismBase
 import org.team2471.frc.lib.commands.addPeriodic
 import org.team2471.frc.lib.commands.command
 import org.team2471.frc.lib.logging.LoopLogger
+import org.littletonrobotics.junction.Logger
+import org.team2471.frc.lib.ctre.PhoenixUtil
+import org.team2471.frc.lib.ctre.addFollower
+import org.team2471.frc.lib.ctre.applyConfiguration
+import org.team2471.frc.lib.ctre.currentLimits
+import org.team2471.frc.lib.ctre.d
+import org.team2471.frc.lib.ctre.inverted
+import org.team2471.frc.lib.ctre.p
+import org.team2471.frc.lib.ctre.s
 import org.team2471.frc.lib.math.toPose2d
 import org.team2471.frc.lib.units.absoluteValue
 import org.team2471.frc.lib.units.asDegrees
@@ -26,7 +36,6 @@ import org.team2471.frc.lib.units.radians
 import org.team2471.frc.lib.units.unWrap
 import org.team2471.frc.lib.units.wrap
 import org.team2471.frc.lib.coroutines.periodicSuspend
-import org.team2471.frc.lib.ctre.PhoenixUtil
 import org.team2471.frc.lib.ctre.addFollower
 import org.team2471.frc.lib.ctre.alternateFeedbackSensor
 import org.team2471.frc.lib.ctre.applyConfiguration
@@ -52,9 +61,11 @@ import org.wpilib.math.system.DCMotor
 import org.wpilib.networktables.NetworkTableInstance
 import org.wpilib.units.measure.Angle
 import org.wpilib.units.measure.AngularVelocity
+import kotlin.collections.toDoubleArray
 import kotlin.math.IEEErem
 import kotlin.math.abs
 import kotlin.math.absoluteValue
+import kotlin.math.hypot
 
 object Turret: MechanismBase("Turret") {
     private val table = NetworkTableInstance.getDefault().getTable("Turret")
@@ -74,13 +85,13 @@ object Turret: MechanismBase("Turret") {
     val turretEncoder2 = CANcoder(CANCoders.TURRET_1, CANivores.TURRET_CAN)
     val turretPigeon = Pigeon2(CANSensors.TURRET_PIGEON, CANivores.TURRET_CAN)
 
-    val TURRET_TOP_LIMIT = if (isCompBot) 190.0.degrees else 270.0.degrees
-    val TURRET_BOTTOM_LIMIT = if (isCompBot) -190.0.degrees else -270.0.degrees
+    val TURRET_TOP_LIMIT = if (isCompBot) 185.0.degrees else 270.0.degrees
+    val TURRET_BOTTOM_LIMIT = if (isCompBot) -185.0.degrees else -270.0.degrees
     val TURRET_RANGE = TURRET_TOP_LIMIT - TURRET_BOTTOM_LIMIT
     val TURRET_ENCODER_LIMIT = if (isCompBot) 600.0.degrees else 720.0.degrees
 
-    val ENCODER_1_DEFAULT_OFFSET = if (isCompBot) 164.004 else 43.0664
-    val ENCODER_2_DEFAULT_OFFSET = if (isCompBot) 144.229 else 76.2
+    val ENCODER_1_DEFAULT_OFFSET = if (isCompBot) -86.92328125 else 43.0664
+    val ENCODER_2_DEFAULT_OFFSET = if (isCompBot) -144.05273438 else 76.2
 
     val encoder1GearRatio = if (isCompBot) 30.0/230.0 else 30.0/200.0
     val encoder2GearRatio = encoder1GearRatio * 83.0/32.0
@@ -185,7 +196,7 @@ object Turret: MechanismBase("Turret") {
     var isTurretWrapping = false
 
     val useTurretGyro
-        get() = true//(turretPigeonIsConnected && turretMotor.fault_RemoteSensorDataInvalid.value) || true
+        get() = true//(turretPigeonIsConnected && turretMotor.fault_RemoteSensorDataInvalid.value)
 
     @get:AutoLogOutput(key = "Turret/fieldCentricSetpoint")
     var fieldCentricSetpoint: Angle = fieldCentricAngle
@@ -308,7 +319,6 @@ object Turret: MechanismBase("Turret") {
                 if (isCompBot) {
                     s(0.1, StaticFeedforwardSignValue.UseClosedLoopSign)
                     p(55.0)
-//                    p(25.0)
                     d(0.0)
                 } else {
                     s(0.2, StaticFeedforwardSignValue.UseClosedLoopSign)
@@ -330,7 +340,6 @@ object Turret: MechanismBase("Turret") {
         }
         turretMotor.addFollower(Falcons.TURRET_1)
 
-//        turretMotor.setPosition(fusedEncoderAngle)
         setTurretOffset(Drive.heading.measure)
 
 
@@ -380,17 +389,9 @@ object Turret: MechanismBase("Turret") {
             periodicSuspend {
 
                 if ((fieldCentricAngle - fieldCentricTurretMotorRotorAngle.unWrap(fieldCentricAngle)).absoluteValue() > 1.0.degrees && turretVelocity.absoluteValue() < 3.0.rotationsPerSecond) {
-//                    if (!resettingGyro) {
-//                        resettingGyro = true
-                    if (isReal) {
-                        GlobalScope.launch {
-//                            println("setting turret pigeon yaw to motor angle")
-//                        println("Detected Error. Trying to change gyro angle from ${fieldCentricAngle.asDegrees.round(3)} to ${fieldCentricTurretMotorRotorAngle.unWrap(fieldCentricAngle).asDegrees.round(3)}")
-
-                            turretPigeon.setYaw(fieldCentricTurretMotorRotorAngle.unWrap(fieldCentricAngle).asDegrees)
-//                            println("finished setting turret pigeon yaw, status ok: ${status.isOK}")
-//                            resettingGyro = false
-                        }
+                    GlobalScope.launch {
+                        // This spams a lot. Its kinda bad to do this. But its okkk
+                        turretPigeon.setYaw(fieldCentricTurretMotorRotorAngle.unWrap(fieldCentricAngle))
                     }
                 }
 
@@ -419,15 +420,19 @@ object Turret: MechanismBase("Turret") {
     }
 
     fun aimAtTarget() = command("AimAtTarget", this) {
-        if (lookForwardOverride) {
-            if (Robot.isEnabled) {
-                fieldCentricSetpoint = Drive.heading.measure
+        if (!demoMode || Shooter.demoAimAtHub) {
+            if (lookForwardOverride) {
+                if (Robot.isEnabled) {
+                    fieldCentricSetpoint = Drive.heading.measure
+                }
+            } else {
+                val aimingAngle = turretTranslation.angleTo(AimUtils.aimTarget)
+                if (Robot.isEnabled) {
+                    fieldCentricSetpoint = aimingAngle
+                }
             }
-        } else {
-            val aimingAngle = turretTranslation.angleTo(AimUtils.aimTarget)
-            if (Robot.isEnabled) {
-                fieldCentricSetpoint = aimingAngle
-            }
+        } else if (driveLeftTriggerFullPress && hypot(OI.driverController.rightX, -OI.driverController.rightY) > 0.7) {
+            fieldCentricSetpoint = Rotation2d(OI.driverController.rightX, -OI.driverController.rightY).measure + 90.0.degrees * if (isRedAlliance) 1.0 else -1.0
         }
     }
 

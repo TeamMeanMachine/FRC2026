@@ -15,6 +15,7 @@ import org.team2471.frc.lib.ctre.loggedTalonFX.MasterMotor
 import org.team2471.frc.lib.energy.BatteryLogger
 import org.team2471.frc.lib.environment.RobotType
 import org.team2471.frc.lib.environment.robotType
+import org.team2471.frc.lib.units.asFeet
 import org.team2471.frc.lib.logging.NT4NonFMSPublisher
 import org.team2471.frc.lib.units.asFeet
 import org.wpilib.command3.Mechanism

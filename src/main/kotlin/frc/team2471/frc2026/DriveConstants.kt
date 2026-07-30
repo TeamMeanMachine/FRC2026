@@ -176,7 +176,7 @@ object DriveConstants {
 
             /** Moment of Inertia. Only used in simulation */
             DriveInertia = 0.025
-            SteerInertia = 0.0000000004
+            SteerInertia = 0.01
 
             /** Simulated voltage required to overcome friction. Only used in simulation */
             DriveFrictionVoltage = 0.2.volts.asVolts

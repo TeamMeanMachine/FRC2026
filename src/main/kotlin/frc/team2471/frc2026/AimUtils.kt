@@ -27,6 +27,7 @@ import org.team2471.frc.lib.units.metersPerSecond
 import org.team2471.frc.lib.units.radians
 import org.team2471.frc.lib.units.rotationsPerSecond
 import org.team2471.frc.lib.units.sin
+import org.team2471.frc.lib.util.demoMode
 import org.wpilib.driverstation.RobotState
 import org.wpilib.math.geometry.Translation2d
 import org.wpilib.math.geometry.Translation3d
@@ -81,13 +82,13 @@ object AimUtils {
     val aimTarget: Translation2d
         get() {
             if (!Drive.useAprilTags) {
-                FieldManager.goalPose
+                return FieldManager.goalPose
             }
 
             return if (isAimingAtGoal) {
                 FieldManager.goalPose - calculateAimTargetOffset(FieldManager.goalPose, Shooter.hubTimeCurve)
             } else {
-                FieldManager.passPose - calculateAimTargetOffset(FieldManager.passPose, Shooter.floorTimeCurve)
+                FieldManager.passPose - calculateAimTargetOffset(FieldManager.passPose, Shooter.passTimeCurve)
             }
         }
 
@@ -106,6 +107,7 @@ object AimUtils {
                 }
             }
 
+
     // Calculates how fast the shooter should spin to make a shot.
     fun getShooterRPS(): AngularVelocity {
         return if (!Drive.useAprilTags) {
@@ -113,7 +115,7 @@ object AimUtils {
 //        } else if (Robot.isAutonomous) {
 //            (if (isAimingAtGoal) hubSpeedCurve.get(distanceToTarget.asFeet) else hubSpeedCurve.get(11.0)).rotationsPerSecond
         } else {
-            (if (isAimingAtGoal || FieldManager.shouldRamp) hubSpeedCurve.get(distanceToTarget.asFeet) else floorSpeedCurve.get(distanceToTarget.asFeet)).rotationsPerSecond
+            (if (isAimingAtGoal || FieldManager.shouldRamp || demoMode) hubSpeedCurve.get(distanceToTarget.asFeet) else Shooter.passSpeedCurve.get(distanceToTarget.asFeet)).rotationsPerSecond
         } / SHOOTER_GEAR_RATIO / shooterEfficiency
     }
 
@@ -138,7 +140,7 @@ object AimUtils {
         return offset
     }
 
-    val isAimingAtGoal get() = RobotState.isAutonomous() || FieldManager.inScoringZone
+    val isAimingAtGoal get() = RobotState.isAutonomous() || FieldManager.inScoringZone || demoMode
 
     val distanceToTarget get() = Turret.turretTranslation.getDistance(aimTarget).absoluteValue.meters
 

@@ -1,7 +1,10 @@
 package frc.team2471.frc2026
 
+import com.ctre.phoenix6.swerve.jni.SwerveJNI
 import com.ctre.phoenix6.swerve.utility.PhoenixPIDController
 import kotlinx.coroutines.DelicateCoroutinesApi
+import frc.team2471.frc2026.OI.driveLeftTriggerFullPress
+import frc.team2471.frc2026.OI.driverController
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.team2471.frc.lib.commands.addPeriodic
@@ -11,6 +14,7 @@ import org.team2471.frc.lib.commands.command
 import org.team2471.frc.lib.control.CurrentLimits
 import org.team2471.frc.lib.logging.LoopLogger
 import org.team2471.frc.lib.control.rightStickButton
+import org.team2471.frc.lib.ctre.PhoenixUtil
 import org.team2471.frc.lib.ctre.currentLimits
 import org.team2471.frc.lib.ctre.modifyConfiguration
 import org.team2471.frc.lib.environment.demoSpeed
@@ -25,6 +29,10 @@ import org.team2471.frc.lib.units.degrees
 import org.team2471.frc.lib.units.inches
 import org.team2471.frc.lib.math.DynamicInterpolatingTreeMap
 import org.team2471.frc.lib.units.asRotation2d
+import org.team2471.frc.lib.math.normalize
+import org.team2471.frc.lib.units.asMeters
+import org.team2471.frc.lib.units.asRadians
+import org.team2471.frc.lib.units.asRadiansPerSecond
 import org.team2471.frc.lib.units.inchesPerSecond
 import org.team2471.frc.lib.units.metersPerSecondPerSecond
 import org.team2471.frc.lib.units.perSecond
@@ -44,25 +52,20 @@ import org.wpilib.math.kinematics.ChassisVelocities
 import org.wpilib.networktables.NetworkTableInstance
 import org.wpilib.system.Timer
 import org.wpilib.units.measure.Angle
+import org.team2471.frc.lib.vision.photonVision.PhotonVisionCamera
+import kotlin.math.absoluteValue
 import kotlin.math.atan2
 
 
 object Drive: SwerveDriveSubsystem(DriveConstants.drivetrainConstants, *DriveConstants.moduleConfigs) {
     private val table = NetworkTableInstance.getDefault().getTable("Drive")
 
-    private val frontLeftConnectedEntry = table.getEntry("FrontLeftConnected")
-    private val frontRightConnectedEntry = table.getEntry("FrontRightConnected")
-    private val backLeftConnectedEntry = table.getEntry("BackLeftConnected")
-    private val backRightConnectedEntry = table.getEntry("BackRightConnected")
-
+    val useAprilTagsEntry = table.getEntry("UseAprilTags")
     val increaseDriveCurrentEntry = table.getEntry("IncreaseDriveCurrent")
+
     val increaseDriveCurrent get() = increaseDriveCurrentEntry.getBoolean(false)
     var prevIncreaseDriveCurrent = increaseDriveCurrent
-
-    val useAprilTagsEntry = table.getEntry("UseAprilTags")
-
     val useAprilTags: Boolean get() = useAprilTagsEntry.getBoolean(true)
-
 
     // To reset position use this, also add other pose sources that need reset here.
     override var pose: Pose2d
@@ -81,6 +84,7 @@ object Drive: SwerveDriveSubsystem(DriveConstants.drivetrainConstants, *DriveCon
             Turret.setTurretOffset(value.measure)
             resetPoseTime = Timer.getMonotonicTimestamp()
         }
+
 
     var headingAngleUnwrapped: Angle = heading.measure
         get() = heading.measure.unWrap(field)
@@ -104,7 +108,7 @@ object Drive: SwerveDriveSubsystem(DriveConstants.drivetrainConstants, *DriveCon
     private var resetPoseTime = 0.0
 
     // TODO: Check heading accuracy
-    val localizer: PoseLocalizer = PoseLocalizer(Fiducial.constructFiducialList(FieldManager.allAprilTags), cameras)
+    val localizer = PoseLocalizer(Fiducial.constructFiducialList(FieldManager.allAprilTags), cameras)
 
     // Drive Feedback controllers
     override val autoPilot = createAPObject(Double.POSITIVE_INFINITY.inchesPerSecond, 100.0.metersPerSecondPerSecond, 2.0.metersPerSecondPerSecond.perSecond, 0.5.inches, 1.0.degrees)
@@ -127,6 +131,8 @@ object Drive: SwerveDriveSubsystem(DriveConstants.drivetrainConstants, *DriveCon
 
     init {
         println("Drive initialization")
+
+        useMapleSim = true
 
         useAprilTagsEntry.setBoolean(true)
         increaseDriveCurrentEntry.setBoolean(false)
@@ -159,14 +165,6 @@ object Drive: SwerveDriveSubsystem(DriveConstants.drivetrainConstants, *DriveCon
                 it.updateInputs()
             }
             LoopLogger.record("Drive camera updateInputs")
-
-
-            frontLeftConnectedEntry.setBoolean(cameras.getOrNull(0)?.isConnected ?: false)
-            frontRightConnectedEntry.setBoolean(cameras.getOrNull(1)?.isConnected ?: false)
-            backLeftConnectedEntry.setBoolean(cameras.getOrNull(2)?.isConnected ?: false)
-            backRightConnectedEntry.setBoolean(cameras.getOrNull(3)?.isConnected ?: false)
-
-            LoopLogger.record("Camera Connected Publisher")
 
             // Update poses with processed particle filter estimates.
             localizer.updateWithLatestPoseEstimate()
@@ -229,12 +227,14 @@ object Drive: SwerveDriveSubsystem(DriveConstants.drivetrainConstants, *DriveCon
         val rawJoystick = OI.driveTranslation
         // Square drive input and apply demoSpeed
         val power = rawJoystick.norm.square() * demoSpeed * if ((Shooter.isShooting || OI.driverController.rightStickButton) && FieldManager.inScoringZone) 0.3 else if (inSnakeMode) 0.8 else 1.0
+        // Modify input to center in trench
+        val joystickWithTrenchAlign = (rawJoystick.normalize() + FieldManager.trenchAlignTranslationModifier * rawJoystick.x.absoluteValue).normalize()
         // Apply modified power to joystick vector and flip depending on alliance
-        val joystickTranslation = rawJoystick * power * if (isBlueAlliance) -1.0 else 1.0
+        val joystickTranslation = joystickWithTrenchAlign * power * if (isBlueAlliance) -1.0 else 1.0
 
         val rawJoystickRotation = OI.driveRotation
         // Cube rotation input and apply demoSpeed
-        val omega = rawJoystickRotation.cube() * demoSpeed
+        val omega = if (!(demoMode && driveLeftTriggerFullPress)) (rawJoystickRotation.cube() + FieldManager.trenchAlignRotationModifier * rawJoystick.x.absoluteValue) * demoSpeed else 0.0
 
         return ChassisVelocities(joystickTranslation.x, joystickTranslation.y, omega)
     }
@@ -260,17 +260,61 @@ object Drive: SwerveDriveSubsystem(DriveConstants.drivetrainConstants, *DriveCon
         inSnakeMode = false
     }
 
+    @get:AutoLogOutput(key = "Swerve/WheelsSlipping")
+    val wheelsSlipping: Boolean get() {
+        val moduleRotationComponents = Array(moduleStates.size) {
+            val state = SwerveModuleState()
+            state.speedMetersPerSecond = gyroYawRate.asRadiansPerSecond * moduleLocations[it].norm
+            state.angle = moduleLocations[it].angle + 90.0.degrees.asRotation2d
+            return@Array state
+        }
+
+        val moduleTranslationNorms = Array(moduleStates.size) { i ->
+            (Translation2d(moduleStates[i].speedMetersPerSecond, moduleStates[i].angle) - Translation2d(moduleRotationComponents[i].speedMetersPerSecond, moduleRotationComponents[i].angle)).norm
+        }.apply{ sort() }
+
+        val mad = moduleTranslationNorms.map {(moduleTranslationNorms.average() - it).absoluteValue}.average()
+        val minMaxRatio = moduleTranslationNorms.last() / (moduleTranslationNorms.first() + 0.001) // add fudge to prevent division by 0
+
+        Logger.recordOutput("Swerve/ModuleTranslationNorms/0", moduleTranslationNorms[0])
+        Logger.recordOutput("Swerve/ModuleTranslationNorms/1", moduleTranslationNorms[1])
+        Logger.recordOutput("Swerve/ModuleTranslationNorms/2", moduleTranslationNorms[2])
+        Logger.recordOutput("Swerve/ModuleTranslationNorms/3", moduleTranslationNorms[3])
+
+        Logger.recordOutput("Swerve/ModuleRotationComponents/0", moduleRotationComponents[0])
+        Logger.recordOutput("Swerve/ModuleRotationComponents/1", moduleRotationComponents[1])
+        Logger.recordOutput("Swerve/ModuleRotationComponents/2", moduleRotationComponents[2])
+        Logger.recordOutput("Swerve/ModuleRotationComponents/3", moduleRotationComponents[3])
+
+        Logger.recordOutput("Swerve/ModuleTranslationsMinMaxRatio", minMaxRatio)
+        Logger.recordOutput("Swerve/ModuleTranslationsMAD", mad)
+
+
+        val accelerationDiff = (acceleration - UTranslation2d<LinearAccelerationUnit>(pigeon2.accelerationX.value, pigeon2.accelerationY.value)).norm
+        Logger.recordOutput("Swerve/DriveGyroAccelerationDifference", accelerationDiff)
+
+//        val threshold = 10.0 // acc diff
+//        return accelerationDiff.asMetersPerSecondPerSecond > threshold
+
+//        val threshold = 0.09 // mad
+//        return mad > threshold
+
+        val threshold = 1.2 // ratio
+        return minMaxRatio > threshold
+    }
+
+
     /** Command to zero robot gyro */
     fun zeroGyroCommand() = command(Drive) {
         println("zero gyro command")
         zeroGyro()
     }
 
-    /** 
-     * Resets swerve odometry ([Drive.pose]) to the vision [PoseLocalizer.pose]. 
-     * 
-     * Useful if you want to use the swerve odometry for quick positioning or path following. 
-     * 
+    /**
+     * Resets swerve odometry ([Drive.pose]) to the vision [PoseLocalizer.pose].
+     *
+     * Useful if you want to use the swerve odometry for quick positioning or path following.
+     *
      * Ex: Traveling somewhere in auto where you know the vision odometry will be unreliable. (human player station in 2025)
      */
     fun resetOdometryToAbsolute() {
