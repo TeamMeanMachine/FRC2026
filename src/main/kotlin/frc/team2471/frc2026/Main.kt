@@ -34,9 +34,6 @@ import java.net.NetworkInterface
  * each mode, as described in the TimedRobot documentation. If you change the name of this class or
  * the package after creating this project, you must also update the build.gradle file in the
  * project.
- *
- * 2027-alpha: Changed robot to be a class instead of an object as wpilib does not support RobotBase as an object.
- * Most things can still function inside a companion object, although makes syntax slightly strange.
  */
 @OptIn(DelicateCoroutinesApi::class)
 object Robot : OpModeRobot(0.01) {
