@@ -15,9 +15,12 @@ import org.team2471.frc.lib.commands.periodic
 import org.team2471.frc.lib.commands.command
 import org.team2471.frc.lib.coroutines.periodicSuspend
 import org.team2471.frc.lib.environment.RobotType
+import org.team2471.frc.lib.environment.demoMode
+import org.team2471.frc.lib.environment.isBlueAlliance
 import org.team2471.frc.lib.environment.isRedAlliance
 import org.team2471.frc.lib.environment.robotType
 import org.team2471.frc.lib.logging.SimpleLogger
+import org.team2471.frc.lib.math.angleTo
 import org.team2471.frc.lib.math.toPose2d
 import org.team2471.frc.lib.units.*
 import org.wpilib.driverstation.MatchState
@@ -135,7 +138,7 @@ object FieldManager {
                 val relativePose = pose - Drive.localizer.pose.translation
                 if (relativePose.y.absoluteValue.meters < (areaWidth * 0.5)) {
                     if (relativePose.x.absoluteValue.meters < (areaLength * 0.5)) {
-                        if (relativePose.x.sign == Drive.velocity.x.asMetersPerSecond.sign) {
+                        if (relativePose.x.sign == Drive.velocity.x.sign) {
                             if (relativePose.y.sign == yRelativeToCenter.asMeters.sign) {
                                 return Translation2d(0.0.inches, relativePose.y.meters) * if (isBlueAlliance) -trenchAssistStrength else trenchAssistStrength
                             }
@@ -253,7 +256,7 @@ object FieldManager {
 
     @get:AutoLogOutput(key = "FieldManager/gameData")
     val preferredPassingSide: PassingSide
-        get() = preferredPassingSideChooser.get()
+        get() = preferredPassingSideChooser.get() ?: PassingSide.BOTH
 
     @get:AutoLogOutput(key = "FieldManager/redWonAuto")
     val redWonAuto: Boolean

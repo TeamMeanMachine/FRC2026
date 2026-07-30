@@ -43,11 +43,13 @@ import org.team2471.frc.lib.ctre.brakeMode
 import org.team2471.frc.lib.ctre.currentLimits
 import org.team2471.frc.lib.ctre.d
 import org.team2471.frc.lib.ctre.inverted
-import org.team2471.frc.lib.ctre.loggedTalonFX.LoggedTalonFX
+import org.team2471.frc.lib.ctre.loggedMotors.LoggedTalonFX
 import org.team2471.frc.lib.ctre.p
 import org.team2471.frc.lib.ctre.s
 import org.team2471.frc.lib.energy.BatteryLogger
+import org.team2471.frc.lib.environment.demoMode
 import org.team2471.frc.lib.environment.isReal
+import org.team2471.frc.lib.environment.isRedAlliance
 import org.team2471.frc.lib.logging.SimpleLogger
 import org.team2471.frc.lib.math.angleTo
 import org.team2471.frc.lib.units.asFeet
@@ -56,6 +58,7 @@ import org.team2471.frc.lib.units.asMeters
 import org.team2471.frc.lib.units.rotations
 import org.team2471.frc.lib.units.rotationsPerSecond
 import org.team2471.frc.lib.units.sin
+import org.wpilib.math.geometry.Rotation2d
 import org.wpilib.math.geometry.Translation2d
 import org.wpilib.math.system.DCMotor
 import org.wpilib.networktables.NetworkTableInstance

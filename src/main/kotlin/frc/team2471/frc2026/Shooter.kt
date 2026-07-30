@@ -21,6 +21,7 @@ import org.team2471.frc.lib.commands.periodic
 import org.team2471.frc.lib.commands.command
 import org.team2471.frc.lib.logging.LoopLogger
 import org.littletonrobotics.junction.Logger
+import org.team2471.frc.lib.control.bButton
 import org.team2471.frc.lib.control.rightStickButton
 import org.team2471.frc.lib.ctre.addFollower
 import org.team2471.frc.lib.ctre.applyConfiguration
@@ -30,6 +31,7 @@ import org.team2471.frc.lib.ctre.currentLimits
 import org.team2471.frc.lib.ctre.d
 import org.team2471.frc.lib.ctre.i
 import org.team2471.frc.lib.ctre.inverted
+import org.team2471.frc.lib.ctre.loggedMotors.LoggedTalonFX
 import org.team2471.frc.lib.ctre.magnetSensorOffset
 import org.team2471.frc.lib.ctre.motionMagic
 import org.team2471.frc.lib.ctre.p
@@ -37,6 +39,7 @@ import org.team2471.frc.lib.ctre.remoteCANCoder
 import org.team2471.frc.lib.ctre.s
 import org.team2471.frc.lib.ctre.setCANCoderAngle
 import org.team2471.frc.lib.energy.BatteryLogger
+import org.team2471.frc.lib.environment.demoMode
 import org.team2471.frc.lib.environment.isReal
 import org.team2471.frc.lib.environment.isSim
 import org.team2471.frc.lib.math.angleTo
@@ -223,7 +226,7 @@ object Shooter: MechanismBase("Shooter") {
     val demoShootingSpeed get() = demoShootingSpeedEntry.getDouble(30.0)
     val demoShootingAngle get() = demoShootingAngleEntry.getDouble(65.0)
 
-    val demoAimAtHub get() = OI.driverController.b || OI.driverController.rightStickButton
+    val demoAimAtHub get() = OI.driverController.bButton || OI.driverController.rightStickButton
 
     val shootingTestSpeed: Double get() = shootingTestSpeedEntry.getDouble(40.0)
     val shootingTestAngle: Double get() = shootingTestAngleEntry.getDouble(40.0)

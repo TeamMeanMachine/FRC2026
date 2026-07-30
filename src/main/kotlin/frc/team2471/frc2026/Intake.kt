@@ -380,7 +380,8 @@ object Intake: MechanismBase("Intake") {
             }
             prevIntakeState = intakeState
 
-        LoopLogger.record("Intake default")
+            LoopLogger.record("Intake default")
+        }
     }
 
     enum class IntakeState {

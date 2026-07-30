@@ -7,6 +7,7 @@ import frc.team2471.frc2026.OI.driveLeftTriggerFullPress
 import frc.team2471.frc2026.OI.driverController
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import org.littletonrobotics.junction.AutoLogOutput
 import org.team2471.frc.lib.commands.addPeriodic
 import org.team2471.frc.lib.commands.onCancel
 import org.team2471.frc.lib.commands.periodic
@@ -17,6 +18,7 @@ import org.team2471.frc.lib.control.rightStickButton
 import org.team2471.frc.lib.ctre.PhoenixUtil
 import org.team2471.frc.lib.ctre.currentLimits
 import org.team2471.frc.lib.ctre.modifyConfiguration
+import org.team2471.frc.lib.environment.demoMode
 import org.team2471.frc.lib.environment.demoSpeed
 import org.team2471.frc.lib.environment.isBlueAlliance
 import org.team2471.frc.lib.localization.PoseLocalizer
@@ -53,6 +55,7 @@ import org.wpilib.networktables.NetworkTableInstance
 import org.wpilib.system.Timer
 import org.wpilib.units.measure.Angle
 import org.team2471.frc.lib.vision.photonVision.PhotonVisionCamera
+import org.wpilib.math.kinematics.SwerveModuleVelocity
 import kotlin.math.absoluteValue
 import kotlin.math.atan2
 
@@ -263,35 +266,35 @@ object Drive: SwerveDriveSubsystem(DriveConstants.drivetrainConstants, *DriveCon
     @get:AutoLogOutput(key = "Swerve/WheelsSlipping")
     val wheelsSlipping: Boolean get() {
         val moduleRotationComponents = Array(moduleStates.size) {
-            val state = SwerveModuleState()
-            state.speedMetersPerSecond = gyroYawRate.asRadiansPerSecond * moduleLocations[it].norm
+            val state = SwerveModuleVelocity()
+            state.velocity = gyroYawRate.asRadiansPerSecond * moduleLocations[it].norm
             state.angle = moduleLocations[it].angle + 90.0.degrees.asRotation2d
             return@Array state
         }
 
         val moduleTranslationNorms = Array(moduleStates.size) { i ->
-            (Translation2d(moduleStates[i].speedMetersPerSecond, moduleStates[i].angle) - Translation2d(moduleRotationComponents[i].speedMetersPerSecond, moduleRotationComponents[i].angle)).norm
+            (Translation2d(moduleStates[i].velocity, moduleStates[i].angle) - Translation2d(moduleRotationComponents[i].velocity, moduleRotationComponents[i].angle)).norm
         }.apply{ sort() }
 
         val mad = moduleTranslationNorms.map {(moduleTranslationNorms.average() - it).absoluteValue}.average()
         val minMaxRatio = moduleTranslationNorms.last() / (moduleTranslationNorms.first() + 0.001) // add fudge to prevent division by 0
 
-        Logger.recordOutput("Swerve/ModuleTranslationNorms/0", moduleTranslationNorms[0])
-        Logger.recordOutput("Swerve/ModuleTranslationNorms/1", moduleTranslationNorms[1])
-        Logger.recordOutput("Swerve/ModuleTranslationNorms/2", moduleTranslationNorms[2])
-        Logger.recordOutput("Swerve/ModuleTranslationNorms/3", moduleTranslationNorms[3])
+        SimpleLogger.recordOutput("Swerve/ModuleTranslationNorms/0", moduleTranslationNorms[0])
+        SimpleLogger.recordOutput("Swerve/ModuleTranslationNorms/1", moduleTranslationNorms[1])
+        SimpleLogger.recordOutput("Swerve/ModuleTranslationNorms/2", moduleTranslationNorms[2])
+        SimpleLogger.recordOutput("Swerve/ModuleTranslationNorms/3", moduleTranslationNorms[3])
 
-        Logger.recordOutput("Swerve/ModuleRotationComponents/0", moduleRotationComponents[0])
-        Logger.recordOutput("Swerve/ModuleRotationComponents/1", moduleRotationComponents[1])
-        Logger.recordOutput("Swerve/ModuleRotationComponents/2", moduleRotationComponents[2])
-        Logger.recordOutput("Swerve/ModuleRotationComponents/3", moduleRotationComponents[3])
+        SimpleLogger.recordOutput("Swerve/ModuleRotationComponents/0", moduleRotationComponents[0])
+        SimpleLogger.recordOutput("Swerve/ModuleRotationComponents/1", moduleRotationComponents[1])
+        SimpleLogger.recordOutput("Swerve/ModuleRotationComponents/2", moduleRotationComponents[2])
+        SimpleLogger.recordOutput("Swerve/ModuleRotationComponents/3", moduleRotationComponents[3])
 
-        Logger.recordOutput("Swerve/ModuleTranslationsMinMaxRatio", minMaxRatio)
-        Logger.recordOutput("Swerve/ModuleTranslationsMAD", mad)
+        SimpleLogger.recordOutput("Swerve/ModuleTranslationsMinMaxRatio", minMaxRatio)
+        SimpleLogger.recordOutput("Swerve/ModuleTranslationsMAD", mad)
 
 
-        val accelerationDiff = (acceleration - UTranslation2d<LinearAccelerationUnit>(pigeon2.accelerationX.value, pigeon2.accelerationY.value)).norm
-        Logger.recordOutput("Swerve/DriveGyroAccelerationDifference", accelerationDiff)
+        val accelerationDiff = (acceleration - Translation2d(pigeon2.accelerationX.valueAsDouble, pigeon2.accelerationY.valueAsDouble)).norm
+        SimpleLogger.recordOutput("Swerve/DriveGyroAccelerationDifference", accelerationDiff)
 
 //        val threshold = 10.0 // acc diff
 //        return accelerationDiff.asMetersPerSecondPerSecond > threshold

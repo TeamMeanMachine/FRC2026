@@ -11,7 +11,7 @@ import org.littletonrobotics.junction.wpilog.WPILOGWriter
 import org.team2471.frc.lib.autonomous.TestOpMode
 import org.team2471.frc.lib.logging.LoopLogger
 import org.team2471.frc.lib.control.isConnected
-import org.team2471.frc.lib.ctre.loggedTalonFX.MasterMotor
+import org.team2471.frc.lib.ctre.loggedMotors.MasterMotor
 import org.team2471.frc.lib.energy.BatteryLogger
 import org.team2471.frc.lib.environment.RobotType
 import org.team2471.frc.lib.environment.robotType
@@ -166,14 +166,14 @@ object Robot : OpModeRobot(0.01) {
 
     /** This function is called once when the robot is disabled.  */
     override fun disabledInit() {
-        println("Robot init disabled")
+        println("Robot disabled init")
         Drive.coastMode()
-        beforeFirstEnable = false // disabledInit is called after the robot is enabled. Does not get called
+        beforeFirstEnable = false // disabledInit is called after the robot is enabled. Does not get called on robot init
     }
 
-    /** Function called when the robot is disabled. Similar to enableInit */
+    /** Function called once when the robot exits disabled state. Similar to enabledInit */
     override fun disabledExit() {
-        println("Robot exit disabled")
+        println("Robot disabled exit")
     }
 
     /** This function is called periodically when disabled.  */
@@ -190,7 +190,7 @@ object Robot : OpModeRobot(0.01) {
     /** This function is called periodically whilst in simulation.  */
     @OptIn(DelicateCoroutinesApi::class)
     override fun simulationPeriodic() {
-        MasterMotor.simPeriodic()
+        MasterMotor.periodic()
     }
 
     /**
