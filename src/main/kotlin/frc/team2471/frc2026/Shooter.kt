@@ -10,17 +10,13 @@ import com.ctre.phoenix6.signals.StaticFeedforwardSignValue
 import frc.team2471.frc2026.AimUtils.shooterEfficiency
 import frc.team2471.frc2026.AimUtils.toExitVelocity
 import frc.team2471.frc2026.Robot.isCompBot
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import org.littletonrobotics.junction.AutoLogOutput
 import org.team2471.frc.lib.commands.MechanismBase
-import org.team2471.frc.lib.commands.addPeriodic
 import org.team2471.frc.lib.commands.onCancel
 import org.team2471.frc.lib.commands.parallel
 import org.team2471.frc.lib.commands.periodic
 import org.team2471.frc.lib.commands.command
 import org.team2471.frc.lib.logging.LoopLogger
-import org.littletonrobotics.junction.Logger
 import org.team2471.frc.lib.control.bButton
 import org.team2471.frc.lib.control.rightStickButton
 import org.team2471.frc.lib.ctre.addFollower
@@ -430,42 +426,40 @@ object Shooter: MechanismBase("Shooter") {
                 remoteCANCoder(hoodEncoder.deviceID, if (isCompBot) 85.5 else 9.64285714285714)
 //            }
         }
-
-        addPeriodic {
-            LoopLogger.record("Shooter periodic")
-            if (isSim) {
-                if (isShooting) {
-                    if (i > 3) {
-                        i = 0
-                        shootSimulatedFuel()
-                    } else {
-                        i++
-                    }
-                }
-                fuel.forEach { it.update() }
-                logFuel("fuel", *fuel.toTypedArray())
-                fuel.removeFuel()
-
-                fuel2.forEach { it.update() }
-                logFuel("fuel2", *fuel2.toTypedArray())
-                fuel2.removeFuel()
-            }
-
-            if (zeroHoodButtonEntry.getBoolean(false)) {
-                hoodEncoder.setCANCoderAngle(HOOD_ZERO.degrees)
-                zeroHoodButtonEntry.setBoolean(false)
-                println("Zeroed hood")
-            }
-
-            BatteryLogger.recordCurrent("Shooter Roller", shooterMotor.supplyCurrent.value * 2.0)
-            BatteryLogger.recordCurrent("Hood", hoodMotor.supplyCurrent.value)
-
-//        shooterMotor.setControl(VoltageOut(shooterController.updateVoltage(shooterAngularVelocitySetpoint.asRotationsPerSecond, shooterAngularVelocity.asRotationsPerSecond)))
-            LoopLogger.record("Shooter periodic")
-
-        }
     }
 
+    override fun periodic() {
+        LoopLogger.record("Shooter periodic")
+        if (isSim) {
+            if (isShooting) {
+                if (i > 3) {
+                    i = 0
+                    shootSimulatedFuel()
+                } else {
+                    i++
+                }
+            }
+            fuel.forEach { it.update() }
+            logFuel("fuel", *fuel.toTypedArray())
+            fuel.removeFuel()
+
+            fuel2.forEach { it.update() }
+            logFuel("fuel2", *fuel2.toTypedArray())
+            fuel2.removeFuel()
+        }
+
+        if (zeroHoodButtonEntry.getBoolean(false)) {
+            hoodEncoder.setCANCoderAngle(HOOD_ZERO.degrees)
+            zeroHoodButtonEntry.setBoolean(false)
+            println("Zeroed hood")
+        }
+
+        BatteryLogger.recordCurrent("Shooter Roller", shooterMotor.supplyCurrent.value * 2.0)
+        BatteryLogger.recordCurrent("Hood", hoodMotor.supplyCurrent.value)
+
+//        shooterMotor.setControl(VoltageOut(shooterController.updateVoltage(shooterAngularVelocitySetpoint.asRotationsPerSecond, shooterAngularVelocity.asRotationsPerSecond)))
+        LoopLogger.record("Shooter periodic")
+    }
 
     override fun defaultCommand() = command(this) {
         this.periodic {

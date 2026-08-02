@@ -1,21 +1,17 @@
 package frc.team2471.frc2026
 
-import com.ctre.phoenix6.swerve.jni.SwerveJNI
 import com.ctre.phoenix6.swerve.utility.PhoenixPIDController
 import kotlinx.coroutines.DelicateCoroutinesApi
 import frc.team2471.frc2026.OI.driveLeftTriggerFullPress
-import frc.team2471.frc2026.OI.driverController
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.littletonrobotics.junction.AutoLogOutput
-import org.team2471.frc.lib.commands.addPeriodic
 import org.team2471.frc.lib.commands.onCancel
 import org.team2471.frc.lib.commands.periodic
 import org.team2471.frc.lib.commands.command
 import org.team2471.frc.lib.control.CurrentLimits
 import org.team2471.frc.lib.logging.LoopLogger
 import org.team2471.frc.lib.control.rightStickButton
-import org.team2471.frc.lib.ctre.PhoenixUtil
 import org.team2471.frc.lib.ctre.currentLimits
 import org.team2471.frc.lib.ctre.modifyConfiguration
 import org.team2471.frc.lib.environment.demoMode
@@ -32,8 +28,6 @@ import org.team2471.frc.lib.units.inches
 import org.team2471.frc.lib.math.DynamicInterpolatingTreeMap
 import org.team2471.frc.lib.units.asRotation2d
 import org.team2471.frc.lib.math.normalize
-import org.team2471.frc.lib.units.asMeters
-import org.team2471.frc.lib.units.asRadians
 import org.team2471.frc.lib.units.asRadiansPerSecond
 import org.team2471.frc.lib.units.inchesPerSecond
 import org.team2471.frc.lib.units.metersPerSecondPerSecond
@@ -54,7 +48,6 @@ import org.wpilib.math.kinematics.ChassisVelocities
 import org.wpilib.networktables.NetworkTableInstance
 import org.wpilib.system.Timer
 import org.wpilib.units.measure.Angle
-import org.team2471.frc.lib.vision.photonVision.PhotonVisionCamera
 import org.wpilib.math.kinematics.SwerveModuleVelocity
 import kotlin.math.absoluteValue
 import kotlin.math.atan2
@@ -147,57 +140,60 @@ object Drive: SwerveDriveSubsystem(DriveConstants.drivetrainConstants, *DriveCon
 
         localizer.trackAllTags()
         localizer.disableSingleTagCalculation() // for loop times and we dont use it in 2026
+    }
 
-        addPeriodic {
-            LoopLogger.record("Drive periodic")
+    override fun periodic() {
+        LoopLogger.record("Drive periodic")
 
-            if (RobotState.isTeleopEnabled()) {
-                if (increaseDriveCurrent != prevIncreaseDriveCurrent) {
-                    if (increaseDriveCurrent) {
-                        setDriveCurrentLimits(DriveConstants.driveMaxCurrentLimits)
-                    } else {
-                        setDriveCurrentLimits(DriveConstants.driveTeleCurrentLimits)
-                    }
+        LoopLogger.record("super Drive periodic")
+        super.periodic()
+        LoopLogger.record("super Drive periodic")
 
-                    prevIncreaseDriveCurrent = increaseDriveCurrent
+        if (RobotState.isTeleopEnabled()) {
+            if (increaseDriveCurrent != prevIncreaseDriveCurrent) {
+                if (increaseDriveCurrent) {
+                    setDriveCurrentLimits(DriveConstants.driveMaxCurrentLimits)
+                } else {
+                    setDriveCurrentLimits(DriveConstants.driveTeleCurrentLimits)
                 }
+
+                prevIncreaseDriveCurrent = increaseDriveCurrent
             }
-
-            // Update Vision
-            cameras.forEach {
-                it.updateInputs()
-            }
-            LoopLogger.record("Drive camera updateInputs")
-
-            // Update poses with processed particle filter estimates.
-            localizer.updateWithLatestPoseEstimate()
-            LoopLogger.record("Drive updateWithLatestPose")
-            // Create an odom measurement with a timestamp converted from phoenix time to fpga time.
-            val poseMeasurement = PoseLocalizer.OdometryMeasurement(pose, stateTimestamp)
-            // Publish the latest camera data to NT and also update pose from swerve odometry measurements.
-            localizer.update(poseMeasurement, cameras.map { it.latestMeasurement }, chassisVelocities)
-            LoopLogger.record("Drive localizer")
-
-            headingHistory.put(Timer.getMonotonicTimestamp(), heading.degrees)
-            LoopLogger.record("Recorded HeadingHistory")
-
-            if (cameras.isNotEmpty()) {
-                cameras.forEach {
-                    table.getEntry("Cameras/${it.cameraName} isConnected").setBoolean(it.isConnected)
-                    SimpleLogger.recordOutput("Drive/Cameras/${it.cameraName} isConnected", it.isConnected)
-                }
-            }
-            LoopLogger.record("Cameras isConnected publish")
-
-            // Log all the poses for debugging
-            SimpleLogger.recordOutput("Swerve/Odometry", localizer.odometryPose)
-            SimpleLogger.recordOutput("Swerve/Localizer Raw", localizer.rawPose)
-            SimpleLogger.recordOutput("Swerve/Localizer", localizer.pose)
-            SimpleLogger.recordOutput("Swerve/SingleTagPose", localizer.singleTagPose)
-
-
-            LoopLogger.record("Drive periodic")
         }
+
+        // Update Vision
+        cameras.forEach {
+            it.updateInputs()
+        }
+        LoopLogger.record("Drive camera updateInputs")
+
+        // Update poses with processed particle filter estimates.
+        localizer.updateWithLatestPoseEstimate()
+        LoopLogger.record("Drive updateWithLatestPose")
+        // Create an odom measurement with a timestamp converted from phoenix time to fpga time.
+        val poseMeasurement = PoseLocalizer.OdometryMeasurement(pose, stateTimestamp)
+        // Publish the latest camera data to NT and also update pose from swerve odometry measurements.
+        localizer.update(poseMeasurement, cameras.map { it.latestMeasurement }, chassisVelocities)
+        LoopLogger.record("Drive localizer")
+
+        headingHistory.put(Timer.getMonotonicTimestamp(), heading.degrees)
+        LoopLogger.record("Recorded HeadingHistory")
+
+        if (cameras.isNotEmpty()) {
+            cameras.forEach {
+                table.getEntry("Cameras/${it.cameraName} isConnected").setBoolean(it.isConnected)
+                SimpleLogger.recordOutput("Drive/Cameras/${it.cameraName} isConnected", it.isConnected)
+            }
+        }
+        LoopLogger.record("Cameras isConnected publish")
+
+        // Log all the poses for debugging
+        SimpleLogger.recordOutput("Swerve/Odometry", localizer.odometryPose)
+        SimpleLogger.recordOutput("Swerve/Localizer Raw", localizer.rawPose)
+        SimpleLogger.recordOutput("Swerve/Localizer", localizer.pose)
+        SimpleLogger.recordOutput("Swerve/SingleTagPose", localizer.singleTagPose)
+
+        LoopLogger.record("Drive periodic")
     }
 
 

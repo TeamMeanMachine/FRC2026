@@ -1,7 +1,6 @@
 package frc.team2471.frc2026
 
 import org.team2471.frc.lib.commands.MechanismBase
-import org.team2471.frc.lib.commands.addPeriodic
 import org.team2471.frc.lib.commands.command
 import org.team2471.frc.lib.commands.onCancel
 import org.team2471.frc.lib.commands.periodic
@@ -155,15 +154,13 @@ object OI: MechanismBase("OI") {
 
         driverController.dpadUp().onTrue(command { Turret.offset -= 2.0.degrees})
         driverController.dpadDown().and(driverController.y().negate()).and(driverController.leftBumper().negate()).onTrue(command { Turret.offset += 2.0.degrees})
+    }
 
-
-
-        addPeriodic {
-            LoopLogger.record("OI periodic")
-            driverNotConnectedAlert.set(driverDebouncer.calculate(!driverController.isConnected))
-            operatorNotConnectedAlert.set(operatorDebouncer.calculate(!operatorController.isConnected))
-            LoopLogger.record("OI periodic")
-        }
+    override fun periodic() {
+        LoopLogger.record("OI periodic")
+        driverNotConnectedAlert.set(driverDebouncer.calculate(!driverController.isConnected))
+        operatorNotConnectedAlert.set(operatorDebouncer.calculate(!operatorController.isConnected))
+        LoopLogger.record("OI periodic")
     }
 
     @Teleop(name = "Country Roads!")

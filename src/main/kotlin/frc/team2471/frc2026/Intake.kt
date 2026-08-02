@@ -13,7 +13,6 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.littletonrobotics.junction.AutoLogOutput
 import org.team2471.frc.lib.commands.MechanismBase
-import org.team2471.frc.lib.commands.addPeriodic
 import org.team2471.frc.lib.commands.onCancel
 import org.team2471.frc.lib.commands.parallel
 import org.team2471.frc.lib.commands.periodic
@@ -210,38 +209,60 @@ object Intake: MechanismBase("Intake") {
             rollerMotor.addFollower(rollerMotorFollower)
         }
 
-        this.defaultCommand = command("Intake Default", this) {
-            this.periodic {
-                LoopLogger.record("Intake default")
-                LoopLogger.record("Intake default")
-            }
-        }
-
-
-        addPeriodic {
-            LoopLogger.record("Intake periodic")
-            if (maxForwardTorque != prevMaxForwardTorque) {
-                GlobalScope.launch {
-                    deployMotor0.modifyConfiguration {
-                        TorqueCurrent.PeakForwardTorqueCurrent = maxForwardTorque
-                    }
-                    deployMotor1.modifyConfiguration {
-                        TorqueCurrent.PeakForwardTorqueCurrent = maxForwardTorque
-                    }
-                }
-                prevMaxForwardTorque = maxForwardTorque
-            }
-
-            BatteryLogger.recordCurrent("Intake Deploy", (deployCurrent0 + deployCurrent1).amps)
-            BatteryLogger.recordCurrent("Intake Rollers", rollerCurrent.amps * 2.0)
-            LoopLogger.record("Intake periodic")
-        }
-
-
         GlobalScope.launch {
             org.team2471.frc.lib.coroutines.periodicSuspend {
                 deploySetpoint = deploySetpoint
             }
+        }
+    }
+
+    override fun periodic() {
+        LoopLogger.record("Intake periodic")
+        if (maxForwardTorque != prevMaxForwardTorque) {
+            GlobalScope.launch {
+                deployMotor0.modifyConfiguration {
+                    TorqueCurrent.PeakForwardTorqueCurrent = maxForwardTorque
+                }
+                deployMotor1.modifyConfiguration {
+                    TorqueCurrent.PeakForwardTorqueCurrent = maxForwardTorque
+                }
+            }
+            prevMaxForwardTorque = maxForwardTorque
+        }
+
+        BatteryLogger.recordCurrent("Intake Deploy", (deployCurrent0 + deployCurrent1).amps)
+        BatteryLogger.recordCurrent("Intake Rollers", rollerCurrent.amps * 2.0)
+        LoopLogger.record("Intake periodic")
+    }
+
+    override fun defaultCommand() = command(this) {
+        this.periodic {
+            LoopLogger.record("Intake default")
+            when (intakeState) {
+                IntakeState.OFF -> {
+                    velocitySetpoint = 0.0
+                }
+
+                IntakeState.INTAKING -> {
+                    velocitySetpoint = if (Robot.isAutonomous) 100.0 else INTAKE_POWER
+                    if (!Shooter.isShooting) {
+                        Spindexer.currentState = Spindexer.State.AGITATING
+                    }
+                }
+
+                IntakeState.SPITTING -> {
+                    velocitySetpoint = -INTAKE_POWER
+                }
+            }
+
+            LoopLogger.record("Intake default when")
+
+            if (prevIntakeState == IntakeState.INTAKING && intakeState != IntakeState.INTAKING) {
+                Spindexer.currentState = Spindexer.State.OFF
+            }
+            prevIntakeState = intakeState
+
+            LoopLogger.record("Intake default")
         }
     }
 
@@ -350,38 +371,6 @@ object Intake: MechanismBase("Intake") {
     fun homeDeploy(): Command = command(this) {
         deployMotor0.setPosition(deploySetpoint)
         if (isCompBot) deployMotor1.setPosition(deploySetpoint)
-    }
-
-
-    override fun defaultCommand() = command(this) {
-        this.periodic {
-            LoopLogger.record("Intake default")
-            when (intakeState) {
-                IntakeState.OFF -> {
-                    velocitySetpoint = 0.0
-                }
-
-                IntakeState.INTAKING -> {
-                    velocitySetpoint = if (Robot.isAutonomous) 100.0 else INTAKE_POWER
-                    if (!Shooter.isShooting) {
-                        Spindexer.currentState = Spindexer.State.AGITATING
-                    }
-                }
-
-                IntakeState.SPITTING -> {
-                    velocitySetpoint = -INTAKE_POWER
-                }
-            }
-
-            LoopLogger.record("Intake default when")
-
-            if (prevIntakeState == IntakeState.INTAKING && intakeState != IntakeState.INTAKING) {
-                Spindexer.currentState = Spindexer.State.OFF
-            }
-            prevIntakeState = intakeState
-
-            LoopLogger.record("Intake default")
-        }
     }
 
     enum class IntakeState {

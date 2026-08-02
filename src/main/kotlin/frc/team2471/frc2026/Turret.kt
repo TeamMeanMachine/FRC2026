@@ -12,10 +12,8 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.littletonrobotics.junction.AutoLogOutput
 import org.team2471.frc.lib.commands.MechanismBase
-import org.team2471.frc.lib.commands.addPeriodic
 import org.team2471.frc.lib.commands.command
 import org.team2471.frc.lib.logging.LoopLogger
-import org.littletonrobotics.junction.Logger
 import org.team2471.frc.lib.ctre.PhoenixUtil
 import org.team2471.frc.lib.ctre.addFollower
 import org.team2471.frc.lib.ctre.applyConfiguration
@@ -36,16 +34,9 @@ import org.team2471.frc.lib.units.radians
 import org.team2471.frc.lib.units.unWrap
 import org.team2471.frc.lib.units.wrap
 import org.team2471.frc.lib.coroutines.periodicSuspend
-import org.team2471.frc.lib.ctre.addFollower
 import org.team2471.frc.lib.ctre.alternateFeedbackSensor
-import org.team2471.frc.lib.ctre.applyConfiguration
 import org.team2471.frc.lib.ctre.brakeMode
-import org.team2471.frc.lib.ctre.currentLimits
-import org.team2471.frc.lib.ctre.d
-import org.team2471.frc.lib.ctre.inverted
 import org.team2471.frc.lib.ctre.loggedMotors.LoggedTalonFX
-import org.team2471.frc.lib.ctre.p
-import org.team2471.frc.lib.ctre.s
 import org.team2471.frc.lib.energy.BatteryLogger
 import org.team2471.frc.lib.environment.demoMode
 import org.team2471.frc.lib.environment.isReal
@@ -64,7 +55,6 @@ import org.wpilib.math.system.DCMotor
 import org.wpilib.networktables.NetworkTableInstance
 import org.wpilib.units.measure.Angle
 import org.wpilib.units.measure.AngularVelocity
-import kotlin.collections.toDoubleArray
 import kotlin.math.IEEErem
 import kotlin.math.abs
 import kotlin.math.absoluteValue
@@ -345,35 +335,6 @@ object Turret: MechanismBase("Turret") {
 
         setTurretOffset(Drive.heading.measure)
 
-
-        addPeriodic {
-            LoopLogger.record("Turret periodic")
-            val aimTarget = AimUtils.aimTarget
-            val turretTranslation = turretTranslation
-            val turretPigeonConnected = turretPigeonIsConnected
-//        Logger.recordOutput("aim target", aimTarget.toPose2d())
-            SimpleLogger.recordOutput("Turret/turret setpoint pose", turretTranslation.toPose2d(fieldCentricSetpoint.asRotation2d))
-            SimpleLogger.recordOutput("Turret/turret pose", turretTranslation.toPose2d(fieldCentricAngle.asRotation2d))
-            SimpleLogger.recordOutput("Turret/distToGoalFeet", aimTarget.getDistance(Drive.localizer.pose.translation).meters.asFeet)
-            SimpleLogger.recordOutput("Turret/turretPigeonLatency", turretPigeonLatency)
-            SimpleLogger.recordOutput("Turret/turretPigeonIsConnected", turretPigeonConnected)
-            turretPigeonIsConnectedEntry.setBoolean(turretPigeonConnected)
-            LoopLogger.record("turret logging")
-
-            rawEncoder1AbsolutePositionEntry.setDouble(rawEncoder1AbsolutePosition.asDegrees)
-            rawEncoder2AbsolutePositionEntry.setDouble(rawEncoder2AbsolutePosition.asDegrees)
-            encoder1AbsolutePositionEntry.setDouble(encoder1AbsolutePosition.asDegrees)
-            encoder2AbsolutePositionEntry.setDouble(encoder2AbsolutePosition.asDegrees)
-            if (!Robot.isEnabled) {
-                fusedEncoderAngleEntry.setDouble(fusedEncoderAngle.asDegrees)
-            }
-
-            BatteryLogger.recordCurrent("Turret", turretMotor.supplyCurrent.value * 2.0)
-
-            LoopLogger.record("Turret periodic")
-        }
-
-
         //Loop that updates setpoint for constantly updating wrap limits and feedforward
         GlobalScope.launch {
             periodicSuspend {
@@ -417,6 +378,32 @@ object Turret: MechanismBase("Turret") {
         zeroTurretMotor()
     }
 
+    override fun periodic() {
+        LoopLogger.record("Turret periodic")
+        val aimTarget = AimUtils.aimTarget
+        val turretTranslation = turretTranslation
+        val turretPigeonConnected = turretPigeonIsConnected
+//        Logger.recordOutput("aim target", aimTarget.toPose2d())
+        SimpleLogger.recordOutput("Turret/turret setpoint pose", turretTranslation.toPose2d(fieldCentricSetpoint.asRotation2d))
+        SimpleLogger.recordOutput("Turret/turret pose", turretTranslation.toPose2d(fieldCentricAngle.asRotation2d))
+        SimpleLogger.recordOutput("Turret/distToGoalFeet", aimTarget.getDistance(Drive.localizer.pose.translation).meters.asFeet)
+        SimpleLogger.recordOutput("Turret/turretPigeonLatency", turretPigeonLatency)
+        SimpleLogger.recordOutput("Turret/turretPigeonIsConnected", turretPigeonConnected)
+        turretPigeonIsConnectedEntry.setBoolean(turretPigeonConnected)
+        LoopLogger.record("turret logging")
+
+        rawEncoder1AbsolutePositionEntry.setDouble(rawEncoder1AbsolutePosition.asDegrees)
+        rawEncoder2AbsolutePositionEntry.setDouble(rawEncoder2AbsolutePosition.asDegrees)
+        encoder1AbsolutePositionEntry.setDouble(encoder1AbsolutePosition.asDegrees)
+        encoder2AbsolutePositionEntry.setDouble(encoder2AbsolutePosition.asDegrees)
+        if (!Robot.isEnabled) {
+            fusedEncoderAngleEntry.setDouble(fusedEncoderAngle.asDegrees)
+        }
+
+        BatteryLogger.recordCurrent("Turret", turretMotor.supplyCurrent.value * 2.0)
+
+        LoopLogger.record("Turret periodic")
+    }
 
     override fun defaultCommand() = command(this) {
         await(aimAtTarget())

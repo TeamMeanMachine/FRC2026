@@ -9,6 +9,7 @@ import org.littletonrobotics.junction.networktables.NT4Publisher
 import org.littletonrobotics.junction.wpilog.WPILOGReader
 import org.littletonrobotics.junction.wpilog.WPILOGWriter
 import org.team2471.frc.lib.autonomous.TestOpMode
+import org.team2471.frc.lib.commands.PeriodicMechanism
 import org.team2471.frc.lib.logging.LoopLogger
 import org.team2471.frc.lib.control.isConnected
 import org.team2471.frc.lib.ctre.loggedMotors.MasterMotor
@@ -17,7 +18,6 @@ import org.team2471.frc.lib.environment.RobotType
 import org.team2471.frc.lib.environment.robotType
 import org.team2471.frc.lib.units.asFeet
 import org.team2471.frc.lib.logging.NT4NonFMSPublisher
-import org.team2471.frc.lib.units.asFeet
 import org.wpilib.command3.Mechanism
 import org.wpilib.command3.Scheduler
 import org.wpilib.driverstation.DriverStationDisplay
@@ -57,15 +57,9 @@ object Robot : OpModeRobot(0.01) {
     val isUtility get() = RobotState.isUtility()
     @get:JvmName("isRobotUtilityEnabled")
     val isUtilityEnabled get() = RobotState.isUtilityEnabled()
-    val isDSAttached get() = RobotState.isDSAttached()
-    val isFMSAttached get() = RobotState.isFMSAttached()
-    val isEStopped get() = RobotState.isEStopped()
 
-    var beforeFirstEnable = true
-        private set
-
-    // Subsystems:
-    // MUST define an individual variable for all subsystems inside this class or else @AutoLogOutput will not work -2025
+    // Mechanisms:
+    // MUST define an individual variable for all mechanisms inside this class or else @AutoLogOutput will not work -2025
     val drive = Drive
     val oi = OI
     val shooter = Shooter
@@ -75,8 +69,12 @@ object Robot : OpModeRobot(0.01) {
     val fieldManager = FieldManager
     val aimUtils = AimUtils
 
-    var allSubsystems = arrayOf<Mechanism>(drive, intake, shooter, turret, spindexer)
+    @Suppress("RemoveExplicitTypeArguments")
+    val allMechanisms = arrayOf<PeriodicMechanism>(drive, intake, shooter, turret, spindexer, oi)
 
+
+    var beforeFirstEnable = true
+        private set
 
     init {
         println("Robot init")
@@ -121,7 +119,7 @@ object Robot : OpModeRobot(0.01) {
 
 
         // Call all subsystems, make sure their init's run
-        allSubsystems.forEach { println("activating subsystem ${it.name}") }
+        allMechanisms.forEach { println("activating subsystem ${it.name}") }
         println("FieldManager thinks the field is ${FieldManager.fieldDimensions.measureX.asFeet} feet big")
         println("OI driverController isConnected: ${OI.driverController.isConnected}")
 
@@ -133,15 +131,31 @@ object Robot : OpModeRobot(0.01) {
         LoopLogger.reset()
         LoopLogger.record("Robot periodic()")
 
+        // Run each mechanism's periodic()
+        // this periodic is designed to be called before [scheduler.run()]
+        allMechanisms.forEach {
+            LoopLogger.record("${it.name} periodic()")
+            it.periodic()
+            LoopLogger.record("${it.name} periodic()")
+        }
 
-        LoopLogger.record("Scheduler")
         // Runs the Scheduler.  This is responsible for polling buttons, adding newly scheduled
         // commands, running already-scheduled commands, removing finished or interrupted commands,
         // and running subsystem periodic() methods.  This must be called from the robot's periodic
         // block in order for anything in the Command-based framework to work.
+        LoopLogger.record("Scheduler")
         scheduler.run()
         LoopLogger.record("Scheduler")
 
+        // Run each mechanism's telemetryPeriodic()
+        // this periodic is designed to be called after [scheduler.run()]
+        allMechanisms.forEach {
+            LoopLogger.record("${it.name} telemetryPeriodic()")
+            it.telemetryPeriodic()
+            LoopLogger.record("${it.name} telemetryPeriodic()")
+        }
+
+        // Scheduler logging
         Logger.recordOutput("Scheduler/scheduler", scheduler)
 
         var allCommandsRuntime = 0.0
@@ -191,10 +205,16 @@ object Robot : OpModeRobot(0.01) {
     @OptIn(DelicateCoroutinesApi::class)
     override fun simulationPeriodic() {
         MasterMotor.periodic()
+        // Run simulationPeriodic() for each mechanism
+        allMechanisms.forEach {
+            LoopLogger.record("${it.name} simPeriodic)")
+            it.simulationPeriodic()
+            LoopLogger.record("${it.name} simPeriodic)")
+        }
     }
 
     /**
-     * Disables all defaults for all subsystems, except for the [exceptions] provided.
+     * Disables all defaults for all mechanisms, except for the [exceptions] provided.
      *
      * Designed to be called as a function in a [TestOpMode], [OpMode], or [Command]. Or anything that implements scoping.
      *
@@ -202,7 +222,7 @@ object Robot : OpModeRobot(0.01) {
      * afterward it will re-enable them. (This "scoping" feature is a part of Commandsv3/OpModes and is documented in wpilib docs)
      */
     fun disableAllDefaultCommands(vararg exceptions: Mechanism) {
-        allSubsystems.filterNot { exceptions.contains(it) }.forEach {
+        allMechanisms.filterNot { exceptions.contains(it) }.forEach {
             it.defaultCommand = it.idle()
         }
     }

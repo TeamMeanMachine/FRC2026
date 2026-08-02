@@ -1,6 +1,5 @@
 package frc.team2471.frc2026
 
-//import frc.team2471.frc2026.tests.*
 import org.team2471.frc.lib.autonomous.Autonomi
 import org.team2471.frc.lib.commands.onCancel
 import org.team2471.frc.lib.commands.parallel
