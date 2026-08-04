@@ -2,6 +2,7 @@ package frc.team2471.frc2026
 
 import com.ctre.phoenix6.swerve.jni.SwerveJNI
 import com.ctre.phoenix6.swerve.utility.PhoenixPIDController
+import edu.wpi.first.math.MathUtil.clamp
 import edu.wpi.first.math.Matrix
 import edu.wpi.first.math.VecBuilder
 import edu.wpi.first.math.controller.PIDController
@@ -46,6 +47,7 @@ import org.team2471.frc.lib.units.asRotation2d
 import org.team2471.frc.lib.units.degrees
 import org.team2471.frc.lib.units.inches
 import org.team2471.frc.lib.math.DynamicInterpolatingTreeMap
+import org.team2471.frc.lib.math.lerp
 import org.team2471.frc.lib.math.normalize
 import org.team2471.frc.lib.units.UTranslation2d
 import org.team2471.frc.lib.units.asMeters
@@ -65,6 +67,7 @@ import org.team2471.frc.lib.vision.QuixVisionCamera
 import org.team2471.frc.lib.vision.photonVision.PhotonVisionCamera
 import kotlin.math.absoluteValue
 import kotlin.math.atan2
+import kotlin.math.min
 
 
 object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerConstants.moduleConfigs) {
@@ -202,7 +205,7 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
         // Create an odom measurement with a timestamp converted from phoenix time to fpga time.
         val poseMeasurement = PoseLocalizer.OdometryMeasurement(pose, PhoenixUtil.currentToFpgaTime(stateTimestamp))
         // Publish the latest camera data to NT and also update pose from swerve odometry measurements.
-        localizer.update(poseMeasurement, cameras.map { it.latestMeasurement }, speeds)
+        localizer.update(poseMeasurement, cameras.map { it.latestMeasurement }, speeds, wheelSlipFactor)
         LoopLogger.record("Drive localizer")
 
         headingHistory.put(Timer.getFPGATimestamp(), heading.degrees)
@@ -281,8 +284,21 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
         inSnakeMode = false
     }
 
-    @get:AutoLogOutput(key = "Swerve/WheelsSlipping")
-    val wheelsSlipping: Boolean get() {
+    val wheelSlipMin = 1.2
+    val wheelSlipMax = 2.0
+
+    /**
+     * A ratio representing wheel slippage from 0.0 (not slipping) to 1.0 (very slippy, swerve odometry not trustworthy).
+     */
+    val wheelSlipFactor: Double get() {
+        return clamp((wheelSlipRatio - wheelSlipMin) / (wheelSlipRatio - wheelSlipMax), 0.0, 1.0)
+    }
+
+    /**
+     * How much the wheels are slipping, determined by the ratio between the largest and smallest translation component of the wheels.
+     */
+    @get:AutoLogOutput(key = "Swerve/WheelsSlipRatio")
+    val wheelSlipRatio: Double get() {
         val moduleRotationComponents = Array(moduleStates.size) {
             val state = SwerveModuleState()
             state.speedMetersPerSecond = gyroYawRate.asRadiansPerSecond * moduleLocations[it].norm
@@ -295,6 +311,10 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
         }.apply{ sort() }
 
         val mad = moduleTranslationNorms.map {(moduleTranslationNorms.average() - it).absoluteValue}.average()
+
+        val accelerationDiff = (acceleration - UTranslation2d<LinearAccelerationUnit>(pigeon2.accelerationX.value, pigeon2.accelerationY.value)).norm
+        Logger.recordOutput("Swerve/DriveGyroAccelerationDifference", accelerationDiff)
+
         val minMaxRatio = moduleTranslationNorms.last() / (moduleTranslationNorms.first() + 0.001) // add fudge to prevent division by 0
 
         Logger.recordOutput("Swerve/ModuleTranslationNorms/0", moduleTranslationNorms[0])
@@ -310,18 +330,18 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
         Logger.recordOutput("Swerve/ModuleTranslationsMinMaxRatio", minMaxRatio)
         Logger.recordOutput("Swerve/ModuleTranslationsMAD", mad)
 
-
-        val accelerationDiff = (acceleration - UTranslation2d<LinearAccelerationUnit>(pigeon2.accelerationX.value, pigeon2.accelerationY.value)).norm
-        Logger.recordOutput("Swerve/DriveGyroAccelerationDifference", accelerationDiff)
-
 //        val threshold = 10.0 // acc diff
 //        return accelerationDiff.asMetersPerSecondPerSecond > threshold
 
 //        val threshold = 0.09 // mad
 //        return mad > threshold
 
-        val threshold = 1.2 // ratio
-        return minMaxRatio > threshold
+        return minMaxRatio
+    }
+
+    @get:AutoLogOutput(key = "Swerve/WheelsSlipping")
+    val wheelsSlipping: Boolean get() {
+        return wheelSlipRatio > 0.0
     }
 
 
