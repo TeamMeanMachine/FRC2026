@@ -22,7 +22,6 @@ import org.wpilib.command3.Mechanism
 import org.wpilib.command3.Scheduler
 import org.wpilib.driverstation.DriverStationDisplay
 import org.wpilib.driverstation.RobotState
-import org.wpilib.driverstation.internal.DriverStationBackend
 import org.wpilib.framework.OpModeRobot
 import org.wpilib.framework.RobotBase
 import org.wpilib.hardware.hal.HAL
@@ -107,9 +106,6 @@ object Robot : OpModeRobot(0.01) {
                 Logger.addDataReceiver(WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim")))
             }
         }
-
-
-        DriverStationBackend.silenceJoystickConnectionWarning(true)
 
         SignalLogger.setPath("")
         SignalLogger.stop()

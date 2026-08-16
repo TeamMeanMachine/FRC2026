@@ -264,7 +264,7 @@ object Drive: SwerveDriveSubsystem(DriveConstants.drivetrainConstants, *DriveCon
         val moduleRotationComponents = Array(moduleStates.size) {
             val state = SwerveModuleVelocity()
             state.velocity = gyroYawRate.asRadiansPerSecond * moduleLocations[it].norm
-            state.angle = moduleLocations[it].angle + 90.0.degrees.asRotation2d
+            state.angle = moduleLocations[it].angle.get() + 90.0.degrees.asRotation2d
             return@Array state
         }
 

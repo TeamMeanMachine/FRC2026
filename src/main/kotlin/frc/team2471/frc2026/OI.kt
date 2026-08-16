@@ -12,13 +12,13 @@ import org.team2471.frc.lib.math.deadband
 import org.team2471.frc.lib.math.normalize
 import org.team2471.frc.lib.units.degrees
 import org.wpilib.command3.button.CommandXboxController
-import org.wpilib.driverstation.Alert
 import org.wpilib.math.filter.Debouncer
 import org.wpilib.math.geometry.Pose2d
 import org.wpilib.math.geometry.Translation2d
 import org.wpilib.networktables.NetworkTableInstance
 import org.wpilib.opmode.PeriodicOpMode
 import org.wpilib.opmode.Teleop
+import org.wpilib.util.Alert
 
 object OI: MechanismBase("OI") {
     private val table = NetworkTableInstance.getDefault().getTable("OI")
@@ -84,8 +84,8 @@ object OI: MechanismBase("OI") {
     val operatorRightY: Double
         get() = operatorController.rightY.deadband(deadbandOperator)
 
-    private val driverNotConnectedAlert: Alert = Alert("DRIVER JOYSTICK DISCONNECTED", Alert.Level.HIGH)
-    private val operatorNotConnectedAlert: Alert = Alert("OPERATOR JOYSTICK DISCONNECTED", Alert.Level.HIGH)
+    private val driverNotConnectedAlert: Alert = Alert("driverNotConnectedAlert", "DRIVER JOYSTICK DISCONNECTED", Alert.Level.HIGH)
+    private val operatorNotConnectedAlert: Alert = Alert("operatorNotConnectedAlert", "OPERATOR JOYSTICK DISCONNECTED", Alert.Level.HIGH)
     private val driverDebouncer = Debouncer(0.05)
     private val operatorDebouncer = Debouncer(0.05)
 

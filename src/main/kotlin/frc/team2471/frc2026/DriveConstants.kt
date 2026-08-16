@@ -28,12 +28,12 @@ import org.team2471.frc.lib.units.degrees
 import org.team2471.frc.lib.units.metersPerSecondPerSecond
 import org.team2471.frc.lib.units.pounds
 import org.team2471.frc.lib.units.volts
-import org.wpilib.driverstation.Alert
 import org.wpilib.math.geometry.Translation2d
 import org.wpilib.math.system.DCMotor
 import org.wpilib.units.measure.Distance
 import org.wpilib.units.measure.LinearAcceleration
 import org.wpilib.units.measure.LinearVelocity
+import org.wpilib.util.Alert
 import org.wpilib.util.Preferences
 import kotlin.math.roundToInt
 
@@ -261,7 +261,6 @@ object DriveConstants {
         val driveMotorGainsOverride: Slot0Configs? = null,
     ) {
         fun createModuleConstants(): SwerveModuleConstants<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration> {
-
             val canCoder = CANcoder(canCoderID, driveCANBus)
             var magnetSensorOffset = canCoder.getMagnetSensorOffset()
 
@@ -272,17 +271,16 @@ object DriveConstants {
                     //couldn't find prefs
                     println("Module $id has missing Preferences, setting to encoders Offset: ${magnetSensorOffset.asDegrees.roundToInt()}")
                     Preferences.setDouble("Module $id Offset", magnetSensorOffset.asDegrees)
-                    Alert("Module $id had missing offset prefs", Alert.Level.MEDIUM).set(true)
+                    Alert("module offsets $id", "Module $id had missing offset prefs", Alert.Level.MEDIUM).set(true)
                 } else if (prefsOffset.asDegrees.roundToInt() != magnetSensorOffset.asDegrees.roundToInt()) {
                     //offsets are different, default to prefs
                     println("Module $id has conflicting offsets. prefsOffset: ${prefsOffset.asDegrees.round(2)} encoders Offset: ${magnetSensorOffset.asDegrees.round(2)}")
                     magnetSensorOffset = prefsOffset
-                    Alert("Module $id had conflicting encoder offsets", Alert.Level.MEDIUM).set(true)
+                    Alert("module offsets $id", "Module $id had conflicting encoder offsets", Alert.Level.MEDIUM).set(true)
                 }
             } else {
-                Alert("Module $id CANCoder Disconnected On INIT", Alert.Level.HIGH).set(true)
+                Alert("module offsets $id", "Module $id CANCoder Disconnected On INIT", Alert.Level.HIGH).set(true)
             }
-
 
             return constantCreator.createModuleConstants(
                 steerMotorID,

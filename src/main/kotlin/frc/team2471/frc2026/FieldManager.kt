@@ -5,20 +5,14 @@ import frc.team2471.frc2026.FieldManager.rotateAroundField
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.littletonrobotics.junction.AutoLogOutput
-import org.littletonrobotics.junction.Logger
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser
-import org.littletonrobotics.junction.networktables.NT4Publisher
-import org.littletonrobotics.junction.wpilog.WPILOGReader
-import org.littletonrobotics.junction.wpilog.WPILOGWriter
 import org.team2471.frc.lib.commands.onCancel
 import org.team2471.frc.lib.commands.periodic
 import org.team2471.frc.lib.commands.command
 import org.team2471.frc.lib.coroutines.periodicSuspend
-import org.team2471.frc.lib.environment.RobotType
 import org.team2471.frc.lib.environment.demoMode
 import org.team2471.frc.lib.environment.isBlueAlliance
 import org.team2471.frc.lib.environment.isRedAlliance
-import org.team2471.frc.lib.environment.robotType
 import org.team2471.frc.lib.logging.SimpleLogger
 import org.team2471.frc.lib.math.angleTo
 import org.team2471.frc.lib.math.toPose2d
@@ -26,12 +20,12 @@ import org.team2471.frc.lib.units.*
 import org.wpilib.driverstation.MatchState
 import org.wpilib.driverstation.RobotState
 import org.wpilib.math.geometry.Pose2d
-import org.wpilib.math.geometry.Pose3d
 import org.wpilib.math.geometry.Translation2d
 import org.wpilib.networktables.NetworkTableInstance
 import org.wpilib.units.measure.Distance
-import org.wpilib.vision.apriltag.AprilTag
-import org.wpilib.vision.apriltag.AprilTagFieldLayout
+import org.wpilib.fields.Field
+import org.wpilib.fields.FieldTag
+import org.wpilib.fields.Fields
 import kotlin.jvm.optionals.getOrNull
 import kotlin.math.absoluteValue
 import kotlin.math.floor
@@ -40,8 +34,8 @@ import kotlin.math.sign
 object FieldManager {
     private val table = NetworkTableInstance.getDefault().getTable("FieldManager")
 
-    val aprilTagFieldLayout: AprilTagFieldLayout = AprilTagFieldLayout(List<AprilTag>(31) { id -> AprilTag(id, Pose3d())}, 10.0, 10.0)//AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField) //AprilTagFieldLayout(Filesystem.getDeployDirectory().path + "/2026Field.json") //TODO: FIX FOR 2027
-    val allAprilTags: List<AprilTag> = aprilTagFieldLayout.tags
+    val aprilTagFieldLayout: Field = Field.loadField(Fields.DEFAULT_FIELD) //AprilTagFieldLayout(Filesystem.getDeployDirectory().path + "/2026Field.json") //TODO: FIX FOR 2027
+    val allAprilTags: List<FieldTag> = aprilTagFieldLayout.tags
 
     // x
     val fieldWidth = aprilTagFieldLayout.fieldWidth.meters
@@ -55,8 +49,8 @@ object FieldManager {
 
     val fieldCenter = fieldDimensions / 2.0
 
-    val redHubTags = allAprilTags.filter { it.ID in 2..5 || it.ID in 8..11 }
-    val blueHubTags = allAprilTags.filter { it.ID in 18..21 || it.ID in 24..27 }
+    val redHubTags = allAprilTags.filter { it.id in 2..5 || it.id in 8..11 }
+    val blueHubTags = allAprilTags.filter { it.id in 18..21 || it.id in 24..27 }
     val hubTags = redHubTags + blueHubTags
 
     val overrideAutoWinnerChooser: LoggedDashboardChooser<String?> =

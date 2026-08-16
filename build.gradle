@@ -7,7 +7,8 @@ import org.wpilib.gradlerio.GradleRIOPlugin
 plugins {
     id "java"
     id "idea"
-    id "org.wpilib.GradleRIO" version "2027.0.0-alpha-6-kilk"
+    id "application"
+    id "org.wpilib.GradleRIO" version "2027.0.0-alpha-6-kilk2"
     id 'org.jetbrains.kotlin.jvm' version '2.3.21'
     id "org.jetbrains.kotlin.kapt" version "2.3.21"
     id "com.gradleup.shadow" version "9.3.0"
@@ -68,10 +69,11 @@ deploy {
 }
 
 def deployArtifact = deploy.targets.systemcore.artifacts.wpilibJava
+wpi.java.runSimWithDebugJni = false
 
 // Set to true to use debug for all targets including JNI, which will drastically impact
 // performance.
-wpi.java.debugJni = false
+//wpi.java.debugJni = false
 
 // Set this to true to enable desktop support.
 def includeDesktopSupport = false
@@ -130,10 +132,10 @@ shadowJar {
     duplicatesStrategy = DuplicatesStrategy.INCLUDE
 }
 
-// Configure jar and deploy tasks
-deployArtifact.jarTask = shadowJar
-//noinspection GroovyAssignabilityCheck
-wpi.java.configureExecutableTasks(shadowJar)
+application.mainClass = ROBOT_MAIN_CLASS
+
+deployArtifact.configureApplication(application)
+wpi.java.configureApplication(application)
 wpi.java.configureTestTasks(test)
 
 // Automatically download library documentation from libraries
