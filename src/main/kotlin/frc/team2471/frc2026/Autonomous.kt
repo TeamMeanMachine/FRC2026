@@ -1,6 +1,8 @@
 package frc.team2471.frc2026
 
 import org.team2471.frc.lib.autonomous.Autonomi
+import org.team2471.frc.lib.autonomous.auto.AutoRoutine
+import org.team2471.frc.lib.autonomous.test.TestRoutine
 import org.team2471.frc.lib.commands.onCancel
 import org.team2471.frc.lib.commands.parallel
 import org.team2471.frc.lib.commands.periodic
@@ -55,13 +57,13 @@ object Autonomous: Autonomi() {
 
         // Register Autos.
         // Converts AutoRoutines to AutoOpModes and registers them to Robot (This makes them show up on the Driver Station)
-        autos.toAutoOpModes().forEach {
-            Robot.addOpModeFactory({ it }, RobotMode.AUTONOMOUS, it.name)
+        autos.toAutoOpModeSuppliers().forEach {
+            Robot.addOpMode(RobotMode.AUTONOMOUS, it.name, it.opModeSupplier)
             println("Registered ${it.name} as an AutoOpMode")
         }
         // Register Tests/Utility OpModes.
-        tests.toTestOpModes().forEach {
-            Robot.addOpModeFactory({ it }, RobotMode.UTILITY, it.name)
+        tests.toTestOpModeSuppliers().forEach {
+            Robot.addOpMode(RobotMode.UTILITY, it.name, it.opModeSupplier)
             println("Registered ${it.name} TestOpMode")
         }
         // Publish cached OpModes to Driver Station.

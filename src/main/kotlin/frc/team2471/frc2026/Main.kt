@@ -8,7 +8,7 @@ import org.littletonrobotics.junction.Logger
 import org.littletonrobotics.junction.networktables.NT4Publisher
 import org.littletonrobotics.junction.wpilog.WPILOGReader
 import org.littletonrobotics.junction.wpilog.WPILOGWriter
-import org.team2471.frc.lib.autonomous.TestOpMode
+import org.team2471.frc.lib.autonomous.test.TestOpMode
 import org.team2471.frc.lib.commands.PeriodicMechanism
 import org.team2471.frc.lib.logging.LoopLogger
 import org.team2471.frc.lib.control.isConnected
@@ -67,6 +67,7 @@ object Robot : OpModeRobot(0.01) {
     val spindexer = Spindexer
     val fieldManager = FieldManager
     val aimUtils = AimUtils
+    val autonomous = Autonomous
 
     @Suppress("RemoveExplicitTypeArguments")
     val allMechanisms = arrayOf<PeriodicMechanism>(drive, intake, shooter, turret, spindexer, oi)
@@ -198,7 +199,6 @@ object Robot : OpModeRobot(0.01) {
     }
 
     /** This function is called periodically whilst in simulation.  */
-    @OptIn(DelicateCoroutinesApi::class)
     override fun simulationPeriodic() {
         MasterMotor.periodic()
         // Run simulationPeriodic() for each mechanism
