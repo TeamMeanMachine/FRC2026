@@ -22,16 +22,15 @@ import org.team2471.frc.lib.logging.SimpleLogger
 import org.team2471.frc.lib.math.cube
 import org.team2471.frc.lib.math.square
 import org.team2471.frc.lib.swerve.SwerveDriveSubsystem
-import org.team2471.frc.lib.units.asMetersPerSecondPerSecond
+import org.team2471.frc.lib.units.asMetersPerSecondSquared
 import org.team2471.frc.lib.units.degrees
 import org.team2471.frc.lib.units.inches
 import org.team2471.frc.lib.math.DynamicInterpolatingTreeMap
-import org.team2471.frc.lib.math.lerp
 import org.team2471.frc.lib.units.asRotation2d
 import org.team2471.frc.lib.math.normalize
 import org.team2471.frc.lib.units.asRadiansPerSecond
 import org.team2471.frc.lib.units.inchesPerSecond
-import org.team2471.frc.lib.units.metersPerSecondPerSecond
+import org.team2471.frc.lib.units.metersPerSecondSquared
 import org.team2471.frc.lib.units.perSecond
 import org.team2471.frc.lib.units.radians
 import org.team2471.frc.lib.units.unWrap
@@ -52,7 +51,6 @@ import org.wpilib.units.measure.Angle
 import org.wpilib.math.kinematics.SwerveModuleVelocity
 import kotlin.math.absoluteValue
 import kotlin.math.atan2
-import kotlin.math.min
 
 
 object Drive: SwerveDriveSubsystem(DriveConstants.drivetrainConstants, *DriveConstants.moduleConfigs) {
@@ -109,9 +107,9 @@ object Drive: SwerveDriveSubsystem(DriveConstants.drivetrainConstants, *DriveCon
     val localizer = PoseLocalizer(Fiducial.constructFiducialList(FieldManager.allAprilTags), cameras)
 
     // Drive Feedback controllers
-    override val autoPilot = createAPObject(Double.POSITIVE_INFINITY.inchesPerSecond, 100.0.metersPerSecondPerSecond, 2.0.metersPerSecondPerSecond.perSecond, 0.5.inches, 1.0.degrees)
-    val fastAutoPilot = createAPObject(Double.POSITIVE_INFINITY.inchesPerSecond, 100.0.metersPerSecondPerSecond, 5.0.metersPerSecondPerSecond.perSecond, 0.5.inches, 1.0.degrees)
-    val slowAutoPilot = createAPObject(Double.POSITIVE_INFINITY.inchesPerSecond, 100.0.metersPerSecondPerSecond, 0.5.metersPerSecondPerSecond.perSecond, 0.25.inches, 1.0.degrees)
+    override val autoPilot = createAPObject(Double.POSITIVE_INFINITY.inchesPerSecond, 100.0.metersPerSecondSquared, 2.0.metersPerSecondSquared.perSecond, 0.5.inches, 1.0.degrees)
+    val fastAutoPilot = createAPObject(Double.POSITIVE_INFINITY.inchesPerSecond, 100.0.metersPerSecondSquared, 5.0.metersPerSecondSquared.perSecond, 0.5.inches, 1.0.degrees)
+    val slowAutoPilot = createAPObject(Double.POSITIVE_INFINITY.inchesPerSecond, 100.0.metersPerSecondSquared, 0.5.metersPerSecondSquared.perSecond, 0.25.inches, 1.0.degrees)
 
     override val pathXController = PIDController(7.0, 0.0, 0.0)
     override val pathYController = PIDController(7.0, 0.0, 0.0)
@@ -138,7 +136,7 @@ object Drive: SwerveDriveSubsystem(DriveConstants.drivetrainConstants, *DriveCon
         // MUST start inside the field on bootup for accurate heading measurements due to a Particle Filter bug.
         pose = Pose2d(3.0, 3.0, heading)
 
-        println("max acceleration ${DriveConstants.kMaxAcceleration.asMetersPerSecondPerSecond}")
+        println("max acceleration ${DriveConstants.kMaxAcceleration.asMetersPerSecondSquared}")
 
         localizer.trackAllTags()
         localizer.disableSingleTagCalculation() // for loop times and we dont use it in 2026
@@ -269,7 +267,7 @@ object Drive: SwerveDriveSubsystem(DriveConstants.drivetrainConstants, *DriveCon
      */
     @get:AutoLogOutput(key = "Swerve/WheelsSlipFactor")
     val wheelSlipFactor: Double get() {
-        return clamp((wheelSlipRatio - wheelSlipMin) / (wheelSlipMax - wheelSlipMin), 0.0, 1.0)
+        return ((wheelSlipRatio - wheelSlipMin) / (wheelSlipMax - wheelSlipMin)).coerceIn(0.0, 1.0)
     }
 
     /**
@@ -290,8 +288,8 @@ object Drive: SwerveDriveSubsystem(DriveConstants.drivetrainConstants, *DriveCon
 
         val mad = moduleTranslationNorms.map {(moduleTranslationNorms.average() - it).absoluteValue}.average()
 
-        val accelerationDiff = (acceleration - UTranslation2d<LinearAccelerationUnit>(pigeon2.accelerationX.value, pigeon2.accelerationY.value)).norm
-        Logger.recordOutput("Swerve/DriveGyroAccelerationDifference", accelerationDiff)
+        val accelerationDiff = (acceleration - Translation2d(pigeon2.accelerationX.value.asMetersPerSecondSquared, pigeon2.accelerationY.value.asMetersPerSecondSquared)).norm
+        SimpleLogger.recordOutput("Swerve/DriveGyroAccelerationDifference", accelerationDiff)
 
         val minMaxRatio = moduleTranslationNorms.last() / (moduleTranslationNorms.first() + 0.001) // add fudge to prevent division by 0
 

@@ -25,7 +25,7 @@ import org.team2471.frc.lib.units.asMetersPerSecond
 import org.team2471.frc.lib.units.asRotations
 import org.team2471.frc.lib.units.asVolts
 import org.team2471.frc.lib.units.degrees
-import org.team2471.frc.lib.units.metersPerSecondPerSecond
+import org.team2471.frc.lib.units.metersPerSecondSquared
 import org.team2471.frc.lib.units.pounds
 import org.team2471.frc.lib.units.volts
 import org.wpilib.math.geometry.Translation2d
@@ -89,7 +89,7 @@ object DriveConstants {
     val kSpeedAt12Volts: LinearVelocity = (driveMotor.freeSpeed / driveGearRatio * wheelRadiusInches.inches.asFeet).feetPerSecond * 0.9  //3.91.metersPerSecond (12.8 fps) -2025
     val robotWeight = 150.0.pounds
     // Max linear acceleration (m/s²) = force per amp * (60 amp stator current limit - free current) * gear ratio * 85% drivetrain efficiency / wheel radius / robot mass
-    val kMaxAcceleration: LinearAcceleration = (driveMotor.Kt * (60.0 - driveMotor.freeCurrent) * driveGearRatio * 0.85 / wheelRadiusInches.inches.asMeters / robotWeight.asKilograms).metersPerSecondPerSecond
+    val kMaxAcceleration: LinearAcceleration = (driveMotor.Kt * (60.0 - driveMotor.freeCurrent) * driveGearRatio * 0.85 / wheelRadiusInches.inches.asMeters / robotWeight.asKilograms).metersPerSecondSquared
 
     val drivetrainConstants: SwerveDrivetrainConstants = SwerveDrivetrainConstants().apply {
         CANBusName = driveCANBus.name
