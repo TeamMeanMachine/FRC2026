@@ -48,6 +48,7 @@ import org.team2471.frc.lib.units.asRotation2d
 import org.team2471.frc.lib.units.asRotations
 import org.team2471.frc.lib.units.cos
 import org.team2471.frc.lib.units.degrees
+import org.team2471.frc.lib.units.feet
 import org.team2471.frc.lib.units.inches
 import org.team2471.frc.lib.units.radians
 import org.team2471.frc.lib.units.rotations
@@ -316,10 +317,21 @@ object Shooter: MechanismBase("Shooter") {
     const val BALL_ANGLE_AT_HOOD_ZERO = 90.0
 
     @get:AutoLogOutput(key = "Shooter/Hood error distance")
-    val hoodErrorDistance get() = abs(AimUtils.distanceToTarget.asFeet * sin(hoodMotor.closedLoopError.valueAsDouble.radians))
+    val hoodErrorDistance get() = (AimUtils.distanceToTarget * sin(hoodMotor.closedLoopError.valueAsDouble.radians)).absoluteValue()
 
     @get:AutoLogOutput(key = "Shooter/Velocity error distance")
-    val velocityErrorDistance get() = abs((if (AimUtils.isAimingAtGoal) AimUtils.MEASURED_SHOT_AIRTIME * kotlin.math.cos(hubAngleCurve.get(AimUtils.distanceToTarget.asFeet)) else AimUtils.PASS_AIRTIME * kotlin.math.cos(passAngleCurve.get(AimUtils.distanceToTarget.asFeet))) * shooterMotor.closedLoopError.valueAsDouble * WHEEL_DIAMETER.asMeters * Math.PI * 0.5)
+    val velocityErrorDistance get() = (WHEEL_DIAMETER * shooterMotor.closedLoopError.valueAsDouble * Math.PI * 0.5 * (
+            if (AimUtils.isAimingAtGoal)
+                hubTimeCurve.get(AimUtils.distanceToTarget.asFeet) * kotlin.math.cos(hubAngleCurve.get(AimUtils.distanceToTarget.asFeet))
+            else
+                if (FieldManager.passOverNet)
+                    overNetTimeCurve.get(AimUtils.distanceToTarget.asFeet) * cos(overNetAngleCurve.get(AimUtils.distanceToTarget.asFeet))
+                else
+                    passTimeCurve.get(AimUtils.distanceToTarget.asFeet) * kotlin.math.cos(passAngleCurve.get(AimUtils.distanceToTarget.asFeet))
+            )).absoluteValue()
+
+    @get:AutoLogOutput(key = "Shooter/Total error distance")
+    val totalErrorDistance get() = hoodErrorDistance + velocityErrorDistance + Turret.turretErrorDistance
 
     var fuel: MutableList<FuelSim> = mutableListOf()
     var fuel2: MutableList<FuelSim> = mutableListOf()
@@ -335,6 +347,10 @@ object Shooter: MechanismBase("Shooter") {
 
     @get:AutoLogOutput(key = "Shooter/Ramped up")
     val rampedUpPassing: Boolean get() = (shooterVelocity - shooterVelocitySetpoint).absoluteValue() < 15.0.rotationsPerSecond
+
+    @get:AutoLogOutput(key = "Shooter/Will not miss")
+//    val willNotMiss get() = ((rampedUp && AimUtils.isAimingAtGoal) || (rampedUpPassing && !AimUtils.isAimingAtGoal))
+    val willNotMiss get() = if (AimUtils.isAimingAtGoal) totalErrorDistance < 3.0.feet else totalErrorDistance < 5.0.feet
 
     @get:AutoLogOutput(key = "Shooter/isShooting")
     var isShooting = false
@@ -527,7 +543,7 @@ object Shooter: MechanismBase("Shooter") {
 
     fun shootLoop(ignoreRampUp: Boolean = false) {
 //        println("Shoot Loop!!!")
-        if ((!FieldManager.inNoShootArea || ignoreRampUp) && (!Turret.isTurretWrapping || Turret.disableTurret) && (((rampedUp || ignoreRampUp) && AimUtils.isAimingAtGoal) || (rampedUpPassing && !AimUtils.isAimingAtGoal)) && (FieldManager.shouldShoot || !AimUtils.isAimingAtGoal)) {
+        if ((!FieldManager.inNoShootArea || ignoreRampUp) && (!Turret.isTurretWrapping || Turret.disableTurret) && (ignoreRampUp || willNotMiss) && (FieldManager.shouldShoot || !AimUtils.isAimingAtGoal)) {
             isShooting = true
             Spindexer.currentState = Spindexer.State.ON
         } else {
