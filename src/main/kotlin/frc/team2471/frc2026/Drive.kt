@@ -288,10 +288,10 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
     val wheelSlipMax = 2.0
 
     /**
-     * A ratio representing wheel slippage from 0.0 (not slipping) to 1.0 (very slippy, swerve odometry not trustworthy).
+     * A value representing wheel slippage from 0.0 (not slipping) to 1.0 (very slippy, swerve odometry not trustworthy).
      */
     val wheelSlipFactor: Double get() {
-        return clamp((wheelSlipRatio - wheelSlipMin) / (wheelSlipRatio - wheelSlipMax), 0.0, 1.0)
+        return clamp((wheelSlipRatio - wheelSlipMin) / (wheelSlipMax - wheelSlipMin), 0.0, 1.0)
     }
 
     /**
@@ -317,15 +317,15 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
 
         val minMaxRatio = moduleTranslationNorms.last() / (moduleTranslationNorms.first() + 0.001) // add fudge to prevent division by 0
 
-        Logger.recordOutput("Swerve/ModuleTranslationNorms/0", moduleTranslationNorms[0])
-        Logger.recordOutput("Swerve/ModuleTranslationNorms/1", moduleTranslationNorms[1])
-        Logger.recordOutput("Swerve/ModuleTranslationNorms/2", moduleTranslationNorms[2])
-        Logger.recordOutput("Swerve/ModuleTranslationNorms/3", moduleTranslationNorms[3])
-
-        Logger.recordOutput("Swerve/ModuleRotationComponents/0", moduleRotationComponents[0])
-        Logger.recordOutput("Swerve/ModuleRotationComponents/1", moduleRotationComponents[1])
-        Logger.recordOutput("Swerve/ModuleRotationComponents/2", moduleRotationComponents[2])
-        Logger.recordOutput("Swerve/ModuleRotationComponents/3", moduleRotationComponents[3])
+//        Logger.recordOutput("Swerve/ModuleTranslationNorms/0", moduleTranslationNorms[0])
+//        Logger.recordOutput("Swerve/ModuleTranslationNorms/1", moduleTranslationNorms[1])
+//        Logger.recordOutput("Swerve/ModuleTranslationNorms/2", moduleTranslationNorms[2])
+//        Logger.recordOutput("Swerve/ModuleTranslationNorms/3", moduleTranslationNorms[3])
+//
+//        Logger.recordOutput("Swerve/ModuleRotationComponents/0", moduleRotationComponents[0])
+//        Logger.recordOutput("Swerve/ModuleRotationComponents/1", moduleRotationComponents[1])
+//        Logger.recordOutput("Swerve/ModuleRotationComponents/2", moduleRotationComponents[2])
+//        Logger.recordOutput("Swerve/ModuleRotationComponents/3", moduleRotationComponents[3])
 
         Logger.recordOutput("Swerve/ModuleTranslationsMinMaxRatio", minMaxRatio)
         Logger.recordOutput("Swerve/ModuleTranslationsMAD", mad)
