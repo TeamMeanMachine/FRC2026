@@ -285,11 +285,12 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
     }
 
     val wheelSlipMin = 1.2
-    val wheelSlipMax = 2.0
+    val wheelSlipMax = 4.0
 
     /**
      * A value representing wheel slippage from 0.0 (not slipping) to 1.0 (very slippy, swerve odometry not trustworthy).
      */
+    @get:AutoLogOutput(key = "Swerve/WheelsSlipFactor")
     val wheelSlipFactor: Double get() {
         return clamp((wheelSlipRatio - wheelSlipMin) / (wheelSlipMax - wheelSlipMin), 0.0, 1.0)
     }
@@ -341,7 +342,7 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
 
     @get:AutoLogOutput(key = "Swerve/WheelsSlipping")
     val wheelsSlipping: Boolean get() {
-        return wheelSlipRatio > 0.0
+        return wheelSlipFactor > 0.0
     }
 
 
