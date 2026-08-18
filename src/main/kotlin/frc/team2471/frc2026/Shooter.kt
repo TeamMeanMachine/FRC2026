@@ -41,7 +41,6 @@ import org.team2471.frc.lib.environment.isSim
 import org.team2471.frc.lib.math.angleTo
 import org.team2471.frc.lib.units.absoluteValue
 import org.team2471.frc.lib.units.asFeet
-import org.team2471.frc.lib.units.asMeters
 import org.team2471.frc.lib.units.asMetersPerSecond
 import org.team2471.frc.lib.units.asRadiansPerSecond
 import org.team2471.frc.lib.units.asRotation2d
@@ -64,7 +63,7 @@ import org.wpilib.math.system.DCMotor
 import org.wpilib.networktables.NetworkTableInstance
 import org.wpilib.units.measure.Angle
 import org.wpilib.units.measure.AngularVelocity
-import kotlin.math.abs
+import kotlin.math.cos
 
 object Shooter: MechanismBase("Shooter") {
     val table = NetworkTableInstance.getDefault().getTable("Shooter")
