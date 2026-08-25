@@ -162,7 +162,7 @@ object Turret: SubsystemBase("Turret") {
 
             Logger.recordOutput("Turret/Errors", errors.toDoubleArray())
 
-            return bestAngle + offset
+            return bestAngle// + offset
         }
     @get:AutoLogOutput(key = "Turret/FieldCentricFusedEncoderAngle")
     val fieldCentricFusedEncoderAngle: Angle
@@ -413,7 +413,7 @@ object Turret: SubsystemBase("Turret") {
             } else {
                 val aimingAngle = turretTranslation.angleTo(AimUtils.aimTarget)
                 if (Robot.isEnabled) {
-                    fieldCentricSetpoint = aimingAngle
+                    fieldCentricSetpoint = (aimingAngle + offset).wrap()
                 }
             }
         } else if (driveLeftTriggerFullPress && hypot(OI.driverController.rightX, -OI.driverController.rightY) > 0.7) {
@@ -422,7 +422,7 @@ object Turret: SubsystemBase("Turret") {
     }.onlyRunWhileFalse { Robot.isTestEnabled && Drive.useAprilTags }
 
     fun staticAimAtTarget(): Command = run {
-        fieldCentricSetpoint = AimUtils.staticShotPos.angleTo(AimUtils.aimTarget)
+        fieldCentricSetpoint = (AimUtils.staticShotPos.angleTo(AimUtils.aimTarget) + offset).wrap()
     }
 
     fun setTurretOffset(robotHeading: Angle) {
