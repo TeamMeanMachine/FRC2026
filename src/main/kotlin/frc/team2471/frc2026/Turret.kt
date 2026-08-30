@@ -53,6 +53,7 @@ import org.team2471.frc.lib.ctre.alternateFeedbackSensor
 import org.team2471.frc.lib.ctre.brakeMode
 import org.team2471.frc.lib.ctre.motionMagic
 import org.team2471.frc.lib.energy.BatteryLogger
+import org.team2471.frc.lib.math.round
 import org.team2471.frc.lib.units.asFeet
 import org.team2471.frc.lib.units.rotationsPerSecond
 import org.team2471.frc.lib.util.demoMode
@@ -61,6 +62,7 @@ import kotlin.collections.toDoubleArray
 import kotlin.math.IEEErem
 import kotlin.math.absoluteValue
 import kotlin.math.hypot
+import kotlin.math.sign
 
 object Turret: SubsystemBase("Turret") {
     private val table = NetworkTableInstance.getDefault().getTable("Turret")
@@ -198,13 +200,13 @@ object Turret: SubsystemBase("Turret") {
     var fieldCentricSetpoint: Angle = fieldCentricAngle
         set(value) {
             if (isReal) {
-                val turretMotorFieldCentricAngle = fieldCentricAngle
+                val turretGyroFieldCentricAngle = fieldCentricAngle
                 val fieldCentricSetpoint = if (isTurretWrapping) {
                     value.unWrap(field)
                 } else {
-                    value.unWrap(turretMotorFieldCentricAngle)
+                    value.unWrap(turretGyroFieldCentricAngle)
                 }
-                val positionError = fieldCentricSetpoint - turretMotorFieldCentricAngle
+                val positionError = fieldCentricSetpoint - turretGyroFieldCentricAngle
                 val robotCentricSetpoint = turretMotorRotorAngle + positionError
 
                 field = if (robotCentricSetpoint > TURRET_TOP_LIMIT && !isTurretWrapping) {
@@ -215,9 +217,16 @@ object Turret: SubsystemBase("Turret") {
                     fieldCentricSetpoint
                 }
 
+                val wrappedSetpointError = (field - turretGyroFieldCentricAngle)
+                // Final check if setpoint will go outside turret range. In cases where gyro might have disconnected/incorrect values.
+                if (wrappedSetpointError.absoluteValue() > TURRET_RANGE) {
+                    println("Something went wrong with gyro. Wrapped setpoint error larger then turret range. Did we overwrap?")
+//                    field = turretGyroFieldCentricAngle + wrappedSetpointError.asDegrees.mod(TURRET_RANGE.asDegrees).degrees * wrappedSetpointError.asDegrees.sign //wrappedSetpointError.unWrap(turretGyroFieldCentricAngle)
+                }
+
 
                 //Wrapping if pose error is more than half a rotation
-                isTurretWrapping = (field - turretMotorFieldCentricAngle).absoluteValue() > 180.0.degrees
+                isTurretWrapping = wrappedSetpointError.absoluteValue() > 180.0.degrees
 
                 if (disableTurret) {
                     turretMotor.setControl(NeutralOut())
@@ -356,6 +365,8 @@ object Turret: SubsystemBase("Turret") {
             var resettingGyroYaw = false
             periodic {
                 if (!resettingGyroYaw) {
+                    val fieldCentricGyroAngle = fieldCentricAngle
+                    val unwrappedFieldCentricRotorAngle = fieldCentricTurretMotorRotorAngle.unWrap(fieldCentricGyroAngle)
                     val tempResetAngle = tempHeadingResetAngle
                     if (tempResetAngle != null) {
                         tempHeadingResetAngle = null
@@ -363,14 +374,16 @@ object Turret: SubsystemBase("Turret") {
                         GlobalScope.launch {
 //                        println("setting turret pigeon yaw")
                             resettingGyroYaw = true
-                            turretPigeon.setYaw(fieldCentricFusedEncoderAngle.unWrap(fieldCentricAngle))
+                            turretPigeon.setYaw(fieldCentricFusedEncoderAngle.unWrap(fieldCentricGyroAngle))
                             resettingGyroYaw = false
 //                        println("finished setting turret pigeon yaw")
                         }
-                    } else if ((fieldCentricAngle - fieldCentricTurretMotorRotorAngle.unWrap(fieldCentricAngle)).absoluteValue() > 1.0.degrees && turretVelocity.absoluteValue() < 3.0.rotationsPerSecond) {
+                    } else if ((fieldCentricGyroAngle - unwrappedFieldCentricRotorAngle).absoluteValue() > 1.0.degrees && turretVelocity.absoluteValue() < 3.0.rotationsPerSecond) {
                         GlobalScope.launch {
+                            println("Error between turret gyro and rotor is too high. resetting to rotor angle: ${unwrappedFieldCentricRotorAngle.asDegrees.round(2)}")
+                            println("Gyro angle: ${fieldCentricGyroAngle.asDegrees.round(2)}")
                             resettingGyroYaw = true
-                            turretPigeon.setYaw(fieldCentricTurretMotorRotorAngle.unWrap(fieldCentricAngle))
+                            turretPigeon.setYaw(unwrappedFieldCentricRotorAngle)
                             resettingGyroYaw = false
                         }
                     }
