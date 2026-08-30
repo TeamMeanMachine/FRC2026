@@ -12,7 +12,7 @@ import org.team2471.frc.lib.control.Direction
 import org.team2471.frc.lib.control.commands.beforeRun
 import org.team2471.frc.lib.control.dPad
 import org.team2471.frc.lib.control.commands.runCommand
-import org.team2471.frc.lib.motors.ctre.ApplyModuleStatesVoltage
+import org.team2471.frc.lib.hardware.ctre.ApplyModuleStatesVoltage
 import org.team2471.frc.lib.units.asRotation2d
 import org.team2471.frc.lib.units.degrees
 import org.littletonrobotics.junction.Logger

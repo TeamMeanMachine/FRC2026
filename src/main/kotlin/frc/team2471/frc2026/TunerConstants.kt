@@ -17,7 +17,7 @@ import edu.wpi.first.units.measure.LinearVelocity
 import edu.wpi.first.wpilibj.Alert
 import edu.wpi.first.wpilibj.Preferences
 import org.team2471.frc.lib.control.CurrentLimits
-import org.team2471.frc.lib.motors.ctre.getMagnetSensorOffset
+import org.team2471.frc.lib.hardware.ctre.getMagnetSensorOffset
 import org.team2471.frc.lib.units.asDegrees
 import org.team2471.frc.lib.units.asFeet
 import org.team2471.frc.lib.units.asMeters

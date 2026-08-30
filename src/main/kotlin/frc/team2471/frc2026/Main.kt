@@ -22,7 +22,7 @@ import org.littletonrobotics.junction.networktables.NT4Publisher
 import org.littletonrobotics.junction.wpilog.WPILOGReader
 import org.littletonrobotics.junction.wpilog.WPILOGWriter
 import org.team2471.frc.lib.control.LoopLogger
-import org.team2471.frc.lib.motors.ctre.loggedMotors.MasterMotor
+import org.team2471.frc.lib.hardware.loggedMotors.MasterMotor
 import org.team2471.frc.lib.energy.BatteryLogger
 import org.team2471.frc.lib.energy.FindAmpsManager
 import org.team2471.frc.lib.units.asFeet

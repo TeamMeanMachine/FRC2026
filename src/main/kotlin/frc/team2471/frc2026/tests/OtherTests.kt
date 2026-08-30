@@ -14,7 +14,7 @@ import frc.team2471.frc2026.Intake
 import frc.team2471.frc2026.Shooter
 import frc.team2471.frc2026.Spindexer
 import org.team2471.frc.lib.control.commands.*
-import org.team2471.frc.lib.motors.ctre.setCANCoderAngle
+import org.team2471.frc.lib.hardware.ctre.setCANCoderAngle
 import org.team2471.frc.lib.units.asDegrees
 import org.team2471.frc.lib.units.degrees
 import org.team2471.frc.lib.units.rotationsPerSecond

@@ -34,9 +34,9 @@ import org.team2471.frc.lib.control.LoopLogger
 import org.team2471.frc.lib.control.commands.finallyRun
 import org.team2471.frc.lib.control.commands.runCommand
 import org.team2471.frc.lib.control.rightStickButton
-import org.team2471.frc.lib.motors.ctre.PhoenixUtil
-import org.team2471.frc.lib.motors.ctre.currentLimits
-import org.team2471.frc.lib.motors.ctre.modifyConfiguration
+import org.team2471.frc.lib.hardware.ctre.PhoenixUtil
+import org.team2471.frc.lib.hardware.ctre.currentLimits
+import org.team2471.frc.lib.hardware.ctre.modifyConfiguration
 import org.team2471.frc.lib.localization.PoseLocalizer
 import org.team2471.frc.lib.math.cube
 import org.team2471.frc.lib.math.square
