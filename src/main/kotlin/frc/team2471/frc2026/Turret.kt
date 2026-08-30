@@ -353,25 +353,29 @@ object Turret: SubsystemBase("Turret") {
 
         //Loop that updates the unwrapped robot heading also sets the turret pigeon offset.
         GlobalScope.launch {
+            var resettingGyroYaw = false
             periodic {
-
-                if ((fieldCentricAngle - fieldCentricTurretMotorRotorAngle.unWrap(fieldCentricAngle)).absoluteValue() > 1.0.degrees && turretVelocity.absoluteValue() < 3.0.rotationsPerSecond) {
-                    GlobalScope.launch {
-                        // This spams a lot. Its kinda bad to do this. But its okkk
-                        turretPigeon.setYaw(fieldCentricTurretMotorRotorAngle.unWrap(fieldCentricAngle))
-                    }
-                }
-
-                val tempResetAngle = tempHeadingResetAngle
-                if (tempResetAngle != null) {
-                    tempHeadingResetAngle = null
-                    Drive.headingAngleUnwrapped = tempResetAngle
-                    GlobalScope.launch {
+                if (!resettingGyroYaw) {
+                    val tempResetAngle = tempHeadingResetAngle
+                    if (tempResetAngle != null) {
+                        tempHeadingResetAngle = null
+                        Drive.headingAngleUnwrapped = tempResetAngle
+                        GlobalScope.launch {
 //                        println("setting turret pigeon yaw")
-                        turretPigeon.setYaw(fieldCentricFusedEncoderAngle.unWrap(fieldCentricAngle))
+                            resettingGyroYaw = true
+                            turretPigeon.setYaw(fieldCentricFusedEncoderAngle.unWrap(fieldCentricAngle))
+                            resettingGyroYaw = false
 //                        println("finished setting turret pigeon yaw")
+                        }
+                    } else if ((fieldCentricAngle - fieldCentricTurretMotorRotorAngle.unWrap(fieldCentricAngle)).absoluteValue() > 1.0.degrees && turretVelocity.absoluteValue() < 3.0.rotationsPerSecond) {
+                        GlobalScope.launch {
+                            resettingGyroYaw = true
+                            turretPigeon.setYaw(fieldCentricTurretMotorRotorAngle.unWrap(fieldCentricAngle))
+                            resettingGyroYaw = false
+                        }
                     }
                 }
+
                 Drive.headingAngleUnwrapped = Drive.heading.measure.unWrap(Drive.headingAngleUnwrapped)
             }
         }
