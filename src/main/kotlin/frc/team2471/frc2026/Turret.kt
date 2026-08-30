@@ -185,8 +185,8 @@ object Turret: SubsystemBase("Turret") {
         get() = turetFeedforwardFactorEntry.getDouble(3.0)
 
     @get:AutoLogOutput(key = "Turret/turretFeedforward")
-    val turretFeedforward: Double
-        get() = -Drive.speeds.omegaRadiansPerSecond.radians.asRotations * 3.0
+    val turretFeedforward: Double // Don't have rotational velocity feedforward when wrapping
+        get() = if (isTurretWrapping) 0.0 else -Drive.speeds.omegaRadiansPerSecond.radians.asRotations * 3.0
 
     @get:AutoLogOutput(key = "Turret/isTurretWrapping")
     var isTurretWrapping = false
