@@ -1,5 +1,6 @@
 package frc.team2471.frc2026
 
+import com.ctre.phoenix6.controls.MotionMagicVoltage
 import com.ctre.phoenix6.controls.NeutralOut
 import com.ctre.phoenix6.controls.PositionVoltage
 import com.ctre.phoenix6.hardware.CANcoder
@@ -50,6 +51,7 @@ import kotlin.math.abs
 import org.team2471.frc.lib.coroutines.periodic
 import org.team2471.frc.lib.ctre.alternateFeedbackSensor
 import org.team2471.frc.lib.ctre.brakeMode
+import org.team2471.frc.lib.ctre.motionMagic
 import org.team2471.frc.lib.energy.BatteryLogger
 import org.team2471.frc.lib.units.asFeet
 import org.team2471.frc.lib.units.rotationsPerSecond
@@ -83,14 +85,14 @@ object Turret: SubsystemBase("Turret") {
     val TURRET_RANGE = TURRET_TOP_LIMIT - TURRET_BOTTOM_LIMIT
     val TURRET_ENCODER_LIMIT = if (Robot.isCompBot) 600.0.degrees else 720.0.degrees
 
-    val ENCODER_1_DEFAULT_OFFSET = if (Robot.isCompBot) -86.92328125 else 43.0664
-    val ENCODER_2_DEFAULT_OFFSET = if (Robot.isCompBot) -144.05273438 else 76.2
+    val ENCODER_1_DEFAULT_OFFSET = 31.55
+    val ENCODER_2_DEFAULT_OFFSET = -61.85
 
     val encoder1GearRatio = if (Robot.isCompBot) 30.0/230.0 else 30.0/200.0
 
     val encoder2GearRatio = encoder1GearRatio * 83.0/32.0
 
-    val turretZeroPositionOnRobot = if (Robot.isCompBot) 0.0.degrees else 90.0.degrees
+    val turretZeroPositionOnRobot = if (Robot.isCompBot) 30.0.degrees else 90.0.degrees
 
     val motorGearRatio = if (Robot.isCompBot) 30.0/230.0 * 11.0/46.0 else 30.0/200.0 * 11.0/46.0
 
@@ -220,7 +222,7 @@ object Turret: SubsystemBase("Turret") {
                 if (disableTurret) {
                     turretMotor.setControl(NeutralOut())
                 } else if (useTurretGyro) { // Use field-centric gyro
-                    turretMotor.setControl(PositionVoltage(field.asRotations).withFeedForward(turretFeedforward))
+                    turretMotor.setControl(MotionMagicVoltage(field.asRotations).withFeedForward(turretFeedforward))
                 } else { // Use robot-centric motor
                     val fieldCentricTurretRotorAngle = fieldCentricTurretMotorRotorAngle
                     val noGyroError = (value.unWrap(fieldCentricTurretRotorAngle) - fieldCentricTurretRotorAngle)
@@ -306,7 +308,7 @@ object Turret: SubsystemBase("Turret") {
         turretMotor.configSim(DCMotor.getKrakenX60(1), 0.01)
 
         turretMotor.applyConfiguration {
-            currentLimits(20.0, 20.0, 1.0)
+            currentLimits(7.0, 7.0, 1.0)
             inverted(false)
             brakeMode()
             if (isReal) {
@@ -325,7 +327,7 @@ object Turret: SubsystemBase("Turret") {
                 d(25.0)
             }
 
-//            motionMagic(0.2, 12.2)
+            motionMagic(2.2, 12.0)
             if (useTurretGyro) {
                 alternateFeedbackSensor(turretPigeon.deviceID, FeedbackSensorSourceValue.RemotePigeon2Yaw, motorGearRatio)
             }
