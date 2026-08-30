@@ -12,11 +12,8 @@ import org.team2471.frc.lib.commands.command
 import org.team2471.frc.lib.control.CurrentLimits
 import org.team2471.frc.lib.logging.LoopLogger
 import org.team2471.frc.lib.control.rightStickButton
-import org.team2471.frc.lib.hardware.ctre.PhoenixUtil
 import org.team2471.frc.lib.hardware.ctre.currentLimits
 import org.team2471.frc.lib.hardware.ctre.modifyConfiguration
-import org.team2471.frc.lib.ctre.currentLimits
-import org.team2471.frc.lib.ctre.modifyConfiguration
 import org.team2471.frc.lib.environment.demoMode
 import org.team2471.frc.lib.environment.demoSpeed
 import org.team2471.frc.lib.environment.isBlueAlliance
@@ -31,6 +28,7 @@ import org.team2471.frc.lib.units.inches
 import org.team2471.frc.lib.math.DynamicInterpolatingTreeMap
 import org.team2471.frc.lib.math.normalize
 import org.team2471.frc.lib.units.asRadiansPerSecond
+import org.team2471.frc.lib.units.asRotation2d
 import org.team2471.frc.lib.units.inchesPerSecond
 import org.team2471.frc.lib.units.metersPerSecondSquared
 import org.team2471.frc.lib.units.perSecond

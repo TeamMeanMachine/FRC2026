@@ -63,12 +63,6 @@ import org.wpilib.math.system.DCMotor
 import org.wpilib.networktables.NetworkTableInstance
 import org.wpilib.units.measure.Angle
 import org.wpilib.units.measure.AngularVelocity
-import org.team2471.frc.lib.units.volts
-import org.team2471.frc.lib.units.voltsPerSecond
-import org.team2471.frc.lib.util.angleTo
-import org.team2471.frc.lib.util.demoMode
-import org.team2471.frc.lib.util.isReal
-import org.team2471.frc.lib.util.isSim
 import kotlin.math.cos
 
 object Shooter: MechanismBase("Shooter") {
