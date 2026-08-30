@@ -12,7 +12,7 @@ import org.team2471.frc.lib.autonomous.TestOpMode
 import org.team2471.frc.lib.commands.PeriodicMechanism
 import org.team2471.frc.lib.logging.LoopLogger
 import org.team2471.frc.lib.control.isConnected
-import org.team2471.frc.lib.ctre.loggedMotors.MasterMotor
+import org.team2471.frc.lib.hardware.loggedMotors.MasterMotor
 import org.team2471.frc.lib.energy.BatteryLogger
 import org.team2471.frc.lib.environment.RobotType
 import org.team2471.frc.lib.environment.robotType
