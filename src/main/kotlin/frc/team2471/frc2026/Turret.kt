@@ -22,15 +22,15 @@ import org.littletonrobotics.junction.AutoLogOutput
 import org.littletonrobotics.junction.Logger
 import org.team2471.frc.lib.control.LoopLogger
 import org.team2471.frc.lib.control.commands.onlyRunWhileFalse
-import org.team2471.frc.lib.ctre.PhoenixUtil
-import org.team2471.frc.lib.ctre.addFollower
-import org.team2471.frc.lib.ctre.applyConfiguration
-import org.team2471.frc.lib.ctre.currentLimits
-import org.team2471.frc.lib.ctre.d
-import org.team2471.frc.lib.ctre.inverted
-import org.team2471.frc.lib.ctre.loggedMotors.LoggedTalonFX
-import org.team2471.frc.lib.ctre.p
-import org.team2471.frc.lib.ctre.s
+import org.team2471.frc.lib.motors.ctre.PhoenixUtil
+import org.team2471.frc.lib.motors.ctre.addFollower
+import org.team2471.frc.lib.motors.ctre.applyConfiguration
+import org.team2471.frc.lib.motors.ctre.currentLimits
+import org.team2471.frc.lib.motors.ctre.d
+import org.team2471.frc.lib.motors.ctre.inverted
+import org.team2471.frc.lib.motors.ctre.loggedMotors.LoggedTalonFX
+import org.team2471.frc.lib.motors.ctre.p
+import org.team2471.frc.lib.motors.ctre.s
 import org.team2471.frc.lib.math.toPose2d
 import org.team2471.frc.lib.units.absoluteValue
 import org.team2471.frc.lib.units.asDegrees
@@ -49,9 +49,9 @@ import org.team2471.frc.lib.util.angleTo
 import org.team2471.frc.lib.util.isReal
 import kotlin.math.abs
 import org.team2471.frc.lib.coroutines.periodic
-import org.team2471.frc.lib.ctre.alternateFeedbackSensor
-import org.team2471.frc.lib.ctre.brakeMode
-import org.team2471.frc.lib.ctre.motionMagic
+import org.team2471.frc.lib.motors.ctre.alternateFeedbackSensor
+import org.team2471.frc.lib.motors.ctre.brakeMode
+import org.team2471.frc.lib.motors.ctre.motionMagic
 import org.team2471.frc.lib.energy.BatteryLogger
 import org.team2471.frc.lib.math.round
 import org.team2471.frc.lib.units.asFeet
@@ -62,7 +62,6 @@ import kotlin.collections.toDoubleArray
 import kotlin.math.IEEErem
 import kotlin.math.absoluteValue
 import kotlin.math.hypot
-import kotlin.math.sign
 
 object Turret: SubsystemBase("Turret") {
     private val table = NetworkTableInstance.getDefault().getTable("Turret")

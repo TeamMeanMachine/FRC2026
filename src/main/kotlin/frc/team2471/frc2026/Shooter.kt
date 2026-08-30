@@ -28,8 +28,6 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine
 import frc.team2471.frc2026.AimUtils.shooterEfficiency
 import frc.team2471.frc2026.AimUtils.toExitVelocity
 import frc.team2471.frc2026.Robot.isCompBot
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import org.littletonrobotics.junction.AutoLogOutput
 import org.littletonrobotics.junction.Logger
 import org.team2471.frc.lib.control.LoopLogger
@@ -40,25 +38,24 @@ import org.team2471.frc.lib.control.commands.onlyRunWhileTrue
 import org.team2471.frc.lib.control.commands.parallelCommand
 import org.team2471.frc.lib.control.commands.runCommand
 import org.team2471.frc.lib.control.rightStickButton
-import org.team2471.frc.lib.ctre.addFollower
-import org.team2471.frc.lib.ctre.applyConfiguration
-import org.team2471.frc.lib.ctre.brakeMode
-import org.team2471.frc.lib.ctre.coastMode
-import org.team2471.frc.lib.ctre.currentLimits
-import org.team2471.frc.lib.ctre.d
-import org.team2471.frc.lib.ctre.i
-import org.team2471.frc.lib.ctre.inverted
-import org.team2471.frc.lib.ctre.loggedMotors.LoggedTalonFX
-import org.team2471.frc.lib.ctre.magnetSensorOffset
-import org.team2471.frc.lib.ctre.motionMagic
-import org.team2471.frc.lib.ctre.p
-import org.team2471.frc.lib.ctre.remoteCANCoder
-import org.team2471.frc.lib.ctre.s
-import org.team2471.frc.lib.ctre.setCANCoderAngle
+import org.team2471.frc.lib.motors.ctre.addFollower
+import org.team2471.frc.lib.motors.ctre.applyConfiguration
+import org.team2471.frc.lib.motors.ctre.brakeMode
+import org.team2471.frc.lib.motors.ctre.coastMode
+import org.team2471.frc.lib.motors.ctre.currentLimits
+import org.team2471.frc.lib.motors.ctre.d
+import org.team2471.frc.lib.motors.ctre.i
+import org.team2471.frc.lib.motors.ctre.inverted
+import org.team2471.frc.lib.motors.ctre.loggedMotors.LoggedTalonFX
+import org.team2471.frc.lib.motors.ctre.magnetSensorOffset
+import org.team2471.frc.lib.motors.ctre.motionMagic
+import org.team2471.frc.lib.motors.ctre.p
+import org.team2471.frc.lib.motors.ctre.remoteCANCoder
+import org.team2471.frc.lib.motors.ctre.s
+import org.team2471.frc.lib.motors.ctre.setCANCoderAngle
 import org.team2471.frc.lib.energy.BatteryLogger
 import org.team2471.frc.lib.units.absoluteValue
 import org.team2471.frc.lib.units.asFeet
-import org.team2471.frc.lib.units.asMeters
 import org.team2471.frc.lib.units.asMetersPerSecond
 import org.team2471.frc.lib.units.asRadiansPerSecond
 import org.team2471.frc.lib.units.asRotation2d
@@ -78,7 +75,6 @@ import org.team2471.frc.lib.util.angleTo
 import org.team2471.frc.lib.util.demoMode
 import org.team2471.frc.lib.util.isReal
 import org.team2471.frc.lib.util.isSim
-import kotlin.math.abs
 import kotlin.math.cos
 
 object Shooter: SubsystemBase("Shooter") {
@@ -449,7 +445,7 @@ object Shooter: SubsystemBase("Shooter") {
             if (!isCompBot) {
                 motionMagic(0.75, 5.0)
             }
-            remoteCANCoder(hoodEncoder.deviceID, if (Robot.isCompBot) 85.5 else 9.64285714285714)
+            remoteCANCoder(hoodEncoder.deviceID, if (isCompBot) 85.5 else 9.64285714285714)
         }
     }
 

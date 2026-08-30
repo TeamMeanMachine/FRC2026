@@ -1,6 +1,5 @@
 package frc.team2471.frc2026
 
-import com.ctre.phoenix6.swerve.jni.SwerveJNI
 import com.ctre.phoenix6.swerve.utility.PhoenixPIDController
 import edu.wpi.first.math.MathUtil.clamp
 import edu.wpi.first.math.Matrix
@@ -35,9 +34,9 @@ import org.team2471.frc.lib.control.LoopLogger
 import org.team2471.frc.lib.control.commands.finallyRun
 import org.team2471.frc.lib.control.commands.runCommand
 import org.team2471.frc.lib.control.rightStickButton
-import org.team2471.frc.lib.ctre.PhoenixUtil
-import org.team2471.frc.lib.ctre.currentLimits
-import org.team2471.frc.lib.ctre.modifyConfiguration
+import org.team2471.frc.lib.motors.ctre.PhoenixUtil
+import org.team2471.frc.lib.motors.ctre.currentLimits
+import org.team2471.frc.lib.motors.ctre.modifyConfiguration
 import org.team2471.frc.lib.localization.PoseLocalizer
 import org.team2471.frc.lib.math.cube
 import org.team2471.frc.lib.math.square
@@ -47,7 +46,6 @@ import org.team2471.frc.lib.units.asRotation2d
 import org.team2471.frc.lib.units.degrees
 import org.team2471.frc.lib.units.inches
 import org.team2471.frc.lib.math.DynamicInterpolatingTreeMap
-import org.team2471.frc.lib.math.lerp
 import org.team2471.frc.lib.math.normalize
 import org.team2471.frc.lib.units.UTranslation2d
 import org.team2471.frc.lib.units.asMeters
@@ -67,7 +65,6 @@ import org.team2471.frc.lib.vision.QuixVisionCamera
 import org.team2471.frc.lib.vision.photonVision.PhotonVisionCamera
 import kotlin.math.absoluteValue
 import kotlin.math.atan2
-import kotlin.math.min
 
 
 object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerConstants.moduleConfigs) {
