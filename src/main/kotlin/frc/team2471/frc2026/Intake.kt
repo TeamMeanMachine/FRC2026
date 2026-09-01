@@ -284,11 +284,11 @@ object Intake: SubsystemBase("Intake") {
     private fun homeMotor(motor: TalonFX, hitHardStopSupplier: () -> Boolean): Command {
         return sequenceCommand(
             runCommand {
-                println("going in?")
+//                println("going in?")
                 motor.setControl(DutyCycleOut(HOMING_POWER))
             }.onlyRunWhileTrue { hitHardStopSupplier.invoke() },
             runCommand {
-                println("going out?")
+//                println("going out?")
                 motor.setControl(DutyCycleOut(-HOMING_POWER))
             }.onlyRunWhileFalse { hitHardStopSupplier.invoke() }.withTimeout(6.0).finallyRun {
                 motor.setControl(DutyCycleOut(0.0))
@@ -305,7 +305,7 @@ object Intake: SubsystemBase("Intake") {
                 timer.restart()
             },
             runCommand {
-                println("going out?")
+//                println("going out?")
                 motor.setControl(DutyCycleOut(HOMING_POWER))
             }.onlyRunWhileFalse { hitHardStopSupplier.invoke() && timer.get() > 0.5 }.withTimeout(6.0).finallyRun {
                 motor.setControl(DutyCycleOut(0.0))

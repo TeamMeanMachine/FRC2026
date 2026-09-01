@@ -7,6 +7,7 @@ import com.ctre.phoenix6.hardware.CANcoder
 import com.ctre.phoenix6.hardware.Pigeon2
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue
+import edu.wpi.first.math.filter.Debouncer
 import edu.wpi.first.math.geometry.Rotation2d
 import edu.wpi.first.math.geometry.Translation2d
 import edu.wpi.first.math.system.plant.DCMotor
@@ -262,7 +263,7 @@ object Turret: SubsystemBase("Turret") {
         get() = turretMotor.supplyCurrent.valueAsDouble
 
     val disableTurret: Boolean
-        get() = disableTurretEntry.getBoolean(false)
+        get() = disableTurretEntry.getBoolean(false) || !debouncedTurretPigeonIsConnected
 
     val turretOffsetFromCenter = Translation2d(0.0.inches, 0.725.inches)
     var turretHeight = 0.4.meters
@@ -277,6 +278,9 @@ object Turret: SubsystemBase("Turret") {
     var tempHeadingResetAngle: Angle? = null
 
     val turretPigeonIsConnected get() = turretPigeon.isConnected && isReal
+    val turretPigeonConnectedDebouncer = Debouncer(1.0, Debouncer.DebounceType.kRising)
+    @get:AutoLogOutput(key = "Turret/debouncedTurretPigeonIsConnected")
+    var debouncedTurretPigeonIsConnected: Boolean = turretPigeonIsConnected
     val turretPigeonLatency get() = turretPigeon.yaw.timestamp.latency
 
     @get:AutoLogOutput(key = "Turret/Look Forward Override")
@@ -370,18 +374,18 @@ object Turret: SubsystemBase("Turret") {
                     if (tempResetAngle != null) {
                         tempHeadingResetAngle = null
                         Drive.headingAngleUnwrapped = tempResetAngle
+                        resettingGyroYaw = true
                         GlobalScope.launch {
 //                        println("setting turret pigeon yaw")
-                            resettingGyroYaw = true
                             turretPigeon.setYaw(fieldCentricFusedEncoderAngle.unWrap(fieldCentricGyroAngle))
                             resettingGyroYaw = false
 //                        println("finished setting turret pigeon yaw")
                         }
                     } else if ((fieldCentricGyroAngle - unwrappedFieldCentricRotorAngle).absoluteValue() > 1.0.degrees && turretVelocity.absoluteValue() < 3.0.rotationsPerSecond) {
+                        resettingGyroYaw = true
                         GlobalScope.launch {
-                            println("Error between turret gyro and rotor is too high. resetting to rotor angle: ${unwrappedFieldCentricRotorAngle.asDegrees.round(2)}")
                             println("Gyro angle: ${fieldCentricGyroAngle.asDegrees.round(2)}")
-                            resettingGyroYaw = true
+                            println("Error between turret gyro and rotor is too high. resetting to rotor angle: ${unwrappedFieldCentricRotorAngle.asDegrees.round(2)}")
                             turretPigeon.setYaw(unwrappedFieldCentricRotorAngle)
                             resettingGyroYaw = false
                         }
@@ -400,6 +404,7 @@ object Turret: SubsystemBase("Turret") {
         val aimTarget = AimUtils.aimTarget
         val turretTranslation = turretTranslation
         val turretPigeonConnected = turretPigeonIsConnected
+        debouncedTurretPigeonIsConnected = turretPigeonConnectedDebouncer.calculate(turretPigeonConnected)
 //        Logger.recordOutput("aim target", aimTarget.toPose2d())
         Logger.recordOutput("Turret/turret setpoint pose", turretTranslation.toPose2d(fieldCentricSetpoint.asRotation2d))
         Logger.recordOutput("Turret/turret pose", turretTranslation.toPose2d(fieldCentricAngle.asRotation2d))
