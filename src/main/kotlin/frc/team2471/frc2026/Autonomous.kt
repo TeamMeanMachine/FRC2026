@@ -56,12 +56,12 @@ object Autonomous: Autonomi() {
         // Register Autos.
         // Converts AutoRoutines to AutoOpModes and registers them to Robot (This makes them show up on the Driver Station)
         autos.toAutoOpModes().forEach {
-            Robot.addOpModeFactory({ it }, RobotMode.AUTONOMOUS, it.name)
+            Robot.addOpMode(RobotMode.AUTONOMOUS, it.name) { it }
             println("Registered ${it.name} as an AutoOpMode")
         }
         // Register Tests/Utility OpModes.
         tests.toTestOpModes().forEach {
-            Robot.addOpModeFactory({ it }, RobotMode.UTILITY, it.name)
+            Robot.addOpMode(RobotMode.UTILITY, it.name) { it }
             println("Registered ${it.name} TestOpMode")
         }
         // Publish cached OpModes to Driver Station.

@@ -339,7 +339,7 @@ object Shooter: MechanismBase("Shooter") {
     @get:AutoLogOutput(key = "Shooter/raw ramped up")
     val rawRampedUp: Boolean get() = (shooterVelocity - shooterVelocitySetpoint).absoluteValue() < 2.0.rotationsPerSecond
 
-    var rampedUpDebouncer = Debouncer(0.1, Debouncer.DebounceType.kFalling)
+    var rampedUpDebouncer = Debouncer(0.1, Debouncer.DebounceType.FALLING)
 
     @get:AutoLogOutput(key = "Shooter/Ramped up")
     val rampedUp: Boolean get() = rampedUpDebouncer.calculate(rawRampedUp)
