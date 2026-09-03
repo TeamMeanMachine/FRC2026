@@ -1,11 +1,9 @@
 package frc.team2471.frc2026
 
-import frc.team2471.frc2026.FieldManager.reflectAcrossField
-import frc.team2471.frc2026.FieldManager.rotateAroundField
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.littletonrobotics.junction.AutoLogOutput
-import org.littletonrobotics.junction.networktables.LoggedDashboardChooser
+import org.littletonrobotics.junction.networktables.LoggedNetworkChooser
 import org.team2471.frc.lib.commands.onCancel
 import org.team2471.frc.lib.commands.periodic
 import org.team2471.frc.lib.commands.command
@@ -53,18 +51,18 @@ object FieldManager {
     val blueHubTags = allAprilTags.filter { it.id in 18..21 || it.id in 24..27 }
     val hubTags = redHubTags + blueHubTags
 
-    val overrideAutoWinnerChooser: LoggedDashboardChooser<String?> =
-        LoggedDashboardChooser<String?>("Override Auto Winner").apply {
-            addDefaultOption("No Override", null)
-            addOption("Red", "R")
-            addOption("Blue", "B")
+    val overrideAutoWinnerChooser: LoggedNetworkChooser<String?> =
+        LoggedNetworkChooser<String?>("Override Auto Winner").apply {
+            addDefault("No Override", null)
+            add("Red", "R")
+            add("Blue", "B")
         }
 
-    val preferredPassingSideChooser: LoggedDashboardChooser<PassingSide> =
-        LoggedDashboardChooser<PassingSide>("Preferred Passing Side").apply {
-            addDefaultOption("Both", PassingSide.BOTH)
-            addOption("Outpost", PassingSide.OUTPOST)
-            addOption("Depot", PassingSide.DEPOT)
+    val preferredPassingSideChooser: LoggedNetworkChooser<PassingSide> =
+        LoggedNetworkChooser<PassingSide>("Preferred Passing Side").apply {
+            addDefault("Both", PassingSide.BOTH)
+            add("Outpost", PassingSide.OUTPOST)
+            add("Depot", PassingSide.DEPOT)
         }
 
     val trenchAreaWidth = 50.0.inches
@@ -248,7 +246,7 @@ object FieldManager {
     val gameData: String
         get() = overrideAutoWinnerChooser.get() ?: rawGameData
 
-    @get:AutoLogOutput(key = "FieldManager/gameData")
+    @get:AutoLogOutput(key = "FieldManager/preferredPassingSide")
     val preferredPassingSide: PassingSide
         get() = preferredPassingSideChooser.get() ?: PassingSide.BOTH
 

@@ -200,7 +200,9 @@ object Robot : OpModeRobot(0.01) {
     /** This function is called periodically whilst in simulation.  */
     @OptIn(DelicateCoroutinesApi::class)
     override fun simulationPeriodic() {
+        LoopLogger.record("Motor simPeriodic")
         MasterMotor.periodic()
+        LoopLogger.record("Motor simPeriodic")
         // Run simulationPeriodic() for each mechanism
         allMechanisms.forEach {
             LoopLogger.record("${it.name} simPeriodic)")

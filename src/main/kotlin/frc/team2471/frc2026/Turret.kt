@@ -376,12 +376,12 @@ object Turret: MechanismBase("Turret") {
                             resettingGyroYaw = false
 //                        println("finished setting turret pigeon yaw")
                         }
-                    } else if ((fieldCentricGyroAngle - unwrappedFieldCentricRotorAngle).absoluteValue() > 1.0.degrees && turretVelocity.absoluteValue() < 3.0.rotationsPerSecond) {
+                    } else if ((fieldCentricGyroAngle - unwrappedFieldCentricRotorAngle).absoluteValue() > 1.0.degrees && turretVelocity.absoluteValue() < 3.0.rotationsPerSecond && isReal) {
                         GlobalScope.launch {
                             println("Error between turret gyro and rotor is too high. resetting to rotor angle: ${unwrappedFieldCentricRotorAngle.asDegrees.round(2)}")
                             println("Gyro angle: ${fieldCentricGyroAngle.asDegrees.round(2)}")
                             resettingGyroYaw = true
-                            if (isReal) turretPigeon.setYaw(unwrappedFieldCentricRotorAngle)
+                            turretPigeon.setYaw(unwrappedFieldCentricRotorAngle)
                             resettingGyroYaw = false
                         }
                     }
