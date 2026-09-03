@@ -342,7 +342,7 @@ object Intake: MechanismBase("Intake") {
             if ((hitHardStopSupplier.invoke() && timer.get() > 0.5) || timer.get() > 6.0) {
                 stop()
             } else {
-                println("going out?")
+//                println("going out?")
                 motor.setControl(DutyCycleOut(HOMING_POWER))
             }
         }

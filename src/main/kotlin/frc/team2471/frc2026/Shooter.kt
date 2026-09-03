@@ -380,7 +380,7 @@ object Shooter: MechanismBase("Shooter") {
 
             Feedback.withSensorToMechanismRatio(1.0/1.5) // Note: I don't think this line configures anything
 
-            inverted(InvertedValue.Clockwise_Positive)
+            inverted(InvertedValue.CounterClockwise_Positive)
 
             if (isReal) {
                 if (isCompBot) {
