@@ -386,7 +386,7 @@ object Shooter: SubsystemBase("Shooter") {
         demoShootingAngleEntry.setDouble(demoShootingAngle)
 
         shooterMotor.applyConfiguration {
-            currentLimits(10.0, 30.0, 0.3)
+            currentLimits(20.0, 30.0, 0.3)
             coastMode()
 
             Feedback.withSensorToMechanismRatio(1.0/1.5) // Note: I don't think this line configures anything
