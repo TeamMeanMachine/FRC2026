@@ -281,22 +281,22 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
         inSnakeMode = false
     }
 
-    val wheelSlipMin = 1.2
-    val wheelSlipMax = 4.0
+    const val WHEEL_SLIP_MIN = 0.06
+    const val WHEEL_SLIP_MAX = 0.3
 
     /**
      * A value representing wheel slippage from 0.0 (not slipping) to 1.0 (very slippy, swerve odometry not trustworthy).
      */
     @get:AutoLogOutput(key = "Swerve/WheelsSlipFactor")
     val wheelSlipFactor: Double get() {
-        return clamp((wheelSlipRatio - wheelSlipMin) / (wheelSlipMax - wheelSlipMin), 0.0, 1.0)
+        return clamp((wheelSlipRaw - WHEEL_SLIP_MIN) / (WHEEL_SLIP_MAX - WHEEL_SLIP_MIN), 0.0, 1.0)
     }
 
     /**
-     * How much the wheels are slipping, determined by the ratio between the largest and smallest translation component of the wheels.
+     * The mean absolute deviation of the translation components of the wheels.
      */
-    @get:AutoLogOutput(key = "Swerve/WheelsSlipRatio")
-    val wheelSlipRatio: Double get() {
+    @get:AutoLogOutput(key = "Swerve/WheelsSlipRaw")
+    val wheelSlipRaw: Double get() {
         val moduleRotationComponents = Array(moduleStates.size) {
             val state = SwerveModuleState()
             state.speedMetersPerSecond = gyroYawRate.asRadiansPerSecond * moduleLocations[it].norm
@@ -326,7 +326,7 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
 //        Logger.recordOutput("Swerve/ModuleRotationComponents/3", moduleRotationComponents[3])
 
         Logger.recordOutput("Swerve/ModuleTranslationsMinMaxRatio", minMaxRatio)
-        Logger.recordOutput("Swerve/ModuleTranslationsMAD", mad)
+//        Logger.recordOutput("Swerve/ModuleTranslationsMAD", mad)
 
 //        val threshold = 10.0 // acc diff
 //        return accelerationDiff.asMetersPerSecondPerSecond > threshold
@@ -334,7 +334,7 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
 //        val threshold = 0.09 // mad
 //        return mad > threshold
 
-        return minMaxRatio
+        return mad
     }
 
     @get:AutoLogOutput(key = "Swerve/WheelsSlipping")

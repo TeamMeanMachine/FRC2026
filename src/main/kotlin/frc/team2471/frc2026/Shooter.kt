@@ -331,7 +331,7 @@ object Shooter: SubsystemBase("Shooter") {
     val hoodErrorDistance get() = (AimUtils.distanceToTarget * sin(hoodMotor.closedLoopError.valueAsDouble.radians)).absoluteValue()
 
     @get:AutoLogOutput(key = "Shooter/Velocity error distance")
-    val velocityErrorDistance get() = (WHEEL_DIAMETER * shooterMotor.closedLoopError.valueAsDouble * Math.PI * 0.5 * (
+    val velocityErrorDistance get() = (WHEEL_DIAMETER * shooterMotor.closedLoopError.valueAsDouble * Math.PI * (
             if (AimUtils.isAimingAtGoal)
                 hubTimeCurve.get(AimUtils.distanceToTarget.asFeet) * cos(hubAngleCurve.get(AimUtils.distanceToTarget.asFeet))
             else
@@ -361,7 +361,7 @@ object Shooter: SubsystemBase("Shooter") {
 
     @get:AutoLogOutput(key = "Shooter/Will not miss")
 //    val willNotMiss get() = ((rampedUp && AimUtils.isAimingAtGoal) || (rampedUpPassing && !AimUtils.isAimingAtGoal))
-    val willNotMiss get() = if (AimUtils.isAimingAtGoal) totalErrorDistance < 3.0.feet else totalErrorDistance < 5.0.feet
+    val willNotMiss get() = if (AimUtils.isAimingAtGoal) totalErrorDistance < 1.5.feet else totalErrorDistance < 4.0.feet
 
     @get:AutoLogOutput(key = "Shooter/isShooting")
     var isShooting = false
