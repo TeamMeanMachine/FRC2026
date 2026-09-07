@@ -67,7 +67,6 @@ object Robot : OpModeRobot(0.01) {
     val spindexer = Spindexer
     val fieldManager = FieldManager
     val aimUtils = AimUtils
-    val autonomous = Autonomous
 
     @Suppress("RemoveExplicitTypeArguments")
     val allMechanisms = arrayOf<PeriodicMechanism>(drive, intake, shooter, turret, spindexer, oi)
@@ -80,7 +79,6 @@ object Robot : OpModeRobot(0.01) {
         println("Robot init")
         // Tells FRC we use Kotlin
         HAL.reportUsage("Language", "Kotlin")
-        println("WPILib Version: ${WPILibVersion.Version}")
 
         DriverStationDisplay.addLine(
             "  ^~^  ,\n" +
@@ -113,6 +111,9 @@ object Robot : OpModeRobot(0.01) {
 
         // Start AdvantageKit logger
 //        Logger.start()
+
+        // Adds autos to driver station
+        Autonomous.addOpModes()
 
         // Call all subsystems, make sure their init's run
         allMechanisms.forEach { println("activating subsystem ${it.name}") }

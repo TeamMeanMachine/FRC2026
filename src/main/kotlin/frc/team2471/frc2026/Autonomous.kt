@@ -24,7 +24,7 @@ object Autonomous: Autonomi() {
 
 //    val paths: MutableMap<String, Trajectory<SwerveSample>> = findChoreoPaths()  <-- already inside AutoMaker
 
-    /** All auto routines for Autonomous mode. Gets registered as an OpMode. */
+    /** All auto routines for Autonomous mode. Gets registered as an OpMode. [org.team2471.frc.lib.autonomous.auto.AutoOpMode] */
     override val autos: List<AutoRoutine> = listOf(
         // AutoRoutine( Name, Command, { RobotStartingPose }, { DisabledPeriodicLoop } )
         // AutoRoutine("My Cool Auto", myCoolAutoCommand(), { paths["coolPath"]!!.getInitialPose(Drive.flipChoreoPaths) }, { Drive.driveVelocity(paths["coolPath"]!!.getInitialSample(Drive.flipChoreoPaths).chassisSpeeds) }
@@ -53,23 +53,22 @@ object Autonomous: Autonomi() {
 
 
     init {
-        println("Autonomous init")
+        println("Autonomous init. Path count: ${paths.size} Auto count: ${autos.size} Test count: ${tests.size}")
+    }
 
-        // Register Autos.
-        // Converts AutoRoutines to AutoOpModes and registers them to Robot (This makes them show up on the Driver Station)
+    fun addOpModes() {
+        // Convert AutoRoutines to AutoOpModeSuppliers
         autos.toAutoOpModeSuppliers().forEach {
-            Robot.addOpMode(RobotMode.AUTONOMOUS, it.name, it.opModeSupplier)
-            println("Registered ${it.name} as an AutoOpMode")
+            println("Auto: ${it.name}")
+            Robot.addOpMode(RobotMode.AUTONOMOUS, it.name, it.opModeSupplier) // AutoOpModes to driver station
         }
-        // Register Tests/Utility OpModes.
-        tests.toTestOpModeSuppliers().forEach {
-            Robot.addOpMode(RobotMode.UTILITY, it.name, it.opModeSupplier)
-            println("Registered ${it.name} TestOpMode")
-        }
-        // Publish cached OpModes to Driver Station.
-        Robot.publishOpModes()
 
-        println("Autonomous path count: ${paths.size}")
+        tests.toTestOpModeSuppliers().forEach { // Add Tests/Utility OpModes.
+            println("Test: ${it.name}")
+            Robot.addOpMode(RobotMode.UTILITY, it.name, it.opModeSupplier)
+        }
+
+        Robot.publishOpModes() // Publish cached OpModes to Driver Station. (This is most important)
     }
 
     /** Autonomous commands */
