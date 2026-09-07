@@ -19,6 +19,7 @@ import org.team2471.frc.lib.environment.demoSpeed
 import org.team2471.frc.lib.environment.isBlueAlliance
 import org.team2471.frc.lib.localization.PoseLocalizer
 import org.team2471.frc.lib.logging.SimpleLogger
+import org.team2471.frc.lib.logging.createTunable
 import org.team2471.frc.lib.math.cube
 import org.team2471.frc.lib.math.square
 import org.team2471.frc.lib.swerve.SwerveDriveSubsystem
@@ -45,23 +46,23 @@ import org.wpilib.math.geometry.Translation2d
 import org.wpilib.math.interpolation.Interpolator
 import org.wpilib.math.interpolation.InverseInterpolator
 import org.wpilib.math.kinematics.ChassisVelocities
-import org.wpilib.networktables.NetworkTableInstance
 import org.wpilib.system.Timer
 import org.wpilib.units.measure.Angle
 import org.wpilib.math.kinematics.SwerveModuleVelocity
+import org.wpilib.telemetry.Telemetry
 import kotlin.math.absoluteValue
 import kotlin.math.atan2
 
 
 object Drive: SwerveDriveSubsystem(DriveConstants.drivetrainConstants, *DriveConstants.moduleConfigs) {
-    private val table = NetworkTableInstance.getDefault().getTable("Drive")
+    val table = Telemetry.getTable("Drive")
 
-    val useAprilTagsEntry = table.getEntry("UseAprilTags")
-    val increaseDriveCurrentEntry = table.getEntry("IncreaseDriveCurrent")
+    val useAprilTagsTunable = table.createTunable("useAprilTags", true, true)
+    val increaseDriveCurrentTunable = table.createTunable("increaseDriveCurrent", false)
 
-    val increaseDriveCurrent get() = increaseDriveCurrentEntry.getBoolean(false)
+    val increaseDriveCurrent get() = increaseDriveCurrentTunable.get()
     var prevIncreaseDriveCurrent = increaseDriveCurrent
-    val useAprilTags: Boolean get() = useAprilTagsEntry.getBoolean(true)
+    val useAprilTags: Boolean get() = useAprilTagsTunable.get()
 
     // To reset position use this, also add other pose sources that need reset here.
     override var pose: Pose2d
@@ -130,9 +131,6 @@ object Drive: SwerveDriveSubsystem(DriveConstants.drivetrainConstants, *DriveCon
 
         useMapleSim = true
 
-        useAprilTagsEntry.setBoolean(true)
-        increaseDriveCurrentEntry.setBoolean(false)
-
         // MUST start inside the field on bootup for accurate heading measurements due to a Particle Filter bug.
         pose = Pose2d(3.0, 3.0, heading)
 
@@ -181,7 +179,7 @@ object Drive: SwerveDriveSubsystem(DriveConstants.drivetrainConstants, *DriveCon
 
         if (cameras.isNotEmpty()) {
             cameras.forEach {
-                table.getEntry("Cameras/${it.cameraName} isConnected").setBoolean(it.isConnected)
+                table.log("Cameras/${it.cameraName} isConnected", it.isConnected)
                 SimpleLogger.recordOutput("Drive/Cameras/${it.cameraName} isConnected", it.isConnected)
             }
         }

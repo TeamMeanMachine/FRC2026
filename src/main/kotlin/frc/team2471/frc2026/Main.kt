@@ -113,7 +113,6 @@ object Robot : OpModeRobot(0.01) {
         // Start AdvantageKit logger
 //        Logger.start()
 
-
         // Call all subsystems, make sure their init's run
         allMechanisms.forEach { println("activating subsystem ${it.name}") }
         println("FieldManager thinks the field is ${FieldManager.fieldDimensions.measureX.asFeet} feet big")
