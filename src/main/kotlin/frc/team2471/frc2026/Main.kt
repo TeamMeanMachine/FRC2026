@@ -12,7 +12,7 @@ import org.team2471.frc.lib.autonomous.test.TestOpMode
 import org.team2471.frc.lib.commands.PeriodicMechanism
 import org.team2471.frc.lib.logging.LoopLogger
 import org.team2471.frc.lib.control.isConnected
-import org.team2471.frc.lib.ctre.loggedMotors.MasterMotor
+import org.team2471.frc.lib.hardware.loggedMotors.MasterMotor
 import org.team2471.frc.lib.energy.BatteryLogger
 import org.team2471.frc.lib.environment.RobotType
 import org.team2471.frc.lib.environment.robotType
@@ -114,7 +114,6 @@ object Robot : OpModeRobot(0.01) {
         // Start AdvantageKit logger
 //        Logger.start()
 
-
         // Call all subsystems, make sure their init's run
         allMechanisms.forEach { println("activating subsystem ${it.name}") }
         println("FieldManager thinks the field is ${FieldManager.fieldDimensions.measureX.asFeet} feet big")
@@ -200,7 +199,9 @@ object Robot : OpModeRobot(0.01) {
 
     /** This function is called periodically whilst in simulation.  */
     override fun simulationPeriodic() {
+        LoopLogger.record("Motor simPeriodic")
         MasterMotor.periodic()
+        LoopLogger.record("Motor simPeriodic")
         // Run simulationPeriodic() for each mechanism
         allMechanisms.forEach {
             LoopLogger.record("${it.name} simPeriodic)")

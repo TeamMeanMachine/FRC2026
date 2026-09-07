@@ -8,7 +8,7 @@ plugins {
     id "java"
     id "idea"
     id "application"
-    id "org.wpilib.GradleRIO" version "2027.0.0-alpha-6-kilk2"
+    id "org.wpilib.GradleRIO" version "2027.0.0-alpha-7"
     id 'org.jetbrains.kotlin.jvm' version '2.3.21'
     id "org.jetbrains.kotlin.kapt" version "2.3.21"
     id "com.gradleup.shadow" version "9.3.0"
@@ -19,9 +19,6 @@ evaluationDependsOn(":meanlib")
 wpi.vendor.loadFrom(project(":meanlib"))
 // Grab wpilib version from MeanLib
 wpi.versions.wpilibVersion = project(":meanlib").wpi.versions.wpilibVersion
-
-wpi.maven.useLocal = project(":meanlib").wpi.maven.useLocal // Usually false
-wpi.maven.useDevelopment = project(":meanlib").wpi.maven.useDevelopment // Usually false
 
 java {
     sourceCompatibility = JavaVersion.VERSION_25

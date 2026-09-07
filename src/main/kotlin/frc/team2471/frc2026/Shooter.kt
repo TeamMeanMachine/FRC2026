@@ -19,21 +19,21 @@ import org.team2471.frc.lib.commands.command
 import org.team2471.frc.lib.logging.LoopLogger
 import org.team2471.frc.lib.control.bButton
 import org.team2471.frc.lib.control.rightStickButton
-import org.team2471.frc.lib.ctre.addFollower
-import org.team2471.frc.lib.ctre.applyConfiguration
-import org.team2471.frc.lib.ctre.brakeMode
-import org.team2471.frc.lib.ctre.coastMode
-import org.team2471.frc.lib.ctre.currentLimits
-import org.team2471.frc.lib.ctre.d
-import org.team2471.frc.lib.ctre.i
-import org.team2471.frc.lib.ctre.inverted
-import org.team2471.frc.lib.ctre.loggedMotors.LoggedTalonFX
-import org.team2471.frc.lib.ctre.magnetSensorOffset
-import org.team2471.frc.lib.ctre.motionMagic
-import org.team2471.frc.lib.ctre.p
-import org.team2471.frc.lib.ctre.remoteCANCoder
-import org.team2471.frc.lib.ctre.s
-import org.team2471.frc.lib.ctre.setCANCoderAngle
+import org.team2471.frc.lib.hardware.ctre.addFollower
+import org.team2471.frc.lib.hardware.ctre.applyConfiguration
+import org.team2471.frc.lib.hardware.ctre.brakeMode
+import org.team2471.frc.lib.hardware.ctre.coastMode
+import org.team2471.frc.lib.hardware.ctre.currentLimits
+import org.team2471.frc.lib.hardware.ctre.d
+import org.team2471.frc.lib.hardware.ctre.i
+import org.team2471.frc.lib.hardware.ctre.inverted
+import org.team2471.frc.lib.hardware.loggedMotors.LoggedTalonFX
+import org.team2471.frc.lib.hardware.ctre.magnetSensorOffset
+import org.team2471.frc.lib.hardware.ctre.motionMagic
+import org.team2471.frc.lib.hardware.ctre.p
+import org.team2471.frc.lib.hardware.ctre.remoteCANCoder
+import org.team2471.frc.lib.hardware.ctre.s
+import org.team2471.frc.lib.hardware.ctre.setCANCoderAngle
 import org.team2471.frc.lib.energy.BatteryLogger
 import org.team2471.frc.lib.environment.demoMode
 import org.team2471.frc.lib.environment.isReal
@@ -41,13 +41,13 @@ import org.team2471.frc.lib.environment.isSim
 import org.team2471.frc.lib.math.angleTo
 import org.team2471.frc.lib.units.absoluteValue
 import org.team2471.frc.lib.units.asFeet
-import org.team2471.frc.lib.units.asMeters
 import org.team2471.frc.lib.units.asMetersPerSecond
 import org.team2471.frc.lib.units.asRadiansPerSecond
 import org.team2471.frc.lib.units.asRotation2d
 import org.team2471.frc.lib.units.asRotations
 import org.team2471.frc.lib.units.cos
 import org.team2471.frc.lib.units.degrees
+import org.team2471.frc.lib.units.feet
 import org.team2471.frc.lib.units.inches
 import org.team2471.frc.lib.units.radians
 import org.team2471.frc.lib.units.rotations
@@ -63,7 +63,7 @@ import org.wpilib.math.system.DCMotor
 import org.wpilib.networktables.NetworkTableInstance
 import org.wpilib.units.measure.Angle
 import org.wpilib.units.measure.AngularVelocity
-import kotlin.math.abs
+import kotlin.math.cos
 
 object Shooter: MechanismBase("Shooter") {
     val table = NetworkTableInstance.getDefault().getTable("Shooter")
@@ -316,10 +316,21 @@ object Shooter: MechanismBase("Shooter") {
     const val BALL_ANGLE_AT_HOOD_ZERO = 90.0
 
     @get:AutoLogOutput(key = "Shooter/Hood error distance")
-    val hoodErrorDistance get() = abs(AimUtils.distanceToTarget.asFeet * sin(hoodMotor.closedLoopError.valueAsDouble.radians))
+    val hoodErrorDistance get() = (AimUtils.distanceToTarget * sin(hoodMotor.closedLoopError.valueAsDouble.radians)).absoluteValue()
 
     @get:AutoLogOutput(key = "Shooter/Velocity error distance")
-    val velocityErrorDistance get() = abs((if (AimUtils.isAimingAtGoal) AimUtils.MEASURED_SHOT_AIRTIME * kotlin.math.cos(hubAngleCurve.get(AimUtils.distanceToTarget.asFeet)) else AimUtils.PASS_AIRTIME * kotlin.math.cos(passAngleCurve.get(AimUtils.distanceToTarget.asFeet))) * shooterMotor.closedLoopError.valueAsDouble * WHEEL_DIAMETER.asMeters * Math.PI * 0.5)
+    val velocityErrorDistance get() = (WHEEL_DIAMETER * shooterMotor.closedLoopError.valueAsDouble * Math.PI * 0.5 * (
+            if (AimUtils.isAimingAtGoal)
+                hubTimeCurve.get(AimUtils.distanceToTarget.asFeet) * kotlin.math.cos(hubAngleCurve.get(AimUtils.distanceToTarget.asFeet))
+            else
+                if (FieldManager.passOverNet)
+                    overNetTimeCurve.get(AimUtils.distanceToTarget.asFeet) * cos(overNetAngleCurve.get(AimUtils.distanceToTarget.asFeet))
+                else
+                    passTimeCurve.get(AimUtils.distanceToTarget.asFeet) * kotlin.math.cos(passAngleCurve.get(AimUtils.distanceToTarget.asFeet))
+            )).absoluteValue()
+
+    @get:AutoLogOutput(key = "Shooter/Total error distance")
+    val totalErrorDistance get() = hoodErrorDistance + velocityErrorDistance + Turret.turretErrorDistance
 
     var fuel: MutableList<FuelSim> = mutableListOf()
     var fuel2: MutableList<FuelSim> = mutableListOf()
@@ -328,13 +339,17 @@ object Shooter: MechanismBase("Shooter") {
     @get:AutoLogOutput(key = "Shooter/raw ramped up")
     val rawRampedUp: Boolean get() = (shooterVelocity - shooterVelocitySetpoint).absoluteValue() < 2.0.rotationsPerSecond
 
-    var rampedUpDebouncer = Debouncer(0.1, Debouncer.DebounceType.kFalling)
+    var rampedUpDebouncer = Debouncer(0.1, Debouncer.DebounceType.FALLING)
 
     @get:AutoLogOutput(key = "Shooter/Ramped up")
     val rampedUp: Boolean get() = rampedUpDebouncer.calculate(rawRampedUp)
 
     @get:AutoLogOutput(key = "Shooter/Ramped up")
     val rampedUpPassing: Boolean get() = (shooterVelocity - shooterVelocitySetpoint).absoluteValue() < 15.0.rotationsPerSecond
+
+    @get:AutoLogOutput(key = "Shooter/Will not miss")
+//    val willNotMiss get() = ((rampedUp && AimUtils.isAimingAtGoal) || (rampedUpPassing && !AimUtils.isAimingAtGoal))
+    val willNotMiss get() = if (AimUtils.isAimingAtGoal) totalErrorDistance < 3.0.feet else totalErrorDistance < 5.0.feet
 
     @get:AutoLogOutput(key = "Shooter/isShooting")
     var isShooting = false
@@ -365,7 +380,7 @@ object Shooter: MechanismBase("Shooter") {
 
             Feedback.withSensorToMechanismRatio(1.0/1.5) // Note: I don't think this line configures anything
 
-            inverted(InvertedValue.Clockwise_Positive)
+            inverted(InvertedValue.CounterClockwise_Positive)
 
             if (isReal) {
                 if (isCompBot) {
@@ -527,7 +542,7 @@ object Shooter: MechanismBase("Shooter") {
 
     fun shootLoop(ignoreRampUp: Boolean = false) {
 //        println("Shoot Loop!!!")
-        if ((!FieldManager.inNoShootArea || ignoreRampUp) && (!Turret.isTurretWrapping || Turret.disableTurret) && (((rampedUp || ignoreRampUp) && AimUtils.isAimingAtGoal) || (rampedUpPassing && !AimUtils.isAimingAtGoal)) && (FieldManager.shouldShoot || !AimUtils.isAimingAtGoal)) {
+        if ((!FieldManager.inNoShootArea || ignoreRampUp) && (!Turret.isTurretWrapping || Turret.disableTurret) && (ignoreRampUp || willNotMiss) && (FieldManager.shouldShoot || !AimUtils.isAimingAtGoal)) {
             isShooting = true
             Spindexer.currentState = Spindexer.State.ON
         } else {

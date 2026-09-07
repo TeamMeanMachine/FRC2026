@@ -5,6 +5,7 @@ import frc.team2471.frc2026.Shooter.hubSpeedCurve
 import org.littletonrobotics.junction.AutoLogOutput
 import org.team2471.frc.lib.environment.demoMode
 import org.team2471.frc.lib.environment.isRedAlliance
+import org.team2471.frc.lib.logging.createTunable
 import org.team2471.frc.lib.math.round
 import org.team2471.frc.lib.units.asDegrees
 import org.team2471.frc.lib.units.asFeet
@@ -30,7 +31,7 @@ import org.wpilib.driverstation.RobotState
 import org.wpilib.math.geometry.Translation2d
 import org.wpilib.math.geometry.Translation3d
 import org.wpilib.math.interpolation.InterpolatingTreeMap
-import org.wpilib.networktables.NetworkTableInstance
+import org.wpilib.telemetry.Telemetry
 import org.wpilib.units.measure.Angle
 import org.wpilib.units.measure.AngularVelocity
 import org.wpilib.units.measure.Distance
@@ -41,9 +42,9 @@ import kotlin.math.pow
 import kotlin.math.sqrt
 
 object AimUtils {
-    private val table = NetworkTableInstance.getDefault().getTable("AimUtils")
+    private val table = Telemetry.getTable("AimUtils")
 
-    val shooterEfficiencyEntry = table.getEntry("shooterEfficiency")
+    val shooterEfficiencyEntry = table.createTunable("shooterEfficiency", 0.67, true)
 
     // seconds
     const val TARGET_SHOT_AIRTIME = 1.25
@@ -68,11 +69,10 @@ object AimUtils {
     val HUB_HEIGHT = 65.0.inches
 
     // Percent of surface speed of shooter that gets transferred into the ball
-    val shooterEfficiency get() = shooterEfficiencyEntry.getDouble(0.67)//if (isCompBot) 0.65 else 0.69
+    val shooterEfficiency get() = shooterEfficiencyEntry.get()
 
     init {
-        if (!shooterEfficiencyEntry.exists()) shooterEfficiencyEntry.setDouble(shooterEfficiency)
-        shooterEfficiencyEntry.setPersistent()
+
     }
 
 
