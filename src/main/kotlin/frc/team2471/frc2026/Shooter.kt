@@ -38,6 +38,7 @@ import org.team2471.frc.lib.energy.BatteryLogger
 import org.team2471.frc.lib.environment.demoMode
 import org.team2471.frc.lib.environment.isReal
 import org.team2471.frc.lib.environment.isSim
+import org.team2471.frc.lib.logging.getTunable
 import org.team2471.frc.lib.math.angleTo
 import org.team2471.frc.lib.units.absoluteValue
 import org.team2471.frc.lib.units.asFeet
@@ -60,13 +61,13 @@ import org.wpilib.math.interpolation.InterpolatingTreeMap
 import org.wpilib.math.interpolation.Interpolator
 import org.wpilib.math.interpolation.InverseInterpolator
 import org.wpilib.math.system.DCMotor
-import org.wpilib.networktables.NetworkTableInstance
+import org.wpilib.telemetry.Telemetry
 import org.wpilib.units.measure.Angle
 import org.wpilib.units.measure.AngularVelocity
 import kotlin.math.cos
 
 object Shooter: MechanismBase("Shooter") {
-    val table = NetworkTableInstance.getDefault().getTable("Shooter")
+    val table = Telemetry.getTable("Shooter")
 
     // feet, rot/s (of the wheel not the motor) (in an ideal condition. need to divide by SHOOTER_EFFICIENCY)
     val hubSpeedCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
@@ -209,25 +210,29 @@ object Shooter: MechanismBase("Shooter") {
     val passAngleCurve: InterpolatingTreeMap<Double, Double> get() = if (!FieldManager.passOverNet) floorAngleCurve else overNetAngleCurve
     val passTimeCurve: InterpolatingTreeMap<Double, Double> get() = if (!FieldManager.passOverNet) floorTimeCurve else overNetTimeCurve
 
-    val shootingTestSpeedEntry = table.getEntry("Shooter Shooting Speed")
-    val shootingTestAngleEntry = table.getEntry("Shooter Shooting Angle")
-    val doAutoShootEntry = table.getEntry("Do Auto Shoot")
-    val doAutoRampEntry = table.getEntry("Do Auto Ramp Up")
+    val shootingTestSpeedEntry = table.getTunable("Shooter Shooting Speed", 40.0, true)
+    val shootingTestAngleEntry = table.getTunable("Shooter Shooting Angle", 40.0, true)
+    val doAutoShootEntry = table.getTunable("Do Auto Shoot", true)
+    val doAutoRampEntry = table.getTunable("Do Auto Ramp Up", true)
 
-    val zeroHoodButtonEntry = table.getEntry("Zero Hood")
+    val zeroHoodButtonEntry = table.getTunable("Zero Hood", false) {
+        hoodEncoder.setCANCoderAngle(HOOD_ZERO.degrees)
+        it.set(false)
+        println("Zeroed hood")
+    }
 
-    val demoShootingSpeedEntry = table.getEntry("Demo Shooting Speed")
-    val demoShootingAngleEntry = table.getEntry("Demo Shooting Angle")
+    val demoShootingSpeedEntry = table.getTunable("Demo Shooting Speed", 30.0)
+    val demoShootingAngleEntry = table.getTunable("Demo Shooting Angle", 65.0)
 
-    val demoShootingSpeed get() = demoShootingSpeedEntry.getDouble(30.0)
-    val demoShootingAngle get() = demoShootingAngleEntry.getDouble(65.0)
+    val demoShootingSpeed get() = demoShootingSpeedEntry.get()
+    val demoShootingAngle get() = demoShootingAngleEntry.get()
 
     val demoAimAtHub get() = OI.driverController.bButton || OI.driverController.rightStickButton
 
-    val shootingTestSpeed: Double get() = shootingTestSpeedEntry.getDouble(40.0)
-    val shootingTestAngle: Double get() = shootingTestAngleEntry.getDouble(40.0)
-    val doAutoShoot: Boolean get() = doAutoShootEntry.getBoolean(true) && !(demoMode)
-    val doAutoRamp: Boolean get() = doAutoRampEntry.getBoolean(true) && !(demoMode)
+    val shootingTestSpeed: Double get() = shootingTestSpeedEntry.get()
+    val shootingTestAngle: Double get() = shootingTestAngleEntry.get()
+    val doAutoShoot: Boolean get() = doAutoShootEntry.get() && !(demoMode)
+    val doAutoRamp: Boolean get() = doAutoRampEntry.get() && !(demoMode)
 
 
     val shooterMotor = LoggedTalonFX(Falcons.SHOOTER_0, CANivores.TURRET_CAN)
@@ -360,20 +365,6 @@ object Shooter: MechanismBase("Shooter") {
         shooterMotor.configSim(DCMotor.getKrakenX60(2), 0.1)
         hoodMotor.configSim(DCMotor.getKrakenX60(1), 0.005)
 
-        if (!shootingTestSpeedEntry.exists()) shootingTestSpeedEntry.setDouble(shootingTestSpeed)
-        shootingTestSpeedEntry.setPersistent()
-
-        if (!shootingTestAngleEntry.exists()) shootingTestAngleEntry.setDouble(shootingTestAngle)
-        shootingTestAngleEntry.setPersistent()
-
-        doAutoShootEntry.setBoolean(true)
-        doAutoRampEntry.setBoolean(true)
-
-        zeroHoodButtonEntry.setBoolean(false)
-
-        demoShootingSpeedEntry.setDouble(demoShootingSpeed)
-        demoShootingAngleEntry.setDouble(demoShootingAngle)
-
         shooterMotor.applyConfiguration {
             currentLimits(10.0, 30.0, 0.3)
             coastMode()
@@ -461,12 +452,6 @@ object Shooter: MechanismBase("Shooter") {
             fuel2.forEach { it.update() }
             logFuel("fuel2", *fuel2.toTypedArray())
             fuel2.removeFuel()
-        }
-
-        if (zeroHoodButtonEntry.getBoolean(false)) {
-            hoodEncoder.setCANCoderAngle(HOOD_ZERO.degrees)
-            zeroHoodButtonEntry.setBoolean(false)
-            println("Zeroed hood")
         }
 
         BatteryLogger.recordCurrent("Shooter Roller", shooterMotor.supplyCurrent.value * 2.0)

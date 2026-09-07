@@ -9,6 +9,7 @@ import com.ctre.phoenix6.controls.PositionTorqueCurrentFOC
 import com.ctre.phoenix6.hardware.TalonFX
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue
 import frc.team2471.frc2026.Robot.isCompBot
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.littletonrobotics.junction.AutoLogOutput
@@ -18,6 +19,7 @@ import org.team2471.frc.lib.commands.parallel
 import org.team2471.frc.lib.commands.periodic
 import org.team2471.frc.lib.commands.command
 import org.team2471.frc.lib.control.CurrentLimits
+import org.team2471.frc.lib.coroutines.periodicSuspend
 import org.team2471.frc.lib.logging.LoopLogger
 import org.team2471.frc.lib.hardware.ctre.addFollower
 import org.team2471.frc.lib.hardware.ctre.applyConfiguration
@@ -30,32 +32,45 @@ import org.team2471.frc.lib.hardware.ctre.motionMagic
 import org.team2471.frc.lib.hardware.ctre.p
 import org.team2471.frc.lib.hardware.ctre.s
 import org.team2471.frc.lib.energy.BatteryLogger
+import org.team2471.frc.lib.logging.getTunable
 import org.team2471.frc.lib.units.amps
 import org.team2471.frc.lib.units.seconds
 import org.wpilib.command3.Command
 import org.wpilib.hardware.discrete.DigitalInput
-import org.wpilib.networktables.NetworkTableInstance
 import org.wpilib.system.Timer
+import org.wpilib.telemetry.Telemetry
 import kotlin.math.absoluteValue
 
 object Intake: MechanismBase("Intake") {
-    private val table = NetworkTableInstance.getDefault().getTable("Intake")
+    private val table = Telemetry.getTable("Intake")
 
-    val deployPoseEntry = table.getEntry("deployPose")
-    val stowPoseEntry = table.getEntry("stowPose")
-    val deepStowPoseEntry = table.getEntry("deepStowPose")
-    val intakePowerEntry = table.getEntry("intakePower")
+    val deployPoseEntry = table.getTunable("deployPose", 29.0, true)
+    val stowPoseEntry = table.getTunable("stowPose", 2.0, true)
+    val deepStowPoseEntry = table.getTunable("deepStowPose", 0.0, true)
+    val intakePowerEntry = table.getTunable("intakePower", 75.0, true)
 
-    val maxForwardTorqueEntry = table.getEntry("maxForwardTorque")
-    val maxForwardTorque get() = maxForwardTorqueEntry.getDouble(18.0)
-    var prevMaxForwardTorque = maxForwardTorque
+    @OptIn(DelicateCoroutinesApi::class)
+    val maxForwardTorqueEntry = table.getTunable("maxForwardTorque", 18.0, true) {
+        GlobalScope.launch {
+            println("Setting max forward torque to $maxForwardTorque")
+            deployMotor0.modifyConfiguration {
+                TorqueCurrent.PeakForwardTorqueCurrent = maxForwardTorque
+            }
+            deployMotor1.modifyConfiguration {
+                TorqueCurrent.PeakForwardTorqueCurrent = maxForwardTorque
+            }
+        }
+    }
 
-    val DEPLOY_POSE get() = deployPoseEntry.getDouble(if (isCompBot) 29.0 else 25.75)
-    val STOW_POSE get() = stowPoseEntry.getDouble(if (isCompBot) 2.0 else 2.0)
-    val DEEP_STOW_POSE get() = deepStowPoseEntry.getDouble(0.0)
+    val maxForwardTorque: Double
+        get() = maxForwardTorqueEntry.get()
 
-    val INTAKE_POWER get() = intakePowerEntry.getDouble(if (isCompBot) 75.0 else 75.0)
-    val HOMING_POWER = if (isCompBot) 0.1 else 0.15
+    val DEPLOY_POSE get() = deployPoseEntry.get()
+    val STOW_POSE get() = stowPoseEntry.get()
+    val DEEP_STOW_POSE get() = deepStowPoseEntry.get()
+
+    val INTAKE_POWER get() = intakePowerEntry.get()
+    val HOMING_POWER = 0.1
 
     const val HOME_VELOCITY_THRESHOLD = 0.25
 
@@ -163,18 +178,6 @@ object Intake: MechanismBase("Intake") {
 
     init {
         println("Intake initialization")
-        if (!deployPoseEntry.exists()) deployPoseEntry.setDouble(DEPLOY_POSE)
-        if (!stowPoseEntry.exists()) stowPoseEntry.setDouble(STOW_POSE)
-        if (!deepStowPoseEntry.exists()) deepStowPoseEntry.setDouble(DEEP_STOW_POSE)
-        if (!intakePowerEntry.exists()) intakePowerEntry.setDouble(INTAKE_POWER)
-        if (!maxForwardTorqueEntry.exists()) maxForwardTorqueEntry.setDouble(maxForwardTorque)
-
-        deployPoseEntry.setPersistent()
-        stowPoseEntry.setPersistent()
-        deepStowPoseEntry.setPersistent()
-        intakePowerEntry.setPersistent()
-        maxForwardTorqueEntry.setPersistent()
-
 
         // Create Intake deploy motor configuration
         val deployConfig = TalonFXConfiguration().apply {
@@ -210,7 +213,7 @@ object Intake: MechanismBase("Intake") {
         }
 
         GlobalScope.launch {
-            org.team2471.frc.lib.coroutines.periodicSuspend {
+            periodicSuspend {
                 deploySetpoint = deploySetpoint
             }
         }
@@ -218,18 +221,6 @@ object Intake: MechanismBase("Intake") {
 
     override fun periodic() {
         LoopLogger.record("Intake periodic")
-        if (maxForwardTorque != prevMaxForwardTorque) {
-            GlobalScope.launch {
-                deployMotor0.modifyConfiguration {
-                    TorqueCurrent.PeakForwardTorqueCurrent = maxForwardTorque
-                }
-                deployMotor1.modifyConfiguration {
-                    TorqueCurrent.PeakForwardTorqueCurrent = maxForwardTorque
-                }
-            }
-            prevMaxForwardTorque = maxForwardTorque
-        }
-
         BatteryLogger.recordCurrent("Intake Deploy", (deployCurrent0 + deployCurrent1).amps)
         BatteryLogger.recordCurrent("Intake Rollers", rollerCurrent.amps * 2.0)
         LoopLogger.record("Intake periodic")

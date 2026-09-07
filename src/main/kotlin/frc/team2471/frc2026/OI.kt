@@ -7,6 +7,7 @@ import org.team2471.frc.lib.commands.periodic
 import org.team2471.frc.lib.logging.LoopLogger
 import org.team2471.frc.lib.control.isConnected
 import org.team2471.frc.lib.environment.demoMode
+import org.team2471.frc.lib.logging.getTunable
 import org.team2471.frc.lib.math.applyDeadband
 import org.team2471.frc.lib.math.deadband
 import org.team2471.frc.lib.math.normalize
@@ -15,16 +16,17 @@ import org.wpilib.command3.button.CommandXboxController
 import org.wpilib.math.filter.Debouncer
 import org.wpilib.math.geometry.Pose2d
 import org.wpilib.math.geometry.Translation2d
-import org.wpilib.networktables.NetworkTableInstance
 import org.wpilib.opmode.PeriodicOpMode
 import org.wpilib.opmode.Teleop
+import org.wpilib.telemetry.Telemetry
 import org.wpilib.util.Alert
 
 object OI: MechanismBase("OI") {
-    private val table = NetworkTableInstance.getDefault().getTable("OI")
+    private val table = Telemetry.getTable("OI")
 
-    val rotationMultiplierEntry = table.getEntry("Rotation Multiplier")
-    val rotationMultiplier = rotationMultiplierEntry.getDouble(0.8)
+    val rotationMultiplierEntry = table.getTunable("Rotation Multiplier", 0.8, true)
+    val rotationMultiplier: Double
+        get() = rotationMultiplierEntry.get()
 
     val driverController = CommandXboxController(0)
     val operatorController = CommandXboxController(1)
@@ -93,9 +95,6 @@ object OI: MechanismBase("OI") {
 
     init {
         println("OI initialization")
-
-        if (!rotationMultiplierEntry.exists()) rotationMultiplierEntry.setDouble(rotationMultiplier)
-        rotationMultiplierEntry.setPersistent()
 
         /** DEFAULT JOYSTICK BINDINGS. (Will be active by default in every OpMode unless overridden) */
 

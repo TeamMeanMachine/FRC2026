@@ -12,6 +12,7 @@ import org.team2471.frc.lib.environment.demoMode
 import org.team2471.frc.lib.environment.isBlueAlliance
 import org.team2471.frc.lib.environment.isRedAlliance
 import org.team2471.frc.lib.logging.SimpleLogger
+import org.team2471.frc.lib.logging.getTunable
 import org.team2471.frc.lib.math.angleTo
 import org.team2471.frc.lib.math.toPose2d
 import org.team2471.frc.lib.units.*
@@ -19,18 +20,18 @@ import org.wpilib.driverstation.MatchState
 import org.wpilib.driverstation.RobotState
 import org.wpilib.math.geometry.Pose2d
 import org.wpilib.math.geometry.Translation2d
-import org.wpilib.networktables.NetworkTableInstance
 import org.wpilib.units.measure.Distance
 import org.wpilib.fields.Field
 import org.wpilib.fields.FieldTag
 import org.wpilib.fields.Fields
+import org.wpilib.telemetry.Telemetry
 import kotlin.jvm.optionals.getOrNull
 import kotlin.math.absoluteValue
 import kotlin.math.floor
 import kotlin.math.sign
 
 object FieldManager {
-    private val table = NetworkTableInstance.getDefault().getTable("FieldManager")
+    private val table = Telemetry.getTable("FieldManager")
 
     val aprilTagFieldLayout: Field = Field.loadField(Fields.DEFAULT_FIELD) //AprilTagFieldLayout(Filesystem.getDeployDirectory().path + "/2026Field.json") //TODO: FIX FOR 2027
     val allAprilTags: List<FieldTag> = aprilTagFieldLayout.tags
@@ -267,26 +268,21 @@ object FieldManager {
     val weWonAuto: Boolean
         get() = redWonAuto == isRedAlliance
 
-    val weWonAutoEntry = table.getEntry("We Won Auto")
-
     @get:AutoLogOutput(key = "FieldManager/matchTime")
     val matchTime: Double
         get() = MatchState.getMatchTime()
 
-    val doShiftTimingEntry = table.getEntry("DoShiftTiming")
-    val autoHoodRetractionEntry = table.getEntry("AutoHoodRetraction")
+    val doShiftTimingEntry = table.getTunable("DoShiftTiming", true)
+    val autoHoodRetractionEntry = table.getTunable("AutoHoodRetraction", true)
 
-    val trenchAssistStrengthEntry = table.getEntry("TrenchAssistStrength")
-    val trenchAssistStrength get() = trenchAssistStrengthEntry.getDouble(2.0)
+    val trenchAssistStrengthEntry = table.getTunable("TrenchAssistStrength", 2.0, true)
+    val trenchAssistStrength get() = trenchAssistStrengthEntry.get()
 
-    val hubCountdownEntry = table.getEntry("HubCountdown")
-    val activeHubEntry = table.getEntry("ActiveHub")
-
-    val doShiftTiming get() = doShiftTimingEntry.getBoolean(true) && !demoMode
+    val doShiftTiming get() = doShiftTimingEntry.get() && !demoMode
     var autoHoodRetraction
-        get() = autoHoodRetractionEntry.getBoolean(true)
+        get() = autoHoodRetractionEntry.get()
         set(value) {
-            autoHoodRetractionEntry.setBoolean(value)
+            autoHoodRetractionEntry.get()
         }
 
     val shouldShootStartTimes = arrayOf(130.0, 105.0, 80.0, 55.0).map { it + AimUtils.MEASURED_SHOT_AIRTIME + HUB_PROCESSING_TIME }
@@ -340,12 +336,6 @@ object FieldManager {
         }
 
     init {
-        doShiftTimingEntry.setBoolean(true)
-        autoHoodRetractionEntry.setBoolean(true)
-
-        trenchAssistStrengthEntry.setDouble(trenchAssistStrength)
-        trenchAssistStrengthEntry.setPersistent()
-
         val apriltagPositions = allAprilTags.map { it.pose }
 //        Logger.recordOutput("FieldManager/All apriltags", *apriltagPositions.toTypedArray())
         println("FieldManager init. Field dimensions: $fieldDimensions. ${allAprilTags.size} tags.")
@@ -357,9 +347,9 @@ object FieldManager {
 
         GlobalScope.launch {
             periodicSuspend {
-                weWonAutoEntry.setBoolean(weWonAuto)
-                hubCountdownEntry.setDouble(if (matchTime > 130.0) matchTime - 130.0 else if (matchTime < 30.0 || (matchTime < 55.0 && weWonAuto)) matchTime else (matchTime - 5) % 25.0)
-                activeHubEntry.setString(
+                table.log("We Won Auto", weWonAuto)
+                table.log("HubCountdown", if (matchTime > 130.0) matchTime - 130.0 else if (matchTime < 30.0 || (matchTime < 55.0 && weWonAuto)) matchTime else (matchTime - 5) % 25.0)
+                table.log("ActiveHub",
                     if (Robot.isAutonomous || matchTime > 130.0 || matchTime < 30.0) {
                         "Both"
                     } else if (isRedAlliance == hubIsActive) {

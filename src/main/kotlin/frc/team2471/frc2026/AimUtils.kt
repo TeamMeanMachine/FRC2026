@@ -5,7 +5,7 @@ import frc.team2471.frc2026.Shooter.hubSpeedCurve
 import org.littletonrobotics.junction.AutoLogOutput
 import org.team2471.frc.lib.environment.demoMode
 import org.team2471.frc.lib.environment.isRedAlliance
-import org.team2471.frc.lib.logging.createTunable
+import org.team2471.frc.lib.logging.getTunable
 import org.team2471.frc.lib.math.round
 import org.team2471.frc.lib.units.asDegrees
 import org.team2471.frc.lib.units.asFeet
@@ -44,7 +44,7 @@ import kotlin.math.sqrt
 object AimUtils {
     private val table = Telemetry.getTable("AimUtils")
 
-    val shooterEfficiencyEntry = table.createTunable("shooterEfficiency", 0.67, true)
+    val shooterEfficiencyEntry = table.getTunable("shooterEfficiency", 0.67, true)
 
     // seconds
     const val TARGET_SHOT_AIRTIME = 1.25

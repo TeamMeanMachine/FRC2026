@@ -18,15 +18,16 @@ import org.team2471.frc.lib.hardware.ctre.inverted
 import org.team2471.frc.lib.hardware.ctre.p
 import org.team2471.frc.lib.hardware.ctre.s
 import org.team2471.frc.lib.energy.BatteryLogger
+import org.team2471.frc.lib.logging.getTunable
 import org.team2471.frc.lib.math.deadband
 import org.team2471.frc.lib.math.linearMap
 import org.wpilib.command3.Command
-import org.wpilib.networktables.NetworkTableInstance
+import org.wpilib.telemetry.Telemetry
 import org.wpilib.units.measure.AngularVelocity
 import org.wpilib.units.measure.Current
 
 object Spindexer: MechanismBase("Spindexer") {
-    val table = NetworkTableInstance.getDefault().getTable("Spindexer")
+    val table = Telemetry.getTable("Spindexer")
 
     val spinMotor = TalonFX(Falcons.SPIN_0, CANBus.systemcore(1))
     val spinMotorFollower = TalonFX(Falcons.SPIN_1, CANBus.systemcore(1))
@@ -36,33 +37,33 @@ object Spindexer: MechanismBase("Spindexer") {
     @get:AutoLogOutput(key = "Spindexer/Current State")
     var currentState = State.OFF
 
-    val spinVelocityEntry = table.getEntry("Spin Velocity")
-    val spinLowerVelocityEntry = table.getEntry("Spin Lower Velocity")
-    val sidetakeVelocityEntry = table.getEntry("Sidetake Velocity")
-    val uptakeVelocityEntry = table.getEntry("Uptake Velocity")
-    val agitateVelocityEntry = table.getEntry("Agitate Velocity")
+    val spinVelocityEntry = table.getTunable("Spin Velocity", 78.0, true)
+    val spinLowerVelocityEntry = table.getTunable("Spin Lower Velocity", 40.0, true)
+    val sidetakeVelocityEntry = table.getTunable("Sidetake Velocity", 115.0, true)
+    val uptakeVelocityEntry = table.getTunable("Uptake Velocity", 129.0, true)
+    val agitateVelocityEntry = table.getTunable("Agitate Velocity", 30.0, true)
 
-    val sidetakeSpitVelocityEntry = table.getEntry("Sidetake Spit Velocity")
-    val uptakeSpitVelocityEntry = table.getEntry("Uptake Spit Velocity")
+    val sidetakeSpitVelocityEntry = table.getTunable("Sidetake Spit Velocity", -50.0, true)
+    val uptakeSpitVelocityEntry = table.getTunable("Uptake Spit Velocity", -50.0, true)
 
-    val spinSlowdownTimeEntry = table.getEntry("Spin Slowdown Time")
-    val spinSlowdownDelayTimeEntry = table.getEntry("Spin Slowdown Delay Time")
-    val doSpinSlowdownEntry = table.getEntry("Do Spin Slowdown")
-    val doSineSpinSlowdownEntry = table.getEntry("Do Sin Spin Slowdown")
+    val spinSlowdownTimeEntry = table.getTunable("Spin Slowdown Time", 3.0, true)
+    val spinSlowdownDelayTimeEntry = table.getTunable("Spin Slowdown Delay Time", 3.0, true)
+    val doSpinSlowdownEntry = table.getTunable("Do Spin Slowdown", false, true)
+    val doSineSpinSlowdownEntry = table.getTunable("Do Sin Spin Slowdown", false, true)
 
-    val SPIN_VELOCITY: Double get() = spinVelocityEntry.getDouble(78.0)
-    val SPIN_LOWER_VELOCITY: Double get() = spinLowerVelocityEntry.getDouble(40.0)
-    val SIDETAKE_VELOCITY: Double get() = sidetakeVelocityEntry.getDouble(115.0)
-    val UPTAKE_VELOCITY: Double get() = uptakeVelocityEntry.getDouble(129.0)
-    val AGITATE_VELOCITY: Double get() = agitateVelocityEntry.getDouble(30.0)
+    val SPIN_VELOCITY: Double get() = spinVelocityEntry.get()
+    val SPIN_LOWER_VELOCITY: Double get() = spinLowerVelocityEntry.get()
+    val SIDETAKE_VELOCITY: Double get() = sidetakeVelocityEntry.get()
+    val UPTAKE_VELOCITY: Double get() = uptakeVelocityEntry.get()
+    val AGITATE_VELOCITY: Double get() = agitateVelocityEntry.get()
 
-    val SIDETAKE_SPIT_VELOCITY: Double get() = sidetakeSpitVelocityEntry.getDouble(-50.0)
-    val UPTAKE_SPIT_VELOCITY: Double get() = uptakeSpitVelocityEntry.getDouble(-50.0)
+    val SIDETAKE_SPIT_VELOCITY: Double get() = sidetakeSpitVelocityEntry.get()
+    val UPTAKE_SPIT_VELOCITY: Double get() = uptakeSpitVelocityEntry.get()
 
-    val spinSlowdownDelayTime: Double get() = spinSlowdownDelayTimeEntry.getDouble(3.0)
-    val spinSlowdownTime: Double get() = spinSlowdownTimeEntry.getDouble(3.0)
-    val doSpinSlowdown: Boolean get() = doSpinSlowdownEntry.getBoolean(false)
-    val doSineSpinSlowdown: Boolean get() = doSineSpinSlowdownEntry.getBoolean(false)
+    val spinSlowdownDelayTime: Double get() = spinSlowdownDelayTimeEntry.get()
+    val spinSlowdownTime: Double get() = spinSlowdownTimeEntry.get()
+    val doSpinSlowdown: Boolean get() = doSpinSlowdownEntry.get()
+    val doSineSpinSlowdown: Boolean get() = doSineSpinSlowdownEntry.get()
 
     @get:AutoLogOutput(key = "Spindexer/Spin Velocity")
     val spinVelocity: AngularVelocity get() = spinMotor.velocity.value
@@ -121,34 +122,6 @@ object Spindexer: MechanismBase("Spindexer") {
 
     init {
         println("Spindexer initialization")
-        if (!spinVelocityEntry.exists()) spinVelocityEntry.setDouble(SPIN_VELOCITY)
-        if (!spinLowerVelocityEntry.exists()) spinLowerVelocityEntry.setDouble(SPIN_LOWER_VELOCITY)
-        if (!sidetakeVelocityEntry.exists()) sidetakeVelocityEntry.setDouble(SIDETAKE_VELOCITY)
-        if (!uptakeVelocityEntry.exists()) uptakeVelocityEntry.setDouble(UPTAKE_VELOCITY)
-        if (!agitateVelocityEntry.exists()) agitateVelocityEntry.setDouble(AGITATE_VELOCITY)
-
-        if (!sidetakeSpitVelocityEntry.exists()) sidetakeSpitVelocityEntry.setDouble(SIDETAKE_SPIT_VELOCITY)
-        if (!uptakeSpitVelocityEntry.exists()) uptakeSpitVelocityEntry.setDouble(UPTAKE_SPIT_VELOCITY)
-
-        if (!spinSlowdownTimeEntry.exists()) spinSlowdownTimeEntry.setDouble(spinSlowdownTime)
-        if (!spinSlowdownDelayTimeEntry.exists()) spinSlowdownDelayTimeEntry.setDouble(spinSlowdownDelayTime)
-        if (!doSpinSlowdownEntry.exists()) doSpinSlowdownEntry.setBoolean(doSpinSlowdown)
-        if (!doSineSpinSlowdownEntry.exists()) doSineSpinSlowdownEntry.setBoolean(doSineSpinSlowdown)
-
-        spinVelocityEntry.setPersistent()
-        spinLowerVelocityEntry.setPersistent()
-        sidetakeVelocityEntry.setPersistent()
-        uptakeVelocityEntry.setPersistent()
-        agitateVelocityEntry.setPersistent()
-
-        sidetakeSpitVelocityEntry.setPersistent()
-        uptakeSpitVelocityEntry.setPersistent()
-
-        spinSlowdownTimeEntry.setPersistent()
-        spinSlowdownDelayTimeEntry.setPersistent()
-        doSpinSlowdownEntry.setPersistent()
-        doSineSpinSlowdownEntry.setPersistent()
-
 
         spinMotor.applyConfiguration {
             currentLimits(10.0, 20.0, 0.5)

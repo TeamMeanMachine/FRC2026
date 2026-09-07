@@ -44,6 +44,7 @@ import org.team2471.frc.lib.hardware.ctre.p
 import org.team2471.frc.lib.hardware.ctre.s
 import org.team2471.frc.lib.hardware.loggedMotors.LoggedTalonFX
 import org.team2471.frc.lib.logging.SimpleLogger
+import org.team2471.frc.lib.logging.getTunable
 import org.team2471.frc.lib.math.angleTo
 import org.team2471.frc.lib.math.round
 import org.team2471.frc.lib.units.asFeet
@@ -56,7 +57,7 @@ import org.wpilib.math.filter.Debouncer
 import org.wpilib.math.geometry.Rotation2d
 import org.wpilib.math.geometry.Translation2d
 import org.wpilib.math.system.DCMotor
-import org.wpilib.networktables.NetworkTableInstance
+import org.wpilib.telemetry.Telemetry
 import org.wpilib.units.measure.Angle
 import org.wpilib.units.measure.AngularVelocity
 import kotlin.math.IEEErem
@@ -65,17 +66,11 @@ import kotlin.math.absoluteValue
 import kotlin.math.hypot
 
 object Turret: MechanismBase("Turret") {
-    private val table = NetworkTableInstance.getDefault().getTable("Turret")
-    val encoder1OffsetEntry = table.getEntry("Encoder 1 Offset")
-    val encoder2OffsetEntry = table.getEntry("Encoder 2 Offset")
-    val disableTurretEntry = table.getEntry("Disable Turret")
-    val turretPigeonIsConnectedEntry = table.getEntry("Turret Pigeon IsConnected")
-    val rawEncoder1AbsolutePositionEntry = table.getEntry("Raw Encoder 1 Absolute Position")
-    val rawEncoder2AbsolutePositionEntry = table.getEntry("Raw Encoder 2 Absolute Position")
-    val encoder1AbsolutePositionEntry = table.getEntry("Encoder 1 Absolute Position")
-    val encoder2AbsolutePositionEntry = table.getEntry("Encoder 2 Absolute Position")
-    val fusedEncoderAngleEntry = table.getEntry("Fused Encoder Angle")
-    val turetFeedforwardFactorEntry = table.getEntry("Feedforward Factor")
+    private val table = Telemetry.getTable("Turret")
+    val encoder1OffsetEntry = table.getTunable("Encoder 1 Offset", ENCODER_1_DEFAULT_OFFSET, true)
+    val encoder2OffsetEntry = table.getTunable("Encoder 2 Offset", ENCODER_2_DEFAULT_OFFSET, true)
+    val disableTurretEntry = table.getTunable("Disable Turret", false, true)
+    val turretFeedforwardFactorEntry = table.getTunable("Feedforward Factor", 3.0, true)
 
     val turretMotor = LoggedTalonFX(Falcons.TURRET_0, CANivores.TURRET_CAN)
     val turretEncoder1 = CANcoder(CANCoders.TURRET_0, CANivores.TURRET_CAN)
@@ -87,8 +82,8 @@ object Turret: MechanismBase("Turret") {
     val TURRET_RANGE = TURRET_TOP_LIMIT - TURRET_BOTTOM_LIMIT
     val TURRET_ENCODER_LIMIT = if (isCompBot) 600.0.degrees else 720.0.degrees
 
-    val ENCODER_1_DEFAULT_OFFSET = 31.55
-    val ENCODER_2_DEFAULT_OFFSET = -61.85
+    const val ENCODER_1_DEFAULT_OFFSET = 31.55
+    const val ENCODER_2_DEFAULT_OFFSET = -61.85
 
     val encoder1GearRatio = if (isCompBot) 30.0/230.0 else 30.0/200.0
     val encoder2GearRatio = encoder1GearRatio * 83.0/32.0
@@ -123,9 +118,9 @@ object Turret: MechanismBase("Turret") {
     val rawEncoder2AbsolutePosition: Angle get() = turretEncoder2.absolutePosition.value
 
     @get:AutoLogOutput(key = "Turret/encoder1AbsolutePosition")
-    val encoder1AbsolutePosition: Angle get() = (rawEncoder1AbsolutePosition - encoder1OffsetEntry.getDouble(ENCODER_1_DEFAULT_OFFSET).degrees).wrap()
+    val encoder1AbsolutePosition: Angle get() = (rawEncoder1AbsolutePosition - encoder1OffsetEntry.get().degrees).wrap()
     @get:AutoLogOutput(key = "Turret/encoder2AbsolutePosition")
-    val encoder2AbsolutePosition: Angle get() = (rawEncoder2AbsolutePosition - encoder2OffsetEntry.getDouble(ENCODER_2_DEFAULT_OFFSET).degrees).wrap()
+    val encoder2AbsolutePosition: Angle get() = (rawEncoder2AbsolutePosition - encoder2OffsetEntry.get().degrees).wrap()
 
     // unwraps encoder 1 angle using encoder 2 angle
     @get:AutoLogOutput(key = "Turret/fusedEncoderAngle")
@@ -183,7 +178,7 @@ object Turret: MechanismBase("Turret") {
     val fieldCentricAngleWrapped: Angle get() = fieldCentricAngle.wrap()
 
     val turretFeedforwardFactor: Double
-        get() = turetFeedforwardFactorEntry.getDouble(3.0)
+        get() = turretFeedforwardFactorEntry.get()
 
     @get:AutoLogOutput(key = "Turret/turretFeedforward")
     val turretFeedforward: Double // Don't have rotational velocity feedforward when wrapping
@@ -262,7 +257,7 @@ object Turret: MechanismBase("Turret") {
         get() = turretMotor.supplyCurrent.valueAsDouble
 
     val disableTurret: Boolean
-        get() = disableTurretEntry.getBoolean(false) || !debouncedTurretPigeonIsConnected
+        get() = disableTurretEntry.get() || !debouncedTurretPigeonIsConnected
 
     val turretOffsetFromCenter = Translation2d(0.0, 0.725.inches.asMeters)
     var turretHeight = 0.4.meters
@@ -290,10 +285,6 @@ object Turret: MechanismBase("Turret") {
 
     init {
         println("Turret initialization")
-        if (!encoder1OffsetEntry.exists()) encoder1OffsetEntry.setDouble(ENCODER_1_DEFAULT_OFFSET); encoder1OffsetEntry.setPersistent()
-        if (!encoder2OffsetEntry.exists()) encoder2OffsetEntry.setDouble(ENCODER_2_DEFAULT_OFFSET); encoder2OffsetEntry.setPersistent()
-        if (!turetFeedforwardFactorEntry.exists()) turetFeedforwardFactorEntry.setDouble(turretFeedforwardFactor); turetFeedforwardFactorEntry.setPersistent()
-        if (!disableTurretEntry.exists()) disableTurretEntry.setBoolean(disableTurret); disableTurretEntry.setPersistent()
 
         turretEncoder1.applyConfiguration {
             if (isCompBot) {
@@ -411,15 +402,15 @@ object Turret: MechanismBase("Turret") {
         SimpleLogger.recordOutput("Turret/distToGoalFeet", aimTarget.getDistance(Drive.localizer.pose.translation).meters.asFeet)
         SimpleLogger.recordOutput("Turret/turretPigeonLatency", turretPigeonLatency)
         SimpleLogger.recordOutput("Turret/turretPigeonIsConnected", turretPigeonConnected)
-        turretPigeonIsConnectedEntry.setBoolean(turretPigeonConnected)
+        table.log("turretPigeonIsConnected", turretPigeonConnected)
         LoopLogger.record("turret logging")
 
-        rawEncoder1AbsolutePositionEntry.setDouble(rawEncoder1AbsolutePosition.asDegrees)
-        rawEncoder2AbsolutePositionEntry.setDouble(rawEncoder2AbsolutePosition.asDegrees)
-        encoder1AbsolutePositionEntry.setDouble(encoder1AbsolutePosition.asDegrees)
-        encoder2AbsolutePositionEntry.setDouble(encoder2AbsolutePosition.asDegrees)
+        table.log("Raw Encoder 1 Absolute Position", rawEncoder1AbsolutePosition.asDegrees)
+        table.log("Raw Encoder 2 Absolute Position", rawEncoder2AbsolutePosition.asDegrees)
+        table.log("Encoder 1 Absolute Position", encoder1AbsolutePosition.asDegrees)
+        table.log("Encoder 2 Absolute Position", encoder2AbsolutePosition.asDegrees)
         if (!Robot.isEnabled) {
-            fusedEncoderAngleEntry.setDouble(fusedEncoderAngle.asDegrees)
+            table.log("Fused Encoder Angle", fusedEncoderAngle.asDegrees)
         }
 
         BatteryLogger.recordCurrent("Turret", turretMotor.supplyCurrent.value * 2.0)

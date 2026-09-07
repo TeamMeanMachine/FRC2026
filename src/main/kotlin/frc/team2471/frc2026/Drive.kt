@@ -19,7 +19,7 @@ import org.team2471.frc.lib.environment.demoSpeed
 import org.team2471.frc.lib.environment.isBlueAlliance
 import org.team2471.frc.lib.localization.PoseLocalizer
 import org.team2471.frc.lib.logging.SimpleLogger
-import org.team2471.frc.lib.logging.createTunable
+import org.team2471.frc.lib.logging.getTunable
 import org.team2471.frc.lib.math.cube
 import org.team2471.frc.lib.math.square
 import org.team2471.frc.lib.swerve.SwerveDriveSubsystem
@@ -57,8 +57,8 @@ import kotlin.math.atan2
 object Drive: SwerveDriveSubsystem(DriveConstants.drivetrainConstants, *DriveConstants.moduleConfigs) {
     val table = Telemetry.getTable("Drive")
 
-    val useAprilTagsTunable = table.createTunable("useAprilTags", true, true)
-    val increaseDriveCurrentTunable = table.createTunable("increaseDriveCurrent", false)
+    val useAprilTagsTunable = table.getTunable("useAprilTags", true, true)
+    val increaseDriveCurrentTunable = table.getTunable("increaseDriveCurrent", false)
 
     val increaseDriveCurrent get() = increaseDriveCurrentTunable.get()
     var prevIncreaseDriveCurrent = increaseDriveCurrent
