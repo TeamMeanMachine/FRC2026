@@ -188,6 +188,22 @@ object FieldManager {
 
     val passPose: Translation2d
         get() {
+//            var pose = if (Robot.isTeleop) Translation2d(4.0, 2.0) else Translation2d(2.0, 1.25)
+//
+//            if (isRedAlliance) {
+//                pose = Translation2d(fieldLength.asMeters - pose.x, fieldWidth.asMeters - pose.y)
+//            } else {
+//                pose = Translation2d(pose.x, pose.y)
+//            }
+//
+//            // meters
+//            if (yRelativeToCenter.asMeters.sign != pose.y.sign * if (isRedAlliance) 1.0 else -1.0) {
+//                pose = Translation2d(pose.x, fieldWidth.asMeters - pose.y)
+//            }
+//
+//            return pose
+
+
             var pose = if (Robot.isTeleop) Translation2d(4.0, 2.0) else Translation2d(2.0, 1.25)
 
             if (isRedAlliance) {
@@ -228,7 +244,7 @@ object FieldManager {
         val angleToNet1 = passPose.angleTo(goalPose + Translation2d(xOffset, 1.0.meters))
         val angleToNet2 = passPose.angleTo(goalPose + Translation2d(xOffset, -1.0.meters))
 
-        return angleToPassPoint in angleToNet1..angleToNet2 || angleToPassPoint in angleToNet2..angleToNet1
+        return false// angleToPassPoint in angleToNet1..angleToNet2 || angleToPassPoint in angleToNet2..angleToNet1
     }
 
     @get:AutoLogOutput(key = "FieldManager/In Scoring Zone")

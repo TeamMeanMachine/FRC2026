@@ -85,9 +85,11 @@ object AimUtils {
             }
 
             return if (isAimingAtGoal) {
-                FieldManager.goalPose - calculateAimTargetOffset(FieldManager.goalPose, Shooter.hubTimeCurve)
+                val goalPose = FieldManager.goalPose
+                goalPose - calculateAimTargetOffset(goalPose, Shooter.hubTimeCurve)
             } else {
-                FieldManager.passPose - calculateAimTargetOffset(FieldManager.passPose, Shooter.passTimeCurve)
+                val passPose = FieldManager.passPose
+                passPose - calculateAimTargetOffset(passPose, Shooter.passTimeCurve)
             }
         }
 

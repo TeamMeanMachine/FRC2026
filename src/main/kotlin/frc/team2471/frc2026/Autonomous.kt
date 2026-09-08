@@ -65,6 +65,7 @@ object Autonomous: Autonomi() {
             addOption("Shooter Test", shooterTest())
             addOption("Intake Deploy Test", intakeDeployTest())
             addOption("Intake Roller Test", intakeRollerTest())
+            addOption("Shooter sysid", Shooter.shooterSYSIDCommand())
 //            addOption("print over hub curves", runOnce{PrintPassOverHubCurves.main(arrayOf(""))})
         }
 

@@ -33,10 +33,12 @@ import org.littletonrobotics.junction.Logger
 import org.team2471.frc.lib.control.LoopLogger
 import org.team2471.frc.lib.control.b
 import org.team2471.frc.lib.control.commands.finallyRun
+import org.team2471.frc.lib.control.commands.finallyWait
 import org.team2471.frc.lib.control.commands.onlyRunWhileFalse
 import org.team2471.frc.lib.control.commands.onlyRunWhileTrue
 import org.team2471.frc.lib.control.commands.parallelCommand
 import org.team2471.frc.lib.control.commands.runCommand
+import org.team2471.frc.lib.control.commands.sequenceCommand
 import org.team2471.frc.lib.control.rightStickButton
 import org.team2471.frc.lib.hardware.ctre.addFollower
 import org.team2471.frc.lib.hardware.ctre.applyConfiguration
@@ -54,6 +56,8 @@ import org.team2471.frc.lib.hardware.ctre.remoteCANCoder
 import org.team2471.frc.lib.hardware.ctre.s
 import org.team2471.frc.lib.hardware.ctre.setCANCoderAngle
 import org.team2471.frc.lib.energy.BatteryLogger
+import org.team2471.frc.lib.hardware.ctre.a
+import org.team2471.frc.lib.hardware.ctre.v
 import org.team2471.frc.lib.units.absoluteValue
 import org.team2471.frc.lib.units.asFeet
 import org.team2471.frc.lib.units.asMetersPerSecond
@@ -332,14 +336,13 @@ object Shooter: SubsystemBase("Shooter") {
 
     @get:AutoLogOutput(key = "Shooter/Velocity error distance")
     val velocityErrorDistance get() = (WHEEL_DIAMETER * shooterMotor.closedLoopError.valueAsDouble * Math.PI * (
-            if (AimUtils.isAimingAtGoal)
+            if (AimUtils.isAimingAtGoal) {
                 hubTimeCurve.get(AimUtils.distanceToTarget.asFeet) * cos(hubAngleCurve.get(AimUtils.distanceToTarget.asFeet))
-            else
-                if (FieldManager.passOverNet)
-                    overNetTimeCurve.get(AimUtils.distanceToTarget.asFeet) * cos(overNetAngleCurve.get(AimUtils.distanceToTarget.asFeet))
-                else
-                    passTimeCurve.get(AimUtils.distanceToTarget.asFeet) * cos(passAngleCurve.get(AimUtils.distanceToTarget.asFeet))
-            )).absoluteValue()
+            } else if (FieldManager.passOverNet) {
+                overNetTimeCurve.get(AimUtils.distanceToTarget.asFeet) * cos(overNetAngleCurve.get(AimUtils.distanceToTarget.asFeet))
+            } else {
+                passTimeCurve.get(AimUtils.distanceToTarget.asFeet) * cos(passAngleCurve.get(AimUtils.distanceToTarget.asFeet))
+            })).absoluteValue()
 
     @get:AutoLogOutput(key = "Shooter/Total error distance")
     val totalErrorDistance get() = hoodErrorDistance + velocityErrorDistance + Turret.turretErrorDistance
@@ -394,13 +397,14 @@ object Shooter: SubsystemBase("Shooter") {
             inverted(InvertedValue.CounterClockwise_Positive)
 
             if (isReal) {
-                if (isCompBot) {
-                    p(0.4)
-                    i(0.4)
-                } else {
-                    p(0.3)
-                    i(0.3)
-                }
+                s(0.2, StaticFeedforwardSignValue.UseVelocitySign)
+                v(0.081312)
+                a(0.034335)
+                p(0.4)
+                i(0.05)
+
+//                    p(0.4)
+//                    i(0.4)
             } else {
                 p(4000.0)
                 i(0.0)
@@ -556,17 +560,20 @@ object Shooter: SubsystemBase("Shooter") {
         }
 
         val wantedHoodSetpoint = (
-            if (Turret.isTurretWrapping)
+            if (Turret.isTurretWrapping) {
                 HOOD_ZERO
-            else
-                if (!demoMode || demoAimAtHub)
-                    if (AimUtils.isAimingAtGoal || demoMode)
+            } else {
+                if (!demoMode || demoAimAtHub) {
+                    if (AimUtils.isAimingAtGoal || demoMode) {
                         BALL_ANGLE_AT_HOOD_ZERO - hubAngleCurve.get(AimUtils.distanceToTarget.asFeet)
-                    else
+                    } else {
                         BALL_ANGLE_AT_HOOD_ZERO - passAngleCurve.get(AimUtils.distanceToTarget.asFeet)
-                else
+                    }
+                } else {
                     BALL_ANGLE_AT_HOOD_ZERO - demoShootingAngle
-            ).degrees
+                }
+            }
+        ).degrees
 
 
         if (FieldManager.inNoShootArea) {
@@ -604,9 +611,9 @@ object Shooter: SubsystemBase("Shooter") {
 
     val sysIDShooterRoutine = SysIdRoutine(
         SysIdRoutine.Config(
-            1.0.voltsPerSecond,
+            0.5.voltsPerSecond,
             7.0.volts,
-            5.0.seconds
+            24.0.seconds
         ) { state: SysIdRoutineLog.State ->
             SignalLogger.writeString("SysIdShooterLeft_State", state.toString())
             Logger.recordOutput("SysIdShooterLeft_State", state.toString())
@@ -618,5 +625,18 @@ object Shooter: SubsystemBase("Shooter") {
             /* also log the requested output for SysId */
             Logger.recordOutput("Shooter_Left_Voltage", output.asVolts + 0.0001 * Math.random())
         }, null, this)
+    )
+
+    fun shooterSYSIDCommand() = sequenceCommand(
+        runOnce {
+            shooterMotor.brakeMode()
+        },
+        sysIDShooterRoutine.dynamic(SysIdRoutine.Direction.kForward).finallyWait(10.0),
+        sysIDShooterRoutine.dynamic(SysIdRoutine.Direction.kReverse).finallyWait(10.0),
+        sysIDShooterRoutine.quasistatic(SysIdRoutine.Direction.kForward).finallyWait(10.0),
+        sysIDShooterRoutine.quasistatic(SysIdRoutine.Direction.kReverse),
+        runOnce {
+            shooterMotor.coastMode()
+        }
     )
 }

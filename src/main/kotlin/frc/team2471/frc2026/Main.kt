@@ -216,6 +216,7 @@ object Robot : LoggedRobot() {
 //                }
             }
         }
+        Drive.brakeMode()
     }
 
     /** This function is called once when the robot is disabled.  */

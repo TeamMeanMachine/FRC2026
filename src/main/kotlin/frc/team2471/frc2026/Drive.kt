@@ -33,6 +33,7 @@ import org.team2471.frc.lib.control.CurrentLimits
 import org.team2471.frc.lib.control.LoopLogger
 import org.team2471.frc.lib.control.commands.finallyRun
 import org.team2471.frc.lib.control.commands.runCommand
+import org.team2471.frc.lib.control.rightBumper
 import org.team2471.frc.lib.control.rightStickButton
 import org.team2471.frc.lib.hardware.ctre.PhoenixUtil
 import org.team2471.frc.lib.hardware.ctre.currentLimits
@@ -147,6 +148,13 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
 
     override val choreoPathsStartOnRed: Boolean = false // false=made on the blue side, true=made on the red side
 
+    @get:AutoLogOutput(key = "Drive/slowDrive")
+    val slowDrive: Boolean
+        get() = AimUtils.isAimingAtGoal &&
+            (Shooter.isShooting || OI.driverController.rightStickButton || (Shooter.doAutoShoot && !Drive.cameraDisconnected && FieldManager.shouldShoot && Drive.useAprilTags))
+                    && !FieldManager.inNoShootArea
+                    && !OI.driverController.rightBumper
+
     init {
         println("inside Drive init")
 
@@ -251,7 +259,7 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
     override fun getJoystickPercentageSpeeds(): ChassisSpeeds {
         val rawJoystick = OI.rawDriveTranslation
         // Square drive input and apply demoSpeed
-        val power = rawJoystick.norm.square() * demoSpeed * if ((Shooter.isShooting || OI.driverController.rightStickButton) && FieldManager.inScoringZone) 0.3 else if (inSnakeMode) 0.8 else 1.0
+        val power = rawJoystick.norm.square() * demoSpeed * if (slowDrive) 0.3 else if (inSnakeMode) 0.8 else 1.0
         // Modify input to center in trench
         val joystickWithTrenchAlign = (rawJoystick.normalize() + FieldManager.trenchAlignTranslationModifier * rawJoystick.x.absoluteValue).normalize()
         // Apply modified power to joystick vector and flip depending on alliance

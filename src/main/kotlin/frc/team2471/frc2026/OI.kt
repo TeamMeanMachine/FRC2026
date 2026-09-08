@@ -11,7 +11,6 @@ import org.team2471.frc.lib.control.LoopLogger
 import org.team2471.frc.lib.control.MeanCommandXboxController
 import org.team2471.frc.lib.control.commands.finallyRun
 import org.team2471.frc.lib.control.commands.onlyRunWhileFalse
-import org.team2471.frc.lib.control.commands.onlyRunWhileTrue
 import org.team2471.frc.lib.control.commands.parallelCommand
 import org.team2471.frc.lib.control.commands.runCommand
 import org.team2471.frc.lib.control.commands.runOnceCommand
@@ -96,7 +95,7 @@ object OI: SubsystemBase("OI") {
         rotationMultiplierEntry.setPersistent()
 
         // Default command, normal field-relative drive
-        Drive.defaultCommand = Drive.joystickDrive()
+        Drive.defaultCommand = Drive.joystickPercentageDrive()
 
         Turret.defaultCommand = Turret.aimAtTarget().ignoringDisable(true)
 
