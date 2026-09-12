@@ -104,7 +104,6 @@ object Drive: SwerveDriveSubsystem(DriveConstants.drivetrainConstants, *DriveCon
 
     private var resetPoseTime = 0.0
 
-    // TODO: Check heading accuracy
     val localizer = PoseLocalizer(Fiducial.constructFiducialList(FieldManager.allAprilTags), cameras)
 
     // Drive Feedback controllers

@@ -33,7 +33,7 @@ import kotlin.math.sign
 object FieldManager {
     private val table = Telemetry.getTable("FieldManager")
 
-    val aprilTagFieldLayout: Field = Field.loadField(Fields.DEFAULT_FIELD) //AprilTagFieldLayout(Filesystem.getDeployDirectory().path + "/2026Field.json") //TODO: FIX FOR 2027
+    val aprilTagFieldLayout: Field = Field.loadField(Fields.DEFAULT_FIELD)
     val allAprilTags: List<FieldTag> = aprilTagFieldLayout.tags
 
     // x

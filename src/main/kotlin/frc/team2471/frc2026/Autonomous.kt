@@ -1,5 +1,6 @@
 package frc.team2471.frc2026
 
+import choreo.util.ChoreoAllianceFlipUtil
 import org.team2471.frc.lib.autonomous.Autonomi
 import org.team2471.frc.lib.autonomous.auto.AutoRoutine
 import org.team2471.frc.lib.autonomous.test.TestRoutine
@@ -10,6 +11,9 @@ import org.team2471.frc.lib.commands.periodicTimeout
 import org.team2471.frc.lib.commands.command
 import org.team2471.frc.lib.commands.commandUnnamed
 import org.team2471.frc.lib.math.round
+import org.team2471.frc.lib.swerve.mirrorX
+import org.team2471.frc.lib.swerve.mirrorY
+import org.team2471.frc.lib.swerve.rotateAround
 import org.team2471.frc.lib.units.feet
 import org.team2471.frc.lib.units.meters
 import org.team2471.frc.lib.units.seconds
@@ -54,6 +58,12 @@ object Autonomous: Autonomi() {
 
     init {
         println("Autonomous init. Path count: ${paths.size} Auto count: ${autos.size} Test count: ${tests.size}")
+
+        // Override choreo red/blue alliance flipper type, this is used a lot in SwerveDrive. (Usually FRC_CURRENT)
+        // Used if the field is mirrored/rotated differently than what choreo thinks.
+        // In cases where the in-season field red/blue reflection is different from offseason comps w/ different fields like BunnyBots
+        ChoreoAllianceFlipUtil.setFlipper(ChoreoAllianceFlipUtil.Flipper.FRC_CURRENT)
+
     }
 
     fun addOpModes() {
@@ -90,7 +100,7 @@ object Autonomous: Autonomi() {
     }
 
     private fun doubleSwipe(doSideToSideFlip: Boolean) = command {
-        val path = paths["LeftSideDoubleSwipe"]!!//.sideToSideFlip(doSideToSideFlip)
+        val path = paths["LeftSideDoubleSwipe"]!!.mirrorY(doSideToSideFlip)
         var pathPercentage = 0.0
         parallel({
 
@@ -231,8 +241,8 @@ object Autonomous: Autonomi() {
 //    }
 
     fun warmupDriveAlongPath() = commandUnnamed(Drive) {
-//        val warmupPath = paths["eightFoot"]!!//.sideToSideFlip(true) //TODO: UNCOMMENT WHEN 2027 CHOREO
-//        await(Drive.driveAlongChoreoPath(warmupPath.getSplit(0).get(), exitSupplier = { percent, error -> percent >= 1.0 || Robot.isEnabled}))
+        val warmupPath = paths["eightFoot"]!!.mirrorY(true).mirrorX(true).rotateAround(true).flipped()
+        await(Drive.driveAlongChoreoPath(warmupPath.getSplit(0).get(), exitSupplier = { percent, error -> percent >= 1.0 || Robot.isEnabled}))
         println("Warmup DAL")
     }.withPriority(Command.LOWEST_PRIORITY + 1).named("Warmup Drive Along Path")
 }
