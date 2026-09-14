@@ -3,7 +3,6 @@ package frc.team2471.frc2026
 import edu.wpi.first.math.geometry.Pose2d
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.CommandScheduler
-import frc.team2471.frc2026.Drive.runOnce
 import frc.team2471.frc2026.tests.*
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser
 import org.team2471.frc.lib.control.Autonomi
@@ -14,7 +13,7 @@ import org.team2471.frc.lib.control.commands.runCommand
 import org.team2471.frc.lib.control.commands.runOnceCommand
 import org.team2471.frc.lib.control.commands.sequenceCommand
 import org.team2471.frc.lib.control.commands.waitUntilCommand
-import org.team2471.frc.lib.swerve.sideToSideFlip
+import org.team2471.frc.lib.swerve.mirrorY
 import org.team2471.frc.lib.units.feet
 import org.team2471.frc.lib.units.meters
 import kotlin.math.absoluteValue
@@ -39,8 +38,8 @@ object Autonomous: Autonomi() {
         LoggedDashboardChooser<AutoCommand?>("Auto Chooser").apply {
             addOption("8 Foot Straight", AutoCommand(eightFootStraight()))
             addOption("6x6 Square", AutoCommand(squarePathTest()))
-            addOption("Double Swipe Left", AutoCommand(doubleSwipe(false), { paths["LeftSideDoubleSwipe"]!!.sideToSideFlip(false).getInitialPose(Drive.flipChoreoPaths).get() }))
-            addOption("Double Swipe Right", AutoCommand(doubleSwipe(true), { paths["LeftSideDoubleSwipe"]!!.sideToSideFlip(true).getInitialPose(Drive.flipChoreoPaths).get() }))
+            addOption("Double Swipe Left", AutoCommand(doubleSwipe(false), { paths["LeftSideDoubleSwipe"]!!.mirrorY(false).getInitialPose(Drive.flipChoreoPaths).get() }))
+            addOption("Double Swipe Right", AutoCommand(doubleSwipe(true), { paths["LeftSideDoubleSwipe"]!!.mirrorY(true).getInitialPose(Drive.flipChoreoPaths).get() }))
             addOption("Just Shoot", AutoCommand(justShoot()))
         }
 
@@ -79,8 +78,8 @@ object Autonomous: Autonomi() {
         return Drive.driveAlongChoreoPath(paths["square"]!!, resetOdometry = true)
     }
 
-    private fun doubleSwipe(doSideToSideFlip: Boolean): Command {
-        val path = paths["LeftSideDoubleSwipe"]!!.sideToSideFlip(doSideToSideFlip)
+    private fun doubleSwipe(doSideToSideMirror: Boolean): Command {
+        val path = paths["LeftSideDoubleSwipe"]!!.mirrorY(doSideToSideMirror)
         var pathPercentage = 0.0
         return parallelCommand(
             sequenceCommand(
@@ -171,7 +170,7 @@ object Autonomous: Autonomi() {
     }
 
     private fun doubleSwipeOld(doSideToSideFlip: Boolean): Command {
-        val path = paths["LeftSideDoubleSwipe"]!!.sideToSideFlip(doSideToSideFlip)
+        val path = paths["LeftSideDoubleSwipe"]!!.mirrorY(doSideToSideFlip)
         return parallelCommand(
             sequenceCommand(
                 parallelCommand(
@@ -232,7 +231,7 @@ object Autonomous: Autonomi() {
     }
 
     fun warmupDriveAlongPath(): Command {
-        val warmupPath = paths["LeftSideDoubleSwipe"]!!.sideToSideFlip(true)
+        val warmupPath = paths["LeftSideDoubleSwipe"]!!.mirrorY(true)
         return Drive.driveAlongChoreoPath(warmupPath.getSplit(0).get(), exitSupplier = { percent, error -> percent >= 1.0 || Robot.isEnabled}).ignoringDisable(true)
     }
 }
