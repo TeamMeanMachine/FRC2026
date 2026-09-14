@@ -170,9 +170,9 @@ object OI: SubsystemBase("OI") {
 
 
 
-//        driverController.a().whileTrue(
-//            Drive.snakeMode()
-//        )
+        driverController.a().whileTrue(
+            Drive.snakeMode()
+        )
 //        driverController.x().whileTrue(runCommand(Drive) {
 //            Drive.xPose()
 //        })
