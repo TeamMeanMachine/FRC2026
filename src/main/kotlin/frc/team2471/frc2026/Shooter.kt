@@ -38,6 +38,8 @@ import org.team2471.frc.lib.energy.BatteryLogger
 import org.team2471.frc.lib.environment.demoMode
 import org.team2471.frc.lib.environment.isReal
 import org.team2471.frc.lib.environment.isSim
+import org.team2471.frc.lib.hardware.ctre.a
+import org.team2471.frc.lib.hardware.ctre.v
 import org.team2471.frc.lib.logging.getTunable
 import org.team2471.frc.lib.math.angleTo
 import org.team2471.frc.lib.units.absoluteValue

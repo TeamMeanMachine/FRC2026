@@ -32,6 +32,8 @@ import org.team2471.frc.lib.hardware.ctre.motionMagic
 import org.team2471.frc.lib.hardware.ctre.p
 import org.team2471.frc.lib.hardware.ctre.s
 import org.team2471.frc.lib.energy.BatteryLogger
+import org.team2471.frc.lib.hardware.ctre.PhoenixUtil
+import org.team2471.frc.lib.hardware.ctre.modifyCurrentLimitsAsync
 import org.team2471.frc.lib.logging.getTunable
 import org.team2471.frc.lib.units.amps
 import org.team2471.frc.lib.units.seconds
@@ -44,21 +46,19 @@ import kotlin.math.absoluteValue
 object Intake: MechanismBase("Intake") {
     private val table = Telemetry.getTable("Intake")
 
-    val deployPoseEntry = table.getTunable("deployPose", 29.0, true)
-    val stowPoseEntry = table.getTunable("stowPose", 2.0, true)
-    val deepStowPoseEntry = table.getTunable("deepStowPose", 0.0, true)
-    val intakePowerEntry = table.getTunable("intakePower", 75.0, true)
+    private val deployPoseEntry = table.getTunable("deployPose", 29.0, true)
+    private val stowPoseEntry = table.getTunable("stowPose", 2.0, true)
+    private val deepStowPoseEntry = table.getTunable("deepStowPose", 0.0, true)
+    private val intakePowerEntry = table.getTunable("intakePower", 75.0, true)
 
     @OptIn(DelicateCoroutinesApi::class)
     val maxForwardTorqueEntry = table.getTunable("maxForwardTorque", 18.0, true) {
-        GlobalScope.launch {
-            println("Setting max forward torque to $maxForwardTorque")
-            deployMotor0.modifyConfiguration {
-                TorqueCurrent.PeakForwardTorqueCurrent = maxForwardTorque
-            }
-            deployMotor1.modifyConfiguration {
-                TorqueCurrent.PeakForwardTorqueCurrent = maxForwardTorque
-            }
+        println("Setting max forward torque to $maxForwardTorque")
+        deployMotor0.modifyConfiguration {
+            TorqueCurrent.PeakForwardTorqueCurrent = maxForwardTorque
+        }
+        deployMotor1.modifyCurrentLimitsAsync {
+            TorqueCurrent.PeakForwardTorqueCurrent = maxForwardTorque
         }
     }
 
@@ -281,49 +281,6 @@ object Intake: MechanismBase("Intake") {
         finishedHoming = true
         deploySetpoint = DEPLOY_POSE
     }
-
-//    fun home(): Command  = if (Robot.isCompBot) {
-//        parallelCommand(
-//            runOnceCommand {
-//                finishedHoming = false
-//            },
-//            homeMotorOut(deployMotor0, { deployVelocity0.absoluteValue < HOME_VELOCITY_THRESHOLD && deployVelocity1.absoluteValue < HOME_VELOCITY_THRESHOLD }),
-//            homeMotorOut(deployMotor1, { deployVelocity1.absoluteValue < HOME_VELOCITY_THRESHOLD && deployVelocity0.absoluteValue < HOME_VELOCITY_THRESHOLD })
-//        ).finallyRun {
-//            finishedHoming = true
-//            deploySetpoint = DEPLOY_POSE
-//        }
-//    } else {
-//        sequenceCommand(
-//            runOnceCommand {
-//                finishedHoming = false
-//            },
-//            homeMotor(deployMotor0, { hitHardStop0 }),
-//            runOnceCommand {
-//                finishedHoming = true
-//                stow()
-//            }
-//        )
-//    }.apply {
-//        addRequirements(Intake, Shooter)
-//    }
-
-//    private fun homeMotor(motor: TalonFX, hitHardStopSupplier: () -> Boolean): Command {
-//        return sequenceCommand(
-//            runCommand {
-//                println("going in?")
-//                motor.setControl(DutyCycleOut(HOMING_POWER))
-//            }.onlyRunWhileTrue { hitHardStopSupplier.invoke() },
-//            runCommand {
-//                println("going out?")
-//                motor.setControl(DutyCycleOut(-HOMING_POWER))
-//            }.onlyRunWhileFalse { hitHardStopSupplier.invoke() }.withTimeout(6.0).finallyRun {
-//                motor.setControl(DutyCycleOut(0.0))
-//                println("Deploy Pos: ${motor.position}")
-//                motor.setPosition(if (Robot.isCompBot) 0.11 else 0.13)
-//            }
-//        )
-//    }
 
     // V3 Commands
     private fun homeMotorOut(motor: TalonFX, hitHardStopSupplier: () -> Boolean): Command = command("HomeMotorOut") {

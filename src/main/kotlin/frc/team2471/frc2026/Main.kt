@@ -3,6 +3,8 @@ package frc.team2471.frc2026
 
 import com.ctre.phoenix6.SignalLogger
 import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import org.littletonrobotics.junction.LogFileUtil
 import org.littletonrobotics.junction.Logger
 import org.littletonrobotics.junction.networktables.NT4Publisher
@@ -12,6 +14,7 @@ import org.team2471.frc.lib.autonomous.test.TestOpMode
 import org.team2471.frc.lib.commands.PeriodicMechanism
 import org.team2471.frc.lib.logging.LoopLogger
 import org.team2471.frc.lib.control.isConnected
+import org.team2471.frc.lib.coroutines.periodicSuspend
 import org.team2471.frc.lib.hardware.loggedMotors.MasterMotor
 import org.team2471.frc.lib.energy.BatteryLogger
 import org.team2471.frc.lib.environment.RobotType
