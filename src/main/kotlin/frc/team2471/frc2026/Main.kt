@@ -185,6 +185,7 @@ object Robot : OpModeRobot(0.01) {
     /** Function called once when the robot exits disabled state. Similar to enabledInit */
     override fun disabledExit() {
         println("Robot disabled exit")
+        Drive.brakeMode()
     }
 
     /** This function is called periodically when disabled.  */

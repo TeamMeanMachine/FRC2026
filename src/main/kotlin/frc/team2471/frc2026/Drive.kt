@@ -111,8 +111,7 @@ object Drive: SwerveDriveSubsystem(DriveConstants.drivetrainConstants, *DriveCon
     val fastAutoPilot = createAPObject(Double.POSITIVE_INFINITY.inchesPerSecond, 100.0.metersPerSecondSquared, 5.0.metersPerSecondSquared.perSecond, 0.5.inches, 1.0.degrees)
     val slowAutoPilot = createAPObject(Double.POSITIVE_INFINITY.inchesPerSecond, 100.0.metersPerSecondSquared, 0.5.metersPerSecondSquared.perSecond, 0.25.inches, 1.0.degrees)
 
-    override val pathXController = PIDController(7.0, 0.0, 0.0)
-    override val pathYController = PIDController(7.0, 0.0, 0.0)
+    override val pathTranslationController = PIDController(7.0, 0.0, 0.0)
     override val pathThetaController = PIDController(8.0, 0.0, 0.0)
 
     override val autoDriveToPointController = PIDController(3.0, 0.0, 0.1)
@@ -124,6 +123,13 @@ object Drive: SwerveDriveSubsystem(DriveConstants.drivetrainConstants, *DriveCon
     override val choreoPathsStartOnRed: Boolean = false
 
     override var centerOfRotation: Translation2d = Translation2d(0.0.inches, 0.0.inches)
+
+    @get:AutoLogOutput(key = "Drive/slowDrive")
+    val slowDrive: Boolean
+        get() = AimUtils.isAimingAtGoal &&
+            (Shooter.isShooting || OI.driverController.rightStickButton || (Shooter.doAutoShoot && !Drive.cameraDisconnected && FieldManager.shouldShoot && Drive.useAprilTags))
+                    && !FieldManager.inNoShootArea
+                    && !OI.driverController.rightBumper
 
     init {
         println("Drive initialization")
@@ -222,7 +228,7 @@ object Drive: SwerveDriveSubsystem(DriveConstants.drivetrainConstants, *DriveCon
     override fun getJoystickPercentageSpeed(): ChassisVelocities {
         val rawJoystick = OI.driveTranslation
         // Square drive input and apply demoSpeed
-        val power = rawJoystick.norm.square() * demoSpeed * if ((Shooter.isShooting || OI.driverController.rightStickButton) && FieldManager.inScoringZone) 0.3 else if (inSnakeMode) 0.8 else 1.0
+        val power = rawJoystick.norm.square() * demoSpeed * if (slowDrive) 0.3 else if (inSnakeMode) 0.8 else 1.0
         // Modify input to center in trench
         val joystickWithTrenchAlign = (rawJoystick.normalize() + FieldManager.trenchAlignTranslationModifier * rawJoystick.x.absoluteValue).normalize()
         // Apply modified power to joystick vector and flip depending on alliance
@@ -256,22 +262,22 @@ object Drive: SwerveDriveSubsystem(DriveConstants.drivetrainConstants, *DriveCon
         inSnakeMode = false
     }
 
-    val wheelSlipMin = 1.2
-    val wheelSlipMax = 4.0
+    const val WHEEL_SLIP_MIN = 0.06
+    const val WHEEL_SLIP_MAX = 0.3
 
     /**
      * A value representing wheel slippage from 0.0 (not slipping) to 1.0 (very slippy, swerve odometry not trustworthy).
      */
     @get:AutoLogOutput(key = "Swerve/WheelsSlipFactor")
     val wheelSlipFactor: Double get() {
-        return ((wheelSlipRatio - wheelSlipMin) / (wheelSlipMax - wheelSlipMin)).coerceIn(0.0, 1.0)
+        return ((wheelSlipRaw - WHEEL_SLIP_MIN) / (WHEEL_SLIP_MAX - WHEEL_SLIP_MIN)).coerceIn(0.0, 1.0)
     }
 
     /**
-     * How much the wheels are slipping, determined by the ratio between the largest and smallest translation component of the wheels.
+     * The mean absolute deviation of the translation components of the wheels.
      */
-    @get:AutoLogOutput(key = "Swerve/WheelsSlipRatio")
-    val wheelSlipRatio: Double get() {
+    @get:AutoLogOutput(key = "Swerve/WheelsSlipRaw")
+    val wheelSlipRaw: Double get() {
         val moduleRotationComponents = Array(moduleStates.size) {
             val state = SwerveModuleVelocity()
             state.velocity = gyroYawRate.asRadiansPerSecond * moduleLocations[it].norm
@@ -301,7 +307,7 @@ object Drive: SwerveDriveSubsystem(DriveConstants.drivetrainConstants, *DriveCon
 //        Logger.recordOutput("Swerve/ModuleRotationComponents/3", moduleRotationComponents[3])
 
         SimpleLogger.recordOutput("Swerve/ModuleTranslationsMinMaxRatio", minMaxRatio)
-        SimpleLogger.recordOutput("Swerve/ModuleTranslationsMAD", mad)
+//        SimpleLogger.recordOutput("Swerve/ModuleTranslationsMAD", mad)
 
 //        val threshold = 10.0 // acc diff
 //        return accelerationDiff.asMetersPerSecondPerSecond > threshold
@@ -309,7 +315,7 @@ object Drive: SwerveDriveSubsystem(DriveConstants.drivetrainConstants, *DriveCon
 //        val threshold = 0.09 // mad
 //        return mad > threshold
 
-        return minMaxRatio
+        return mad
     }
 
     @get:AutoLogOutput(key = "Swerve/WheelsSlipping")

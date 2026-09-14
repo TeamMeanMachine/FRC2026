@@ -324,15 +324,14 @@ object Shooter: MechanismBase("Shooter") {
     val hoodErrorDistance get() = (AimUtils.distanceToTarget * sin(hoodMotor.closedLoopError.valueAsDouble.radians)).absoluteValue()
 
     @get:AutoLogOutput(key = "Shooter/Velocity error distance")
-    val velocityErrorDistance get() = (WHEEL_DIAMETER * shooterMotor.closedLoopError.valueAsDouble * Math.PI * 0.5 * (
-            if (AimUtils.isAimingAtGoal)
+    val velocityErrorDistance get() = (WHEEL_DIAMETER * shooterMotor.closedLoopError.valueAsDouble * Math.PI * (
+            if (AimUtils.isAimingAtGoal) {
                 hubTimeCurve.get(AimUtils.distanceToTarget.asFeet) * kotlin.math.cos(hubAngleCurve.get(AimUtils.distanceToTarget.asFeet))
-            else
-                if (FieldManager.passOverNet)
-                    overNetTimeCurve.get(AimUtils.distanceToTarget.asFeet) * cos(overNetAngleCurve.get(AimUtils.distanceToTarget.asFeet))
-                else
-                    passTimeCurve.get(AimUtils.distanceToTarget.asFeet) * kotlin.math.cos(passAngleCurve.get(AimUtils.distanceToTarget.asFeet))
-            )).absoluteValue()
+            } else if (FieldManager.passOverNet) {
+                overNetTimeCurve.get(AimUtils.distanceToTarget.asFeet) * cos(overNetAngleCurve.get(AimUtils.distanceToTarget.asFeet))
+            } else {
+                passTimeCurve.get(AimUtils.distanceToTarget.asFeet) * kotlin.math.cos(passAngleCurve.get(AimUtils.distanceToTarget.asFeet))
+            })).absoluteValue()
 
     @get:AutoLogOutput(key = "Shooter/Total error distance")
     val totalErrorDistance get() = hoodErrorDistance + velocityErrorDistance + Turret.turretErrorDistance
@@ -354,7 +353,7 @@ object Shooter: MechanismBase("Shooter") {
 
     @get:AutoLogOutput(key = "Shooter/Will not miss")
 //    val willNotMiss get() = ((rampedUp && AimUtils.isAimingAtGoal) || (rampedUpPassing && !AimUtils.isAimingAtGoal))
-    val willNotMiss get() = if (AimUtils.isAimingAtGoal) totalErrorDistance < 3.0.feet else totalErrorDistance < 5.0.feet
+    val willNotMiss get() = if (AimUtils.isAimingAtGoal) totalErrorDistance < 1.5.feet else totalErrorDistance < 4.0.feet
 
     @get:AutoLogOutput(key = "Shooter/isShooting")
     var isShooting = false
@@ -366,7 +365,7 @@ object Shooter: MechanismBase("Shooter") {
         hoodMotor.configSim(DCMotor.getKrakenX60(1), 0.005)
 
         shooterMotor.applyConfiguration {
-            currentLimits(10.0, 30.0, 0.3)
+            currentLimits(20.0, 30.0, 0.3)
             coastMode()
 
             Feedback.withSensorToMechanismRatio(1.0/1.5) // Note: I don't think this line configures anything
@@ -374,13 +373,14 @@ object Shooter: MechanismBase("Shooter") {
             inverted(InvertedValue.CounterClockwise_Positive)
 
             if (isReal) {
-                if (isCompBot) {
-                    p(0.4)
-                    i(0.4)
-                } else {
-                    p(0.3)
-                    i(0.3)
-                }
+                s(0.2, StaticFeedforwardSignValue.UseVelocitySign)
+                v(0.081312)
+                a(0.034335)
+                p(0.4)
+                i(0.05)
+
+//                    p(0.4)
+//                    i(0.4)
             } else {
                 p(4000.0)
                 i(0.0)
@@ -397,7 +397,7 @@ object Shooter: MechanismBase("Shooter") {
         if (isCompBot) {
             hoodEncoder.applyConfiguration {
                 inverted(false)
-                magnetSensorOffset(0.21337890625)
+                magnetSensorOffset(0.2109375)
             }
         }
 
@@ -536,17 +536,20 @@ object Shooter: MechanismBase("Shooter") {
         }
 
         val wantedHoodSetpoint = (
-            if (Turret.isTurretWrapping)
+            if (Turret.isTurretWrapping) {
                 HOOD_ZERO
-            else
-                if (!demoMode || demoAimAtHub)
-                    if (AimUtils.isAimingAtGoal || demoMode)
+            } else {
+                if (!demoMode || demoAimAtHub) {
+                    if (AimUtils.isAimingAtGoal || demoMode) {
                         BALL_ANGLE_AT_HOOD_ZERO - hubAngleCurve.get(AimUtils.distanceToTarget.asFeet)
-                    else
+                    } else {
                         BALL_ANGLE_AT_HOOD_ZERO - passAngleCurve.get(AimUtils.distanceToTarget.asFeet)
-                else
+                    }
+                } else {
                     BALL_ANGLE_AT_HOOD_ZERO - demoShootingAngle
-            ).degrees
+                }
+            }
+        ).degrees
 
 
         if (FieldManager.inNoShootArea) {

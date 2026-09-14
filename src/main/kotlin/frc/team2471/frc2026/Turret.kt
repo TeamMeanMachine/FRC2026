@@ -77,13 +77,13 @@ object Turret: MechanismBase("Turret") {
     val turretEncoder2 = CANcoder(CANCoders.TURRET_1, CANivores.TURRET_CAN)
     val turretPigeon = Pigeon2(CANSensors.TURRET_PIGEON, CANivores.TURRET_CAN)
 
-    val TURRET_TOP_LIMIT = if (isCompBot) 185.0.degrees else 270.0.degrees
-    val TURRET_BOTTOM_LIMIT = if (isCompBot) -185.0.degrees else -270.0.degrees
+    val TURRET_TOP_LIMIT = 200.0.degrees
+    val TURRET_BOTTOM_LIMIT = -200.0.degrees
     val TURRET_RANGE = TURRET_TOP_LIMIT - TURRET_BOTTOM_LIMIT
     val TURRET_ENCODER_LIMIT = if (isCompBot) 600.0.degrees else 720.0.degrees
 
-    const val ENCODER_1_DEFAULT_OFFSET = 31.55
-    const val ENCODER_2_DEFAULT_OFFSET = -61.85
+    const val ENCODER_1_DEFAULT_OFFSET = 28.3
+    const val ENCODER_2_DEFAULT_OFFSET = -83.84
 
     val encoder1GearRatio = if (isCompBot) 30.0/230.0 else 30.0/200.0
     val encoder2GearRatio = encoder1GearRatio * 83.0/32.0
@@ -372,7 +372,7 @@ object Turret: MechanismBase("Turret") {
                             resettingGyroYaw = false
 //                        println("finished setting turret pigeon yaw")
                         }
-                    } else if ((fieldCentricGyroAngle - unwrappedFieldCentricRotorAngle).absoluteValue() > 1.0.degrees && turretVelocity.absoluteValue() < 3.0.rotationsPerSecond && isReal) {
+                    } else if ((fieldCentricGyroAngle - unwrappedFieldCentricRotorAngle).absoluteValue() > 1.0.degrees && turretVelocity.absoluteValue() < 10.0.rotationsPerSecond && isReal) {
                         resettingGyroYaw = true
                         GlobalScope.launch {
                             println("Gyro angle: ${fieldCentricGyroAngle.asDegrees.round(2)}")
