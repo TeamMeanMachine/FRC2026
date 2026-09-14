@@ -135,8 +135,7 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
     val fastAutoPilot = createAPObject(Double.POSITIVE_INFINITY.inchesPerSecond, 100.0.metersPerSecondPerSecond, 5.0.metersPerSecondPerSecond.perSecond, 0.5.inches, 1.0.degrees)
     val slowAutoPilot = createAPObject(Double.POSITIVE_INFINITY.inchesPerSecond, 100.0.metersPerSecondPerSecond, 0.5.metersPerSecondPerSecond.perSecond, 0.25.inches, 1.0.degrees)
 
-    override val pathXController = PIDController(7.0, 0.0, 0.0)
-    override val pathYController = PIDController(7.0, 0.0, 0.0)
+    override val pathTranslationController = PIDController(7.0, 0.0, 0.0)
     override val pathThetaController = PIDController(8.0, 0.0, 0.0)
 
     override val autoDriveToPointController = PIDController(3.0, 0.0, 0.1)
