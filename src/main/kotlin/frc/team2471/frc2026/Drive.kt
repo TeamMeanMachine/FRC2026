@@ -10,6 +10,7 @@ import org.team2471.frc.lib.commands.onCancel
 import org.team2471.frc.lib.commands.periodic
 import org.team2471.frc.lib.commands.command
 import org.team2471.frc.lib.control.CurrentLimits
+import org.team2471.frc.lib.control.rightBumperButton
 import org.team2471.frc.lib.logging.LoopLogger
 import org.team2471.frc.lib.control.rightStickButton
 import org.team2471.frc.lib.hardware.ctre.currentLimits
@@ -129,7 +130,7 @@ object Drive: SwerveDriveSubsystem(DriveConstants.drivetrainConstants, *DriveCon
         get() = AimUtils.isAimingAtGoal &&
             (Shooter.isShooting || OI.driverController.rightStickButton || (Shooter.doAutoShoot && !Drive.cameraDisconnected && FieldManager.shouldShoot && Drive.useAprilTags))
                     && !FieldManager.inNoShootArea
-                    && !OI.driverController.rightBumper
+                    && !OI.driverController.rightBumperButton
 
     init {
         println("Drive initialization")
