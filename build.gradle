@@ -11,7 +11,6 @@ plugins {
     id "org.wpilib.GradleRIO" version "2027.0.0-alpha-7"
     id 'org.jetbrains.kotlin.jvm' version '2.3.21'
     id "org.jetbrains.kotlin.kapt" version "2.3.21"
-    id "com.gradleup.shadow" version "9.3.0"
 }
 
 evaluationDependsOn(":meanlib")
@@ -27,6 +26,14 @@ java {
 
 kotlin {
     jvmToolchain(25)
+}
+
+// Automatically download library documentation from libraries
+idea {
+    module {
+        downloadJavadoc = true
+        downloadSources = true
+    }
 }
 
 def ROBOT_MAIN_CLASS = "frc.team2471.frc2026.Main"
@@ -51,7 +58,10 @@ deploy {
                 // First part is artifact name, 2nd is artifact type
                 // getTargetTypeClass is a shortcut to get the class type using a string
 
-                wpilibJava(getArtifactTypeClass('WPILibJavaArtifact')) {}
+                wpilibJava(getArtifactTypeClass('WPILibJavaArtifact')) {
+                    // Set to true to use debug including JNI, which will drastically impact performance.
+                    debugJni = false
+                }
 
                 // Static files artifact
                 wpilibStaticFileDeploy(getArtifactTypeClass('FileTreeArtifact')) {
@@ -66,18 +76,15 @@ deploy {
 }
 
 def deployArtifact = deploy.targets.systemcore.artifacts.wpilibJava
-wpi.java.runSimWithDebugJni = false
 
-// Set to true to use debug for all targets including JNI, which will drastically impact
-// performance.
-//wpi.java.debugJni = false
+// Set to true to use debug for simulation including JNI
+wpi.java.runSimWithDebugJni = false
 
 // Set this to true to enable desktop support.
 def includeDesktopSupport = false
 
 // Defining my dependencies. In this case, WPILib (+ friends), and vendor libraries.
 // Also defines JUnit 5.
-
 dependencies {
     implementation(project(":meanlib"))
 
@@ -115,32 +122,16 @@ test {
 wpi.sim.addGui().defaultEnabled = true
 wpi.sim.addDriverstation()
 
-// Setting up my Jar File. In this case, adding all libraries into the main jar ('fat/shaded jar')
-// in order to make them all available at runtime and merging service files to make JSON work.
-// Also adding the manifest so WPILib knows where to look for our Robot Class.
-shadowJar {
-    //noinspection GroovyAssignabilityCheck
-    mergeServiceFiles()
-    from('src') { into 'backup/src' }
-    from('vendordeps') { into 'backup/vendordeps' }
-    from('build.gradle') { into 'backup' }
-    //noinspection GroovyAssignabilityCheck
-    manifest GradleRIOPlugin.javaManifest(ROBOT_MAIN_CLASS)
-    duplicatesStrategy = DuplicatesStrategy.INCLUDE
-}
-
 application.mainClass = ROBOT_MAIN_CLASS
 
 deployArtifact.configureApplication(application)
 wpi.java.configureApplication(application)
 wpi.java.configureTestTasks(test)
 
-// Automatically download library documentation from libraries
-idea {
-    module {
-        downloadJavadoc = true
-        downloadSources = true
-    }
+jar {
+    from('src') { into 'backup/src' }
+    from('vendordeps') { into 'backup/vendordeps' }
+    from('build.gradle') { into 'backup' }
 }
 
 // Configure string concat to always inline compile

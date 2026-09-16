@@ -9,7 +9,6 @@ import com.ctre.phoenix6.controls.PositionTorqueCurrentFOC
 import com.ctre.phoenix6.hardware.TalonFX
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue
 import frc.team2471.frc2026.Robot.isCompBot
-import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.littletonrobotics.junction.AutoLogOutput
@@ -27,13 +26,11 @@ import org.team2471.frc.lib.hardware.ctre.coastMode
 import org.team2471.frc.lib.hardware.ctre.currentLimits
 import org.team2471.frc.lib.hardware.ctre.d
 import org.team2471.frc.lib.hardware.ctre.inverted
-import org.team2471.frc.lib.hardware.ctre.modifyConfiguration
 import org.team2471.frc.lib.hardware.ctre.motionMagic
 import org.team2471.frc.lib.hardware.ctre.p
 import org.team2471.frc.lib.hardware.ctre.s
 import org.team2471.frc.lib.energy.BatteryLogger
-import org.team2471.frc.lib.hardware.ctre.PhoenixUtil
-import org.team2471.frc.lib.hardware.ctre.modifyCurrentLimitsAsync
+import org.team2471.frc.lib.hardware.ctre.modifyConfigurationAsync
 import org.team2471.frc.lib.logging.getTunable
 import org.team2471.frc.lib.units.amps
 import org.team2471.frc.lib.units.seconds
@@ -51,13 +48,12 @@ object Intake: MechanismBase("Intake") {
     private val deepStowPoseEntry = table.getTunable("deepStowPose", 0.0, true)
     private val intakePowerEntry = table.getTunable("intakePower", 75.0, true)
 
-    @OptIn(DelicateCoroutinesApi::class)
     val maxForwardTorqueEntry = table.getTunable("maxForwardTorque", 18.0, true) {
         println("Setting max forward torque to $maxForwardTorque")
-        deployMotor0.modifyConfiguration {
+        deployMotor0.modifyConfigurationAsync {
             TorqueCurrent.PeakForwardTorqueCurrent = maxForwardTorque
         }
-        deployMotor1.modifyCurrentLimitsAsync {
+        deployMotor1.modifyConfigurationAsync {
             TorqueCurrent.PeakForwardTorqueCurrent = maxForwardTorque
         }
     }
