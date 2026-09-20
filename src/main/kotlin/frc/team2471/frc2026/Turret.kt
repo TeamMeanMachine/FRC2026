@@ -33,8 +33,6 @@ import org.team2471.frc.lib.environment.isReal
 import org.team2471.frc.lib.environment.isRedAlliance
 import org.team2471.frc.lib.hardware.ctre.PhoenixUtil
 import org.team2471.frc.lib.hardware.ctre.addFollower
-import org.team2471.frc.lib.util.angleTo
-import org.team2471.frc.lib.util.isReal
 import kotlin.math.abs
 import org.team2471.frc.lib.hardware.ctre.alternateFeedbackSensor
 import org.team2471.frc.lib.hardware.ctre.applyConfiguration
@@ -64,7 +62,6 @@ import org.wpilib.telemetry.Telemetry
 import org.wpilib.units.measure.Angle
 import org.wpilib.units.measure.AngularVelocity
 import kotlin.math.IEEErem
-import kotlin.math.abs
 import kotlin.math.absoluteValue
 import kotlin.math.hypot
 

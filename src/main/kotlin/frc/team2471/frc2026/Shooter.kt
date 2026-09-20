@@ -358,7 +358,7 @@ object Shooter: MechanismBase("Shooter") {
     val rawWillNotMiss get() = if (AimUtils.isAimingAtGoal) totalErrorDistance < 1.5.feet else totalErrorDistance < 4.0.feet
     val willNotMiss get() = willNotMissDebouncer.calculate(rawWillNotMiss)
 
-    val willNotMissDebouncer = Debouncer(0.1, Debouncer.DebounceType.kFalling)
+    val willNotMissDebouncer = Debouncer(0.1, Debouncer.DebounceType.FALLING)
 
     @get:AutoLogOutput(key = "Shooter/isShooting")
     var isShooting = false
