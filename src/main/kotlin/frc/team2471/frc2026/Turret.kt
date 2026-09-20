@@ -33,6 +33,9 @@ import org.team2471.frc.lib.environment.isReal
 import org.team2471.frc.lib.environment.isRedAlliance
 import org.team2471.frc.lib.hardware.ctre.PhoenixUtil
 import org.team2471.frc.lib.hardware.ctre.addFollower
+import org.team2471.frc.lib.util.angleTo
+import org.team2471.frc.lib.util.isReal
+import kotlin.math.abs
 import org.team2471.frc.lib.hardware.ctre.alternateFeedbackSensor
 import org.team2471.frc.lib.hardware.ctre.applyConfiguration
 import org.team2471.frc.lib.hardware.ctre.brakeMode
@@ -72,7 +75,7 @@ object Turret: MechanismBase("Turret") {
     val disableTurretEntry = table.getTunable("Disable Turret", false, true)
     val turretFeedforwardFactorEntry = table.getTunable("Feedforward Factor", 3.0, true)
 
-    val turretMotor = LoggedTalonFX(Falcons.TURRET_0, CANBusses.TURRET_CAN)
+    val turretMotor = LoggedTalonFX(Talons.TURRET_0, CANBusses.TURRET_CAN)
     val turretEncoder1 = CANcoder(CANCoders.TURRET_0, CANBusses.TURRET_CAN)
     val turretEncoder2 = CANcoder(CANCoders.TURRET_1, CANBusses.TURRET_CAN)
     val turretPigeon = Pigeon2(CANSensors.TURRET_PIGEON, CANBusses.TURRET_CAN)
@@ -82,8 +85,8 @@ object Turret: MechanismBase("Turret") {
     val TURRET_RANGE = TURRET_TOP_LIMIT - TURRET_BOTTOM_LIMIT
     val TURRET_ENCODER_LIMIT = if (isCompBot) 600.0.degrees else 720.0.degrees
 
-    const val ENCODER_1_DEFAULT_OFFSET = 28.3
-    const val ENCODER_2_DEFAULT_OFFSET = -83.84
+    const val ENCODER_1_DEFAULT_OFFSET = 33.486328
+    const val ENCODER_2_DEFAULT_OFFSET = 142.910156
 
     val encoder1GearRatio = if (isCompBot) 30.0/230.0 else 30.0/200.0
     val encoder2GearRatio = encoder1GearRatio * 83.0/32.0
@@ -336,7 +339,7 @@ object Turret: MechanismBase("Turret") {
 
             ClosedLoopGeneral.ContinuousWrap = false
         }
-        turretMotor.addFollower(Falcons.TURRET_1)
+        turretMotor.addFollower(Talons.TURRET_1)
 
         setTurretOffset(Drive.heading.measure)
 

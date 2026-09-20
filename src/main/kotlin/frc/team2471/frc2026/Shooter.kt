@@ -237,9 +237,9 @@ object Shooter: MechanismBase("Shooter") {
     val doAutoRamp: Boolean get() = doAutoRampEntry.get() && !(demoMode)
 
 
-    val shooterMotor = LoggedTalonFX(Falcons.SHOOTER_0, CANBusses.TURRET_CAN)
-    val shooterMotorFollower = LoggedTalonFX(Falcons.SHOOTER_1, CANBusses.TURRET_CAN)
-    val hoodMotor = LoggedTalonFX(Falcons.SHOOTER_HOOD, CANBusses.TURRET_CAN)
+    val shooterMotor = LoggedTalonFX(Talons.SHOOTER_0, CANBusses.TURRET_CAN)
+    val shooterMotorFollower = LoggedTalonFX(Talons.SHOOTER_1, CANBusses.TURRET_CAN)
+    val hoodMotor = LoggedTalonFX(Talons.SHOOTER_HOOD, CANBusses.TURRET_CAN)
     val hoodEncoder = CANcoder(CANCoders.HOOD, CANBusses.TURRET_CAN)
 
     val WHEEL_DIAMETER = 4.0.inches
@@ -326,7 +326,7 @@ object Shooter: MechanismBase("Shooter") {
     val hoodErrorDistance get() = (AimUtils.distanceToTarget * sin(hoodMotor.closedLoopError.valueAsDouble.radians)).absoluteValue()
 
     @get:AutoLogOutput(key = "Shooter/Velocity error distance")
-    val velocityErrorDistance get() = (WHEEL_DIAMETER * shooterMotor.closedLoopError.valueAsDouble * Math.PI * (
+    val velocityErrorDistance get() = (WHEEL_DIAMETER * shooterMotor.closedLoopError.valueAsDouble * shooterEfficiency * Math.PI * (
             if (AimUtils.isAimingAtGoal) {
                 hubTimeCurve.get(AimUtils.distanceToTarget.asFeet) * kotlin.math.cos(hubAngleCurve.get(AimUtils.distanceToTarget.asFeet))
             } else if (FieldManager.passOverNet) {
@@ -345,7 +345,7 @@ object Shooter: MechanismBase("Shooter") {
     @get:AutoLogOutput(key = "Shooter/raw ramped up")
     val rawRampedUp: Boolean get() = (shooterVelocity - shooterVelocitySetpoint).absoluteValue() < 2.0.rotationsPerSecond
 
-    var rampedUpDebouncer = Debouncer(0.1, Debouncer.DebounceType.FALLING)
+    val rampedUpDebouncer = Debouncer(0.1, Debouncer.DebounceType.FALLING)
 
     @get:AutoLogOutput(key = "Shooter/Ramped up")
     val rampedUp: Boolean get() = rampedUpDebouncer.calculate(rawRampedUp)
@@ -355,7 +355,10 @@ object Shooter: MechanismBase("Shooter") {
 
     @get:AutoLogOutput(key = "Shooter/Will not miss")
 //    val willNotMiss get() = ((rampedUp && AimUtils.isAimingAtGoal) || (rampedUpPassing && !AimUtils.isAimingAtGoal))
-    val willNotMiss get() = if (AimUtils.isAimingAtGoal) totalErrorDistance < 1.5.feet else totalErrorDistance < 4.0.feet
+    val rawWillNotMiss get() = if (AimUtils.isAimingAtGoal) totalErrorDistance < 1.5.feet else totalErrorDistance < 4.0.feet
+    val willNotMiss get() = willNotMissDebouncer.calculate(rawWillNotMiss)
+
+    val willNotMissDebouncer = Debouncer(0.1, Debouncer.DebounceType.kFalling)
 
     @get:AutoLogOutput(key = "Shooter/isShooting")
     var isShooting = false

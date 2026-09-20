@@ -28,10 +28,10 @@ import org.wpilib.units.measure.Current
 object Spindexer: MechanismBase("Spindexer") {
     val table = Telemetry.getTable("Spindexer")
 
-    val spinMotor = TalonFX(Falcons.SPIN_0, CANBusses.CAN_0)
-    val spinMotorFollower = TalonFX(Falcons.SPIN_1, CANBusses.CAN_0)
-    val sidetakeMotor = TalonFX(Falcons.SIDETAKE, CANBusses.CAN_0)
-    val uptakeMotor = TalonFX(Falcons.UPTAKE, CANBusses.CAN_0)
+    val spinMotor = TalonFX(Talons.SPIN_0, CANBusses.CAN_0)
+    val spinMotorFollower = TalonFX(Talons.SPIN_1, CANBusses.CAN_0)
+    val sidetakeMotor = TalonFX(Talons.SIDETAKE, CANBusses.CAN_0)
+    val uptakeMotor = TalonFX(Talons.UPTAKE, CANBusses.CAN_0)
 
     @get:AutoLogOutput(key = "Spindexer/Current State")
     var currentState = State.OFF
