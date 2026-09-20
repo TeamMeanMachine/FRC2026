@@ -3,7 +3,7 @@
 package frc.team2471.frc2026
 
 import com.ctre.phoenix6.CANBus
-import frc.team2471.frc2026.Robot.isCompBot
+import org.wpilib.hardware.bus.CANPort
 
 object Sparks {
 }
@@ -72,7 +72,14 @@ object PWMPort {
 object ServoPort {
 }
 
-object CANivores {
+object CANBusses {
+    // CAN ports on systemcore
+    val CAN_0 = CANBus(CANPort.CAN_S0)
+    val CAN_1 = CANBus(CANPort.CAN_S1)
+    val CAN_2 = CANBus(CANPort.CAN_S2)
+    val CAN_3 = CANBus(CANPort.CAN_S3)
+    val CAN_4 = CANBus(CANPort.CAN_S4)
+
     val TURRET_CAN = CANBus("Ken A Vore")
     val INTAKE_CAN = CANBus("Intake A Vore")
 }

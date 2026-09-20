@@ -72,10 +72,10 @@ object Turret: MechanismBase("Turret") {
     val disableTurretEntry = table.getTunable("Disable Turret", false, true)
     val turretFeedforwardFactorEntry = table.getTunable("Feedforward Factor", 3.0, true)
 
-    val turretMotor = LoggedTalonFX(Falcons.TURRET_0, CANivores.TURRET_CAN)
-    val turretEncoder1 = CANcoder(CANCoders.TURRET_0, CANivores.TURRET_CAN)
-    val turretEncoder2 = CANcoder(CANCoders.TURRET_1, CANivores.TURRET_CAN)
-    val turretPigeon = Pigeon2(CANSensors.TURRET_PIGEON, CANivores.TURRET_CAN)
+    val turretMotor = LoggedTalonFX(Falcons.TURRET_0, CANBusses.TURRET_CAN)
+    val turretEncoder1 = CANcoder(CANCoders.TURRET_0, CANBusses.TURRET_CAN)
+    val turretEncoder2 = CANcoder(CANCoders.TURRET_1, CANBusses.TURRET_CAN)
+    val turretPigeon = Pigeon2(CANSensors.TURRET_PIGEON, CANBusses.TURRET_CAN)
 
     val TURRET_TOP_LIMIT = 200.0.degrees
     val TURRET_BOTTOM_LIMIT = -200.0.degrees

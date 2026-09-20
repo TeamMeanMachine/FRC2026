@@ -237,10 +237,10 @@ object Shooter: MechanismBase("Shooter") {
     val doAutoRamp: Boolean get() = doAutoRampEntry.get() && !(demoMode)
 
 
-    val shooterMotor = LoggedTalonFX(Falcons.SHOOTER_0, CANivores.TURRET_CAN)
-    val shooterMotorFollower = LoggedTalonFX(Falcons.SHOOTER_1, CANivores.TURRET_CAN)
-    val hoodMotor = LoggedTalonFX(Falcons.SHOOTER_HOOD, CANivores.TURRET_CAN)
-    val hoodEncoder = CANcoder(CANCoders.HOOD, CANivores.TURRET_CAN)
+    val shooterMotor = LoggedTalonFX(Falcons.SHOOTER_0, CANBusses.TURRET_CAN)
+    val shooterMotorFollower = LoggedTalonFX(Falcons.SHOOTER_1, CANBusses.TURRET_CAN)
+    val hoodMotor = LoggedTalonFX(Falcons.SHOOTER_HOOD, CANBusses.TURRET_CAN)
+    val hoodEncoder = CANcoder(CANCoders.HOOD, CANBusses.TURRET_CAN)
 
     val WHEEL_DIAMETER = 4.0.inches
 

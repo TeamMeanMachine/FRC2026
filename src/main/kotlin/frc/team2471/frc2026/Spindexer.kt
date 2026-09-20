@@ -1,6 +1,5 @@
 package frc.team2471.frc2026
 
-import com.ctre.phoenix6.CANBus
 import com.ctre.phoenix6.controls.MotionMagicVelocityTorqueCurrentFOC
 import com.ctre.phoenix6.controls.NeutralOut
 import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC
@@ -29,10 +28,10 @@ import org.wpilib.units.measure.Current
 object Spindexer: MechanismBase("Spindexer") {
     val table = Telemetry.getTable("Spindexer")
 
-    val spinMotor = TalonFX(Falcons.SPIN_0, CANBus.systemcore(1))
-    val spinMotorFollower = TalonFX(Falcons.SPIN_1, CANBus.systemcore(1))
-    val sidetakeMotor = TalonFX(Falcons.SIDETAKE, CANBus.systemcore(1))
-    val uptakeMotor = TalonFX(Falcons.UPTAKE, CANBus.systemcore(1))
+    val spinMotor = TalonFX(Falcons.SPIN_0, CANBusses.CAN_0)
+    val spinMotorFollower = TalonFX(Falcons.SPIN_1, CANBusses.CAN_0)
+    val sidetakeMotor = TalonFX(Falcons.SIDETAKE, CANBusses.CAN_0)
+    val uptakeMotor = TalonFX(Falcons.UPTAKE, CANBusses.CAN_0)
 
     @get:AutoLogOutput(key = "Spindexer/Current State")
     var currentState = State.OFF

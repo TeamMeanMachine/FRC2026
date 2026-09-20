@@ -82,7 +82,7 @@ object DriveConstants {
 
     // CAN bus that the devices are located on;
     // All swerve devices must share the same CAN bus
-    val driveCANBus: CANBus = CANBus("rio", "./logs/example.hoot")
+    val driveCANBus: CANBus = CANBusses.CAN_0
 
     // Theoretical free speed at 12 V applied output;
     // This needs to be tuned to your individual robot
@@ -92,7 +92,7 @@ object DriveConstants {
     val kMaxAcceleration: LinearAcceleration = (driveMotor.Kt * (60.0 - driveMotor.freeCurrent) * driveGearRatio * 0.85 / wheelRadiusInches.inches.asMeters / robotWeight.asKilograms).metersPerSecondSquared
 
     val drivetrainConstants: SwerveDrivetrainConstants = SwerveDrivetrainConstants().apply {
-        CANBusName = driveCANBus.name
+        Network = driveCANBus
         Pigeon2Id = CANSensors.PIGEON
         Pigeon2Configs = null //Leave this null to skip applying Pigeon 2 configs
     }

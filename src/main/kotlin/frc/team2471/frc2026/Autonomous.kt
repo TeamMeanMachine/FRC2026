@@ -70,7 +70,7 @@ object Autonomous: Autonomi() {
         // Convert AutoRoutines to AutoOpModeSuppliers
         autos.toAutoOpModeSuppliers().forEach {
             println("Auto: ${it.name}")
-            Robot.addOpMode(RobotMode.AUTONOMOUS, it.name, it.opModeSupplier) // AutoOpModes to driver station
+            Robot.addOpMode(RobotMode.AUTONOMOUS, it.name, it.opModeSupplier) // Add autos to driver station
         }
 
         tests.toTestOpModeSuppliers().forEach { // Add Tests/Utility OpModes.
