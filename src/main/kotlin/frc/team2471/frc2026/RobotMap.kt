@@ -4,9 +4,6 @@ package frc.team2471.frc2026
 
 import com.ctre.phoenix6.CANBus
 
-object Sparks {
-}
-
 object AnalogSensors {
 }
 
@@ -15,7 +12,10 @@ object DigitalSensors {
     const val INTAKE_STOP_SENSOR_1 = 1
 }
 
-object Falcons {
+object Sparks { // SPARK REV motors
+}
+
+object Talons { // TalonFX CTRE motors
     const val FRONT_RIGHT_DRIVE = 23
     const val FRONT_RIGHT_STEER = 22
 
@@ -48,9 +48,6 @@ object Falcons {
     const val SPIN_1 = 3
     const val SIDETAKE = 19
     const val UPTAKE = 18
-}
-
-object Talons {
 }
 
 object CANCoders {

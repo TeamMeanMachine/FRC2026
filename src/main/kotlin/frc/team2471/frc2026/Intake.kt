@@ -62,10 +62,10 @@ object Intake: SubsystemBase("Intake") {
 
     const val HOME_VELOCITY_THRESHOLD = 0.25
 
-    val rollerMotor = TalonFX(Falcons.INTAKE_ROLLER_0, if (Robot.isCompBot) CANivores.INTAKE_CAN else CANBus("rio"))
-    val rollerMotorFollower = TalonFX(Falcons.INTAKE_ROLLER_1, if (Robot.isCompBot) CANivores.INTAKE_CAN else CANBus("rio"))
-    val deployMotor0 = TalonFX(Falcons.INTAKE_DEPLOY_0)
-    val deployMotor1 = TalonFX(Falcons.INTAKE_DEPLOY_1)
+    val rollerMotor = TalonFX(Talons.INTAKE_ROLLER_0, if (Robot.isCompBot) CANivores.INTAKE_CAN else CANBus("rio"))
+    val rollerMotorFollower = TalonFX(Talons.INTAKE_ROLLER_1, if (Robot.isCompBot) CANivores.INTAKE_CAN else CANBus("rio"))
+    val deployMotor0 = TalonFX(Talons.INTAKE_DEPLOY_0)
+    val deployMotor1 = TalonFX(Talons.INTAKE_DEPLOY_1)
     val stopSensor0 = DigitalInput(DigitalSensors.INTAKE_STOP_SENSOR_0)
     val stopSensor1 = DigitalInput(DigitalSensors.INTAKE_STOP_SENSOR_1)
 

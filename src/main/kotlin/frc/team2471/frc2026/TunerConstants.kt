@@ -187,8 +187,8 @@ object TunerConstants {
     val moduleTrackWidth = 11.0.inches
 
     val frontLeft = ModuleConfig(
-        Falcons.FRONT_LEFT_DRIVE,
-        Falcons.FRONT_LEFT_STEER,
+        Talons.FRONT_LEFT_DRIVE,
+        Talons.FRONT_LEFT_STEER,
         CANCoders.FRONT_LEFT,
         driveMotorInverted = false,
         steerMotorInverted = true,
@@ -200,8 +200,8 @@ object TunerConstants {
     ).createModuleConstants()
 
     val frontRight = ModuleConfig(
-        Falcons.FRONT_RIGHT_DRIVE,
-        Falcons.FRONT_RIGHT_STEER,
+        Talons.FRONT_RIGHT_DRIVE,
+        Talons.FRONT_RIGHT_STEER,
         CANCoders.FRONT_RIGHT,
         driveMotorInverted = false,
         steerMotorInverted = true,
@@ -213,8 +213,8 @@ object TunerConstants {
     ).createModuleConstants()
 
     val backLeft = ModuleConfig(
-        Falcons.BACK_LEFT_DRIVE,
-        Falcons.BACK_LEFT_STEER,
+        Talons.BACK_LEFT_DRIVE,
+        Talons.BACK_LEFT_STEER,
         CANCoders.BACK_LEFT,
         driveMotorInverted = false,
         steerMotorInverted = true,
@@ -226,8 +226,8 @@ object TunerConstants {
     ).createModuleConstants()
 
     val backRight = ModuleConfig(
-        Falcons.BACK_RIGHT_DRIVE,
-        Falcons.BACK_RIGHT_STEER,
+        Talons.BACK_RIGHT_DRIVE,
+        Talons.BACK_RIGHT_STEER,
         CANCoders.BACK_RIGHT,
         driveMotorInverted = false,
         steerMotorInverted = true,

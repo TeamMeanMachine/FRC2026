@@ -49,7 +49,6 @@ import org.team2471.frc.lib.units.wrap
 import org.team2471.frc.lib.util.angleTo
 import org.team2471.frc.lib.util.isReal
 import kotlin.math.abs
-import org.team2471.frc.lib.coroutines.periodic
 import org.team2471.frc.lib.hardware.ctre.alternateFeedbackSensor
 import org.team2471.frc.lib.hardware.ctre.brakeMode
 import org.team2471.frc.lib.hardware.ctre.motionMagic
@@ -77,7 +76,7 @@ object Turret: SubsystemBase("Turret") {
     val fusedEncoderAngleEntry = table.getEntry("Fused Encoder Angle")
     val turetFeedforwardFactorEntry = table.getEntry("Feedforward Factor")
 
-    val turretMotor = LoggedTalonFX(Falcons.TURRET_0, CANivores.TURRET_CAN)
+    val turretMotor = LoggedTalonFX(Talons.TURRET_0, CANivores.TURRET_CAN)
     val turretEncoder1 = CANcoder(CANCoders.TURRET_0, CANivores.TURRET_CAN)
     val turretEncoder2 = CANcoder(CANCoders.TURRET_1, CANivores.TURRET_CAN)
     val turretPigeon = Pigeon2(CANSensors.TURRET_PIGEON, CANivores.TURRET_CAN)
@@ -346,7 +345,7 @@ object Turret: SubsystemBase("Turret") {
 
             ClosedLoopGeneral.ContinuousWrap = false
         }
-        turretMotor.addFollower(Falcons.TURRET_1)
+        turretMotor.addFollower(Talons.TURRET_1)
 
         setTurretOffset(Drive.heading.measure)
 
