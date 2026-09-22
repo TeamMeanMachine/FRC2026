@@ -146,6 +146,15 @@ object OI: SubsystemBase("OI") {
         driverController.povLeft().whileTrue(Turret.staticAimAtTarget().onlyRunWhileFalse{demoMode})
         driverController.povRight().whileTrue(FieldManager.disableAutoHoodRetractionCommand().onlyRunWhileFalse{demoMode})
 
+
+        driverController.x().whileTrue(runCommand {
+            Intake.deploy()
+            Intake.intakeState = Intake.IntakeState.SPITTING
+
+        }.finallyRun {
+            Intake.intakeState = Intake.IntakeState.OFF
+        })
+
         /**
          * DEMO CONTROLS:
          * left trigger and right stick to aim turret
@@ -173,6 +182,7 @@ object OI: SubsystemBase("OI") {
         driverController.a().whileTrue(
             Drive.snakeMode()
         )
+
 //        driverController.x().whileTrue(runCommand(Drive) {
 //            Drive.xPose()
 //        })
