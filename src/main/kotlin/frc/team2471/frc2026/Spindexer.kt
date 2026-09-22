@@ -25,10 +25,10 @@ import org.team2471.frc.lib.math.linearMap
 object Spindexer: SubsystemBase("Spindexer") {
     val table = NetworkTableInstance.getDefault().getTable("Spindexer")
 
-    val spinMotor = TalonFX(Falcons.SPIN_0)
-    val spinMotorFollower = TalonFX(Falcons.SPIN_1)
-    val sidetakeMotor = TalonFX(Falcons.SIDETAKE)
-    val uptakeMotor = TalonFX(Falcons.UPTAKE)
+    val spinMotor = TalonFX(Talons.SPIN_0)
+    val spinMotorFollower = TalonFX(Talons.SPIN_1)
+    val sidetakeMotor = TalonFX(Talons.SIDETAKE)
+    val uptakeMotor = TalonFX(Talons.UPTAKE)
 
     @get:AutoLogOutput(key = "Spindexer/Current State")
     var currentState = State.OFF

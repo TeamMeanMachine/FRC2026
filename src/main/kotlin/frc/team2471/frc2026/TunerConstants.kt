@@ -41,9 +41,9 @@ object TunerConstants {
     val driveMotor = DCMotor.getKrakenX60Foc(1)!!
     val steerMotor = DCMotor.getKrakenX44(1)!!
 
-    private val driveGearRatio = if (Robot.isCompBot) 7.125 else 6.746031746031747
-    private val steerGearRatio = if (Robot.isCompBot) 18.75 else 21.428571428571427
-    private val wheelRadiusInches = 2.0 * if (Robot.isCompBot) ((89.5 / 96.0) * (97.0 / 96.0)) else (0.950495049505 * (9.33 / 8.0) * (0.9479) * (106.0 / 96.0) * (91.0 / 96.0) * (94.5/96.0))
+    private val driveGearRatio = 7.125
+    private val steerGearRatio = 18.75
+    private val wheelRadiusInches = 2.0 * (89.5 / 96.0) * (97.0 / 96.0)
 
     // The steer motor uses any SwerveModule.SteerRequestType control request with the
     // output type specified by SwerveModuleConstants.SteerMotorClosedLoopOutput
@@ -187,8 +187,8 @@ object TunerConstants {
     val moduleTrackWidth = 11.0.inches
 
     val frontLeft = ModuleConfig(
-        Falcons.FRONT_LEFT_DRIVE,
-        Falcons.FRONT_LEFT_STEER,
+        Talons.FRONT_LEFT_DRIVE,
+        Talons.FRONT_LEFT_STEER,
         CANCoders.FRONT_LEFT,
         driveMotorInverted = false,
         steerMotorInverted = true,
@@ -200,8 +200,8 @@ object TunerConstants {
     ).createModuleConstants()
 
     val frontRight = ModuleConfig(
-        Falcons.FRONT_RIGHT_DRIVE,
-        Falcons.FRONT_RIGHT_STEER,
+        Talons.FRONT_RIGHT_DRIVE,
+        Talons.FRONT_RIGHT_STEER,
         CANCoders.FRONT_RIGHT,
         driveMotorInverted = false,
         steerMotorInverted = true,
@@ -213,8 +213,8 @@ object TunerConstants {
     ).createModuleConstants()
 
     val backLeft = ModuleConfig(
-        Falcons.BACK_LEFT_DRIVE,
-        Falcons.BACK_LEFT_STEER,
+        Talons.BACK_LEFT_DRIVE,
+        Talons.BACK_LEFT_STEER,
         CANCoders.BACK_LEFT,
         driveMotorInverted = false,
         steerMotorInverted = true,
@@ -226,8 +226,8 @@ object TunerConstants {
     ).createModuleConstants()
 
     val backRight = ModuleConfig(
-        Falcons.BACK_RIGHT_DRIVE,
-        Falcons.BACK_RIGHT_STEER,
+        Talons.BACK_RIGHT_DRIVE,
+        Talons.BACK_RIGHT_STEER,
         CANCoders.BACK_RIGHT,
         driveMotorInverted = false,
         steerMotorInverted = true,

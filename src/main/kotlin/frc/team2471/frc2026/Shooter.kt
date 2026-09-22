@@ -2,7 +2,6 @@ package frc.team2471.frc2026
 
 import com.ctre.phoenix6.SignalLogger
 import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage
-import com.ctre.phoenix6.controls.MotionMagicVoltage
 import com.ctre.phoenix6.controls.NeutralOut
 import com.ctre.phoenix6.controls.PositionVoltage
 import com.ctre.phoenix6.controls.VoltageOut
@@ -27,7 +26,6 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine
 import frc.team2471.frc2026.AimUtils.shooterEfficiency
 import frc.team2471.frc2026.AimUtils.toExitVelocity
-import frc.team2471.frc2026.Robot.isCompBot
 import org.littletonrobotics.junction.AutoLogOutput
 import org.littletonrobotics.junction.Logger
 import org.team2471.frc.lib.control.LoopLogger
@@ -50,7 +48,6 @@ import org.team2471.frc.lib.hardware.ctre.i
 import org.team2471.frc.lib.hardware.ctre.inverted
 import org.team2471.frc.lib.hardware.loggedMotors.LoggedTalonFX
 import org.team2471.frc.lib.hardware.ctre.magnetSensorOffset
-import org.team2471.frc.lib.hardware.ctre.motionMagic
 import org.team2471.frc.lib.hardware.ctre.p
 import org.team2471.frc.lib.hardware.ctre.remoteCANCoder
 import org.team2471.frc.lib.hardware.ctre.s
@@ -86,93 +83,52 @@ object Shooter: SubsystemBase("Shooter") {
 
     // feet, rot/s (of the wheel not the motor) (in an ideal condition. need to divide by SHOOTER_EFFICIENCY)
     val hubSpeedCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
-        if (isCompBot) {
-            put(5.0, 20.0)
-            put(7.0, 22.0)
-            put(9.0, 22.5)
-            put(12.0, 24.7)
-            put(15.0, 26.5)
-            put(18.0, 29.0)
-            put(21.0, 32.0)
-        } else {
-            put(3.0, 38.5)
-            put(6.0, 40.0)
-            put(9.0, 46.0)
-            put(12.0, 48.0)
-            put(15.0, 51.5)
-            put(18.0, 58.0)
-        }
+        put(5.0, 20.0)
+        put(7.0, 22.0)
+        put(9.0, 22.5)
+        put(12.0, 24.7)
+        put(15.0, 26.5)
+        put(18.0, 29.0)
+        put(21.0, 32.0)
     }
     // feet, degrees
     val hubAngleCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
-        if (isCompBot) {
-            put(5.0, 75.0)
-            put(7.0, 75.0)
-            put(9.0, 72.0)
-            put(12.0, 64.851)
-            put(15.0, 61.085)
-            put(18.0, 59.0)
-            put(21.0, 57.0)
-        } else {
-            put(3.0, 81.476)
-            put(6.0, 75.118)
-            put(9.0, 69.575)
-            put(12.0, 64.851)
-            put(15.0, 61.085)
-            put(18.0, 60.206)
-        }
+        put(5.0, 75.0)
+        put(7.0, 75.0)
+        put(9.0, 72.0)
+        put(12.0, 64.851)
+        put(15.0, 61.085)
+        put(18.0, 59.0)
+        put(21.0, 57.0)
     }
 
     //feet, s
     val hubTimeCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
-        if (isCompBot) {
-            put(5.0, 0.785)
-            put(7.0, 0.992)
-            put(9.0, 1.027)
-            put(12.0, 1.15)
-            put(15.0, 1.2)
-            put(18.0, 1.35)
-            put(21.0, 1.4)
-        } else {
-            put(3.0, 1.03)
-            put(6.0, 1.08)
-            put(9.0, 1.08)
-            put(12.0, 1.1)
-            put(15.0, 1.2)
-            put(18.0, 1.28)
-        }
+        put(5.0, 0.785)
+        put(7.0, 0.992)
+        put(9.0, 1.027)
+        put(12.0, 1.15)
+        put(15.0, 1.2)
+        put(18.0, 1.35)
+        put(21.0, 1.4)
     }
 
     // feet, rot/s (of the wheel not the motor) (in an ideal condition. need to divide by SHOOTER_EFFICIENCY)
     val floorSpeedCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
-        if (isCompBot) {
-            put(5.0, 25.0)
-            put(15.0, 30.988)
-            put(25.0, 40.362)
-            put(35.0, 70.839)
-            put(45.0, 80.88)
-        } else {
-            put(5.0, 55.0)
-            put(10.0, 55.0)
-            put(15.0, 55.0)
-            put(20.0, 55.0)
-        }
+        put(5.0, 25.0)
+        put(15.0, 30.988)
+        put(25.0, 40.362)
+        put(35.0, 70.839)
+        put(45.0, 80.88)
     }
     // feet, degrees
     val floorAngleCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
-        if (isCompBot) {
-            put(5.0, 45.0)
-            put(15.0, 45.0)
-            put(25.0, 45.0)
-            put(35.0, 45.0)
-            put(45.0, 45.0)
-            put(55.0, 45.0)
-        } else {
-            put(5.0, 45.0)
-            put(10.0, 45.0)
-            put(15.0, 45.0)
-            put(20.0, 45.0)
-        }
+        put(5.0, 45.0)
+        put(15.0, 45.0)
+        put(25.0, 45.0)
+        put(35.0, 45.0)
+        put(45.0, 45.0)
+        put(55.0, 45.0)
     }
 
     // feet, rot/s (of the wheel not the motor) (in an ideal condition. need to divide by SHOOTER_EFFICIENCY)
@@ -197,19 +153,12 @@ object Shooter: SubsystemBase("Shooter") {
 
 
     val floorTimeCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
-        if (isCompBot) {
-            put(5.0, 0.64)
-            put(15.0, 1.03)
-            put(25.0, 1.32)
-            put(35.0, 1.57)
-            put(45.0, 1.8)
-            put(55.0, 2.01)
-        } else {
-            put(5.0, 0.246)
-            put(10.0, 0.491)
-            put(15.0, 0.737)
-            put(20.0, 0.982)
-        }
+        put(5.0, 0.64)
+        put(15.0, 1.03)
+        put(25.0, 1.32)
+        put(35.0, 1.57)
+        put(45.0, 1.8)
+        put(55.0, 2.01)
     }
 
     val overNetTimeCurve = InterpolatingTreeMap(InverseInterpolator.forDouble(), Interpolator.forDouble()).apply {
@@ -246,14 +195,14 @@ object Shooter: SubsystemBase("Shooter") {
     val doAutoRamp: Boolean get() = doAutoRampEntry.getBoolean(true) && !(demoMode)
 
 
-    val shooterMotor = LoggedTalonFX(Falcons.SHOOTER_0, CANivores.TURRET_CAN)
-    val shooterMotorFollower = LoggedTalonFX(Falcons.SHOOTER_1, CANivores.TURRET_CAN)
-    val hoodMotor = LoggedTalonFX(Falcons.SHOOTER_HOOD, CANivores.TURRET_CAN)
+    val shooterMotor = LoggedTalonFX(Talons.SHOOTER_0, CANivores.TURRET_CAN)
+    val shooterMotorFollower = LoggedTalonFX(Talons.SHOOTER_1, CANivores.TURRET_CAN)
+    val hoodMotor = LoggedTalonFX(Talons.SHOOTER_HOOD, CANivores.TURRET_CAN)
     val hoodEncoder = CANcoder(CANCoders.HOOD, CANivores.TURRET_CAN)
 
     val WHEEL_DIAMETER = 4.0.inches
 
-    val SHOOTER_GEAR_RATIO = if (isCompBot) 1.0 else 18.0/22.0
+    val SHOOTER_GEAR_RATIO = 1.0
 
     // seconds
     const val HOOD_DOWN_TIME = 0.75
@@ -265,11 +214,7 @@ object Shooter: SubsystemBase("Shooter") {
             if (field > 0.0.rotationsPerSecond) {
                 shooterMotor.setControl(MotionMagicVelocityVoltage(field))
             } else {
-                if (Robot.isCompBot) {
-                    shooterMotor.setControl(NeutralOut())
-                } else {
-                    shooterMotor.setControl(MotionMagicVoltage(0.0))
-                }
+                shooterMotor.setControl(NeutralOut())
             }
         }
 
@@ -288,18 +233,8 @@ object Shooter: SubsystemBase("Shooter") {
     @get:AutoLogOutput(key = "Shooter/Hood Angle Setpoint")
     var hoodAngleSetpoint: Angle = hoodAngle
         set(value) {
-            if (isCompBot) {
-                field = value.coerceIn(HOOD_ZERO.degrees, 45.0.degrees)
-                hoodMotor.setControl(PositionVoltage(field).withFeedForward(0.0))
-            } else {
-                field = value.coerceIn(0.0.degrees, 44.0.degrees)
-                if (field == 0.0.degrees && hoodAngle > 5.0.degrees) {
-                    hoodMotor.setControl(PositionVoltage(field).withFeedForward(hoodFeedforward))
-                } else {
-                    hoodMotor.setControl(MotionMagicVoltage(field).withFeedForward(hoodFeedforward))
-                }
-            }
-
+            field = value.coerceIn(HOOD_ZERO.degrees, 45.0.degrees)
+            hoodMotor.setControl(PositionVoltage(field).withFeedForward(0.0))
         }
 
     @get:AutoLogOutput(key = "Shooter/Hood Angle")
@@ -327,7 +262,7 @@ object Shooter: SubsystemBase("Shooter") {
 
     // degrees
     const val HOOD_ZERO = 15.0
-    val HOOD_UNDER_TRENCH_MAX_ANGLE = if (Robot.isCompBot) 32.0.degrees else 0.0.degrees
+    val HOOD_UNDER_TRENCH_MAX_ANGLE = 32.0.degrees
 
     const val BALL_ANGLE_AT_HOOD_ZERO = 90.0
 
@@ -413,19 +348,13 @@ object Shooter: SubsystemBase("Shooter") {
                 i(0.0)
             }
 
-            if (isCompBot) {
-                MotionMagic.MotionMagicAcceleration = 120.0
-            } else {
-                MotionMagic.MotionMagicAcceleration = 25.0
-            }
+            MotionMagic.MotionMagicAcceleration = 120.0
         }
         shooterMotor.addFollower(shooterMotorFollower, MotorAlignmentValue.Opposed)
 
-        if (isCompBot) {
-            hoodEncoder.applyConfiguration {
-                inverted(false)
-                magnetSensorOffset(0.2109375)
-            }
+        hoodEncoder.applyConfiguration {
+            inverted(false)
+            magnetSensorOffset(0.2109375)
         }
 
         hoodMotor.applyConfiguration {
@@ -434,25 +363,16 @@ object Shooter: SubsystemBase("Shooter") {
             brakeMode()
 
             if (isReal) {
-                if (isCompBot) {
-                    s(0.2, StaticFeedforwardSignValue.UseClosedLoopSign)
-                    p(200.0)
-                    d(0.0)
-                } else {
-                    s(0.05, StaticFeedforwardSignValue.UseClosedLoopSign)
-                    p(60.0)
-                    d(0.0)
-                }
+                s(0.2, StaticFeedforwardSignValue.UseClosedLoopSign)
+                p(200.0)
+                d(0.0)
             } else {
                 s(0.05, StaticFeedforwardSignValue.UseClosedLoopSign)
                 p(60.0)
                 d(4.0)
             }
 
-            if (!isCompBot) {
-                motionMagic(0.75, 5.0)
-            }
-            remoteCANCoder(hoodEncoder.deviceID, if (isCompBot) 85.5 else 9.64285714285714)
+            remoteCANCoder(hoodEncoder.deviceID, 85.5)
         }
     }
 

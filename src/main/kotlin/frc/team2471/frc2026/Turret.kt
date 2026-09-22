@@ -49,7 +49,6 @@ import org.team2471.frc.lib.units.wrap
 import org.team2471.frc.lib.util.angleTo
 import org.team2471.frc.lib.util.isReal
 import kotlin.math.abs
-import org.team2471.frc.lib.coroutines.periodic
 import org.team2471.frc.lib.hardware.ctre.alternateFeedbackSensor
 import org.team2471.frc.lib.hardware.ctre.brakeMode
 import org.team2471.frc.lib.hardware.ctre.motionMagic
@@ -77,7 +76,7 @@ object Turret: SubsystemBase("Turret") {
     val fusedEncoderAngleEntry = table.getEntry("Fused Encoder Angle")
     val turetFeedforwardFactorEntry = table.getEntry("Feedforward Factor")
 
-    val turretMotor = LoggedTalonFX(Falcons.TURRET_0, CANivores.TURRET_CAN)
+    val turretMotor = LoggedTalonFX(Talons.TURRET_0, CANivores.TURRET_CAN)
     val turretEncoder1 = CANcoder(CANCoders.TURRET_0, CANivores.TURRET_CAN)
     val turretEncoder2 = CANcoder(CANCoders.TURRET_1, CANivores.TURRET_CAN)
     val turretPigeon = Pigeon2(CANSensors.TURRET_PIGEON, CANivores.TURRET_CAN)
@@ -85,18 +84,18 @@ object Turret: SubsystemBase("Turret") {
     val TURRET_TOP_LIMIT = 200.0.degrees
     val TURRET_BOTTOM_LIMIT = -200.0.degrees
     val TURRET_RANGE = TURRET_TOP_LIMIT - TURRET_BOTTOM_LIMIT
-    val TURRET_ENCODER_LIMIT = if (Robot.isCompBot) 600.0.degrees else 720.0.degrees
+    val TURRET_ENCODER_LIMIT = 600.0.degrees
 
     val ENCODER_1_DEFAULT_OFFSET = 33.838
     val ENCODER_2_DEFAULT_OFFSET = -32.432
 
-    val encoder1GearRatio = if (Robot.isCompBot) 30.0/230.0 else 30.0/200.0
+    val encoder1GearRatio = 30.0/230.0
 
     val encoder2GearRatio = encoder1GearRatio * 83.0/32.0
 
-    val turretZeroPositionOnRobot = if (Robot.isCompBot) 30.0.degrees else 90.0.degrees
+    val turretZeroPositionOnRobot = 30.0.degrees
 
-    val motorGearRatio = if (Robot.isCompBot) 30.0/230.0 * 11.0/46.0 else 30.0/200.0 * 11.0/46.0
+    val motorGearRatio = 30.0/230.0 * 11.0/46.0
 
     @AutoLogOutput(key = "Turret/offset")
     var offset: Angle = 0.0.degrees
@@ -297,24 +296,16 @@ object Turret: SubsystemBase("Turret") {
         if (!disableTurretEntry.exists()) disableTurretEntry.setBoolean(disableTurret); disableTurretEntry.setPersistent()
 
         turretEncoder1.applyConfiguration {
-            if (Robot.isCompBot) {
-                inverted(false)
-            } else {
-                inverted(false)
-            }
+            inverted(false)
         }
         turretEncoder2.applyConfiguration {
-            if (Robot.isCompBot) {
-                inverted(true)
-            } else {
-                inverted(false)
-            }
+            inverted(true)
         }
 
         turretPigeon.applyConfiguration {
             MountPose.MountPoseYaw = 0.0
             MountPose.MountPosePitch = 0.0
-            MountPose.MountPoseRoll = if (Robot.isCompBot) 0.0 else -90.0
+            MountPose.MountPoseRoll = 0.0
         }
 
         turretMotor.configSim(DCMotor.getKrakenX60(1), 0.01)
@@ -324,15 +315,9 @@ object Turret: SubsystemBase("Turret") {
             inverted(false)
             brakeMode()
             if (isReal) {
-                if (Robot.isCompBot) {
-                    s(0.1, StaticFeedforwardSignValue.UseClosedLoopSign)
-                    p(55.0)
-                    d(0.0)
-                } else {
-                    s(0.2, StaticFeedforwardSignValue.UseClosedLoopSign)
-                    p(50.0)
-                    d(0.0)
-                }
+                s(0.1, StaticFeedforwardSignValue.UseClosedLoopSign)
+                p(55.0)
+                d(0.0)
             } else {
                 s(0.13, StaticFeedforwardSignValue.UseClosedLoopSign)
                 p(500.0)
@@ -346,13 +331,13 @@ object Turret: SubsystemBase("Turret") {
 
             ClosedLoopGeneral.ContinuousWrap = false
         }
-        turretMotor.addFollower(Falcons.TURRET_1)
+        turretMotor.addFollower(Talons.TURRET_1)
 
         setTurretOffset(Drive.heading.measure)
 
         //Loop that updates setpoint for constantly updating wrap limits and feedforward
         GlobalScope.launch {
-            periodic {
+            org.team2471.frc.lib.coroutines.periodic {
                 if (Robot.isDisabled) {
                     fieldCentricSetpoint = fieldCentricAngle
                 } else {
@@ -366,7 +351,7 @@ object Turret: SubsystemBase("Turret") {
         //Loop that updates the unwrapped robot heading also sets the turret pigeon offset.
         GlobalScope.launch {
             var resettingGyroYaw = false
-            periodic {
+            org.team2471.frc.lib.coroutines.periodic {
                 if (!resettingGyroYaw) {
                     val fieldCentricGyroAngle = fieldCentricAngle
                     val unwrappedFieldCentricRotorAngle = fieldCentricTurretMotorRotorAngle.unWrap(fieldCentricGyroAngle)
