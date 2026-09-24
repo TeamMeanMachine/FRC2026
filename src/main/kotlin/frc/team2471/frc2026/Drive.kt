@@ -106,8 +106,8 @@ object Drive: SwerveDriveSubsystem(TunerConstants.drivetrainConstants, *TunerCon
         +y   o   -y
          *  back *
              -x      */
-        PhotonVisionCamera("FrontLeft", Transform3d(Translation3d(-12.5.inches.asMeters, 13.1.inches.asMeters, 21.0.inches.asMeters), Rotation3d(0.0, -25.0.degrees.asRadians, 45.0.degrees.asRadians)), arrayOf(PipelineConfig())),
-        PhotonVisionCamera("FrontRight", Transform3d(Translation3d(-12.5.inches.asMeters, -13.1.inches.asMeters, 21.0.inches.asMeters), Rotation3d(0.0, -25.0.degrees.asRadians, -45.0.degrees.asRadians)), arrayOf(PipelineConfig())),
+        PhotonVisionCamera("FrontLeft", Transform3d(Translation3d(-12.5.inches.asMeters, 13.1.inches.asMeters, 21.0.inches.asMeters), Rotation3d(0.0, -25.0.degrees.asRadians, 43.0.degrees.asRadians)), arrayOf(PipelineConfig())),
+        PhotonVisionCamera("FrontRight", Transform3d(Translation3d(-12.5.inches.asMeters, -13.1.inches.asMeters, 21.0.inches.asMeters), Rotation3d(0.0, -25.0.degrees.asRadians, -43.0.degrees.asRadians)), arrayOf(PipelineConfig())),
         PhotonVisionCamera("BackLeft", Transform3d(Translation3d(-13.7.inches.asMeters, 10.7.inches.asMeters, 21.0.inches.asMeters), Rotation3d(0.0, -25.0.degrees.asRadians, 130.0.degrees.asRadians)), arrayOf(PipelineConfig())),
         PhotonVisionCamera("BackRight", Transform3d(Translation3d(-13.7.inches.asMeters, -10.7.inches.asMeters, 21.0.inches.asMeters), Rotation3d(0.0, -25.0.degrees.asRadians, -130.0.degrees.asRadians)), arrayOf(PipelineConfig())),
     )
