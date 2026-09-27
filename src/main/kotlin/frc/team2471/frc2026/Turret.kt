@@ -86,8 +86,8 @@ object Turret: SubsystemBase("Turret") {
     val TURRET_RANGE = TURRET_TOP_LIMIT - TURRET_BOTTOM_LIMIT
     val TURRET_ENCODER_LIMIT = 600.0.degrees
 
-    val ENCODER_1_DEFAULT_OFFSET = 33.838
-    val ENCODER_2_DEFAULT_OFFSET = -32.432
+    val ENCODER_1_DEFAULT_OFFSET = 38.232421875
+    val ENCODER_2_DEFAULT_OFFSET = -80.33203125
 
     val encoder1GearRatio = 30.0/230.0
 
