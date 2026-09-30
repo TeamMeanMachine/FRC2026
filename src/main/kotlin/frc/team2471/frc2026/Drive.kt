@@ -3,8 +3,6 @@ package frc.team2471.frc2026
 import com.ctre.phoenix6.swerve.utility.PhoenixPIDController
 import kotlinx.coroutines.DelicateCoroutinesApi
 import frc.team2471.frc2026.OI.driveLeftTriggerFullPress
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import org.littletonrobotics.junction.AutoLogOutput
 import org.team2471.frc.lib.commands.onCancel
 import org.team2471.frc.lib.commands.periodic
