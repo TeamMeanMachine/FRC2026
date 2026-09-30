@@ -107,14 +107,10 @@ object Intake: MechanismBase("Intake") {
             if (finishedHoming) {
                 if (disableSpringProtection) {
                     deployMotor0.setControl(MotionMagicVoltage(field).withSlot(1))
-                    if (isCompBot) {
-                        deployMotor1.setControl(MotionMagicVoltage(field).withSlot(1))
-                    }
+                    deployMotor1.setControl(MotionMagicVoltage(field).withSlot(1))
                 } else {
                     deployMotor0.setControl(PositionTorqueCurrentFOC(field))
-                    if (isCompBot) {
-                        deployMotor1.setControl(PositionTorqueCurrentFOC(field))
-                    }
+                    deployMotor1.setControl(PositionTorqueCurrentFOC(field))
                 }
             }
         }
@@ -149,7 +145,7 @@ object Intake: MechanismBase("Intake") {
 
     @get:AutoLogOutput(key = "Intake/Deploy Motor Follower Position")
     val deployMotor1Position: Double
-        get() = if (isCompBot) deployMotor1.position.valueAsDouble else 0.0
+        get() = deployMotor1.position.valueAsDouble
 
 
     @get:AutoLogOutput(key = "Intake/Deploy Motor Error")
@@ -185,27 +181,21 @@ object Intake: MechanismBase("Intake") {
 
             TorqueCurrent.PeakForwardTorqueCurrent = maxForwardTorque
 
-            if (isCompBot) motionMagic(200.0, 500.0) else motionMagic(750.0, 1500.0)
+            motionMagic(200.0, 500.0)
         }
 
 //         Apply config to motors
         deployMotor0.applyConfiguration(deployConfig.apply { inverted(true) })
         deployMotor0.setPosition(0.0)
 
-        if (isCompBot) {
-            deployMotor1.applyConfiguration(deployConfig.apply { inverted(false) })
-            deployMotor1.setPosition(0.0)
-        }
+        deployMotor1.applyConfiguration(deployConfig.apply { inverted(false) })
+        deployMotor1.setPosition(0.0)
 
         rollerMotor.applyConfiguration {
             currentLimits(autoCurrentLimits.peakLimit, autoCurrentLimits.continuousLimit, autoCurrentLimits.peakDuration)
             coastMode()
         }
-        if (isCompBot) {
-            rollerMotor.addFollower(rollerMotorFollower/*, false*/)
-        } else {
-            rollerMotor.addFollower(rollerMotorFollower)
-        }
+        rollerMotor.addFollower(rollerMotorFollower)
 
         GlobalScope.launch {
             periodicSuspend {

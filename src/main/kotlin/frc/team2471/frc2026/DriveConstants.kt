@@ -45,7 +45,7 @@ object DriveConstants {
 
     private val driveGearRatio = 7.125
     private val steerGearRatio = 18.75
-    private val wheelRadiusInches = 2.0 * ((89.5 / 96.0) * (97.0 / 96.0))
+    private val wheelRadiusInches = 2.0 * (89.5 / 96.0) * (97.0 / 96.0)
 
     // The steer motor uses any SwerveModule.SteerRequestType control request with the
     // output type specified by SwerveModuleConstants.SteerMotorClosedLoopOutput
