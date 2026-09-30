@@ -61,6 +61,7 @@ object Drive: SwerveDriveSubsystem(DriveConstants.drivetrainConstants, *DriveCon
 
     val useAprilTagsTunable = table.getTunable("useAprilTags", true, true)
     val increaseDriveCurrentTunable = table.getTunable("increaseDriveCurrent", false)
+    val slowDownModeEntry = table.getTunable("Slow Down Mode", false)
 
     val increaseDriveCurrent get() = increaseDriveCurrentTunable.get()
     var prevIncreaseDriveCurrent = increaseDriveCurrent
@@ -230,7 +231,16 @@ object Drive: SwerveDriveSubsystem(DriveConstants.drivetrainConstants, *DriveCon
     override fun getJoystickPercentageSpeed(): ChassisVelocities {
         val rawJoystick = OI.driveTranslation
         // Square drive input and apply demoSpeed
-        val power = rawJoystick.norm.square() * demoSpeed * if (slowDrive) 0.3 else if (inSnakeMode) 0.8 else 1.0
+        val power = rawJoystick.norm.square() * demoSpeed *
+                if (slowDrive) {
+                    0.3
+                } else if (inSnakeMode) {
+                    0.8
+                } else if (slowDownModeEntry.getBoolean(false)) {
+                    0.8
+                } else {
+                    1.0
+                }
         // Modify input to center in trench
         val joystickWithTrenchAlign = (rawJoystick.normalize() + FieldManager.trenchAlignTranslationModifier * rawJoystick.x.absoluteValue).normalize()
         // Apply modified power to joystick vector and flip depending on alliance
