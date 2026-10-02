@@ -37,6 +37,7 @@ import org.team2471.frc.lib.hardware.ctre.motionMagic
 import org.team2471.frc.lib.hardware.ctre.p
 import org.team2471.frc.lib.hardware.ctre.s
 import org.team2471.frc.lib.energy.BatteryLogger
+import org.team2471.frc.lib.hardware.ctre.brakeMode
 import org.team2471.frc.lib.units.amps
 import kotlin.math.absoluteValue
 
@@ -176,7 +177,7 @@ object Intake: SubsystemBase("Intake") {
         // Create Intake deploy motor configuration
         val deployConfig = TalonFXConfiguration().apply {
             currentLimits(5.0, 25.0, 0.25)
-            coastMode()
+            brakeMode()
             p(1.5, 1)
             s(0.25, StaticFeedforwardSignValue.UseClosedLoopSign, 1)
             p(50.0)

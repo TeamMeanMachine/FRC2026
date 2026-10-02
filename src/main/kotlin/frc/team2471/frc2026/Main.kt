@@ -25,6 +25,7 @@ import org.team2471.frc.lib.control.LoopLogger
 import org.team2471.frc.lib.hardware.loggedMotors.MasterMotor
 import org.team2471.frc.lib.energy.BatteryLogger
 import org.team2471.frc.lib.energy.FindAmpsManager
+import org.team2471.frc.lib.hardware.ctre.brakeMode
 import org.team2471.frc.lib.units.asFeet
 import org.team2471.frc.lib.logging.NT4NonFMSPublisher
 import org.team2471.frc.lib.util.RobotMode
@@ -215,6 +216,8 @@ object Robot : LoggedRobot() {
             }
         }
         Drive.brakeMode()
+        Intake.deployMotor0.brakeMode()
+        Intake.deployMotor1.brakeMode()
     }
 
     /** This function is called once when the robot is disabled.  */

@@ -96,7 +96,7 @@ object Autonomous: Autonomi() {
                         runOnceCommand {
                             Spindexer.disableReversingAuto = true
                         },
-                        waitUntilCommand { pathPercentage > 0.9 },
+                        waitUntilCommand { pathPercentage > 0.99 }, // PRESHOOT BEFORE PATH STOPPING THRESHOLD
                         parallelCommand(
                             Shooter.shoot(true),
                             sequenceCommand(
@@ -104,7 +104,7 @@ object Autonomous: Autonomi() {
                                     Intake.intakeState = Intake.IntakeState.OFF
                                     Spindexer.disableReversingAuto = false
                                 },
-                                Intake.pulse().withTimeout(1.0).finallyRun {
+                                Intake.pulse().finallyRun {
                                     Intake.deploy()
                                 }
                             )
@@ -122,7 +122,7 @@ object Autonomous: Autonomi() {
                         runOnceCommand {
                             Spindexer.disableReversingAuto = true
                         },
-                        waitUntilCommand { pathPercentage > 0.95 },
+                        waitUntilCommand { pathPercentage > 0.99 }, // PRESHOOT BEFORE PATH STOPPING THRESHOLD
                         parallelCommand(
                             Shooter.shoot(true),
                             sequenceCommand(
