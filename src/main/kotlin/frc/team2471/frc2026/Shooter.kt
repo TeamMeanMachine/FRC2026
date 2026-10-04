@@ -212,7 +212,7 @@ object Shooter: SubsystemBase("Shooter") {
         set(value) {
             field = value.coerceAtLeast(0.0.rotationsPerSecond)// / SHOOTER_GEAR_RATIO
             if (field > 0.0.rotationsPerSecond) {
-                shooterMotor.setControl(MotionMagicVelocityVoltage(field))
+                shooterMotor.setControl(MotionMagicVelocityVoltage(field).withEnableFOC(false))
             } else {
                 shooterMotor.setControl(NeutralOut())
             }
@@ -259,6 +259,11 @@ object Shooter: SubsystemBase("Shooter") {
 
     @get:AutoLogOutput(key = "Shooter/Hood Current")
     val hoodCurrent: Double get() = hoodMotor.supplyCurrent.valueAsDouble
+
+    @get:AutoLogOutput(key = "Shooter/Follower current")
+    val shooterFollowerCurrent get() = shooterMotorFollower.supplyCurrent.valueAsDouble
+    @get:AutoLogOutput(key = "Shooter/Follower velocity")
+    val shooterFollowerVelocity get() = shooterMotorFollower.velocity.valueAsDouble
 
     // degrees
     const val HOOD_ZERO = 15.0
@@ -354,7 +359,7 @@ object Shooter: SubsystemBase("Shooter") {
 
         hoodEncoder.applyConfiguration {
             inverted(false)
-            magnetSensorOffset(0.2109375)
+            magnetSensorOffset(0.213134765625)
         }
 
         hoodMotor.applyConfiguration {
@@ -509,7 +514,7 @@ object Shooter: SubsystemBase("Shooter") {
 
 
     fun shootSimulatedFuel() {
-        val exitVelocity = (AimUtils.getShooterRPS() * SHOOTER_GEAR_RATIO * AimUtils.shooterEfficiency).toExitVelocity().asMetersPerSecond
+        val exitVelocity = (AimUtils.getShooterRPS() * SHOOTER_GEAR_RATIO * shooterEfficiency).toExitVelocity().asMetersPerSecond
         val exitAngle = if (AimUtils.isAimingAtGoal) hubAngleCurve.get(AimUtils.distanceToTarget.asFeet).degrees else passAngleCurve.get(AimUtils.distanceToTarget.asFeet).degrees
         val angleToTarget = Turret.turretTranslation.angleTo(AimUtils.aimTarget)
         val velocity2d = Translation2d(exitVelocity * exitAngle.cos(), 0.0).rotateBy(angleToTarget.asRotation2d)

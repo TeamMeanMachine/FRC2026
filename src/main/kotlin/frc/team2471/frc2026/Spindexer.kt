@@ -204,11 +204,13 @@ object Spindexer: SubsystemBase("Spindexer") {
             }
 
             State.AGITATING -> {
-                if (Robot.isAutonomous && disableReversingAuto) {
-                    spinMotorVelocitySetpoint = 0.0
-                } else {
-                    spinMotorVelocitySetpoint = -AGITATE_VELOCITY
-                }
+                spinMotorVelocitySetpoint = 0.0
+
+//                if (Robot.isAutonomous && disableReversingAuto) {
+//                    spinMotorVelocitySetpoint = 0.0
+//                } else {
+//                    spinMotorVelocitySetpoint = -AGITATE_VELOCITY
+//                }
                 sidetakeMotorVelocitySetpoint = 0.0
                 uptakeMotorVelocitySetpoint = 0.0
             }

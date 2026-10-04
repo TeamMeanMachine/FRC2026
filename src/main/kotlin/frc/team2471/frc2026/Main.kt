@@ -93,7 +93,7 @@ object Robot : LoggedRobot() {
         when (robotMode) {
             RobotMode.REAL -> { // Running on a real robot, log to a USB stick ("/U/logs")
 //                Logger.addDataReceiver(WPILOGWriter())
-                Logger.addDataReceiver(NT4NonFMSPublisher()) // Only log to NT if FMS is not connected
+                Logger.addDataReceiver(NT4Publisher()) // Only log to NT if FMS is not connected
             }
             RobotMode.SIM -> {
                 Logger.addDataReceiver(NT4Publisher())

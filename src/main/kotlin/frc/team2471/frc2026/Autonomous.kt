@@ -116,7 +116,7 @@ object Autonomous: Autonomi() {
                         Intake.deploy()
                         Intake.intakeState = Intake.IntakeState.INTAKING
                     },
-                    Drive.driveAlongChoreoPath(path.getSplit(2).get(), resetOdometry = false, poseSupplier = Drive.localizer::pose, exitSupplier = { percent, error -> pathPercentage = percent; Turret.lookForwardOverride = percent > 0.1 && percent < 0.75; percent >= 1.0 && error.translation.norm.meters < 0.5.feet  }),
+                    Drive.driveAlongChoreoPath(path.getSplit(2).get(), resetOdometry = false, poseSupplier = Drive.localizer::pose, exitSupplier = { percent, error -> pathPercentage = percent; Turret.lookForwardOverride = percent > 0.1 && percent < 0.75; percent >= 1.0 && error.translation.norm.meters < 0.3.feet }),
                     sequenceCommand(
                         waitUntilCommand { pathPercentage > 0.85 },
                         runOnceCommand {
@@ -199,7 +199,7 @@ object Autonomous: Autonomi() {
                         Intake.deploy()
                         Intake.intakeState = Intake.IntakeState.INTAKING
                                    },
-                    Drive.driveAlongChoreoPath(path.getSplit(2).get(), resetOdometry = false, poseSupplier = Drive.localizer::pose, exitSupplier = { percent, error -> percent >= 1.0 && error.translation.norm.meters < 0.5.feet  }),
+                    Drive.driveAlongChoreoPath(path.getSplit(2).get(), resetOdometry = false, poseSupplier = Drive.localizer::pose, exitSupplier = { percent, error -> percent >= 1.0 && error.translation.norm.meters < 0.3.feet }),
                     ),
                 parallelCommand(
                     Shooter.shoot(true),

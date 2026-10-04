@@ -252,8 +252,8 @@ object FieldManager {
         get () = xRelativeToCenter.absoluteValue() > distanceFromMiddleToScore
                 && if (isRedAlliance) xRelativeToCenter > 0.0.meters else xRelativeToCenter < 0.0.meters
 
-    const val HUB_PROCESSING_TIME = 1.0
-    const val RAMP_TIME = 3.0
+    const val HUB_PROCESSING_TIME = 0.5
+    const val RAMP_TIME = 2.5
 
     @get:AutoLogOutput(key = "FieldManager/rawGameData")
     val rawGameData: String

@@ -176,12 +176,12 @@ fun spindexerTest() = sequenceCommand(
 }
 
 fun shooterTest() = sequenceCommand(
-    runOnceCommand(Shooter) { Shooter.shooterVelocitySetpoint = 50.0.rotationsPerSecond },
-    runOnceCommand(Shooter) { Shooter.hoodAngleSetpoint = 40.0.degrees },
-    waitCommand(2.0),
-    runOnceCommand(Shooter) { Shooter.hoodAngleSetpoint = 0.0.degrees },
-    runOnceCommand(Shooter) { Shooter.shooterVelocitySetpoint = 0.0.rotationsPerSecond },
-    waitCommand(2.0),
+//    runOnceCommand(Shooter) { Shooter.shooterVelocitySetpoint = 50.0.rotationsPerSecond },
+//    runOnceCommand(Shooter) { Shooter.hoodAngleSetpoint = 40.0.degrees },
+//    waitCommand(2.0),
+//    runOnceCommand(Shooter) { Shooter.hoodAngleSetpoint = 0.0.degrees },
+//    runOnceCommand(Shooter) { Shooter.shooterVelocitySetpoint = 0.0.rotationsPerSecond },
+//    waitCommand(2.0),
 
 
     runOnce { Shooter.shooterMotorFollower.setControl(DutyCycleOut(-0.5)) },

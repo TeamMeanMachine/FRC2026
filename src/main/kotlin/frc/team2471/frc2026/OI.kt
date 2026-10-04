@@ -7,6 +7,8 @@ import edu.wpi.first.networktables.NetworkTableInstance
 import edu.wpi.first.wpilibj.Alert
 import edu.wpi.first.wpilibj.GenericHID
 import edu.wpi.first.wpilibj2.command.SubsystemBase
+import frc.team2471.frc2026.AimUtils.shooterEfficiency
+import frc.team2471.frc2026.AimUtils.shooterEfficiencyEntry
 import org.team2471.frc.lib.control.LoopLogger
 import org.team2471.frc.lib.control.MeanCommandXboxController
 import org.team2471.frc.lib.control.commands.finallyRun
@@ -108,9 +110,9 @@ object OI: SubsystemBase("OI") {
             }.toCommand(Drive).ignoringDisable(true))
 
         // Reset Odometry Position
-        driverController.start().onTrue( {
-            Drive.pose = Pose2d(Translation2d(3.0, 3.0), Drive.heading)
-        }.toCommand(Drive).ignoringDisable(true))
+//        driverController.start().onTrue( {
+//            Drive.pose = Pose2d(Translation2d(3.0, 3.0), Drive.heading)
+//        }.toCommand(Drive).ignoringDisable(true))
 
         (driverController.y().and(driverController.povDown().negate())).onTrue(Intake.home())
 
@@ -170,12 +172,12 @@ object OI: SubsystemBase("OI") {
         **/
 
         // demo shooting speed
-        driverController.povLeft().onTrue(runOnceCommand { if (demoMode) Shooter.demoShootingSpeedEntry.setDouble(Shooter.demoShootingSpeed - 2.0) })
-        driverController.povRight().onTrue(runOnceCommand { if (demoMode) Shooter.demoShootingSpeedEntry.setDouble(Shooter.demoShootingSpeed + 2.0) })
+        driverController.povLeft().onTrue(runOnceCommand { if (!demoMode) Turret.offset += 2.0.degrees else Shooter.demoShootingSpeedEntry.setDouble(Shooter.demoShootingSpeed - 2.0) })
+        driverController.povRight().onTrue(runOnceCommand { if (!demoMode) Turret.offset -= 2.0.degrees else Shooter.demoShootingSpeedEntry.setDouble(Shooter.demoShootingSpeed + 2.0) })
 
         // turret adjust or demo shooting angle
-        driverController.povUp().onTrue(runOnceCommand { if (!demoMode) Turret.offset -= 2.0.degrees else Shooter.demoShootingAngleEntry.setDouble(Shooter.demoShootingAngle + 2.0) })
-        driverController.povDown().and(driverController.y().negate()).and(driverController.leftBumper().negate()).onTrue(runOnceCommand { if (!demoMode) Turret.offset += 2.0.degrees else Shooter.demoShootingAngleEntry.setDouble(Shooter.demoShootingAngle - 2.0) })
+        driverController.povUp().onTrue(runOnceCommand { if (!demoMode) shooterEfficiencyEntry.setDouble(shooterEfficiency - 0.01) else Shooter.demoShootingAngleEntry.setDouble(Shooter.demoShootingAngle + 2.0) })
+        driverController.povDown().and(driverController.y().negate()).and(driverController.leftBumper().negate()).onTrue(runOnceCommand { if (!demoMode) shooterEfficiencyEntry.setDouble(shooterEfficiency + 0.01) else Shooter.demoShootingAngleEntry.setDouble(Shooter.demoShootingAngle - 2.0) })
 
 
 
