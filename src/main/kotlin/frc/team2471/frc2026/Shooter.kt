@@ -179,6 +179,9 @@ object Shooter: SubsystemBase("Shooter") {
     val doAutoShootEntry = table.getEntry("Do Auto Shoot")
     val doAutoRampEntry = table.getEntry("Do Auto Ramp Up")
 
+//    val enableShooterFOCEntry = table.getEntry("Enable Shooter Foc Entry")
+    @get:AutoLogOutput(key = "Shooter/enableShooterFOC")
+    val enableShooterFOC get() = true//enableShooterFOCEntry.getBoolean(true)
     val zeroHoodButtonEntry = table.getEntry("Zero Hood")
 
     val demoShootingSpeedEntry = table.getEntry("Demo Shooting Speed")
@@ -212,8 +215,10 @@ object Shooter: SubsystemBase("Shooter") {
         set(value) {
             field = value.coerceAtLeast(0.0.rotationsPerSecond)// / SHOOTER_GEAR_RATIO
             if (field > 0.0.rotationsPerSecond) {
-                shooterMotor.setControl(MotionMagicVelocityVoltage(field).withEnableFOC(false))
+                shooterMotor.setControl(MotionMagicVelocityVoltage(field).withEnableFOC(enableShooterFOC))
+                shooterMotorFollower.setControl(MotionMagicVelocityVoltage(field).withEnableFOC(enableShooterFOC))
             } else {
+                shooterMotorFollower.setControl(NeutralOut())
                 shooterMotor.setControl(NeutralOut())
             }
         }
@@ -323,6 +328,9 @@ object Shooter: SubsystemBase("Shooter") {
         if (!shootingTestAngleEntry.exists()) shootingTestAngleEntry.setDouble(shootingTestAngle)
         shootingTestAngleEntry.setPersistent()
 
+//        if (!enableShooterFOCEntry.exists()) enableShooterFOCEntry.setBoolean(enableShooterFOC)
+//        enableShooterFOCEntry.setPersistent()
+
         doAutoShootEntry.setBoolean(true)
         doAutoRampEntry.setBoolean(true)
 
@@ -355,7 +363,32 @@ object Shooter: SubsystemBase("Shooter") {
 
             MotionMagic.MotionMagicAcceleration = 120.0
         }
-        shooterMotor.addFollower(shooterMotorFollower, MotorAlignmentValue.Opposed)
+
+        shooterMotorFollower.applyConfiguration {
+            currentLimits(20.0, 30.0, 0.3)
+            coastMode()
+
+            Feedback.withSensorToMechanismRatio(1.0/1.5) // Note: I don't think this line configures anything
+
+            inverted(InvertedValue.Clockwise_Positive)
+
+            if (isReal) {
+                s(0.2, StaticFeedforwardSignValue.UseVelocitySign)
+                v(0.081312)
+                a(0.034335)
+                p(0.4)
+                i(0.05)
+
+//                    p(0.4)
+//                    i(0.4)
+            } else {
+                p(4000.0)
+                i(0.0)
+            }
+
+            MotionMagic.MotionMagicAcceleration = 120.0
+        }
+//        shooterMotor.addFollower(shooterMotorFollower, MotorAlignmentValue.Opposed)
 
         hoodEncoder.applyConfiguration {
             inverted(false)
@@ -516,7 +549,7 @@ object Shooter: SubsystemBase("Shooter") {
     fun shootSimulatedFuel() {
         val exitVelocity = (AimUtils.getShooterRPS() * SHOOTER_GEAR_RATIO * shooterEfficiency).toExitVelocity().asMetersPerSecond
         val exitAngle = if (AimUtils.isAimingAtGoal) hubAngleCurve.get(AimUtils.distanceToTarget.asFeet).degrees else passAngleCurve.get(AimUtils.distanceToTarget.asFeet).degrees
-        val angleToTarget = Turret.turretTranslation.angleTo(AimUtils.aimTarget)
+        val angleToTarget = Turret.turretTranslation.angleTo(AimUtils.aimTarget) + Turret.offset
         val velocity2d = Translation2d(exitVelocity * exitAngle.cos(), 0.0).rotateBy(angleToTarget.asRotation2d)
         val turretVelocity = Translation2d(Turret.turretOffsetFromCenter.x * Drive.gyroYawRate.asRadiansPerSecond, Turret.turretOffsetFromCenter.y * Drive.gyroYawRate.asRadiansPerSecond).rotateBy(Drive.heading) + Drive.velocity
         fuel.add(FuelSim(
@@ -549,7 +582,7 @@ object Shooter: SubsystemBase("Shooter") {
             Logger.recordOutput("Shooter_Left_Velocity", shooterMotor.velocity.valueAsDouble)
         },
         SysIdRoutine.Mechanism({ output: Voltage ->
-            shooterMotor.setControl(VoltageOut(output.asVolts))
+            shooterMotor.setControl(VoltageOut(output.asVolts).withEnableFOC(false))
             /* also log the requested output for SysId */
             Logger.recordOutput("Shooter_Left_Voltage", output.asVolts + 0.0001 * Math.random())
         }, null, this)

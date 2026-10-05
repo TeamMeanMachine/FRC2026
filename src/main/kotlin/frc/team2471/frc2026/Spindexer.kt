@@ -37,7 +37,7 @@ object Spindexer: SubsystemBase("Spindexer") {
     val spinLowerVelocityEntry = table.getEntry("Spin Lower Velocity")
     val sidetakeVelocityEntry = table.getEntry("Sidetake Velocity")
     val uptakeVelocityEntry = table.getEntry("Uptake Velocity")
-    val agitateVelocityEntry = table.getEntry("Agitate Velocity")
+//    val agitateVelocityEntry = table.getEntry("Agitate Velocity")
 
     val sidetakeSpitVelocityEntry = table.getEntry("Sidetake Spit Velocity")
     val uptakeSpitVelocityEntry = table.getEntry("Uptake Spit Velocity")
@@ -51,7 +51,7 @@ object Spindexer: SubsystemBase("Spindexer") {
     val SPIN_LOWER_VELOCITY: Double get() = spinLowerVelocityEntry.getDouble(40.0)
     val SIDETAKE_VELOCITY: Double get() = sidetakeVelocityEntry.getDouble(115.0)
     val UPTAKE_VELOCITY: Double get() = uptakeVelocityEntry.getDouble(129.0)
-    val AGITATE_VELOCITY: Double get() = agitateVelocityEntry.getDouble(30.0)
+//    val AGITATE_VELOCITY: Double get() = agitateVelocityEntry.getDouble(40.0)
 
     val SIDETAKE_SPIT_VELOCITY: Double get() = sidetakeSpitVelocityEntry.getDouble(-50.0)
     val UPTAKE_SPIT_VELOCITY: Double get() = uptakeSpitVelocityEntry.getDouble(-50.0)
@@ -121,7 +121,7 @@ object Spindexer: SubsystemBase("Spindexer") {
         if (!spinLowerVelocityEntry.exists()) spinLowerVelocityEntry.setDouble(SPIN_LOWER_VELOCITY)
         if (!sidetakeVelocityEntry.exists()) sidetakeVelocityEntry.setDouble(SIDETAKE_VELOCITY)
         if (!uptakeVelocityEntry.exists()) uptakeVelocityEntry.setDouble(UPTAKE_VELOCITY)
-        if (!agitateVelocityEntry.exists()) agitateVelocityEntry.setDouble(AGITATE_VELOCITY)
+//        if (!agitateVelocityEntry.exists()) agitateVelocityEntry.setDouble(AGITATE_VELOCITY)
 
         if (!sidetakeSpitVelocityEntry.exists()) sidetakeSpitVelocityEntry.setDouble(SIDETAKE_SPIT_VELOCITY)
         if (!uptakeSpitVelocityEntry.exists()) uptakeSpitVelocityEntry.setDouble(UPTAKE_SPIT_VELOCITY)
@@ -135,7 +135,7 @@ object Spindexer: SubsystemBase("Spindexer") {
         spinLowerVelocityEntry.setPersistent()
         sidetakeVelocityEntry.setPersistent()
         uptakeVelocityEntry.setPersistent()
-        agitateVelocityEntry.setPersistent()
+//        agitateVelocityEntry.setPersistent()
 
         sidetakeSpitVelocityEntry.setPersistent()
         uptakeSpitVelocityEntry.setPersistent()
@@ -204,13 +204,11 @@ object Spindexer: SubsystemBase("Spindexer") {
             }
 
             State.AGITATING -> {
-                spinMotorVelocitySetpoint = 0.0
-
-//                if (Robot.isAutonomous && disableReversingAuto) {
-//                    spinMotorVelocitySetpoint = 0.0
-//                } else {
-//                    spinMotorVelocitySetpoint = -AGITATE_VELOCITY
-//                }
+                if (Robot.isAutonomous && disableReversingAuto) {
+                    spinMotorVelocitySetpoint = 0.0
+                } else {
+                    spinMotorVelocitySetpoint = -40.0
+                }
                 sidetakeMotorVelocitySetpoint = 0.0
                 uptakeMotorVelocitySetpoint = 0.0
             }

@@ -19,6 +19,7 @@ import org.team2471.frc.lib.control.commands.runOnceCommand
 import org.team2471.frc.lib.control.commands.toCommand
 import org.team2471.frc.lib.math.deadband
 import org.team2471.frc.lib.math.normalize
+import org.team2471.frc.lib.units.asDegrees
 import org.team2471.frc.lib.units.degrees
 import org.team2471.frc.lib.util.demoMode
 
@@ -172,8 +173,8 @@ object OI: SubsystemBase("OI") {
         **/
 
         // demo shooting speed
-        driverController.povLeft().onTrue(runOnceCommand { if (!demoMode) Turret.offset += 2.0.degrees else Shooter.demoShootingSpeedEntry.setDouble(Shooter.demoShootingSpeed - 2.0) })
-        driverController.povRight().onTrue(runOnceCommand { if (!demoMode) Turret.offset -= 2.0.degrees else Shooter.demoShootingSpeedEntry.setDouble(Shooter.demoShootingSpeed + 2.0) })
+        driverController.povLeft().onTrue(runOnceCommand { if (!demoMode) Turret.offsetEntry.setDouble(Turret.offset.asDegrees + 2.0) else Shooter.demoShootingSpeedEntry.setDouble(Shooter.demoShootingSpeed - 2.0) })
+        driverController.povRight().onTrue(runOnceCommand { if (!demoMode) Turret.offsetEntry.setDouble(Turret.offset.asDegrees - 2.0) else Shooter.demoShootingSpeedEntry.setDouble(Shooter.demoShootingSpeed + 2.0) })
 
         // turret adjust or demo shooting angle
         driverController.povUp().onTrue(runOnceCommand { if (!demoMode) shooterEfficiencyEntry.setDouble(shooterEfficiency - 0.01) else Shooter.demoShootingAngleEntry.setDouble(Shooter.demoShootingAngle + 2.0) })
