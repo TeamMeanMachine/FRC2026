@@ -28,7 +28,6 @@ import org.wpilib.driverstation.RobotState
 import org.wpilib.framework.OpModeRobot
 import org.wpilib.framework.RobotBase
 import org.wpilib.hardware.hal.HAL
-import org.wpilib.system.WPILibVersion
 import java.net.NetworkInterface
 
 
@@ -38,7 +37,6 @@ import java.net.NetworkInterface
  * the package after creating this project, you must also update the build.gradle file in the
  * project.
  */
-@OptIn(DelicateCoroutinesApi::class)
 object Robot : OpModeRobot(0.01) {
     val scheduler = Scheduler.getDefault()
     val isCompBot = getCompBotBoolean()
