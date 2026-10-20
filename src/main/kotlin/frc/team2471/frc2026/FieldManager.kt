@@ -165,7 +165,7 @@ object FieldManager {
 
     @get:AutoLogOutput(key = "FieldManager/In No Shoot Area")
     val inNoShootArea: Boolean
-        get() = ((autoHoodRetraction && Drive.useAprilTags) && (inTowerArea || inTrenchArea)) || inOpposingNoPassArea
+        get() = (autoHoodRetraction && Drive.useAprilTags && !demoMode) && ((inTowerArea || inTrenchArea) || inOpposingNoPassArea)
 
 
     val redTowerPose = (allAprilTags[14].pose.toPose2d().translation + Translation2d(-1.75, 0.0))
