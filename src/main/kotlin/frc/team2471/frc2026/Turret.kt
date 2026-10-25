@@ -92,9 +92,11 @@ object Turret: MechanismBase("Turret") {
     val turretZeroPositionOnRobot = 30.0.degrees
 
     val motorGearRatio = 30.0/230.0 * 11.0/46.0
-    val offsetEntry = table.getEntry("Turret/offset")
+    val offsetEntry = table.getTunable("Turret/offset", 0.0.degrees)
     //@AutoLogOutput(key = "Turret/offset")
-    val offset: Angle get() = offsetEntry.getDouble(0.0).degrees
+    var offset: Angle
+        get() = offsetEntry.get()
+        set(value) { offsetEntry.set(value) }
 
     @get:AutoLogOutput(key = "Turret/rawTurretMotorRotorAngle")
     val rawTurretMotorRotorAngle: Angle get() = turretMotor.rotorPosition.valueAsDouble.rotations * motorGearRatio
@@ -286,7 +288,6 @@ object Turret: MechanismBase("Turret") {
 
     init {
         println("Turret initialization")
-        offsetEntry.setDouble(0.0)
 
         turretEncoder1.applyConfiguration {
             inverted(false)

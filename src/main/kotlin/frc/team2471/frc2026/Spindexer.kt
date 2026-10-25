@@ -54,7 +54,6 @@ object Spindexer: MechanismBase("Spindexer") {
     val SPIN_LOWER_VELOCITY: Double get() = spinLowerVelocityEntry.get()
     val SIDETAKE_VELOCITY: Double get() = sidetakeVelocityEntry.get()
     val UPTAKE_VELOCITY: Double get() = uptakeVelocityEntry.get()
-    val AGITATE_VELOCITY: Double get() = agitateVelocityEntry.get()
 
     val SIDETAKE_SPIT_VELOCITY: Double get() = sidetakeSpitVelocityEntry.get()
     val UPTAKE_SPIT_VELOCITY: Double get() = uptakeSpitVelocityEntry.get()
