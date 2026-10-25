@@ -17,6 +17,8 @@ import org.team2471.frc.lib.control.isConnected
 import org.team2471.frc.lib.coroutines.periodicSuspend
 import org.team2471.frc.lib.hardware.loggedMotors.MasterMotor
 import org.team2471.frc.lib.energy.BatteryLogger
+import org.team2471.frc.lib.energy.FindAmpsManager
+import org.team2471.frc.lib.hardware.ctre.brakeMode
 import org.team2471.frc.lib.environment.RobotType
 import org.team2471.frc.lib.environment.robotType
 import org.team2471.frc.lib.units.asFeet
@@ -93,7 +95,7 @@ object Robot : OpModeRobot(0.01) {
         when (robotType) {
             RobotType.REAL -> { // Running on a real robot, log to a USB stick ("/U/logs")
                 Logger.addDataReceiver(WPILOGWriter())
-                Logger.addDataReceiver(NT4NonFMSPublisher()) // Only log to NT if FMS is not connected
+                Logger.addDataReceiver(NT4Publisher()) // Only log to NT if FMS is not connected
             }
             RobotType.SIM -> {
                 Logger.addDataReceiver(NT4Publisher())

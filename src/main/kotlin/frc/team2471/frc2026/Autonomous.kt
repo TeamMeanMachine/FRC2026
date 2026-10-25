@@ -209,7 +209,7 @@ object Autonomous: Autonomi() {
 //                        Intake.deploy()
 //                        Intake.intakeState = Intake.IntakeState.INTAKING
 //                                   },
-//                    Drive.driveAlongChoreoPath(path.getSplit(2).get(), resetOdometry = false, poseSupplier = Drive.localizer::pose, exitSupplier = { percent, error -> percent >= 1.0 && error.translation.norm.meters < 0.5.feet  }),
+//                    Drive.driveAlongChoreoPath(path.getSplit(2).get(), resetOdometry = false, poseSupplier = Drive.localizer::pose, exitSupplier = { percent, error -> percent >= 1.0 && error.translation.norm.meters < 0.3.feet }),
 //                    ),
 //                parallelCommand(
 //                    Shooter.shoot(true),

@@ -165,7 +165,7 @@ object FieldManager {
 
     @get:AutoLogOutput(key = "FieldManager/In No Shoot Area")
     val inNoShootArea: Boolean
-        get() = ((autoHoodRetraction && Drive.useAprilTags) && (inTowerArea || inTrenchArea)) || inOpposingNoPassArea
+        get() = (autoHoodRetraction && Drive.useAprilTags && !demoMode) && ((inTowerArea || inTrenchArea) || inOpposingNoPassArea)
 
 
     val redTowerPose = (allAprilTags[14].pose.toPose2d().translation + Translation2d(-1.75, 0.0))
@@ -252,8 +252,8 @@ object FieldManager {
         get () = xRelativeToCenter.absoluteValue() > distanceFromMiddleToScore
                 && if (isRedAlliance) xRelativeToCenter > 0.0.meters else xRelativeToCenter < 0.0.meters
 
-    const val HUB_PROCESSING_TIME = 1.0
-    const val RAMP_TIME = 3.0
+    const val HUB_PROCESSING_TIME = 0.5
+    const val RAMP_TIME = 2.5
 
     @get:AutoLogOutput(key = "FieldManager/rawGameData")
     val rawGameData: String

@@ -40,7 +40,7 @@ object Spindexer: MechanismBase("Spindexer") {
     val spinLowerVelocityEntry = table.getTunable("Spin Lower Velocity", 40.0, true)
     val sidetakeVelocityEntry = table.getTunable("Sidetake Velocity", 115.0, true)
     val uptakeVelocityEntry = table.getTunable("Uptake Velocity", 129.0, true)
-    val agitateVelocityEntry = table.getTunable("Agitate Velocity", 30.0, true)
+//    val agitateVelocityEntry = table.getTunable("Agitate Velocity", 30.0, true)
 
     val sidetakeSpitVelocityEntry = table.getTunable("Sidetake Spit Velocity", -50.0, true)
     val uptakeSpitVelocityEntry = table.getTunable("Uptake Spit Velocity", -50.0, true)
@@ -189,7 +189,7 @@ object Spindexer: MechanismBase("Spindexer") {
                 if (Robot.isAutonomous && disableReversingAuto) {
                     spinMotorVelocitySetpoint = 0.0
                 } else {
-                    spinMotorVelocitySetpoint = -AGITATE_VELOCITY
+                    spinMotorVelocitySetpoint = -40.0
                 }
                 sidetakeMotorVelocitySetpoint = 0.0
                 uptakeMotorVelocitySetpoint = 0.0

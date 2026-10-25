@@ -1,6 +1,8 @@
 package frc.team2471.frc2026
 
 import org.team2471.frc.lib.commands.MechanismBase
+import frc.team2471.frc2026.AimUtils.shooterEfficiency
+import frc.team2471.frc2026.AimUtils.shooterEfficiencyEntry
 import org.team2471.frc.lib.commands.command
 import org.team2471.frc.lib.commands.onCancel
 import org.team2471.frc.lib.commands.periodic
@@ -11,6 +13,7 @@ import org.team2471.frc.lib.logging.getTunable
 import org.team2471.frc.lib.math.applyDeadband
 import org.team2471.frc.lib.math.deadband
 import org.team2471.frc.lib.math.normalize
+import org.team2471.frc.lib.units.asDegrees
 import org.team2471.frc.lib.units.degrees
 import org.wpilib.command3.button.CommandXboxController
 import org.wpilib.math.filter.Debouncer
