@@ -7,11 +7,11 @@ import com.ctre.phoenix6.hardware.CANcoder
 import com.ctre.phoenix6.hardware.Pigeon2
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue
-import frc.team2471.frc2026.Robot.isCompBot
 import frc.team2471.frc2026.OI.driveLeftTriggerFullPress
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.littletonrobotics.junction.AutoLogOutput
+import org.littletonrobotics.junction.Logger
 import org.team2471.frc.lib.commands.MechanismBase
 import org.team2471.frc.lib.commands.command
 import org.team2471.frc.lib.logging.LoopLogger
@@ -44,7 +44,6 @@ import org.team2471.frc.lib.hardware.ctre.motionMagic
 import org.team2471.frc.lib.hardware.ctre.p
 import org.team2471.frc.lib.hardware.ctre.s
 import org.team2471.frc.lib.hardware.loggedMotors.LoggedTalonFX
-import org.team2471.frc.lib.logging.SimpleLogger
 import org.team2471.frc.lib.logging.getTunable
 import org.team2471.frc.lib.math.angleTo
 import org.team2471.frc.lib.math.round
@@ -235,7 +234,7 @@ object Turret: MechanismBase("Turret") {
                     val robotCentricNoGyroSetpoint = (turretMotorRotorAngle + noGyroError)
                     val robotCentricNoGyroSetpointWrapped = robotCentricNoGyroSetpoint.asDegrees.IEEErem(TURRET_TOP_LIMIT.asDegrees.absoluteValue + TURRET_BOTTOM_LIMIT.asDegrees.absoluteValue).degrees
                     println("Turret Gyro Disconnect ${robotCentricNoGyroSetpointWrapped.asDegrees}")
-                    SimpleLogger.recordOutput("Turret/testMotorCentricSetpointDeg", robotCentricNoGyroSetpointWrapped.asDegrees)
+                    Logger.recordOutput("Turret/testMotorCentricSetpointDeg", robotCentricNoGyroSetpointWrapped.asDegrees)
                     turretMotor.setControl(PositionVoltage(robotCentricNoGyroSetpointWrapped.asRotations).withFeedForward(turretFeedforward))
                 }
             } else {
@@ -385,12 +384,12 @@ object Turret: MechanismBase("Turret") {
         val turretTranslation = turretTranslation
         val turretPigeonConnected = turretPigeonIsConnected
         debouncedTurretPigeonIsConnected = turretPigeonConnectedDebouncer.calculate(turretPigeonConnected)
-//        Logger.recordOutput("aim target", aimTarget.toPose2d())
-        SimpleLogger.recordOutput("Turret/turret setpoint pose", turretTranslation.toPose2d(fieldCentricSetpoint.asRotation2d))
-        SimpleLogger.recordOutput("Turret/turret pose", turretTranslation.toPose2d(fieldCentricAngle.asRotation2d))
-        SimpleLogger.recordOutput("Turret/distToGoalFeet", aimTarget.getDistance(Drive.localizer.pose.translation).meters.asFeet)
-        SimpleLogger.recordOutput("Turret/turretPigeonLatency", turretPigeonLatency)
-        SimpleLogger.recordOutput("Turret/turretPigeonIsConnected", turretPigeonConnected)
+//        Logger.recordOutput("aim target", aimTarget)
+        Logger.recordOutput("Turret/turret setpoint pose", turretTranslation.toPose2d(fieldCentricSetpoint.asRotation2d))
+        Logger.recordOutput("Turret/turret pose", turretTranslation.toPose2d(fieldCentricAngle.asRotation2d))
+        Logger.recordOutput("Turret/distToGoalFeet", aimTarget.getDistance(Drive.localizer.pose.translation).meters.asFeet)
+        Logger.recordOutput("Turret/turretPigeonLatency", turretPigeonLatency)
+        Logger.recordOutput("Turret/turretPigeonIsConnected", turretPigeonConnected)
         table.log("turretPigeonIsConnected", turretPigeonConnected)
         LoopLogger.record("turret logging")
 

@@ -6,7 +6,6 @@ import frc.team2471.frc2026.AimUtils.FUEL_FRONTAL_AREA
 import frc.team2471.frc2026.AimUtils.FUEL_MASS
 import frc.team2471.frc2026.AimUtils.G
 import org.littletonrobotics.junction.Logger
-import org.team2471.frc.lib.logging.SimpleLogger
 import org.team2471.frc.lib.units.asKilograms
 import org.wpilib.math.geometry.Translation3d
 import org.wpilib.system.Timer
@@ -48,7 +47,7 @@ class FuelSim(val x0: Translation3d, val v0: Translation3d) {
 
 fun logFuel(name: String, vararg fuel: FuelSim) {
     val fuelPositions = fuel.map { it.pos }.toTypedArray()
-    SimpleLogger.recordOutput(name, *fuelPositions)
+    Logger.recordOutput(name, *fuelPositions)
 }
 
 fun MutableList<FuelSim>.removeFuel() {

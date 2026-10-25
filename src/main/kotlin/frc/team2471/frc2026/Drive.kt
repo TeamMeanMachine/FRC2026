@@ -4,6 +4,7 @@ import com.ctre.phoenix6.swerve.utility.PhoenixPIDController
 import kotlinx.coroutines.DelicateCoroutinesApi
 import frc.team2471.frc2026.OI.driveLeftTriggerFullPress
 import org.littletonrobotics.junction.AutoLogOutput
+import org.littletonrobotics.junction.Logger
 import org.team2471.frc.lib.commands.onCancel
 import org.team2471.frc.lib.commands.periodic
 import org.team2471.frc.lib.commands.command
@@ -18,7 +19,6 @@ import org.team2471.frc.lib.environment.demoSpeed
 import org.team2471.frc.lib.environment.isBlueAlliance
 import org.team2471.frc.lib.hardware.ctre.PhoenixUtil
 import org.team2471.frc.lib.localization.PoseLocalizer
-import org.team2471.frc.lib.logging.SimpleLogger
 import org.team2471.frc.lib.logging.getTunable
 import org.team2471.frc.lib.math.cube
 import org.team2471.frc.lib.math.square
@@ -193,16 +193,16 @@ object Drive: SwerveDriveSubsystem(DriveConstants.drivetrainConstants, *DriveCon
         if (cameras.isNotEmpty()) {
             cameras.forEach {
                 table.log("Cameras/${it.cameraName} isConnected", it.isConnected)
-                SimpleLogger.recordOutput("Drive/Cameras/${it.cameraName} isConnected", it.isConnected)
+                Logger.recordOutput("Drive/Cameras/${it.cameraName} isConnected", it.isConnected)
             }
         }
         LoopLogger.record("Cameras isConnected publish")
 
         // Log all the poses for debugging
-        SimpleLogger.recordOutput("Swerve/Odometry", localizer.odometryPose)
-        SimpleLogger.recordOutput("Swerve/Localizer Raw", localizer.rawPose)
-        SimpleLogger.recordOutput("Swerve/Localizer", localizer.pose)
-        SimpleLogger.recordOutput("Swerve/SingleTagPose", localizer.singleTagPose)
+        Logger.recordOutput("Swerve/Odometry", localizer.odometryPose)
+        Logger.recordOutput("Swerve/Localizer Raw", localizer.rawPose)
+        Logger.recordOutput("Swerve/Localizer", localizer.pose)
+        Logger.recordOutput("Swerve/SingleTagPose", localizer.singleTagPose)
 
         LoopLogger.record("Drive periodic")
     }
@@ -309,7 +309,7 @@ object Drive: SwerveDriveSubsystem(DriveConstants.drivetrainConstants, *DriveCon
         val mad = moduleTranslationNorms.map {(moduleTranslationNorms.average() - it).absoluteValue}.average()
 
         val accelerationDiff = (acceleration - Translation2d(pigeon2.accelerationX.value.asMetersPerSecondSquared, pigeon2.accelerationY.value.asMetersPerSecondSquared)).norm
-        SimpleLogger.recordOutput("Swerve/DriveGyroAccelerationDifference", accelerationDiff)
+        Logger.recordOutput("Swerve/DriveGyroAccelerationDifference", accelerationDiff)
 
         val minMaxRatio = moduleTranslationNorms.last() / (moduleTranslationNorms.first() + 0.001) // add fudge to prevent division by 0
 
@@ -323,7 +323,7 @@ object Drive: SwerveDriveSubsystem(DriveConstants.drivetrainConstants, *DriveCon
 //        Logger.recordOutput("Swerve/ModuleRotationComponents/2", moduleRotationComponents[2])
 //        Logger.recordOutput("Swerve/ModuleRotationComponents/3", moduleRotationComponents[3])
 
-        SimpleLogger.recordOutput("Swerve/ModuleTranslationsMinMaxRatio", minMaxRatio)
+        Logger.recordOutput("Swerve/ModuleTranslationsMinMaxRatio", minMaxRatio)
 //        SimpleLogger.recordOutput("Swerve/ModuleTranslationsMAD", mad)
 
 //        val threshold = 10.0 // acc diff

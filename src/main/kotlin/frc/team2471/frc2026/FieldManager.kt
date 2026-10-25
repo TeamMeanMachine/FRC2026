@@ -3,6 +3,7 @@ package frc.team2471.frc2026
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.littletonrobotics.junction.AutoLogOutput
+import org.littletonrobotics.junction.Logger
 import org.littletonrobotics.junction.networktables.LoggedNetworkChooser
 import org.team2471.frc.lib.commands.onCancel
 import org.team2471.frc.lib.commands.periodic
@@ -11,13 +12,11 @@ import org.team2471.frc.lib.coroutines.periodicSuspend
 import org.team2471.frc.lib.environment.demoMode
 import org.team2471.frc.lib.environment.isBlueAlliance
 import org.team2471.frc.lib.environment.isRedAlliance
-import org.team2471.frc.lib.logging.SimpleLogger
 import org.team2471.frc.lib.logging.getTunable
 import org.team2471.frc.lib.math.angleTo
 import org.team2471.frc.lib.math.toPose2d
 import org.team2471.frc.lib.units.*
 import org.wpilib.driverstation.MatchState
-import org.wpilib.driverstation.RobotState
 import org.wpilib.math.geometry.Pose2d
 import org.wpilib.math.geometry.Translation2d
 import org.wpilib.units.measure.Distance
@@ -98,7 +97,7 @@ object FieldManager {
                 val relativePose = pose - Drive.localizer.pose.translation
                 if (relativePose.y.absoluteValue.meters < (trenchAreaWidth/2.0)) {
                     val predictedPose = Drive.localizer.pose.translation + Drive.velocity * Shooter.HOOD_DOWN_TIME
-                    SimpleLogger.recordOutput("Drive/predictedPose", predictedPose)
+                    Logger.recordOutput("Drive/predictedPose", predictedPose)
                     val predictedRelativePose = pose - predictedPose
                     if ((predictedRelativePose.x.sign != relativePose.x.sign) || (relativePose.x.absoluteValue.meters < (trenchAreaLength/2.0))) {
                         return true

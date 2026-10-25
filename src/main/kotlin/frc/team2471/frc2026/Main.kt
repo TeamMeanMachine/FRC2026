@@ -2,10 +2,8 @@
 package frc.team2471.frc2026
 
 import com.ctre.phoenix6.SignalLogger
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import org.littletonrobotics.junction.LogFileUtil
+import org.littletonrobotics.junction.LoggedOpModeRobot
 import org.littletonrobotics.junction.Logger
 import org.littletonrobotics.junction.networktables.NT4Publisher
 import org.littletonrobotics.junction.wpilog.WPILOGReader
@@ -14,20 +12,15 @@ import org.team2471.frc.lib.autonomous.test.TestOpMode
 import org.team2471.frc.lib.commands.PeriodicMechanism
 import org.team2471.frc.lib.logging.LoopLogger
 import org.team2471.frc.lib.control.isConnected
-import org.team2471.frc.lib.coroutines.periodicSuspend
 import org.team2471.frc.lib.hardware.loggedMotors.MasterMotor
 import org.team2471.frc.lib.energy.BatteryLogger
-import org.team2471.frc.lib.energy.FindAmpsManager
-import org.team2471.frc.lib.hardware.ctre.brakeMode
 import org.team2471.frc.lib.environment.RobotType
 import org.team2471.frc.lib.environment.robotType
 import org.team2471.frc.lib.units.asFeet
-import org.team2471.frc.lib.logging.NT4NonFMSPublisher
 import org.wpilib.command3.Mechanism
 import org.wpilib.command3.Scheduler
 import org.wpilib.driverstation.DriverStationDisplay
 import org.wpilib.driverstation.RobotState
-import org.wpilib.framework.OpModeRobot
 import org.wpilib.framework.RobotBase
 import org.wpilib.hardware.hal.HAL
 import java.net.NetworkInterface
@@ -39,7 +32,7 @@ import java.net.NetworkInterface
  * the package after creating this project, you must also update the build.gradle file in the
  * project.
  */
-object Robot : OpModeRobot(0.01) {
+object Robot : LoggedOpModeRobot(0.01) {
     val scheduler = Scheduler.getDefault()
     val isCompBot = getCompBotBoolean()
 
@@ -113,7 +106,7 @@ object Robot : OpModeRobot(0.01) {
         SignalLogger.stop()
 
         // Start AdvantageKit logger
-//        Logger.start()
+        Logger.start()
 
         // Adds autos to driver station
         Autonomous.addOpModes()
