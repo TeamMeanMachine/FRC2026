@@ -215,7 +215,6 @@ object Drive: SwerveDriveSubsystem(DriveConstants.drivetrainConstants, *DriveCon
     /**
      * Sets all drive motor current limits to be the passed in [currentLimits].
      */
-    @OptIn(DelicateCoroutinesApi::class)
     fun setDriveCurrentLimits(currentLimits: CurrentLimits) {
         PhoenixUtil.runOnBackgroundThread {
             modules.forEach {
