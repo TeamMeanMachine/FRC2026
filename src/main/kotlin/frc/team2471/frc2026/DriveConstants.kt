@@ -265,21 +265,23 @@ object DriveConstants {
             var magnetSensorOffset = canCoder.getMagnetSensorOffset()
 
             //Use NT preferences as a backup to check if the encoder offset is valid
-            if (canCoder.isConnected) {
-                val prefsOffset = Preferences.getDouble("Module $id Offset", Double.NaN).degrees
-                if (prefsOffset.asDegrees.isNaN()) {
-                    //couldn't find prefs
-                    println("Module $id has missing Preferences, setting to encoders Offset: ${magnetSensorOffset.asDegrees.roundToInt()}")
-                    Preferences.setDouble("Module $id Offset", magnetSensorOffset.asDegrees)
-                    Alert("module offsets $id", "Module $id had missing offset prefs", Alert.Level.MEDIUM).set(true)
-                } else if (prefsOffset.asDegrees.roundToInt() != magnetSensorOffset.asDegrees.roundToInt()) {
-                    //offsets are different, default to prefs
-                    println("Module $id has conflicting offsets. prefsOffset: ${prefsOffset.asDegrees.round(2)} encoders Offset: ${magnetSensorOffset.asDegrees.round(2)}")
-                    magnetSensorOffset = prefsOffset
-                    Alert("module offsets $id", "Module $id had conflicting encoder offsets", Alert.Level.MEDIUM).set(true)
+            if (isReal) {
+                if (canCoder.isConnected) {
+                    val prefsOffset = Preferences.getDouble("Module $id Offset", Double.NaN).degrees
+                    if (prefsOffset.asDegrees.isNaN()) {
+                        //couldn't find prefs
+                        println("Module $id has missing Preferences, setting to encoders Offset: ${magnetSensorOffset.asDegrees.roundToInt()}")
+                        Preferences.setDouble("Module $id Offset", magnetSensorOffset.asDegrees)
+                        Alert("module offsets $id", "Module $id had missing offset prefs", Alert.Level.MEDIUM).set(true)
+                    } else if (prefsOffset.asDegrees.roundToInt() != magnetSensorOffset.asDegrees.roundToInt()) {
+                        //offsets are different, default to prefs
+                        println("Module $id has conflicting offsets. prefsOffset: ${prefsOffset.asDegrees.round(2)} encoders Offset: ${magnetSensorOffset.asDegrees.round(2)}")
+                        magnetSensorOffset = prefsOffset
+                        Alert("module offsets $id", "Module $id had conflicting encoder offsets", Alert.Level.MEDIUM).set(true)
+                    }
+                } else {
+                    Alert("module offsets $id", "Module $id CANCoder Disconnected On INIT", Alert.Level.HIGH).set(true)
                 }
-            } else {
-                Alert("module offsets $id", "Module $id CANCoder Disconnected On INIT", Alert.Level.HIGH).set(true)
             }
 
             return constantCreator.createModuleConstants(
