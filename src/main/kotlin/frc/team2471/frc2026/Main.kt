@@ -10,6 +10,7 @@ import org.littletonrobotics.junction.wpilog.WPILOGReader
 import org.littletonrobotics.junction.wpilog.WPILOGWriter
 import org.team2471.frc.lib.autonomous.test.TestOpMode
 import org.team2471.frc.lib.commands.PeriodicMechanism
+import org.team2471.frc.lib.commands.command
 import org.team2471.frc.lib.logging.LoopLogger
 import org.team2471.frc.lib.control.isConnected
 import org.team2471.frc.lib.hardware.loggedMotors.MasterMotor
@@ -17,6 +18,7 @@ import org.team2471.frc.lib.energy.BatteryLogger
 import org.team2471.frc.lib.environment.RobotType
 import org.team2471.frc.lib.environment.robotType
 import org.team2471.frc.lib.units.asFeet
+import org.wpilib.command3.Command
 import org.wpilib.command3.Mechanism
 import org.wpilib.command3.Scheduler
 import org.wpilib.driverstation.DriverStationDisplay
@@ -66,6 +68,15 @@ object Robot : LoggedOpModeRobot(0.01) {
 
     @Suppress("RemoveExplicitTypeArguments")
     val allMechanisms = arrayOf<PeriodicMechanism>(drive, intake, shooter, turret, spindexer, oi)
+
+    fun childCommand(): Command = command("Child") {
+        println("child")
+    }
+
+    fun parentCommand(): Command = command("Parent") {
+        childCommand() // should fail Detekt
+        await(childCommand()) // should be fine
+    }
 
 
     var beforeFirstEnable = true
