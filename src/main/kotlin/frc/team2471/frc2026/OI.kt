@@ -103,7 +103,7 @@ object OI: MechanismBase("OI") {
 
 
         driverController.menu().onTrue(Drive.zeroGyroCommand()) // Zero Gyro
-        driverController.view().onTrue(command { Drive.pose = Pose2d(Translation2d(3.0, 3.0), Drive.heading) }) // Reset Odometry Position
+        driverController.view().onTrue(command("zero pose") { Drive.pose = Pose2d(Translation2d(3.0, 3.0), Drive.heading) }) // Reset Odometry Position
 
         (driverController.y().and(driverController.dpadDown().negate())).onTrue(Intake.home())
 
@@ -112,7 +112,7 @@ object OI: MechanismBase("OI") {
             .or(driverController.rightStick())
             .whileTrue(Shooter.shootOrRamp())
 
-        driverController.leftBumper().and(driverController.dpadDown().negate()).whileTrue(command {
+        driverController.leftBumper().and(driverController.dpadDown().negate()).whileTrue(command("intake") {
             periodic {
                 Intake.deploy()
                 Intake.intakeState = Intake.IntakeState.INTAKING
@@ -121,7 +121,7 @@ object OI: MechanismBase("OI") {
             Intake.intakeState = Intake.IntakeState.OFF
         })
 
-        driverController.leftStick().onTrue(command {
+        driverController.leftStick().onTrue(command("stowOrDeploy") {
             if (Intake.isDeployed) {
                 Intake.stow()
             } else {
@@ -133,30 +133,30 @@ object OI: MechanismBase("OI") {
             Drive.snakeMode()
         )
 
-        driverController.x().whileTrue(command(Drive) {
+        driverController.x().whileTrue(command("xpose", Drive) {
             this.periodic {
                 Drive.xPose()
             }
         })
 
-        driverController.a().onTrue(command {
+        driverController.a().onTrue(command("deep stow") {
             Intake.deploySetpoint = Intake.DEEP_STOW_POSE
         })
-        driverController.x().onTrue(command {
+        driverController.x().onTrue(command("stow") {
             Intake.deploySetpoint = Intake.STOW_POSE
         })
-        driverController.b().onTrue(command {
+        driverController.b().onTrue(command("deploy") {
             Intake.deploySetpoint = Intake.DEPLOY_POSE
         })
 
         (driverController.dpadDown().and(driverController.y())).onTrue(Intake.homeDeploy())
-        (driverController.dpadDown().and(driverController.leftBumper())).onTrue(command { Intake.deepStow() })
+        (driverController.dpadDown().and(driverController.leftBumper())).onTrue(command("deep stow") { Intake.deepStow() })
 
         driverController.dpadLeft().whileTrue(Turret.staticAimAtTarget())
         driverController.dpadRight().whileTrue(FieldManager.disableAutoHoodRetractionCommand())
 
-        driverController.dpadUp().onTrue(command { Turret.offset -= 2.0.degrees})
-        driverController.dpadDown().and(driverController.y().negate()).and(driverController.leftBumper().negate()).onTrue(command { Turret.offset += 2.0.degrees})
+        driverController.dpadUp().onTrue(command("-turretOffset") { Turret.offset -= 2.0.degrees})
+        driverController.dpadDown().and(driverController.y().negate()).and(driverController.leftBumper().negate()).onTrue(command("+turretOffset") { Turret.offset += 2.0.degrees})
     }
 
     override fun periodic() {

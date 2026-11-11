@@ -26,6 +26,11 @@ java {
 
 kotlin {
     jvmToolchain(25)
+    compilerOptions {
+        // This line is useful!!! Adds "unused return value" warning to Commands that are not `await`ed.
+        // Try adding @IgnorableReturnValue to functions if the warning is on unintended functions
+        freeCompilerArgs.add("-Xreturn-value-checker=full")
+    }
 }
 
 // Automatically download library documentation from libraries

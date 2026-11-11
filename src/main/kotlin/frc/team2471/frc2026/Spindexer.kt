@@ -158,7 +158,7 @@ object Spindexer: MechanismBase("Spindexer") {
         BatteryLogger.recordCurrent("Dye Rotor Sidetake", sidetakeMotor.supplyCurrent.value)
     }
 
-    override fun defaultCommand(): Command = command(this) {
+    override fun defaultCommand(): Command = command("Spindexer Default", this) {
         LoopLogger.record("Spindexer default")
         when (currentState) {
             State.OFF -> {

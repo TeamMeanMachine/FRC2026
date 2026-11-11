@@ -377,7 +377,7 @@ object FieldManager {
         }
     }
 
-    fun disableAutoHoodRetractionCommand() = command {
+    fun disableAutoHoodRetractionCommand() = command("disableAutoHoodRetractionCommand") {
         println("Disabling autoHoodRetraction")
         this.periodic {
             autoHoodRetraction = false

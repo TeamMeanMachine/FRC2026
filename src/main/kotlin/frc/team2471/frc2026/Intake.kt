@@ -212,7 +212,7 @@ object Intake: MechanismBase("Intake") {
         LoopLogger.record("Intake periodic")
     }
 
-    override fun defaultCommand() = command(this) {
+    override fun defaultCommand() = command("Intake Default",this) {
         this.periodic {
             LoopLogger.record("Intake default")
             when (intakeState) {
@@ -285,7 +285,7 @@ object Intake: MechanismBase("Intake") {
         motor.setPosition(DEPLOY_POSE + 0.5)
     }
 
-    fun pulse() = command(this) {
+    fun pulse() = command("pulse", this) {
         this.periodic {
             if (Robot.isAutonomous || OI.driverController.rightTrigger > 0.75) {
                 stow()
@@ -302,7 +302,7 @@ object Intake: MechanismBase("Intake") {
     }
 
 
-    fun homeDeploy(): Command = command(this) {
+    fun homeDeploy(): Command = command("homeDeploy", this) {
         deployMotor0.setPosition(deploySetpoint)
         if (isCompBot) deployMotor1.setPosition(deploySetpoint)
     }

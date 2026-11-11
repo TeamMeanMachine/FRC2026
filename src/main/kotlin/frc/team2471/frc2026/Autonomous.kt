@@ -83,7 +83,7 @@ object Autonomous: Autonomi() {
 
     /** Autonomous commands */
 
-    private fun printFor20Seconds() = command(Drive) {
+    private fun printFor20Seconds() = command("printFor20Seconds", Drive) {
         println("starting printFor20Seconds")
         periodicTimeout(20.0) {
             println("dt time: ${it.round(2)}")
@@ -91,15 +91,15 @@ object Autonomous: Autonomi() {
         println("finished")
     }
 
-    private fun eightFootStraight() = command(Drive) {
+    private fun eightFootStraight() = command("eightFootStraight", Drive) {
         await(Drive.driveAlongChoreoPath(paths["eightFoot"]!!, resetOdometry = true))
     }
 
-    private fun squarePathTest() = command(Drive) {
+    private fun squarePathTest() = command("squarePathTest", Drive) {
         await(Drive.driveAlongChoreoPath(paths["square"]!!, resetOdometry = true))
     }
 
-    private fun doubleSwipe(doSideToSideFlip: Boolean) = command {
+    private fun doubleSwipe(doSideToSideFlip: Boolean) = command("doubleSwipe") {
         val path = paths["LeftSideDoubleSwipe"]!!.mirrorY(doSideToSideFlip)
         var pathPercentage = 0.0
         parallel({

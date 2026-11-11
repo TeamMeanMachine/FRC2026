@@ -416,7 +416,7 @@ object Shooter: MechanismBase("Shooter") {
         LoopLogger.record("Shooter periodic")
     }
 
-    override fun defaultCommand() = command(this) {
+    override fun defaultCommand() = command("Shooter Default",this) {
         this.periodic {
             if ((doAutoShoot && !Drive.cameraDisconnected) && Drive.useAprilTags && AimUtils.isAimingAtGoal && !demoMode) {
                 if (FieldManager.inScoringZone && !FieldManager.inNoShootArea /*&& AimUtils.distanceToTarget < 13.0.feet*/ && FieldManager.shouldShoot) {
@@ -443,7 +443,7 @@ object Shooter: MechanismBase("Shooter") {
         }
     }
 
-    fun shootOrRamp() = command(this) {
+    fun shootOrRamp() = command("shootOrRamp",this) {
         parallel({
             this.periodic {
                 rampUpLoop()
@@ -465,7 +465,7 @@ object Shooter: MechanismBase("Shooter") {
         hoodAngleSetpoint = hoodAngleSetpoint.coerceAtMost(HOOD_UNDER_TRENCH_MAX_ANGLE)
     }
 
-    fun shoot(ignoreRampUp: Boolean = false) = command(this) {
+    fun shoot(ignoreRampUp: Boolean = false) = command("shoot",this) {
         this.periodic {
             shootLoop(ignoreRampUp)
             rampUpLoop()

@@ -406,7 +406,7 @@ object Turret: MechanismBase("Turret") {
         LoopLogger.record("Turret periodic")
     }
 
-    override fun defaultCommand() = command(this) {
+    override fun defaultCommand() = command("Turret Default", this) {
         await(aimAtTarget())
     }
 
@@ -427,7 +427,7 @@ object Turret: MechanismBase("Turret") {
         }
     }
 
-    fun staticAimAtTarget() = command(this) {
+    fun staticAimAtTarget() = command("staticAimAtTarget", this) {
         fieldCentricSetpoint = (AimUtils.staticShotPos.angleTo(AimUtils.aimTarget) + offset).wrap()
     }
 

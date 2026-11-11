@@ -208,7 +208,7 @@ object Drive: SwerveDriveSubsystem(DriveConstants.drivetrainConstants, *DriveCon
     }
 
 
-    override fun defaultCommand(): Command = command(this) {
+    override fun defaultCommand(): Command = command("Drive Default", this) {
         await(joystickPercentageDrive())
     }
 
@@ -258,7 +258,7 @@ object Drive: SwerveDriveSubsystem(DriveConstants.drivetrainConstants, *DriveCon
     }
 
     var inSnakeMode = false
-    fun snakeMode(): Command = command(Drive) {
+    fun snakeMode(): Command = command("snakeMode", Drive) {
         periodic {
             println("snake mode")
             inSnakeMode = true
@@ -341,7 +341,7 @@ object Drive: SwerveDriveSubsystem(DriveConstants.drivetrainConstants, *DriveCon
 
 
     /** Command to zero robot gyro */
-    fun zeroGyroCommand() = command(Drive) {
+    fun zeroGyroCommand() = command("zeroGyroCommand", Drive) {
         println("zero gyro command")
         zeroGyro()
     }
