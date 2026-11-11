@@ -69,16 +69,6 @@ object Robot : LoggedOpModeRobot(0.01) {
     @Suppress("RemoveExplicitTypeArguments")
     val allMechanisms = arrayOf<PeriodicMechanism>(drive, intake, shooter, turret, spindexer, oi)
 
-    fun childCommand(): Command = command("Child") {
-        println("child")
-    }
-
-    fun parentCommand(): Command = command("Parent") {
-        childCommand() // should fail Detekt
-        await(childCommand()) // should be fine
-    }
-
-
     var beforeFirstEnable = true
         private set
 

@@ -93,7 +93,7 @@ def includeDesktopSupport = false
 // Also defines JUnit 5.
 dependencies {
     implementation(project(":meanlib"))
-    detektPlugins(project(":detekt-command-message"))
+    detektPlugins(project(":meanlib:detekt-command-message"))
 
     kapt wpi.java.deps.wpilibAnnotations()
     implementation wpi.java.deps.wpilib()
@@ -144,12 +144,13 @@ jar {
 detekt {
     buildUponDefaultConfig = false
     allRules = false
-    config.setFrom(files("$rootDir/config/detekt.yml"))
+    config.setFrom(files("$rootDir/meanlib/config/detekt.yml"))
     ignoreFailures = false
 }
 
 tasks.withType(JavaExec).configureEach {
-    dependsOn(tasks.named("detektMain"))
+    dependsOn(":detektMain")
+    dependsOn(":meanlib:detektMain")
 }
 
 // Configure string concat to always inline compile
