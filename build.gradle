@@ -148,6 +148,19 @@ detekt {
     ignoreFailures = false
 }
 
+def meanlibProject = project(":meanlib")
+def meanlibJar = meanlibProject.layout.buildDirectory.file("libs/meanlib.jar")
+
+tasks.named("detektMain", dev.detekt.gradle.Detekt).configure {
+    // Use compiled MeanLib classes for type resolution, not meanlib.jar.
+    classpath.setFrom(
+            sourceSets.main.compileClasspath.minus(files(meanlibJar)),
+            meanlibProject.sourceSets.main.output.classesDirs
+    )
+
+    dependsOn(":meanlib:classes")
+}
+
 tasks.withType(JavaExec).configureEach {
     dependsOn(":detektMain")
     dependsOn(":meanlib:detektMain")
