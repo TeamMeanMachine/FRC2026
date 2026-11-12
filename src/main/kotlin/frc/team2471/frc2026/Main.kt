@@ -10,7 +10,6 @@ import org.littletonrobotics.junction.wpilog.WPILOGReader
 import org.littletonrobotics.junction.wpilog.WPILOGWriter
 import org.team2471.frc.lib.autonomous.test.TestOpMode
 import org.team2471.frc.lib.commands.PeriodicMechanism
-import org.team2471.frc.lib.commands.command
 import org.team2471.frc.lib.logging.LoopLogger
 import org.team2471.frc.lib.control.isConnected
 import org.team2471.frc.lib.hardware.loggedMotors.MasterMotor

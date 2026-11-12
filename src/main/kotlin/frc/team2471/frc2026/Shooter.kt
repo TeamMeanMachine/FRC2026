@@ -17,7 +17,6 @@ import org.team2471.frc.lib.commands.command
 import org.team2471.frc.lib.logging.LoopLogger
 import org.team2471.frc.lib.control.bButton
 import org.team2471.frc.lib.control.rightStickButton
-import org.team2471.frc.lib.hardware.ctre.addFollower
 import org.team2471.frc.lib.hardware.ctre.applyConfiguration
 import org.team2471.frc.lib.hardware.ctre.brakeMode
 import org.team2471.frc.lib.hardware.ctre.coastMode
@@ -44,7 +43,6 @@ import org.team2471.frc.lib.units.asFeet
 import org.team2471.frc.lib.units.asMetersPerSecond
 import org.team2471.frc.lib.units.asRadiansPerSecond
 import org.team2471.frc.lib.units.asRotation2d
-import org.team2471.frc.lib.units.asRotations
 import org.team2471.frc.lib.units.cos
 import org.team2471.frc.lib.units.degrees
 import org.team2471.frc.lib.units.feet
