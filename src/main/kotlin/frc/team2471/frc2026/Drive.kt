@@ -231,7 +231,7 @@ object Drive: SwerveDriveSubsystem(DriveConstants.drivetrainConstants, *DriveCon
     /**
      * Returns [ChassisVelocities] with a percentage power from the driver controller.
      */
-    override fun getJoystickPercentageSpeed(): ChassisVelocities {
+    override fun getJoystickPercentageVelocities(): ChassisVelocities {
         val rawJoystick = OI.driveTranslation
         // Square drive input and apply demoSpeed
         val power = rawJoystick.norm.square() * demoSpeed *

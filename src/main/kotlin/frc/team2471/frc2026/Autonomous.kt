@@ -92,11 +92,11 @@ object Autonomous: Autonomi() {
     }
 
     private fun eightFootStraight() = command("eightFootStraight", Drive) {
-        await(Drive.driveAlongChoreoPath(paths["eightFoot"]!!, resetOdometry = true))
+        await(Drive.driveAlongChoreoPathCmd(paths["eightFoot"]!!, resetOdometry = true))
     }
 
     private fun squarePathTest() = command("squarePathTest", Drive) {
-        await(Drive.driveAlongChoreoPath(paths["square"]!!, resetOdometry = true))
+        await(Drive.driveAlongChoreoPathCmd(paths["square"]!!, resetOdometry = true))
     }
 
     private fun doubleSwipe(doSideToSideFlip: Boolean) = command("doubleSwipe") {
@@ -106,11 +106,11 @@ object Autonomous: Autonomi() {
 
             Turret.lookForwardOverride = true
             // Beginning Intake Path
-            await(Drive.driveAlongChoreoPath(path.getSplit(0).get(), resetOdometry = false))
+            await(Drive.driveAlongChoreoPathCmd(path.getSplit(0).get(), resetOdometry = false))
 
             // Rest of intake path going back
             parallel({
-                await(Drive.driveAlongChoreoPath(path.getSplit(1).get(), resetOdometry = false, poseSupplier = Drive.localizer::pose, exitSupplier = { percent, error -> pathPercentage = percent; Turret.lookForwardOverride = percent < 0.75; percent >= 1.0 }))
+                await(Drive.driveAlongChoreoPathCmd(path.getSplit(1).get(), resetOdometry = false, poseSupplier = Drive.localizer::pose, exitSupplier = { percent, error -> pathPercentage = percent; Turret.lookForwardOverride = percent < 0.75; percent >= 1.0 }))
             }, {
                 waitUntil { pathPercentage > 0.8 }
                 // Disable spindexer reversing a little early
@@ -130,7 +130,7 @@ object Autonomous: Autonomi() {
 
             // Next Intake Path out and back
             parallel({
-                await(Drive.driveAlongChoreoPath(path.getSplit(2).get(), resetOdometry = false, poseSupplier = Drive.localizer::pose, exitSupplier = { percent, error -> pathPercentage = percent; Turret.lookForwardOverride = percent > 0.1 && percent < 0.75; percent >= 1.0 && error.translation.norm.meters < 0.5.feet  }))
+                await(Drive.driveAlongChoreoPathCmd(path.getSplit(2).get(), resetOdometry = false, poseSupplier = Drive.localizer::pose, exitSupplier = { percent, error -> pathPercentage = percent; Turret.lookForwardOverride = percent > 0.1 && percent < 0.75; percent >= 1.0 && error.translation.norm.meters < 0.5.feet  }))
             }, {
                 Intake.deploy()
                 Intake.intakeState = Intake.IntakeState.INTAKING
@@ -153,7 +153,7 @@ object Autonomous: Autonomi() {
             Intake.deploy()
             pathPercentage = 0.0
             Intake.disableSpringProtection = false
-            await(Drive.driveAlongChoreoPath(path.getSplit(3).get(), resetOdometry = false, poseSupplier = Drive.localizer::pose))
+            await(Drive.driveAlongChoreoPathCmd(path.getSplit(3).get(), resetOdometry = false, poseSupplier = Drive.localizer::pose))
         }, {
             // Wait until intake is done homing
             waitUntil { Intake.finishedHoming }
@@ -242,7 +242,7 @@ object Autonomous: Autonomi() {
 
     fun warmupDriveAlongPath() = commandUnnamed(Drive) {
         val warmupPath = paths["eightFoot"]!!.mirrorY(true).mirrorX(true).rotateAround(true).flipped()
-        await(Drive.driveAlongChoreoPath(warmupPath.getSplit(0).get(), exitSupplier = { percent, error -> percent >= 1.0 || Robot.isEnabled}))
+        await(Drive.driveAlongChoreoPathCmd(warmupPath.getSplit(0).get(), exitSupplier = { percent, error -> percent >= 1.0 || Robot.isEnabled}))
         println("Warmup DAL")
     }.withPriority(Command.LOWEST_PRIORITY + 1).named("Warmup Drive Along Path")
 }
