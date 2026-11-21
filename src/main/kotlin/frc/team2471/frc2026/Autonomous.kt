@@ -9,7 +9,7 @@ import org.team2471.frc.lib.commands.parallel
 import org.team2471.frc.lib.commands.periodic
 import org.team2471.frc.lib.commands.periodicTimeout
 import org.team2471.frc.lib.commands.command
-import org.team2471.frc.lib.commands.commandUnnamed
+import org.team2471.frc.lib.commands.priority
 import org.team2471.frc.lib.math.round
 import org.team2471.frc.lib.swerve.mirrorX
 import org.team2471.frc.lib.swerve.mirrorY
@@ -168,7 +168,7 @@ object Autonomous: Autonomi() {
                 Intake.disableSpringProtection = false
             }, {
                 // Ramp up shooter always
-                this.periodic {
+                periodic {
                     Shooter.rampUpLoop()
                 }
             })
@@ -178,71 +178,9 @@ object Autonomous: Autonomi() {
         Intake.deploy()
     }
 
-//
-//    private fun doubleSwipeOG(doSideToSideFlip: Boolean): Command {
-//        val path = paths["LeftSideDoubleSwipe"]!!.sideToSideFlip(doSideToSideFlip)
-//        return parallelCommand(
-//            sequenceCommand(
-//                parallelCommand(
-//                    sequenceCommand(
-//                        Drive.driveAlongChoreoPath(path.getSplit(0).get(), resetOdometry = false),
-//                        Drive.driveAlongChoreoPath(path.getSplit(1).get(), resetOdometry = false, poseSupplier = Drive.localizer::pose),
-//                        runOnceCommand {
-//                            Intake.intakeState = Intake.IntakeState.OFF
-//                        }
-//                    ).withName("first driving double swipe auto"),
-//                    sequenceCommand(
-//                        waitUntilCommand { Intake.finishedHoming },
-//                        runOnceCommand {
-//                            Intake.deploy()
-//                            Intake.intakeState = Intake.IntakeState.INTAKING
-//                            println("Intake finished homing. Running Intake")
-//                        }
-//                    ).withName("Intake homing"),
-//                ).withName("First component Double swipe auto"),
-//                parallelCommand(
-//                    Shooter.shoot(true),
-//                    Intake.pulse()
-//                ).withTimeout(3.5),
-//                parallelCommand(
-//                    runOnceCommand {
-//                        Intake.deploy()
-//                        Intake.intakeState = Intake.IntakeState.INTAKING
-//                                   },
-//                    Drive.driveAlongChoreoPath(path.getSplit(2).get(), resetOdometry = false, poseSupplier = Drive.localizer::pose, exitSupplier = { percent, error -> percent >= 1.0 && error.translation.norm.meters < 0.3.feet }),
-//                    ),
-//                parallelCommand(
-//                    Shooter.shoot(true),
-//                    sequenceCommand(
-//                        runOnceCommand {
-//                            Intake.intakeState = Intake.IntakeState.OFF
-//                        },
-//                        Intake.pulse()
-//                    ),
-////                    Drive.driveAlongChoreoPath(path.getSplit(3).get(), resetOdometry = false, poseSupplier = Drive.localizer::pose),
-//                )
-//            ).withName("Double Swipe auto sequence"),
-//            runCommand {
-//                Shooter.rampUpLoop()
-//            }.withName("Shooter ramp up loop").finallyRun {
-//                Intake.deploy()
-//            }
-//        ).withName("Double swipe auto")
-//    }
-//
-//
-//    private fun justShoot(): Command {
-//        return parallelCommand(
-//            Shooter.shoot().beforeWait(5.0),
-//            runOnceCommand {
-//                Intake.stow()
-//            }
-//        )
-//    }
-
-    fun warmupDriveAlongPath() = commandUnnamed(Drive) {
+    fun warmupDriveAlongPath() = command("Warmup Drive Along Path", Drive) {
         val warmupPath = paths["eightFoot"]!!.mirrorY(true).mirrorX(true).rotateAround(true).flipped()
         await(Drive.driveAlongChoreoPathCmd(warmupPath.getSplit(0).get(), exitSupplier = { percent, error -> percent >= 1.0 || Robot.isEnabled}))
         println("Warmup DAL")
-    }.withPriority(Command.LOWEST_PRIORITY + 1).named("Warmup Drive Along Path")
+    }.priority(Command.LOWEST_PRIORITY + 1)
 }
