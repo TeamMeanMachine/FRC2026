@@ -10,6 +10,7 @@ import org.team2471.frc.lib.commands.periodic
 import org.team2471.frc.lib.commands.periodicTimeout
 import org.team2471.frc.lib.commands.command
 import org.team2471.frc.lib.commands.priority
+import org.team2471.frc.lib.commands.unaryPlus
 import org.team2471.frc.lib.math.round
 import org.team2471.frc.lib.swerve.mirrorX
 import org.team2471.frc.lib.swerve.mirrorY
@@ -92,11 +93,11 @@ object Autonomous: Autonomi() {
     }
 
     private fun eightFootStraight() = command("eightFootStraight", Drive) {
-        await(Drive.driveAlongChoreoPathCmd(paths["eightFoot"]!!, resetOdometry = true))
+        +Drive.driveAlongChoreoPathCmd(paths["eightFoot"]!!, resetOdometry = true)
     }
 
     private fun squarePathTest() = command("squarePathTest", Drive) {
-        await(Drive.driveAlongChoreoPathCmd(paths["square"]!!, resetOdometry = true))
+        +Drive.driveAlongChoreoPathCmd(paths["square"]!!, resetOdometry = true)
     }
 
     private fun doubleSwipe(doSideToSideFlip: Boolean) = command("doubleSwipe") {
@@ -106,11 +107,11 @@ object Autonomous: Autonomi() {
 
             Turret.lookForwardOverride = true
             // Beginning Intake Path
-            await(Drive.driveAlongChoreoPathCmd(path.getSplit(0).get(), resetOdometry = false))
+            +Drive.driveAlongChoreoPathCmd(path.getSplit(0).get(), resetOdometry = false)
 
             // Rest of intake path going back
             parallel({
-                await(Drive.driveAlongChoreoPathCmd(path.getSplit(1).get(), resetOdometry = false, poseSupplier = Drive.localizer::pose, exitSupplier = { percent, error -> pathPercentage = percent; Turret.lookForwardOverride = percent < 0.75; percent >= 1.0 }))
+                +Drive.driveAlongChoreoPathCmd(path.getSplit(1).get(), resetOdometry = false, poseSupplier = Drive.localizer::pose, exitSupplier = { percent, error -> pathPercentage = percent; Turret.lookForwardOverride = percent < 0.75; percent >= 1.0 })
             }, {
                 waitUntil { pathPercentage > 0.8 }
                 // Disable spindexer reversing a little early
